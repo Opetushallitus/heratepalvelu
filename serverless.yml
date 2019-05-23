@@ -1,0 +1,107 @@
+service: heratepalvelu
+
+custom:
+  region: eu-west-1
+  stage: ${opt:stage, 'sieni'}
+  stack: ${self:custom.stage}-${self:service}
+  herateTable: ${self:custom.stack}-herateTable
+  eHOKSherateQueue: ${self:custom.stack}-eHOKSHerateQueue
+
+provider:
+  name: aws
+  stackName: ${self:custom.stack}
+  stage: ${self:custom.stage}
+  region: ${self:custom.region}
+  runtime: java8
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - dynamodb:Query
+        - dynamodb:BatchWriteItem
+        - dynamodb:PutItem
+        - dynamodb:UpdateItem
+        - dynamodb:Scan
+        - dynamodb:GetItem
+        - dynamodb:DescribeTable
+      Resource:
+        - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.herateTable}"
+  environment:
+    herate_table: ${self:custom.herateTable}
+    region: ${self:custom.region}
+    caller_id: ${self:custom.stack}
+
+package:
+  artifact: target/uberjar/${self:service}-0.1.0-SNAPSHOT-standalone.jar
+
+functions:
+  eHOKSherateHandler:
+    memorySize: 256
+    handler: oph.heratepalvelu.eHOKSherateHandler::handleHOKShyvaksytty
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - eHOKSHerateQueue
+              - Arn
+    environment:
+      organisaatio_url: https://virkailija.testiopintopolku.fi/organisaatio-service/rest/organisaatio/v4/
+      koski_url: https://dev.koski.opintopolku.fi//koski/api/
+      koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user}
+      koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
+
+#    The following are a few example events you can configure
+#    NOTE: Please make sure to change your handler code to work with those events
+#    Check the event documentation for details
+#    events:
+#      - http:
+#          path: users/create
+#          method: get
+#      - websocket: $connect
+#      - s3: ${env:BUCKET}
+#      - schedule: rate(10 minutes)
+#      - sns: greeter-topic
+#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
+#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
+#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
+#      - iot:
+#          sql: "SELECT * FROM 'some_topic'"
+#      - cloudwatchEvent:
+#          event:
+#            source:
+#              - "aws.ec2"
+#            detail-type:
+#              - "EC2 Instance State-change Notification"
+#            detail:
+#              state:
+#                - pending
+#      - cloudwatchLog: '/aws/lambda/hello'
+#      - cognitoUserPool:
+#          pool: MyUserPool
+#          trigger: PreSignUp
+
+#    Define function environment variables here
+#    environment:
+#      variable2: value2
+
+resources:
+  Description: Herätepalvelu Arvo-kyselylinkkien lähettämiseen
+  Resources:
+    HerateTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.herateTable}
+        AttributeDefinitions:
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: uuid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 20
+          WriteCapacityUnits: 10
+        SSESpecification:
+          SSEEnabled: true
+    eHOKSHerateQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.eHOKSherateQueue}

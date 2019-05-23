@@ -1,0 +1,20 @@
+{
+  "Records": [
+    {
+      "messageId": "19dd0b57-b21e-4ac1-bd88-01bbb068cb78",
+      "receiptHandle": "MessageReceiptHandle",
+      "body": "{\n  \"ensikertainen-hyvaksyminen\": \"2019-05-20\",\n  \"sahkoposti\": \"testi@testi.fi\",\n  \"opiskeluoikeus-oid\": \"1.2.246.562.15.43634207518\",\n  \"id\": 1337,\n  \"tutkinto\": {\n    \"laajuus\": 0,\n    \"nimi\": \"Tutkinto\"\n  },\n  \"oppija-oid\": \"1.2.246.562.24.10442483592\"\n}\n",
+      "attributes": {
+        "ApproximateReceiveCount": "1",
+        "SentTimestamp": "1523232000000",
+        "SenderId": "123456789012",
+        "ApproximateFirstReceiveTimestamp": "1523232000001"
+      },
+      "messageAttributes": {},
+      "md5OfBody": "7b270e59b47ff90a553787216d55d91d",
+      "eventSource": "aws:sqs",
+      "eventSourceARN": "arn:aws:sqs:eu-west-1:123456789012:MyQueue",
+      "awsRegion": "eu-west-1"
+    }
+  ]
+}
