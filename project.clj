@@ -5,6 +5,7 @@
                  [environ "1.1.0"]
                  [clj-http "3.9.1"]
                  [cheshire "5.8.1"]
+                 [clj-time "0.15.1"]
                  [com.amazonaws/aws-lambda-java-core "1.2.0"]
                  [com.amazonaws/aws-lambda-java-events "2.2.6"]
                  [com.taoensso/faraday "1.9.0"]]

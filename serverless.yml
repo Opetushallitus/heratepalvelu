@@ -17,14 +17,11 @@ provider:
     - Effect: Allow
       Action:
         - dynamodb:Query
-        - dynamodb:BatchWriteItem
         - dynamodb:PutItem
         - dynamodb:UpdateItem
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:DescribeTable
       Resource:
         - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.herateTable}"
+        - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.herateTable}/index/lahetysIndex"
   environment:
     herate_table: ${self:custom.herateTable}
     region: ${self:custom.region}
@@ -32,10 +29,18 @@ provider:
 
 package:
   artifact: target/uberjar/${self:service}-0.1.0-SNAPSHOT-standalone.jar
+  exclude:
+    - "*.txt"
+    - "*.md"
+    - "*.yml"
+    - "*.json"
+    - "*.xml"
+    - "test/*"
 
 functions:
   eHOKSherateHandler:
-    memorySize: 256
+    memorySize: 384
+    timeout: 30
     handler: oph.heratepalvelu.eHOKSherateHandler::handleHOKShyvaksytty
     events:
       - sqs:
@@ -48,6 +53,12 @@ functions:
       koski_url: https://dev.koski.opintopolku.fi//koski/api/
       koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user}
       koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
+  herateEmailHandler:
+    memorySize: 384
+    timeout: 30
+    handler: oph.heratepalvelu.herateEmailHandler::handleSendEmails
+ #   events:
+  #    - schedule: cron(0/5 10-16 * * ? *)
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
@@ -91,17 +102,50 @@ resources:
       Properties:
         TableName: ${self:custom.herateTable}
         AttributeDefinitions:
-          - AttributeName: uuid
+          - AttributeName: oppija_toimija
+            AttributeType: S
+          - AttributeName: tyyppi_kausi
+            AttributeType: S
+          - AttributeName: lahetystila
+            AttributeType: S
+          - AttributeName: alkupvm
             AttributeType: S
         KeySchema:
-          - AttributeName: uuid
+          - AttributeName: oppija_toimija
             KeyType: HASH
+          - AttributeName: tyyppi_kausi
+            KeyType: RANGE
         ProvisionedThroughput:
           ReadCapacityUnits: 20
           WriteCapacityUnits: 10
         SSESpecification:
           SSEEnabled: true
+        GlobalSecondaryIndexes:
+          - IndexName: lahetysIndex
+            KeySchema:
+              - AttributeName: lahetystila
+                KeyType: HASH
+              - AttributeName: alkupvm
+                KeyType: RANGE
+            Projection:
+              NonKeyAttributes:
+                - sahkoposti
+                - kyselylinkki
+                - suorituskieli
+              ProjectionType: INCLUDE
+            ProvisionedThroughput:
+              ReadCapacityUnits: '5'
+              WriteCapacityUnits: '5'
     eHOKSHerateQueue:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.eHOKSherateQueue}
+  Outputs:
+    eHOKSHerateQueueArn:
+      Export:
+        Name: ${self:custom.stage}-eHOKSHerateQueueArn
+      Value:
+        Fn::GetAtt:
+          - eHOKSHerateQueue
+          - Arn
+
