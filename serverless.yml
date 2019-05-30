@@ -25,7 +25,6 @@ provider:
   environment:
     herate_table: ${self:custom.herateTable}
     region: ${self:custom.region}
-    caller_id: ${self:custom.stack}
 
 package:
   artifact: target/uberjar/${self:service}-0.1.0-SNAPSHOT-standalone.jar
@@ -39,8 +38,9 @@ package:
 
 functions:
   eHOKSherateHandler:
-    memorySize: 384
-    timeout: 30
+    name: ${self:custom.stack}-eHOKSherateHandler
+    memorySize: 640
+    timeout: 10
     handler: oph.heratepalvelu.eHOKSherateHandler::handleHOKShyvaksytty
     events:
       - sqs:
@@ -53,12 +53,16 @@ functions:
       koski_url: https://dev.koski.opintopolku.fi//koski/api/
       koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user}
       koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
+      caller_id: ${self:custom.stack}-herateEmailHandler
   herateEmailHandler:
+    name: ${self:custom.stack}-herateEmailHandler
     memorySize: 384
     timeout: 30
     handler: oph.heratepalvelu.herateEmailHandler::handleSendEmails
- #   events:
-  #    - schedule: cron(0/5 10-16 * * ? *)
+    environment:
+      caller_id: ${self:custom.stack}-herateEmailHandler
+#    events:
+#      - schedule: cron(0/5 10-16 * * ? *)
 
 #    The following are a few example events you can configure
 #    NOTE: Please make sure to change your handler code to work with those events
@@ -102,7 +106,7 @@ resources:
       Properties:
         TableName: ${self:custom.herateTable}
         AttributeDefinitions:
-          - AttributeName: oppija_toimija
+          - AttributeName: toimija_oppija
             AttributeType: S
           - AttributeName: tyyppi_kausi
             AttributeType: S
@@ -111,7 +115,7 @@ resources:
           - AttributeName: alkupvm
             AttributeType: S
         KeySchema:
-          - AttributeName: oppija_toimija
+          - AttributeName: toimija_oppija
             KeyType: HASH
           - AttributeName: tyyppi_kausi
             KeyType: RANGE
@@ -140,12 +144,3 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.eHOKSherateQueue}
-  Outputs:
-    eHOKSHerateQueueArn:
-      Export:
-        Name: ${self:custom.stage}-eHOKSHerateQueueArn
-      Value:
-        Fn::GetAtt:
-          - eHOKSHerateQueue
-          - Arn
-

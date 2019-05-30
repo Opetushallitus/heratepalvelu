@@ -20,7 +20,7 @@
 
 
 
-(defn get-kyselylinkki [data]
+(defn create-kyselylinkki [data]
   (:kysely_linkki {:kysely_linkki "https://arvovastaus.csc.fi/ABC123"}))
 
 (defn deactivate-kyselylinkki [linkki]

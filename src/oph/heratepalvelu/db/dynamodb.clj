@@ -1,17 +1,113 @@
 (ns oph.heratepalvelu.db.dynamodb
-  (:require [taoensso.faraday :as ddb]
-            [environ.core :refer [env]]))
+  (:require [environ.core :refer [env]]
+            [clojure.walk :refer [stringify-keys]]
+            [clojure.tools.logging :as log])
+  (:import (software.amazon.awssdk.services.dynamodb DynamoDbClient)
+           (software.amazon.awssdk.services.dynamodb.model PutItemRequest
+                                                           QueryRequest
+                                                           UpdateItemRequest
+                                                           Condition
+                                                           AttributeValue
+                                                           ReturnConsumedCapacity)
+           (software.amazon.awssdk.regions Region)
+           (clojure.lang Reflector)
+           (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap DefaultSdkAutoConstructList)))
 
-(def client-opts
-  { :endpoint (str "http://dynamodb." (:region env) ".amazonaws.com") })
+(def ddb-client (-> (DynamoDbClient/builder)
+                    (.region (Region/EU_WEST_1))
+                    (.build)))
 
-(defn put-item
-  [item options]
-  (ddb/put-item client-opts (:herate-table env) item options))
+(def ^:private comparison-operators
+  {:eq "EQ" :ne "NE" :le "LE"
+   :lt "LT" :ge "GE" :gt "GT"
+   :not-null "NOT_NULL" :null "NULL"
+   :contains "CONTAINS" :not-contains "NOT_CONTAINS"
+   :begins "BEGINS_WITH" :in "IN" :between "BETWEEN"})
 
-(defn query-items
-  [prim-key-conds options]
-  (ddb/query client-opts (:herate-table env) prim-key-conds options))
+(def ^:private attribute-types
+  {:s "s" :n "n" :b "b"
+   :ss "ss" :ns "ns" :bs "bs"
+   :m "m" :l "l" :bool "bool"
+   :nul "nul"})
 
-(defn update-item [prim-key-conds options]
-  (ddb/update-item client-opts (:herate-table env) prim-key-conds options))
+(defn- invoke-instance-method [inst m params]
+  (Reflector/invokeInstanceMethod
+    inst m (to-array params)))
+
+(defn- to-attribute-value
+  ([tk v]
+   (if-let [t (get attribute-types tk)]
+     (.build (invoke-instance-method
+               (AttributeValue/builder) t [(if (= t "n") (str v) v)]))
+     (throw (-> (Exception. (str "Unknown attribute type " type))))))
+  ([tk-v]
+   (let [[tk v] tk-v]
+     (to-attribute-value tk v))))
+
+(defn- build-condition [op-vals]
+  (let [[op vals] op-vals
+        values (if (coll? (first vals))
+                 (map to-attribute-value vals)
+                 [(to-attribute-value vals)])]
+    (-> (Condition/builder)
+        (.attributeValueList values)
+        (.comparisonOperator (get comparison-operators op "EQ"))
+        (.build))))
+
+(defn- map-vals-to-attribute-values [map]
+  (into {} (for [[k [t v]] map] [(name k) (to-attribute-value t v)])))
+
+(defn- map-vals-to-conditions [map]
+  (into {} (for [[k v] map] [(name k) (build-condition v)])))
+
+(defn- get-value [av]
+  (reduce (fn [o t]
+            (let [v (invoke-instance-method av t [])]
+              (when (and (some? v)
+                         (not (instance? DefaultSdkAutoConstructMap v))
+                         (not (instance? DefaultSdkAutoConstructList v)))
+                (reduced v))))
+          nil (vals attribute-types)))
+
+(defn put-item [item options]
+  (.putItem ddb-client (-> (PutItemRequest/builder)
+                           (.tableName (:herate-table env))
+                           (.item (map-vals-to-attribute-values item))
+                           (cond->
+                             (:cond-expr options)
+                             (.conditionExpression (:cond-expr options)))
+                           (.build))))
+
+(defn query-items [key-conds options]
+  (let [conditions (map-vals-to-conditions key-conds)
+        response (.query ddb-client (-> (QueryRequest/builder)
+                                        (.tableName (:herate-table env))
+                                        (.keyConditions conditions)
+                                        (cond->
+                                          (:index options)
+                                          (.indexName (:index options)))
+                                        (.returnConsumedCapacity ReturnConsumedCapacity/INDEXES)
+                                        (.build)))
+        items (.items response)]
+    (log/info "Consumed capacity" (.consumedCapacity response))
+
+
+    (into [] (map
+               (fn [item]
+                 (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
+                            {} (into {} item)))
+               items))))
+
+(defn update-item [key-conds options]
+  (let [req (-> (UpdateItemRequest/builder)
+                (.tableName (:herate-table env))
+                (.key (map-vals-to-attribute-values key-conds))
+                (.updateExpression (:update-expr options))
+                (cond->
+                  (:expr-attr-names options)
+                  (.expressionAttributeNames (:expr-attr-names options))
+                  (:expr-attr-vals options)
+                  (.expressionAttributeValues (map-vals-to-attribute-values (:expr-attr-vals options))))
+                (.build))]
+    (log/info req)
+    (.updateItem ddb-client req)))

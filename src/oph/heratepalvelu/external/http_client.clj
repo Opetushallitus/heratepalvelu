@@ -8,3 +8,6 @@
 
 (defn get [url & [options]]
   (client/get url (merge client-options options)))
+
+(defn post [url & [options]]
+  (client/post url (merge client-options options)))

@@ -6,8 +6,8 @@
             [oph.heratepalvelu.external.arvo :refer :all]
             [oph.heratepalvelu.external.organisaatio :refer [get-organisaatio]]
             [oph.heratepalvelu.db.dynamodb :as ddb])
-  (:import (com.amazonaws.services.dynamodbv2.model ConditionalCheckFailedException)
-           (com.amazonaws AmazonServiceException)))
+  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
+           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
 
 (gen-class
   :name "oph.heratepalvelu.eHOKSherateHandler"
@@ -37,43 +37,45 @@
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (let [hoks (parse-string (.getBody msg) true)
-            kyselytyyppi "HOKS_hyvaksytty"]
-        (log/info "Kerätään tietoja " (:id hoks) " " kyselytyyppi)
+            kyselytyyppi (:kyselytyyppi hoks)]
+        (log/info "Kerätään tietoja " (:ehoks-id hoks) " " kyselytyyppi)
         (let [opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid hoks))
               oppilaitos (:oid (:oppilaitos opiskeluoikeus))
               koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
               suoritukset (seq (:suoritukset opiskeluoikeus))
               tutkinto (:koodiarvo (:tunniste (:koulutusmoduuli (first suoritukset))))
-              suorituskieli (:lyhytNimi (:suorituskieli (first suoritukset)))
+              suorituskieli "fi"                                ;(:lyhytNimi (:suorituskieli (first suoritukset)))
               alkupvm (:ensikertainen-hyvaksyminen hoks)
               oppija (str (:oppija-oid hoks))
               uuid (generate-uuid)
-              kyselylinkki (get-kyselylinkki (build-arvo-request-body alkupvm
-                                                                      uuid
-                                                                      kyselytyyppi
-                                                                      koulutustoimija
-                                                                      oppilaitos
-                                                                      tutkinto
-                                                                      suorituskieli))]
+              kyselylinkki (create-kyselylinkki (build-arvo-request-body alkupvm
+                                                                         uuid
+                                                                         kyselytyyppi
+                                                                         koulutustoimija
+                                                                         oppilaitos
+                                                                         tutkinto
+                                                                         suorituskieli))]
           (log/info "Tallennetaan kantaan")
           (try
-            (ddb/put-item {:oppija_toimija (str oppija "_" koulutustoimija)
-                           :tyyppi_kausi (str kyselytyyppi "_" (kausi alkupvm))
-                           :kyselylinkki kyselylinkki
-                           :sahkoposti (:sahkoposti hoks)
-                           :suorituskieli suorituskieli
-                           :lahetystila "ei_lahetetty"
-                           :alkupvm alkupvm
-                           :request-id uuid
-                           :oppilaitos oppilaitos
-                           :ehoks-id (:id hoks)
-                           :opiskeluoikeus-oid (:opiskeluoikeus-oid hoks)}
+            (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                           :tyyppi_kausi [:s (str kyselytyyppi "/" (kausi alkupvm))]
+                           :kyselylinkki [:s kyselylinkki]
+                           :sahkoposti [:s (:sahkoposti hoks)]
+                           :suorituskieli [:s suorituskieli]
+                           :lahetystila [:s "ei_lahetetty"]
+                           :alkupvm [:s alkupvm]
+                           :request-id [:s uuid]
+                           :oppilaitos [:s oppilaitos]
+                           :ehoks-id [:n (str (:ehoks-id hoks))]
+                           :opiskeluoikeus-oid [:s (:opiskeluoikeus-oid hoks)]}
                           {:cond-expr "attribute_not_exists(oppija_toimija) AND attribute_not_exists(tyyppi_kausi)"})
             (catch ConditionalCheckFailedException e
+              ;Lambdan suoritus päättyy onnistuneesti
               (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
-                        oppija " koulutustoimijalla " koulutustoimija)
+                        oppija " koulutustoimijalla " koulutustoimija
+                        "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm))
               (deactivate-kyselylinkki kyselylinkki))
-            (catch AmazonServiceException e
+            (catch AwsServiceException e
               (log/error "Virhe tietokantaan tallennettaessa")
               (deactivate-kyselylinkki kyselylinkki)
               (throw e))))))))

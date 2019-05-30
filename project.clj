@@ -8,8 +8,10 @@
                  [clj-time "0.15.1"]
                  [com.amazonaws/aws-lambda-java-core "1.2.0"]
                  [com.amazonaws/aws-lambda-java-events "2.2.6"]
-                 [com.taoensso/faraday "1.9.0"]]
-
+                 [software.amazon.awssdk/dynamodb "2.5.37"]
+                 [org.apache.logging.log4j/log4j-api "2.11.1"]
+                 [org.apache.logging.log4j/log4j-core "2.11.1"]
+                 [org.apache.logging.log4j/log4j-slf4j-impl "2.11.1"]]
   :aot :all
   :source-paths ["src"]
   :java-source-paths ["src/java"]

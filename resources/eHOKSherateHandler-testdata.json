@@ -3,7 +3,7 @@
     {
       "messageId": "19dd0b57-b21e-4ac1-bd88-01bbb068cb78",
       "receiptHandle": "MessageReceiptHandle",
-      "body": "{\n  \"ensikertainen-hyvaksyminen\": \"2019-05-20\",\n  \"sahkoposti\": \"testi@testi.fi\",\n  \"opiskeluoikeus-oid\": \"1.2.246.562.15.43634207518\",\n  \"id\": 1337,\n  \"tutkinto\": {\n    \"laajuus\": 0,\n    \"nimi\": \"Tutkinto\"\n  },\n  \"oppija-oid\": \"1.2.246.562.24.10442483592\"\n}\n",
+      "body": "{\"kyselytyyppi\": \"HOKS_hyvaksytty\",  \"ensikertainen-hyvaksyminen\": \"2019-05-20\",\n  \"sahkoposti\": \"testi@testi.fi\",\n  \"opiskeluoikeus-oid\": \"1.2.246.562.15.43634207518\",\n  \"ehoks-id\": 1337,\n  \"oppija-oid\": \"1.2.246.562.24.10442483592\"\n}\n",
       "attributes": {
         "ApproximateReceiveCount": "1",
         "SentTimestamp": "1523232000000",
