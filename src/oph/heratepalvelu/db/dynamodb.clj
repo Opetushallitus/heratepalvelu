@@ -89,9 +89,7 @@
                                         (.returnConsumedCapacity ReturnConsumedCapacity/INDEXES)
                                         (.build)))
         items (.items response)]
-    (log/info "Consumed capacity" (.consumedCapacity response))
-
-
+    (log/info (.toString (.consumedCapacity response)))
     (into [] (map
                (fn [item]
                  (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
@@ -109,5 +107,4 @@
                   (:expr-attr-vals options)
                   (.expressionAttributeValues (map-vals-to-attribute-values (:expr-attr-vals options))))
                 (.build))]
-    (log/info req)
     (.updateItem ddb-client req)))

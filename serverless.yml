@@ -6,6 +6,7 @@ custom:
   stack: ${self:custom.stage}-${self:service}
   herateTable: ${self:custom.stack}-herateTable
   eHOKSherateQueue: ${self:custom.stack}-eHOKSHerateQueue
+  virkailija-url: https://virkailija.testiopintopolku.fi
 
 provider:
   name: aws
@@ -39,8 +40,8 @@ package:
 functions:
   eHOKSherateHandler:
     name: ${self:custom.stack}-eHOKSherateHandler
-    memorySize: 640
-    timeout: 10
+    memorySize: 1024
+    timeout: 30
     handler: oph.heratepalvelu.eHOKSherateHandler::handleHOKShyvaksytty
     events:
       - sqs:
@@ -49,54 +50,23 @@ functions:
               - eHOKSHerateQueue
               - Arn
     environment:
-      organisaatio_url: https://virkailija.testiopintopolku.fi/organisaatio-service/rest/organisaatio/v4/
-      koski_url: https://dev.koski.opintopolku.fi//koski/api/
+      organisaatio_url: ${self:custom.virkailija-url}/organisaatio-service/rest/organisaatio/v4/
+      koski_url: https://dev.koski.opintopolku.fi/koski/api/
       koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user}
       koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
       caller_id: ${self:custom.stack}-herateEmailHandler
   herateEmailHandler:
     name: ${self:custom.stack}-herateEmailHandler
-    memorySize: 384
-    timeout: 30
+    memorySize: 1024
+    timeout: 300
     handler: oph.heratepalvelu.herateEmailHandler::handleSendEmails
     environment:
       caller_id: ${self:custom.stack}-herateEmailHandler
+      viestintapalvelu_url: ${self:custom.virkailija-url}/ryhmasahkoposti-service/email/firewall
 #    events:
-#      - schedule: cron(0/5 10-16 * * ? *)
+#      - schedule: cron(0/15 10-16 * * ? *)
 
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - websocket: $connect
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill: amzn1.ask.skill.xx-xx-xx-xx
-#      - alexaSmartHome: amzn1.ask.skill.xx-xx-xx-xx
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-#      - cognitoUserPool:
-#          pool: MyUserPool
-#          trigger: PreSignUp
 
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
 
 resources:
   Description: Herätepalvelu Arvo-kyselylinkkien lähettämiseen

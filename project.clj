@@ -11,7 +11,9 @@
                  [software.amazon.awssdk/dynamodb "2.5.37"]
                  [org.apache.logging.log4j/log4j-api "2.11.1"]
                  [org.apache.logging.log4j/log4j-core "2.11.1"]
-                 [org.apache.logging.log4j/log4j-slf4j-impl "2.11.1"]]
+                 [org.apache.logging.log4j/log4j-slf4j-impl "2.11.1"]
+                 [prismatic/schema "1.1.10"]
+                 [hiccup "1.0.5"]]
   :aot :all
   :source-paths ["src"]
   :java-source-paths ["src/java"]
