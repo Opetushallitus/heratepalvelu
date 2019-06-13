@@ -29,15 +29,14 @@
               {:update-expr     "SET #lahetystila = :lahetystila"
                :expr-attr-names {"#lahetystila" "lahetystila"}
                :expr-attr-vals  {":lahetystila" [:s (str "viestintapalvelussa_" id)]}})
-            (log/info "Viesti lähetetty ja lähetystila tallennettu tietokantaan, id " id)))
+            (log/info "Viesti lähetetty ja lähetystila tallennettu tietokantaan, id " id))
           (catch AwsServiceException e
             (log/error "Viesti lähetty viestintäpalveluun, muttei päivitetty kantaan!")
             (log/error e))
           (catch Exception e
             (log/error "Virhe viestin lähetyksessä!" email)
-            (log/error e)))
+            (log/error e))))
       (when (> 10000 (.getRemainingTimeInMillis context))
-        ;(recur (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
-        ;                         :alkupvm     [:le [:s (.toString (today))]]}
-        ;                        {:index "lahetysIndex"}))
-         ))))
+        (recur (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
+                                 :alkupvm     [:le [:s (.toString (today))]]}
+                                {:index "lahetysIndex"}))))))
