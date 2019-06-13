@@ -43,8 +43,8 @@ package:
 functions:
   eHOKSherateHandler:
     name: ${self:custom.stack}-eHOKSherateHandler
-    memorySize: 1024
-    timeout: 30
+    memorySize: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehokshandler-memory~true}
+    timeout: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehokshandler-timeout~true}
     handler: oph.heratepalvelu.eHOKSherateHandler::handleHOKShyvaksytty
     events:
       - sqs:
@@ -54,22 +54,20 @@ functions:
               - Arn
     environment:
       organisaatio_url: ${self:custom.virkailija_url}/organisaatio-service/rest/organisaatio/v4/
-      koski_url: https://dev.koski.opintopolku.fi/koski/api/
+      koski_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-url~true}
       koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user~true}
       koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
       caller_id: ${self:custom.stack}-herateEmailHandler
   herateEmailHandler:
     name: ${self:custom.stack}-herateEmailHandler
-    memorySize: 1024
-    timeout: 30
+    memorySize: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/emailhandler-memory~true}
+    timeout: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/emailhandler-timeout~true}
     handler: oph.heratepalvelu.herateEmailHandler::handleSendEmails
     environment:
       caller_id: ${self:custom.stack}-herateEmailHandler
       viestintapalvelu_url: ${self:custom.virkailija_url}/ryhmasahkoposti-service/email
-#    events:
-#      - schedule: cron(0/15 10-16 * * ? *)
-
-
+    events:
+      - schedule: cron(${ssm:/${self:custom.stage}/serverless/heratepalvelu/emailhandler-cron~true})
 
 resources:
   Description: Herätepalvelu Arvo-kyselylinkkien lähettämiseen
