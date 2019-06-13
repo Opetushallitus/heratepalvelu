@@ -5,3 +5,4 @@
 .serverless
 .nrepl-port
 target
+.lein-env

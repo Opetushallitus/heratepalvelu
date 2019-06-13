@@ -85,7 +85,9 @@
                                         (.keyConditions conditions)
                                         (cond->
                                           (:index options)
-                                          (.indexName (:index options)))
+                                          (.indexName (:index options))
+                                          (:limit options)
+                                          (.limit (int (:limit options))))
                                         (.returnConsumedCapacity ReturnConsumedCapacity/INDEXES)
                                         (.build)))
         items (.items response)]

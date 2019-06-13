@@ -6,7 +6,7 @@ custom:
   stack: ${self:custom.stage}-${self:service}
   herateTable: ${self:custom.stack}-herateTable
   eHOKSherateQueue: ${self:custom.stack}-eHOKSHerateQueue
-  virkailija-url: https://virkailija.testiopintopolku.fi
+  virkailija_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/virkailija-url~true}
 
 provider:
   name: aws
@@ -26,6 +26,9 @@ provider:
   environment:
     herate_table: ${self:custom.herateTable}
     region: ${self:custom.region}
+    cas_url: ${self:custom.virkailija_url}/cas
+    cas_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-user~true}
+    cas_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-pwd~true}
 
 package:
   artifact: target/uberjar/${self:service}-0.1.0-SNAPSHOT-standalone.jar
@@ -50,19 +53,19 @@ functions:
               - eHOKSHerateQueue
               - Arn
     environment:
-      organisaatio_url: ${self:custom.virkailija-url}/organisaatio-service/rest/organisaatio/v4/
+      organisaatio_url: ${self:custom.virkailija_url}/organisaatio-service/rest/organisaatio/v4/
       koski_url: https://dev.koski.opintopolku.fi/koski/api/
-      koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user}
+      koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user~true}
       koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
       caller_id: ${self:custom.stack}-herateEmailHandler
   herateEmailHandler:
     name: ${self:custom.stack}-herateEmailHandler
     memorySize: 1024
-    timeout: 300
+    timeout: 30
     handler: oph.heratepalvelu.herateEmailHandler::handleSendEmails
     environment:
       caller_id: ${self:custom.stack}-herateEmailHandler
-      viestintapalvelu_url: ${self:custom.virkailija-url}/ryhmasahkoposti-service/email/firewall
+      viestintapalvelu_url: ${self:custom.virkailija_url}/ryhmasahkoposti-service/email
 #    events:
 #      - schedule: cron(0/15 10-16 * * ? *)
 

@@ -1,7 +1,9 @@
 (ns oph.heratepalvelu.external.viestintapalvelu
   (:require [clojure.tools.logging :as log]
-            [oph.heratepalvelu.external.http-client :refer [post]]
-            [environ.core :refer [env]])
+            [cheshire.core :refer [generate-string]]
+            [oph.heratepalvelu.external.cas-client :refer [cas-authenticated-post]]
+            [environ.core :refer [env]]
+            [clj-time.core :refer [now]])
   (:use hiccup.core))
 
 (defn- amispalaute-html [data]
@@ -11,14 +13,16 @@
               [:body
                [:div
                 [:p "Vastaa opiskelijapalautekyselyyn tästä linkistä"]
-                [:a {:href (:kyselylinkki data)} "Linkki"]]]])))
+                [:a {:href (:kyselylinkki data)} "Linkki"]
+                [:p (.toString (now))]]]])))
 
 (defn send-email [data]
-  (log/info "Sending " data)
-  (post (:viestintapalvelu-url env)
-        {:content-type :json
-         :form-params {:recipient [{:email (:email data)}]
-                       :email {:from "no-reply@opintopolku.fi"
-                               :subject "Ammattikoulu palaute"
-                               :isHtml true
-                               :body (amispalaute-html data)}}}))
+  (let [resp (cas-authenticated-post
+               (:viestintapalvelu-url env)
+               {:recipient [{:email (:email data)}]
+                :email {:from "no-reply@opintopolku.fi"
+                        :subject "Ammattikoulu palaute"
+                        :isHtml true
+                        :body (amispalaute-html data)}}
+               {:as :json})]
+    (:body resp)))
