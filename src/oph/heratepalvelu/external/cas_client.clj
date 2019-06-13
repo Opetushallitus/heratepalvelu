@@ -30,7 +30,6 @@
   (cond-> {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)
                               "Caller-Id" (:caller-id env)
                               "clientSubSystemCode" (:caller-id env)}
-           :debug true :debug-body true
            :redirect-strategy :none}
           (some? body)
           (request-with-json-body body)))
