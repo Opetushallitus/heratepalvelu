@@ -1,7 +1,7 @@
 (ns oph.heratepalvelu.eHOKSherateHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
-            [clojure.string :refer [split]]
+            [clojure.string :refer [split lower-case]]
             [oph.heratepalvelu.external.koski :refer [get-opiskeluoikeus]]
             [oph.heratepalvelu.external.arvo :refer :all]
             [oph.heratepalvelu.external.organisaatio :refer [get-organisaatio]]
@@ -15,13 +15,13 @@
   :name "oph.heratepalvelu.eHOKSherateHandler"
   :methods [[^:static handleHOKShyvaksytty [com.amazonaws.services.lambda.runtime.events.SQSEvent] void]])
 
-(s/defschema herate-msg
+(s/defschema herate-schema
   {:ehoks-id s/Num
    :kyselytyyppi s/Str
    :opiskeluoikeus-oid s/Str
    :oppija-oid s/Str
    :sahkoposti s/Str
-   :ensikertainen-hyvaksyminen s/Str})
+   :alkupvm s/Str})
 
 (defn generate-uuid []
   (.toString (java.util.UUID/randomUUID)))
@@ -50,54 +50,55 @@
         koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
         suoritukset (seq (:suoritukset opiskeluoikeus))
         tutkinto (:koodiarvo (:tunniste (:koulutusmoduuli (first suoritukset))))
-        suorituskieli (:koodiarvo (:suorituskieli (first suoritukset)))
-        alkupvm (:ensikertainen-hyvaksyminen hoks)
+        suorituskieli (lower-case (:koodiarvo (:suorituskieli (first suoritukset))))
+        alkupvm (:alkupvm hoks)
         oppija (str (:oppija-oid hoks))
         uuid (generate-uuid)
         laskentakausi (kausi alkupvm)
-        kyselylinkki (create-kyselylinkki (build-arvo-request-body alkupvm
-                                                                   uuid
-                                                                   kyselytyyppi
-                                                                   koulutustoimija
-                                                                   oppilaitos
-                                                                   tutkinto
-                                                                   suorituskieli))]
-    (log/info "Tallennetaan kantaan")
-    (try
-      (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
-                     :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]
-                     :kyselylinkki [:s kyselylinkki]
-                     :sahkoposti [:s (:sahkoposti hoks)]
-                     :suorituskieli [:s suorituskieli]
-                     :lahetystila [:s "ei_lahetetty"]
-                     :alkupvm [:s alkupvm]
-                     :request-id [:s uuid]
-                     :oppilaitos [:s oppilaitos]
-                     :ehoks-id [:n (str (:ehoks-id hoks))]
-                     :opiskeluoikeus-oid [:s (:opiskeluoikeus-oid hoks)]
-                     :oppija-oid [:s oppija]
-                     :koulutustoimija [:s koulutustoimija]
-                     :kyselytyyppi [:s kyselytyyppi]
-                     :rahoituskausi [:s laskentakausi]}
-                    {:cond-expr "attribute_not_exists(oppija_toimija) AND attribute_not_exists(tyyppi_kausi)"})
-      (catch ConditionalCheckFailedException e
-        ;Lambdan suoritus päättyy onnistuneesti
-        (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
-                  oppija " koulutustoimijalla " koulutustoimija
-                  "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm))
-        (deactivate-kyselylinkki kyselylinkki))
-      (catch AwsServiceException e
-        (log/error "Virhe tietokantaan tallennettaessa")
-        (deactivate-kyselylinkki kyselylinkki)
-        (throw e)))))
+        kyselylinkki (get-kyselylinkki (build-arvo-request-body alkupvm
+                                                                uuid
+                                                                kyselytyyppi
+                                                                koulutustoimija
+                                                                oppilaitos
+                                                                tutkinto
+                                                                suorituskieli))]
+    (log/info "Tallennetaan kantaan " (str koulutustoimija "/" oppija) " " (str kyselytyyppi "/" laskentakausi))
+    (when kyselylinkki
+      (try
+        (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                       :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]
+                       :kyselylinkki [:s kyselylinkki]
+                       :sahkoposti [:s (:sahkoposti hoks)]
+                       :suorituskieli [:s suorituskieli]
+                       :lahetystila [:s "ei_lahetetty"]
+                       :alkupvm [:s alkupvm]
+                       :request-id [:s uuid]
+                       :oppilaitos [:s oppilaitos]
+                       :ehoks-id [:n (str (:ehoks-id hoks))]
+                       :opiskeluoikeus-oid [:s (:opiskeluoikeus-oid hoks)]
+                       :oppija-oid [:s oppija]
+                       :koulutustoimija [:s koulutustoimija]
+                       :kyselytyyppi [:s kyselytyyppi]
+                       :rahoituskausi [:s laskentakausi]}
+                      {:cond-expr "attribute_not_exists(oppija_toimija) AND attribute_not_exists(tyyppi_kausi)"})
+        (catch ConditionalCheckFailedException e
+          ;Lambdan suoritus päättyy onnistuneesti
+          (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
+                    oppija " koulutustoimijalla " koulutustoimija
+                    "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm))
+          (deactivate-kyselylinkki kyselylinkki))
+        (catch AwsServiceException e
+          (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
+          (deactivate-kyselylinkki kyselylinkki)
+          (throw e))))))
 
 (defn -handleHOKShyvaksytty [this event]
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try
         (let [hoks (parse-string (.getBody msg) true)]
-          (if (nil? (s/check herate-msg hoks))
+          (if (nil? (s/check herate-schema hoks))
             (save-HOKSHyvaksytty hoks)
-            (log/error (s/check herate-msg hoks))))
+            (log/error (s/check herate-schema hoks))))
         (catch JsonParseException e
           (log/error "Virheellinen viesti " e))))))

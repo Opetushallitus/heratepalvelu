@@ -3,9 +3,7 @@
   (:require [clj-cas.cas :refer :all]
             [environ.core :refer [env]]
             [cheshire.core :as json]
-            [clj-http.client :refer [request]]
-            [clojure.tools.logging :as log]))
-
+            [clj-http.client :refer [request]]))
 
 (defrecord CasClient [client params session-id])
 

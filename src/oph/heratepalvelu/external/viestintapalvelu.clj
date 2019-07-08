@@ -1,7 +1,5 @@
 (ns oph.heratepalvelu.external.viestintapalvelu
-  (:require [clojure.tools.logging :as log]
-            [cheshire.core :refer [generate-string]]
-            [oph.heratepalvelu.external.cas-client :refer [cas-authenticated-post]]
+  (:require [oph.heratepalvelu.external.cas-client :refer [cas-authenticated-post]]
             [environ.core :refer [env]]
             [clj-time.core :refer [now]])
   (:use hiccup.core))

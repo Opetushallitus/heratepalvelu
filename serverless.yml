@@ -6,6 +6,7 @@ custom:
   stack: ${self:custom.stage}-${self:service}
   herateTable: ${self:custom.stack}-herateTable
   eHOKSherateQueue: ${self:custom.stack}-eHOKSHerateQueue
+  eHOKSherateDLQ: ${self:custom.stack}-eHOKSherateDLQ
   virkailija_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/virkailija-url~true}
 
 provider:
@@ -20,9 +21,17 @@ provider:
         - dynamodb:Query
         - dynamodb:PutItem
         - dynamodb:UpdateItem
+        - dynamodb:GetItem
       Resource:
         - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.herateTable}"
         - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.herateTable}/index/lahetysIndex"
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+      Resource:
+        - Fn::GetAtt:
+            - eHOKSherateDLQ
+            - Arn
   environment:
     herate_table: ${self:custom.herateTable}
     region: ${self:custom.region}
@@ -58,6 +67,9 @@ functions:
       koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user~true}
       koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
       caller_id: ${self:custom.stack}-herateEmailHandler
+      arvo_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-url~true}
+      arvo_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-user~true}
+      arvo_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-pwd~true}
   herateEmailHandler:
     name: ${self:custom.stack}-herateEmailHandler
     memorySize: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/emailhandler-memory~true}
@@ -72,6 +84,8 @@ functions:
 resources:
   Description: Herätepalvelu Arvo-kyselylinkkien lähettämiseen
   Resources:
+    EHOKSherateHandlerLogGroup:
+      DependsOn: IamRoleLambdaExecution
     HerateTable:
       Type: AWS::DynamoDB::Table
       Properties:
@@ -115,3 +129,13 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.eHOKSherateQueue}
+        RedrivePolicy:
+          deadLetterTargetArn:
+            Fn::GetAtt:
+              - eHOKSherateDLQ
+              - Arn
+          maxReceiveCount: 5
+    eHOKSherateDLQ:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: ${self:custom.eHOKSherateDLQ}
