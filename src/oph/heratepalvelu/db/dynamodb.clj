@@ -8,7 +8,7 @@
                                                            UpdateItemRequest
                                                            Condition
                                                            AttributeValue
-                                                           ReturnConsumedCapacity)
+                                                           ReturnConsumedCapacity GetItemRequest)
            (software.amazon.awssdk.regions Region)
            (clojure.lang Reflector)
            (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap DefaultSdkAutoConstructList)))
@@ -69,44 +69,65 @@
                 (reduced v))))
           nil (vals attribute-types)))
 
-(defn put-item [item options]
-  (.putItem ddb-client (-> (PutItemRequest/builder)
-                           (.tableName (:herate-table env))
-                           (.item (map-vals-to-attribute-values item))
-                           (cond->
-                             (:cond-expr options)
-                             (.conditionExpression (:cond-expr options)))
-                           (.build))))
+(defn put-item
+  ([item options]
+    (put-item item options (:herate-table env)))
+  ([item options table]
+   (.putItem ddb-client (-> (PutItemRequest/builder)
+                            (.tableName table)
+                            (.item (map-vals-to-attribute-values item))
+                            (cond->
+                              (:cond-expr options)
+                              (.conditionExpression (:cond-expr options)))
+                            (.build)))))
 
-(defn query-items [key-conds options]
-  (let [conditions (map-vals-to-conditions key-conds)
-        response (.query ddb-client (-> (QueryRequest/builder)
-                                        (.tableName (:herate-table env))
-                                        (.keyConditions conditions)
-                                        (cond->
-                                          (:index options)
-                                          (.indexName (:index options))
-                                          (:limit options)
-                                          (.limit (int (:limit options))))
-                                        (.returnConsumedCapacity ReturnConsumedCapacity/INDEXES)
-                                        (.build)))
-        items (.items response)]
-    (log/info (.toString (.consumedCapacity response)))
-    (into [] (map
-               (fn [item]
-                 (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
-                            {} (into {} item)))
-               items))))
+(defn query-items
+  ([key-conds options]
+    (query-items key-conds options (:herate-table env)))
+  ([key-conds options table]
+   (let [conditions (map-vals-to-conditions key-conds)
+         response (.query ddb-client (-> (QueryRequest/builder)
+                                         (.tableName table)
+                                         (.keyConditions conditions)
+                                         (cond->
+                                           (:index options)
+                                           (.indexName (:index options))
+                                           (:limit options)
+                                           (.limit (int (:limit options))))
+                                         (.returnConsumedCapacity ReturnConsumedCapacity/INDEXES)
+                                         (.build)))
+         items (.items response)]
+     (log/info (.toString (.consumedCapacity response)))
+     (into [] (map
+                (fn [item]
+                  (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
+                             {} (into {} item)))
+                items)))))
 
-(defn update-item [key-conds options]
-  (let [req (-> (UpdateItemRequest/builder)
-                (.tableName (:herate-table env))
-                (.key (map-vals-to-attribute-values key-conds))
-                (.updateExpression (:update-expr options))
-                (cond->
-                  (:expr-attr-names options)
-                  (.expressionAttributeNames (:expr-attr-names options))
-                  (:expr-attr-vals options)
-                  (.expressionAttributeValues (map-vals-to-attribute-values (:expr-attr-vals options))))
-                (.build))]
-    (.updateItem ddb-client req)))
+(defn update-item
+  ([key-conds options]
+    (update-item key-conds options (:herate-table env)))
+  ([key-conds options table]
+   (let [req (-> (UpdateItemRequest/builder)
+                 (.tableName table)
+                 (.key (map-vals-to-attribute-values key-conds))
+                 (.updateExpression (:update-expr options))
+                 (cond->
+                   (:expr-attr-names options)
+                   (.expressionAttributeNames (:expr-attr-names options))
+                   (:expr-attr-vals options)
+                   (.expressionAttributeValues (map-vals-to-attribute-values (:expr-attr-vals options))))
+                 (.build))]
+     (.updateItem ddb-client req))))
+
+(defn get-item
+  ([key-conds]
+    (get-item key-conds (:herate-table env)))
+  ([key-conds table]
+    (let [req (-> (GetItemRequest/builder)
+                  (.tableName table)
+                  (.key (map-vals-to-attribute-values key-conds)))
+          response (.getItem ddb-client req)
+          item (.item response)]
+      (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
+                 {} (into {} item)))))
