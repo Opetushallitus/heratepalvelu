@@ -126,7 +126,8 @@
   ([key-conds table]
     (let [req (-> (GetItemRequest/builder)
                   (.tableName table)
-                  (.key (map-vals-to-attribute-values key-conds)))
+                  (.key (map-vals-to-attribute-values key-conds))
+                  (.build))
           response (.getItem ddb-client req)
           item (.item response)]
       (reduce-kv #(assoc %1 (keyword %2) (get-value %3))

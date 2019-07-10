@@ -5,6 +5,7 @@ custom:
   stage: ${opt:stage, 'sieni'}
   stack: ${self:custom.stage}-${self:service}
   herateTable: ${self:custom.stack}-herateTable
+  orgWhitelistTable: ${self:custom.stack}-organisaatioWhitelist
   eHOKSherateQueue: ${self:custom.stack}-eHOKSHerateQueue
   eHOKSherateDLQ: ${self:custom.stack}-eHOKSherateDLQ
   virkailija_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/virkailija-url~true}
@@ -32,8 +33,14 @@ provider:
         - Fn::GetAtt:
             - eHOKSherateDLQ
             - Arn
+    - Effect: Allow
+      Action:
+        - dynamodb:GetItem
+      Resource:
+        - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.orgWhitelistTable}"
   environment:
     herate_table: ${self:custom.herateTable}
+    orgwhitelist_table: ${self:custom.orgWhitelistTable}
     region: ${self:custom.region}
     cas_url: ${self:custom.virkailija_url}/cas
     cas_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-user~true}
@@ -125,6 +132,21 @@ resources:
             ProvisionedThroughput:
               ReadCapacityUnits: '5'
               WriteCapacityUnits: '5'
+    organisaatioWhitelist:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.orgWhitelistTable}
+        AttributeDefinitions:
+          - AttributeName: organisaatio-oid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: organisaatio-oid
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 20
+          WriteCapacityUnits: 10
+        SSESpecification:
+          SSEEnabled: true
     eHOKSHerateQueue:
       Type: AWS::SQS::Queue
       Properties:
