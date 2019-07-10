@@ -22,13 +22,11 @@
             :hankintakoulutuksen_toteuttaja nil))<
 
 (defn get-kyselylinkki [data]
-  (log/info data)
   (let [resp (client/post (:arvo-url env)
                                  {:content-type "application/json"
                                   :body (generate-string data)
                                   :basic-auth [(:arvo-user env) (:arvo-pwd env)]
                                   :as :json})]
-    (log/info resp)
     (if (get-in resp [:body :errors])
       (log/error (:body resp))
       (get-in resp [:body :kysely_linkki]))))
