@@ -16,6 +16,8 @@ provider:
   stage: ${self:custom.stage}
   region: ${self:custom.region}
   runtime: java8
+  tracing:
+    lambda: true
   iamRoleStatements:
     - Effect: Allow
       Action:
