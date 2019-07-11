@@ -63,7 +63,7 @@ functions:
     name: ${self:custom.stack}-eHOKSherateHandler
     memorySize: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehokshandler-memory~true}
     timeout: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehokshandler-timeout~true}
-    handler: oph.heratepalvelu.eHOKSherateHandler::handleHOKShyvaksytty
+    handler: oph.heratepalvelu.eHOKSherateHandler::handleHOKSherate
     events:
       - sqs:
           arn:

@@ -18,7 +18,7 @@
 
 (gen-class
   :name "oph.heratepalvelu.eHOKSherateHandler"
-  :methods [[^:static handleHOKShyvaksytty [com.amazonaws.services.lambda.runtime.events.SQSEvent] void]])
+  :methods [[^:static handleHOKSherate [com.amazonaws.services.lambda.runtime.events.SQSEvent] void]])
 
 (s/defschema herate-schema
   {:ehoks-id s/Num
@@ -34,12 +34,12 @@
 (defn get-koulutustoimija-oid [opiskeluoikeus]
   (if-let [koulutustoimija-oid (:oid (:koulutustoimija opiskeluoikeus))]
     koulutustoimija-oid
-    ((log/info "Ei koulutustoimijaa opiskeluoikeudessa " (:oid opiskeluoikeus) ", haetaan Organisaatiopalvelusta")
-     (-> opiskeluoikeus
-         :oppilaitos
-         :oid
-         get-organisaatio
-         :parentOid))))
+    (do
+      (log/info "Ei koulutustoimijaa opiskeluoikeudessa "
+                (:oid opiskeluoikeus) ", haetaan Organisaatiopalvelusta")
+      (:parentOid
+        (get-organisaatio
+          (get-in opiskeluoikeus [:oppilaitos :oid]))))))
 
 (defn kausi [alkupvm]
   (let [[year month] (split alkupvm #"-")]
@@ -48,8 +48,8 @@
       (str (- (Integer/parseInt year) 1) "-" year))))
 
 (defn check-suoritus-type [suoritus]
-  (or (= (:koodiarvo (:tyyppi suoritus) "ammatillinentutkinto"))
-      (= (:koodiarvo (:tyyppi suoritus) "ammatillinentutkintoosittainen"))))
+  (or (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkinto")
+      (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkintoosittainen")))
 
 (defn check-organisaatio-whitelist [koulutustoimija]
   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
@@ -58,7 +58,7 @@
       (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
           (c/to-long (today))))))
 
-(defn- save-HOKSHyvaksytty [hoks]
+(defn save-HOKS-herate [hoks]
   (log/info "Kerätään tietoja " (:ehoks-id hoks) " " (:kyselytyyppi hoks))
   (let [kyselytyyppi (:kyselytyyppi hoks)
         opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid hoks))
@@ -74,53 +74,59 @@
 
     (if (and (check-suoritus-type (first suoritukset))
              (check-organisaatio-whitelist koulutustoimija))
-      (let [kyselylinkki (get-kyselylinkki (build-arvo-request-body alkupvm
-                                                                    uuid
-                                                                    kyselytyyppi
-                                                                    koulutustoimija
-                                                                    oppilaitos
-                                                                    tutkinto
-                                                                    suorituskieli))]
-        (when kyselylinkki
-          (log/info "Tallennetaan kantaan " (str koulutustoimija "/" oppija)
-                    " " (str kyselytyyppi "/" laskentakausi))
-          (try
-            (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
-                           :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]
-                           :kyselylinkki [:s kyselylinkki]
-                           :sahkoposti [:s (:sahkoposti hoks)]
-                           :suorituskieli [:s suorituskieli]
-                           :lahetystila [:s "ei_lahetetty"]
-                           :alkupvm [:s alkupvm]
-                           :request-id [:s uuid]
-                           :oppilaitos [:s oppilaitos]
-                           :ehoks-id [:n (str (:ehoks-id hoks))]
-                           :opiskeluoikeus-oid [:s (:opiskeluoikeus-oid hoks)]
-                           :oppija-oid [:s oppija]
-                           :koulutustoimija [:s koulutustoimija]
-                           :kyselytyyppi [:s kyselytyyppi]
-                           :rahoituskausi [:s laskentakausi]}
-                          {:cond-expr "attribute_not_exists(oppija_toimija) AND attribute_not_exists(tyyppi_kausi)"})
-            (catch ConditionalCheckFailedException e
-              ;Lambdan suoritus päättyy onnistuneesti
-              (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
-                        oppija " koulutustoimijalla " koulutustoimija
-                        "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm))
-              (deactivate-kyselylinkki kyselylinkki))
-            (catch AwsServiceException e
-              (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
-              (deactivate-kyselylinkki kyselylinkki)
-              (throw e)))))
+      (if-let [item (ddb/get-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                                     :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]})]
+        (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
+                  oppija " koulutustoimijalla " koulutustoimija
+                  "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm))
+        (let [kyselylinkki
+              (get-kyselylinkki
+                (build-arvo-request-body alkupvm
+                                         uuid
+                                         kyselytyyppi
+                                         koulutustoimija
+                                         oppilaitos
+                                         tutkinto
+                                         suorituskieli))]
+          (when kyselylinkki
+            (try
+              (log/info "Tallennetaan kantaan " (str koulutustoimija "/" oppija)
+                        " " (str kyselytyyppi "/" laskentakausi))
+              (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                             :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]
+                             :kyselylinkki [:s kyselylinkki]
+                             :sahkoposti [:s (:sahkoposti hoks)]
+                             :suorituskieli [:s suorituskieli]
+                             :lahetystila [:s "ei_lahetetty"]
+                             :alkupvm [:s alkupvm]
+                             :request-id [:s uuid]
+                             :oppilaitos [:s oppilaitos]
+                             :ehoks-id [:n (str (:ehoks-id hoks))]
+                             :opiskeluoikeus-oid [:s (:opiskeluoikeus-oid hoks)]
+                             :oppija-oid [:s oppija]
+                             :koulutustoimija [:s koulutustoimija]
+                             :kyselytyyppi [:s kyselytyyppi]
+                             :rahoituskausi [:s laskentakausi]}
+                            {:cond-expr "attribute_not_exists(oppija_toimija) AND attribute_not_exists(tyyppi_kausi)"})
+              (catch ConditionalCheckFailedException e
+                (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
+                          oppija " koulutustoimijalla " koulutustoimija
+                          "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm))
+                (deactivate-kyselylinkki kyselylinkki))
+              (catch AwsServiceException e
+                (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
+                (deactivate-kyselylinkki kyselylinkki)
+                (throw e))))))
       (log/info "Väärä suoritustyyppi '" (:koodiarvo (:tyyppi (first suoritukset)))
                 "' tai koulutustoimija " koulutustoimija " ei ole mukana automaatiossa"))))
 
-(defn -handleHOKShyvaksytty [this event]
+(defn -handleHOKSherate [this event]
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try
         (let [hoks (parse-string (.getBody msg) true)]
           (if (nil? (s/check herate-schema hoks))
-            (save-HOKSHyvaksytty hoks)
+            (save-HOKS-herate hoks)
             (log/error (s/check herate-schema hoks))))
         (catch JsonParseException e
           (log/error "Virheellinen viesti " e))
