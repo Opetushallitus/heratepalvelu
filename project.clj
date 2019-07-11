@@ -8,6 +8,8 @@
                  [clj-http "3.10.0"]
                  [cheshire "5.8.1"]
                  [clj-time "0.15.1"]
+                 [com.amazonaws/aws-xray-recorder-sdk-core "2.2.1"]
+                 [com.amazonaws/aws-xray-recorder-sdk-aws-sdk-v2 "2.2.1"]
                  [com.amazonaws/aws-lambda-java-core "1.2.0"]
                  [com.amazonaws/aws-lambda-java-events "2.2.6"]
                  [software.amazon.awssdk/dynamodb "2.5.54"]
@@ -17,6 +19,7 @@
                  [prismatic/schema "1.1.10"]
                  [hiccup "1.0.5"]
                  [oph/clj-cas "0.5.3-SNAPSHOT"]]
+  :managed-dependencies [[software.amazon.awssdk/aws-core "2.5.54"]]
   :aot :all
   :source-paths ["src"]
   :java-source-paths ["src/java"]

@@ -3,7 +3,8 @@
   (:require [clj-cas.cas :refer :all]
             [environ.core :refer [env]]
             [cheshire.core :as json]
-            [clj-http.client :refer [request]]))
+            [clj-http.client :refer [request]]
+            [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]]))
 
 (defrecord CasClient [client params session-id])
 
@@ -52,7 +53,9 @@
         resp))))
 
 (defn cas-authenticated-get [url & [options]]
-  (cas-http :get url options nil))
+  (wrap-aws-xray url
+                 #(cas-http :get url options nil)))
 
 (defn cas-authenticated-post [url body & [options]]
-  (cas-http :post url options body))
+  (wrap-aws-xray url
+                 #(cas-http :post url options body)))

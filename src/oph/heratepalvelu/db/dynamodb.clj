@@ -2,7 +2,8 @@
   (:require [environ.core :refer [env]]
             [clojure.walk :refer [stringify-keys]]
             [clojure.tools.logging :as log])
-  (:import (software.amazon.awssdk.services.dynamodb DynamoDbClient)
+  (:import (clojure.lang Reflector)
+           (software.amazon.awssdk.services.dynamodb DynamoDbClient)
            (software.amazon.awssdk.services.dynamodb.model PutItemRequest
                                                            QueryRequest
                                                            UpdateItemRequest
@@ -10,11 +11,16 @@
                                                            AttributeValue
                                                            ReturnConsumedCapacity GetItemRequest)
            (software.amazon.awssdk.regions Region)
-           (clojure.lang Reflector)
-           (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap DefaultSdkAutoConstructList)))
+           (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap DefaultSdkAutoConstructList)
+           (software.amazon.awssdk.core.client.config ClientOverrideConfiguration)
+           (com.amazonaws.xray.interceptors TracingInterceptor)))
 
 (def ddb-client (-> (DynamoDbClient/builder)
                     (.region (Region/EU_WEST_1))
+                    (.overrideConfiguration
+                      (-> (ClientOverrideConfiguration/builder)
+                          (.addExecutionInterceptor (TracingInterceptor.))
+                          (.build)))
                     (.build)))
 
 (def ^:private comparison-operators

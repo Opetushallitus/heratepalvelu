@@ -6,3 +6,4 @@
 .nrepl-port
 target
 .lein-env
+.lein-failures
