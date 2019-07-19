@@ -74,11 +74,8 @@
 
     (if (and (check-suoritus-type (first suoritukset))
              (check-organisaatio-whitelist koulutustoimija))
-      (if-let [item (ddb/get-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
-                                     :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]})]
-        (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
-                  oppija " koulutustoimijalla " koulutustoimija
-                  "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm))
+      (if (empty? (ddb/get-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                                 :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]}))
         (let [kyselylinkki
               (get-kyselylinkki
                 (build-arvo-request-body alkupvm
@@ -116,7 +113,10 @@
               (catch AwsServiceException e
                 (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
                 (deactivate-kyselylinkki kyselylinkki)
-                (throw e))))))
+                (throw e)))))
+        (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
+                  oppija " koulutustoimijalla " koulutustoimija
+                  "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm) ")"))
       (log/info "Väärä suoritustyyppi '" (:koodiarvo (:tyyppi (first suoritukset)))
                 "' tai koulutustoimija " koulutustoimija " ei ole mukana automaatiossa"))))
 
@@ -131,7 +131,10 @@
         (catch JsonParseException e
           (log/error "Virheellinen viesti " e))
         (catch ExceptionInfo e
-          (if (and (> 399 (:status e))
-                   (< 500 (:status)))
+          (log/error e)
+          (if (and
+                (:status (:data e))
+                (< 399 (:status (:data e)))
+                (> 500 (:status (:data e))))
             (log/error "Unhandled client error " e)
             (throw e)))))))
