@@ -1,12 +1,14 @@
 (ns oph.heratepalvelu.external.aws-xray
+  (:require [clojure.string :as str])
   (:import (com.amazonaws.xray AWSXRay)))
 
-(defn wrap-aws-xray [url request]
-  (let [segment (AWSXRay/beginSubsegment "HTTP GET")]
+(defn wrap-aws-xray [url method request]
+  (let [segment (AWSXRay/beginSubsegment
+                  (str "HTTP " (str/upper-case (name method))))]
     (try
+      (.putHttp segment "request" {"method" (str/upper-case (name method))
+                                   "url" url})
       (let [resp (request)]
-        (.putHttp segment "request" {"method" "GET"
-                                     "url" url})
         (.putHttp segment "response"
                   {"status" (:status resp)
                    "content_length"

@@ -53,9 +53,9 @@
         resp))))
 
 (defn cas-authenticated-get [url & [options]]
-  (wrap-aws-xray url
+  (wrap-aws-xray url :get
                  #(cas-http :get url options nil)))
 
 (defn cas-authenticated-post [url body & [options]]
-  (wrap-aws-xray url
+  (wrap-aws-xray url :post
                  #(cas-http :post url options body)))

@@ -79,6 +79,7 @@ functions:
       arvo_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-url~true}
       arvo_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-user~true}
       arvo_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-pwd~true}
+      ehoks_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehoks-url~true}
   herateEmailHandler:
     name: ${self:custom.stack}-herateEmailHandler
     memorySize: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/emailhandler-memory~true}

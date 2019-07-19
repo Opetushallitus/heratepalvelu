@@ -116,7 +116,7 @@
                 (throw e)))))
         (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                   oppija " koulutustoimijalla " koulutustoimija
-                  "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm) ")"))
+                  "(tyyppi '" kyselytyyppi "' kausi " (kausi alkupvm) ")"))
       (log/info "Väärä suoritustyyppi '" (:koodiarvo (:tyyppi (first suoritukset)))
                 "' tai koulutustoimija " koulutustoimija " ei ole mukana automaatiossa"))))
 

@@ -8,9 +8,9 @@
   {:headers {"Caller-Id" (:caller-id env)}})
 
 (defn get [url & [options]]
-  (wrap-aws-xray url
+  (wrap-aws-xray url :get
                  #(client/get url (merge client-options options))))
 
 (defn post [url & [options]]
-  (wrap-aws-xray url
+  (wrap-aws-xray url :post
                  #(client/post url (merge client-options options))))
