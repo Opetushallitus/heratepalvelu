@@ -7,3 +7,6 @@
   (:body (client/get (str (:koski-url env) "opiskeluoikeus/" oid)
                       {:basic-auth [(:koski-user env) (:koski-pwd env)]
                        :as :json})))
+
+(defn get-updated-opiskeluoikeudet [ts]
+  [])

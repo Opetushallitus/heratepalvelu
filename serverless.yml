@@ -5,6 +5,7 @@ custom:
   stage: ${opt:stage, 'sieni'}
   stack: ${self:custom.stage}-${self:service}
   herateTable: ${self:custom.stack}-herateTable
+  chekedLastTable: ${self:custom.stack}-checkedLastTable
   orgWhitelistTable: ${self:custom.stack}-organisaatioWhitelist
   eHOKSherateQueue: ${self:custom.stack}-eHOKSHerateQueue
   eHOKSherateDLQ: ${self:custom.stack}-eHOKSherateDLQ
@@ -28,6 +29,7 @@ provider:
       Resource:
         - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.herateTable}"
         - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.herateTable}/index/lahetysIndex"
+        - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.checkedLastTable}"
     - Effect: Allow
       Action:
         - sqs:SendMessage
@@ -43,6 +45,7 @@ provider:
   environment:
     herate_table: ${self:custom.herateTable}
     orgwhitelist_table: ${self:custom.orgWhitelistTable}
+    checkedlast_table: ${self:custom.checkedLastTable}
     region: ${self:custom.region}
     cas_url: ${self:custom.virkailija_url}/cas
     cas_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-user~true}
@@ -131,6 +134,7 @@ resources:
                 - sahkoposti
                 - kyselylinkki
                 - suorituskieli
+                - viestintapalvelu-id
               ProjectionType: INCLUDE
             ProvisionedThroughput:
               ReadCapacityUnits: '5'
@@ -148,6 +152,21 @@ resources:
         ProvisionedThroughput:
           ReadCapacityUnits: 20
           WriteCapacityUnits: 10
+        SSESpecification:
+          SSEEnabled: true
+    checkedLastTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:custom.checkedLastTable}
+        AttributeDefinitions:
+          - AttributeName: type
+            AttributeType: S
+        KeySchema:
+          - AttributeName: type
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
         SSESpecification:
           SSEEnabled: true
     eHOKSHerateQueue:

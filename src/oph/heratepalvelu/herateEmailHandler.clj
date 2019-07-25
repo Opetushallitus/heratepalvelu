@@ -19,7 +19,7 @@
                                        {:index "lahetysIndex"
                                         :limit 100})]
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
-    (when (not= (count lahetettavat) 0)
+    (when (not-empty lahetettavat)
       (doseq [email lahetettavat]
         (try
           (let [time (System/currentTimeMillis)
@@ -28,9 +28,12 @@
               (ddb/update-item
                 {:toimija_oppija [:s (:toimija_oppija email)]
                  :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-                {:update-expr     "SET #lahetystila = :lahetystila"
-                 :expr-attr-names {"#lahetystila" "lahetystila"}
-                 :expr-attr-vals  {":lahetystila" [:s (str "viestintapalvelussa_" id)]}})
+                {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                       "SET #vp-id = :vp-id")
+                 :expr-attr-names {"#lahetystila" "lahetystila"
+                                   "#vp-id" "viestintapalvelu-id"}
+                 :expr-attr-vals  {":lahetystila" [:s (str "viestintapalvelussa")]
+                                   ":vp-id" [:n id]}})
               (catch AwsServiceException e
                 (log/error "Viesti " id " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
                 (log/error e)))

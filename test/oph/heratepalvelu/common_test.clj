@@ -1,6 +1,6 @@
-(ns oph.heratepalvelu.eHOKSherateHandler-test
+(ns oph.heratepalvelu.common-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.eHOKSherateHandler :refer :all]
+            [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.util :refer :all]))
 
 (deftest test-get-koulutustoimija-oid
@@ -25,10 +25,10 @@
 
 (deftest test-check-suoritus-type
   (testing "Check suoritustype"
-    (is (false? (check-suoritus-type {:tyyppi {:koodiarvo "valma"}})))
-    (is (true? (check-suoritus-type
+    (is (nil? (check-suoritus-type? {:tyyppi {:koodiarvo "valma"}})))
+    (is (true? (check-suoritus-type?
                  {:tyyppi {:koodiarvo "ammatillinentutkinto"}})))
-    (is (true? (check-suoritus-type
+    (is (true? (check-suoritus-type?
                  {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}})))))
 
 (deftest test-check-organisaatio-whitelist
@@ -37,8 +37,8 @@
       [oph.heratepalvelu.db.dynamodb/get-item mock-get-item-from-whitelist]
       (do
         (is (true?
-              (check-organisaatio-whitelist "1.2.246.562.10.346830761110")))
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761110")))
         (is (nil?
-              (check-organisaatio-whitelist "1.2.246.562.10.346830761111")))
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761111")))
         (is (nil?
-              (check-organisaatio-whitelist "1.2.246.562.10.346830761112")))))))
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761112")))))))
