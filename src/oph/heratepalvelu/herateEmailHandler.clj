@@ -4,8 +4,7 @@
             [clojure.tools.logging :as log]
             [clj-time.core :refer [today now]]
             [cheshire.core :refer [parse-string]])
-  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (fi.vm.sade.utils.cas CasClientException)))
+  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
   :name "oph.heratepalvelu.herateEmailHandler"
@@ -19,7 +18,7 @@
                                        {:index "lahetysIndex"
                                         :limit 100})]
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
-    (when (not-empty lahetettavat)
+    (when (seq lahetettavat)
       (doseq [email lahetettavat]
         (try
           (let [time (System/currentTimeMillis)

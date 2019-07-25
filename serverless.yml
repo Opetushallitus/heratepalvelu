@@ -5,7 +5,7 @@ custom:
   stage: ${opt:stage, 'sieni'}
   stack: ${self:custom.stage}-${self:service}
   herateTable: ${self:custom.stack}-herateTable
-  chekedLastTable: ${self:custom.stack}-checkedLastTable
+  checkedLastTable: ${self:custom.stack}-checkedLastTable
   orgWhitelistTable: ${self:custom.stack}-organisaatioWhitelist
   eHOKSherateQueue: ${self:custom.stack}-eHOKSHerateQueue
   eHOKSherateDLQ: ${self:custom.stack}-eHOKSherateDLQ
@@ -45,11 +45,17 @@ provider:
   environment:
     herate_table: ${self:custom.herateTable}
     orgwhitelist_table: ${self:custom.orgWhitelistTable}
-    checkedlast_table: ${self:custom.checkedLastTable}
     region: ${self:custom.region}
     cas_url: ${self:custom.virkailija_url}/cas
     cas_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-user~true}
     cas_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-pwd~true}
+    arvo_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-url~true}
+    arvo_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-user~true}
+    arvo_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-pwd~true}
+    koski_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-url~true}
+    koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user~true}
+    koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
+    organisaatio_url: ${self:custom.virkailija_url}/organisaatio-service/rest/organisaatio/v4/
 
 package:
   artifact: target/uberjar/${self:service}-0.1.0-SNAPSHOT-standalone.jar
@@ -74,15 +80,7 @@ functions:
               - eHOKSHerateQueue
               - Arn
     environment:
-      organisaatio_url: ${self:custom.virkailija_url}/organisaatio-service/rest/organisaatio/v4/
-      koski_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-url~true}
-      koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user~true}
-      koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
       caller_id: ${self:custom.stack}-herateEmailHandler
-      arvo_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-url~true}
-      arvo_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-user~true}
-      arvo_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-pwd~true}
-      ehoks_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehoks-url~true}
   herateEmailHandler:
     name: ${self:custom.stack}-herateEmailHandler
     memorySize: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/emailhandler-memory~true}
@@ -93,6 +91,17 @@ functions:
       viestintapalvelu_url: ${self:custom.virkailija_url}/ryhmasahkoposti-service/email
     events:
       - schedule: cron(${ssm:/${self:custom.stage}/serverless/heratepalvelu/emailhandler-cron~true})
+  updatedOpiskeluoikeusHandler:
+    name: ${self:custom.stack}-updatedOpiskeluoikeusHandler
+    memorySize: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/updatedoohandler-memory~true}
+    timeout: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/updatedoohandler-timeout~true}
+    handler: oph.heratepalvelu.UpdatedOpiskeluoikeusHandler::handleUpdatedOpiskeluoikeus
+    environment:
+      caller_id: ${self:custom.stack}-updatedOpiskeluoikeusHandler
+      checkedlast_table: ${self:custom.checkedLastTable}
+      ehoks_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehoks-url~true}
+    events:
+      - schedule: cron(${ssm:/${self:custom.stage}/serverless/heratepalvelu/updatedoohandler-cron~true})
 
 resources:
   Description: Herätepalvelu Arvo-kyselylinkkien lähettämiseen
