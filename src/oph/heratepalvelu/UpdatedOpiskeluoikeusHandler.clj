@@ -4,13 +4,23 @@
     [oph.heratepalvelu.external.ehoks :refer [get-hoks-by-opiskeluoikeus]]
     [oph.heratepalvelu.db.dynamodb :as ddb]
     [oph.heratepalvelu.common :refer :all]
-    [environ.core :refer [env]]))
+    [environ.core :refer [env]]
+    [clojure.tools.logging :as log]
+    [schema.core :as s]))
 
 (gen-class
   :name "oph.heratepalvelu.UpdatedOpiskeluoikeusHandler"
   :methods [[^:static handleUpdatedOpiskeluoikeus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
+
+(defn- parse-herate [hoks kyselytyyppi alkupvm]
+  {:ehoks-id           (:id hoks)
+   :kyselytyyppi       kyselytyyppi
+   :opiskeluoikeus-oid (:opiskeluoikeus-oid hoks)
+   :oppija-oid         (:oppija-oid hoks)
+   :sahkoposti         (:sahkoposti hoks)
+   :alkupvm            alkupvm})
 
 (defn -handleUpdatedOpiskeluoikeus [this event context]
   (let [last-modified (:timestamp (ddb/get-item
@@ -28,20 +38,21 @@
                        (check-suoritus-type? suoritus)
                        (check-organisaatio-whitelist?
                          koulustoimija (:updated-at opiskeluoikeus)))
-              (let [hoks (get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))]
-                (cond
-                  (= (:tyyppi suoritus)
-                     "ammatillinentutkinto")
-                  (save-herate (assoc hoks :ehoks-id (:id hoks))
-                               opiskeluoikeus
-                               "tutkinnon_suorittaneet"
-                               vahvistus-pvm)
-                  (= (:tyyppi suoritus)
-                     "ammatillinentutkintoosittainen")
-                  (save-herate (assoc hoks :ehoks-id (:id hoks))
-                               opiskeluoikeus
-                               "tutkinnon_osia_suorittaneet"
-                               vahvistus-pvm))))))
+              (let [hoks (get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))
+                    herate
+                    (parse-herate
+                      hoks
+                      (cond
+                        (= (get-in suoritus [:tyyppi :koodiarvo])
+                           "ammatillinentutkinto")
+                        "tutkinnon_suorittaneet"
+                        (= (get-in suoritus [:tyyppi :koodiarvo])
+                           "ammatillinentutkintoosittainen")
+                        "tutkinnon_osia_suorittaneet")
+                      vahvistus-pvm)]
+                (if (nil? (s/check herate-schema herate))
+                  (save-herate herate opiskeluoikeus)
+                  (log/error (s/check herate-schema hoks)))))))
         (ddb/update-item
           {:type [:s "opiskeluoikeus"]}
           {:update-expr     "SET #timestamp = :timestamp"
@@ -50,6 +61,7 @@
                             [:n (str (:updated-at (last opiskeluoikeudet)))]}}
           (:checkedlast-table env))
         (when (> 30000 (.getRemainingTimeInMillis context))
-          (recur (sort-by :updated-at
-                          (get-updated-opiskeluoikeudet
-                            (:updated-at (last opiskeluoikeudet))))))))))
+          ;(recur (sort-by :updated-at
+          ;                (get-updated-opiskeluoikeudet
+          ;                  (:updated-at (last opiskeluoikeudet)))))
+          )))))

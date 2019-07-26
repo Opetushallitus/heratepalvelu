@@ -56,6 +56,7 @@ provider:
     koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user~true}
     koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
     organisaatio_url: ${self:custom.virkailija_url}/organisaatio-service/rest/organisaatio/v4/
+    virkailija_url: ${self:custom.virkailija_url}
 
 package:
   artifact: target/uberjar/${self:service}-0.1.0-SNAPSHOT-standalone.jar
@@ -99,7 +100,7 @@ functions:
     environment:
       caller_id: ${self:custom.stack}-updatedOpiskeluoikeusHandler
       checkedlast_table: ${self:custom.checkedLastTable}
-      ehoks_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehoks-url~true}
+      ehoks_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/virkailija-url~true}/ehoks-virkailija-backend/api/v1/
     events:
       - schedule: cron(${ssm:/${self:custom.stage}/serverless/heratepalvelu/updatedoohandler-cron~true})
 

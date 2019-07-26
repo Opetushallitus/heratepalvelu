@@ -1,10 +1,15 @@
 (ns oph.heratepalvelu.external.cas-client
   (:refer-clojure :exclude [get])
   (:require [clj-cas.cas :refer :all]
+            [clj-cas.client :as cl]
             [environ.core :refer [env]]
             [cheshire.core :as json]
             [clj-http.client :refer [request]]
-            [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]]))
+            [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]])
+  (:import (fi.vm.sade.utils.cas CasParams
+                                 TicketGrantingTicketClient
+                                 ServiceTicketClient)
+           (org.http4s Uri)))
 
 (defrecord CasClient [client params session-id])
 
@@ -40,13 +45,15 @@
         cas-params     (:params @client)
         cas-session-id (:session-id @client)]
     (when (nil? @cas-session-id)
-      (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params "JSESSIONID"))))
+      (reset! cas-session-id
+              (.run (.fetchCasSession cas-client cas-params "JSESSIONID"))))
     (let [resp (request (merge {:url url :method method}
                                (create-params cas-session-id body)
                                options))]
       (if (= 302 (:status resp))
         (do
-          (reset! cas-session-id (.run (.fetchCasSession cas-client cas-params "JSESSIONID")))
+          (reset! cas-session-id
+                  (.run (.fetchCasSession cas-client cas-params "JSESSIONID")))
           (request (merge {:url url :method method}
                           (create-params cas-session-id body)
                           options)))
@@ -59,3 +66,19 @@
 (defn cas-authenticated-post [url body & [options]]
   (wrap-aws-xray url :post
                  #(cas-http :post url options body)))
+
+(defn- get-uri [uri]
+  (-> (Uri/fromString uri)
+      (.toOption)
+      (.get)))
+
+(defn get-service-ticket [service suffix]
+  (let [username    (:cas-user env)
+        password    (:cas-pwd env)
+        params      (CasParams/apply service suffix username password)
+        service-uri (get-uri (str (:virkailija-url env) service "/" suffix))
+        cas-uri     (get-uri (:cas-url env))
+        tgt (TicketGrantingTicketClient/getTicketGrantingTicket
+              cas-uri cl/client params)]
+    (.run (ServiceTicketClient/getServiceTicketFromTgt
+            cl/client service-uri (.run tgt)))))

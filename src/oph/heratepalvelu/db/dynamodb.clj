@@ -72,8 +72,20 @@
               (when (and (some? v)
                          (not (instance? DefaultSdkAutoConstructMap v))
                          (not (instance? DefaultSdkAutoConstructList v)))
-                (reduced v))))
+                (reduced (cond
+                           (= t "n")
+                           (Integer. v)
+                           (= t "ns")
+                           (map #(Integer. %) v)
+                           (= t "m")
+                           (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
+                                      {} (into {} v))
+                           :else v)))))
           nil (vals attribute-types)))
+
+(defn- map-attribute-vals-to-vals [item]
+  (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
+             {} (into {} item)))
 
 (defn put-item
   ([item options]
@@ -105,9 +117,7 @@
          items (.items response)]
      (log/info (.toString (.consumedCapacity response)))
      (into [] (map
-                (fn [item]
-                  (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
-                             {} (into {} item)))
+                map-attribute-vals-to-vals
                 items)))))
 
 (defn update-item
@@ -136,5 +146,4 @@
                   (.build))
           response (.getItem ddb-client req)
           item (.item response)]
-      (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
-                 {} (into {} item)))))
+      (map-attribute-vals-to-vals item))))

@@ -8,10 +8,19 @@
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [environ.core :refer [env]])
+            [environ.core :refer [env]]
+            [schema.core :as s])
   (:import (java.util UUID)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
+
+(s/defschema herate-schema
+             {:ehoks-id           s/Num
+              :kyselytyyppi       s/Str
+              :opiskeluoikeus-oid s/Str
+              :oppija-oid         s/Str
+              :sahkoposti         s/Str
+              :alkupvm            s/Str})
 
 (defn generate-uuid []
   (.toString (UUID/randomUUID)))
@@ -47,7 +56,7 @@
      (if
        (when (:kayttoonottopvm item)
          (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-             timestamp))
+             (* 1000 timestamp)))
        true
        (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa")))))
 
@@ -70,12 +79,14 @@
     (log/warn "Opiskeluoikeudessa" (:oid opiskeluoikeus)
               "ei vahvistus päivämäärää")))
 
-(defn save-herate [hoks opiskeluoikeus kyselytyyppi heratepvm]
-  (log/info "Kerätään tietoja " (:ehoks-id hoks) " " (:kyselytyyppi hoks))
-  (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
+(defn save-herate [herate opiskeluoikeus]
+  (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
+  (let [kyselytyyppi (:kyselytyyppi herate)
+        alkupvm (:alkupvm herate)
+        koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
         suoritus (first (seq (:suoritukset opiskeluoikeus)))
-        oppija (str (:oppija-oid hoks))
-        laskentakausi (kausi heratepvm)
+        oppija (str (:oppija-oid herate))
+        laskentakausi (kausi alkupvm)
         uuid (generate-uuid)
         oppilaitos (:oid (:oppilaitos opiskeluoikeus))
         tutkinto
@@ -87,7 +98,7 @@
       (if-let [kyselylinkki
                (get-kyselylinkki
                  (build-arvo-request-body
-                   heratepvm
+                   alkupvm
                    uuid
                    kyselytyyppi
                    koulutustoimija
@@ -100,24 +111,24 @@
           (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
                          :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]
                          :kyselylinkki [:s kyselylinkki]
-                         :sahkoposti [:s (:sahkoposti hoks)]
+                         :sahkoposti [:s (:sahkoposti herate)]
                          :suorituskieli [:s suorituskieli]
                          :lahetystila [:s "ei_lahetetty"]
-                         :alkupvm [:s heratepvm]
+                         :alkupvm [:s alkupvm]
                          :request-id [:s uuid]
                          :oppilaitos [:s oppilaitos]
-                         :ehoks-id [:n (str (:ehoks-id hoks))]
+                         :ehoks-id [:n (str (:ehoks-id herate))]
                          :opiskeluoikeus-oid [:s (:oid opiskeluoikeus)]
                          :oppija-oid [:s oppija]
                          :koulutustoimija [:s koulutustoimija]
                          :kyselytyyppi [:s kyselytyyppi]
                          :rahoituskausi [:s laskentakausi]
-                         :viestintapalvelu-id -1}
+                         :viestintapalvelu-id [:n "-1"]}
                         {:cond-expr "attribute_not_exists(oppija_toimija) AND attribute_not_exists(tyyppi_kausi)"})
           (catch ConditionalCheckFailedException e
             (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                       oppija " koulutustoimijalla " koulutustoimija
-                      "(tyyppi " kyselytyyppi " kausi " (kausi heratepvm))
+                      "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm))
             (deactivate-kyselylinkki kyselylinkki))
           (catch AwsServiceException e
             (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
