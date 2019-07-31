@@ -58,7 +58,7 @@
           {:update-expr     "SET #timestamp = :timestamp"
            :expr-attr-names {"#timestamp" "timestamp"}
            :expr-attr-vals {":timestamp"
-                            [:n (str (:updated-at (last opiskeluoikeudet)))]}}
+                            [:n (:updated-at (last opiskeluoikeudet))]}}
           (:checkedlast-table env))
         (when (> 30000 (.getRemainingTimeInMillis context))
           ;(recur (sort-by :updated-at

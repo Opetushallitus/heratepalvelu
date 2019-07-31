@@ -10,6 +10,5 @@
              (str (:ehoks-url env) "hoks/opiskeluoikeus/" opiskeluoikeus-oid)
              {:headers {:ticket (cas/get-service-ticket
                                   "/ehoks-virkailija-backend"
-                                  "cas-security-check")
-                        :caller-id (:caller-id env)}
+                                  "cas-security-check")}
               :as :json}))))

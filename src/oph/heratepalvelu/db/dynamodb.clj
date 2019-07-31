@@ -45,10 +45,9 @@
    (if-let [t (get attribute-types tk)]
      (.build (invoke-instance-method
                (AttributeValue/builder) t [(if (= t "n") (str v) v)]))
-     (throw (-> (Exception. (str "Unknown attribute type " type))))))
-  ([tk-v]
-   (let [[tk v] tk-v]
-     (to-attribute-value tk v))))
+     (throw (Exception. (str "Unknown attribute type " t)))))
+  ([[tk v]]
+   (to-attribute-value tk v)))
 
 (defn- build-condition [op-vals]
   (let [[op vals] op-vals

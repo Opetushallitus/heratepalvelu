@@ -7,10 +7,16 @@
 (def client-options
   {:headers {"Caller-Id" (:caller-id env)}})
 
+(defn- merge-options [options]
+  (merge (assoc client-options :headers
+                               (merge (:headers client-options)
+                                      (:headers options)))
+         (dissoc options :headers)))
+
 (defn get [url & [options]]
   (wrap-aws-xray url :get
-                 #(client/get url (merge client-options options))))
+                 #(client/get url (merge-options options))))
 
 (defn post [url & [options]]
   (wrap-aws-xray url :post
-                 #(client/post url (merge client-options options))))
+                 #(client/post url (merge-options options))))
