@@ -25,10 +25,6 @@
    :sahkoposti         (:sahkoposti hoks)
    :alkupvm            alkupvm})
 
-(defn timestamp-to-datetime-string [ts]
-  (f/unparse (:date-hour-minute-second-ms f/formatters)
-             (c/from-long ts)))
-
 (defn date-string-to-timestamp [date]
   (c/to-long (f/parse (:date f/formatters)
                       date)))
