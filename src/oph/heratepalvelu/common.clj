@@ -69,16 +69,6 @@
               oppija " koulutustoimijalla " koulutustoimija
               "(tyyppi '" kyselytyyppi "' kausi " laskentakausi ")")))
 
-(defn get-vahvistus-pvm [opiskeluoikeus]
-  (if-let [vahvistus-pvm (-> (:suoritukset opiskeluoikeus)
-                             (seq)
-                             (first)
-                             (:vahvistus)
-                             (:päivä))]
-    vahvistus-pvm
-    (log/warn "Opiskeluoikeudessa" (:oid opiskeluoikeus)
-              "ei vahvistus päivämäärää")))
-
 (defn save-herate [herate opiskeluoikeus]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
   (let [kyselytyyppi (:kyselytyyppi herate)

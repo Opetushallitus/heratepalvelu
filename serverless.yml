@@ -5,7 +5,7 @@ custom:
   stage: ${opt:stage, 'sieni'}
   stack: ${self:custom.stage}-${self:service}
   herateTable: ${self:custom.stack}-herateTable
-  checkedLastTable: ${self:custom.stack}-checkedLastTable
+  metadataTable: ${self:custom.stack}-metadataTable
   orgWhitelistTable: ${self:custom.stack}-organisaatioWhitelist
   eHOKSherateQueue: ${self:custom.stack}-eHOKSHerateQueue
   eHOKSherateDLQ: ${self:custom.stack}-eHOKSherateDLQ
@@ -29,7 +29,7 @@ provider:
       Resource:
         - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.herateTable}"
         - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.herateTable}/index/lahetysIndex"
-        - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.checkedLastTable}"
+        - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.metadataTable}"
     - Effect: Allow
       Action:
         - sqs:SendMessage
@@ -45,6 +45,7 @@ provider:
   environment:
     herate_table: ${self:custom.herateTable}
     orgwhitelist_table: ${self:custom.orgWhitelistTable}
+    metadata_table: ${self:custom.metadataTable}
     region: ${self:custom.region}
     cas_url: ${self:custom.virkailija_url}/cas
     cas_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-user~true}
@@ -99,7 +100,6 @@ functions:
     handler: oph.heratepalvelu.UpdatedOpiskeluoikeusHandler::handleUpdatedOpiskeluoikeus
     environment:
       caller_id: ${self:custom.stack}-updatedOpiskeluoikeusHandler
-      checkedlast_table: ${self:custom.checkedLastTable}
       ehoks_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/virkailija-url~true}/ehoks-virkailija-backend/api/v1/
     events:
       - schedule: cron(${ssm:/${self:custom.stage}/serverless/heratepalvelu/updatedoohandler-cron~true})
@@ -164,15 +164,15 @@ resources:
           WriteCapacityUnits: 10
         SSESpecification:
           SSEEnabled: true
-    checkedLastTable:
+    metadataTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:custom.checkedLastTable}
+        TableName: ${self:custom.metadataTable}
         AttributeDefinitions:
-          - AttributeName: type
+          - AttributeName: key
             AttributeType: S
         KeySchema:
-          - AttributeName: type
+          - AttributeName: key
             KeyType: HASH
         ProvisionedThroughput:
           ReadCapacityUnits: 5
