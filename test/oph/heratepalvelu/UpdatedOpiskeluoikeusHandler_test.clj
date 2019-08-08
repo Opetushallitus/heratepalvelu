@@ -11,3 +11,8 @@
                                            :tyyppi {:koodiarvo "ammatillinentutkinto"}
                                            :vahvistus {:päivä "2019-07-24"}}]})
         "2019-07-24")))
+
+(deftest test-date-string-to-timestamp
+  (testing "Transforming date-string to timestamp")
+  (is (date-string-to-timestamp "1970-01-01") 0)
+  (is (date-string-to-timestamp "2018-08-01") 1564617600))
