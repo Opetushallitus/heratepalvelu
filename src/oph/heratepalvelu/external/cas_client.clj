@@ -72,13 +72,16 @@
       (.toOption)
       (.get)))
 
+(def tgt (atom nil))
+
 (defn get-service-ticket [service suffix]
   (let [username    (:cas-user env)
         password    (:cas-pwd env)
         params      (CasParams/apply service suffix username password)
         service-uri (get-uri (str (:virkailija-url env) service "/" suffix))
-        cas-uri     (get-uri (:cas-url env))
-        tgt (TicketGrantingTicketClient/getTicketGrantingTicket
-              cas-uri cl/client params)]
+        cas-uri     (get-uri (:cas-url env))]
+    (when (nil? @tgt)
+      (reset! tgt (.run (TicketGrantingTicketClient/getTicketGrantingTicket
+                          cas-uri cl/client params))))
     (.run (ServiceTicketClient/getServiceTicketFromTgt
-            cl/client service-uri (.run tgt)))))
+            cl/client service-uri @tgt))))

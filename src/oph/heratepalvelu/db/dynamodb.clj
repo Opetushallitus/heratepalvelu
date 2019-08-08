@@ -1,7 +1,5 @@
 (ns oph.heratepalvelu.db.dynamodb
-  (:require [environ.core :refer [env]]
-            [clojure.walk :refer [stringify-keys]]
-            [clojure.tools.logging :as log])
+  (:require [environ.core :refer [env]])
   (:import (clojure.lang Reflector)
            (software.amazon.awssdk.services.dynamodb DynamoDbClient)
            (software.amazon.awssdk.services.dynamodb.model PutItemRequest
@@ -9,7 +7,7 @@
                                                            UpdateItemRequest
                                                            Condition
                                                            AttributeValue
-                                                           ReturnConsumedCapacity GetItemRequest)
+                                                           GetItemRequest)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap DefaultSdkAutoConstructList)
            (software.amazon.awssdk.core.client.config ClientOverrideConfiguration)
@@ -45,7 +43,7 @@
    (if-let [t (get attribute-types tk)]
      (.build (invoke-instance-method
                (AttributeValue/builder) t [(if (= t "n") (str v) v)]))
-     (throw (Exception. (str "Unknown attribute type " t)))))
+     (throw (Exception. (str "Unknown attribute type " tk)))))
   ([[tk v]]
    (to-attribute-value tk v)))
 
@@ -82,7 +80,7 @@
                            :else v)))))
           nil (vals attribute-types)))
 
-(defn- map-attribute-vals-to-vals [item]
+(defn- map-attribute-values-to-vals [item]
   (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
              {} (into {} item)))
 
@@ -111,12 +109,10 @@
                                            (.indexName (:index options))
                                            (:limit options)
                                            (.limit (int (:limit options))))
-                                         (.returnConsumedCapacity ReturnConsumedCapacity/INDEXES)
                                          (.build)))
          items (.items response)]
-     (log/info (.toString (.consumedCapacity response)))
      (into [] (map
-                map-attribute-vals-to-vals
+                map-attribute-values-to-vals
                 items)))))
 
 (defn update-item
@@ -131,7 +127,8 @@
                    (:expr-attr-names options)
                    (.expressionAttributeNames (:expr-attr-names options))
                    (:expr-attr-vals options)
-                   (.expressionAttributeValues (map-vals-to-attribute-values (:expr-attr-vals options))))
+                   (.expressionAttributeValues
+                     (map-vals-to-attribute-values (:expr-attr-vals options))))
                  (.build))]
      (.updateItem ddb-client req))))
 
@@ -145,4 +142,4 @@
                   (.build))
           response (.getItem ddb-client req)
           item (.item response)]
-      (map-attribute-vals-to-vals item))))
+      (map-attribute-values-to-vals item))))
