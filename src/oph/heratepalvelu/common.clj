@@ -114,7 +114,8 @@
                          :kyselytyyppi [:s kyselytyyppi]
                          :rahoituskausi [:s laskentakausi]
                          :viestintapalvelu-id [:n "-1"]}
-                        {:cond-expr "attribute_not_exists(oppija_toimija) AND attribute_not_exists(tyyppi_kausi)"})
+                        {:cond-expr (str "attribute_not_exists(oppija_toimija) "
+                                         "AND attribute_not_exists(tyyppi_kausi)")})
           (catch ConditionalCheckFailedException e
             (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                       oppija " koulutustoimijalla " koulutustoimija

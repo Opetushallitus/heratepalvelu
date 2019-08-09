@@ -27,7 +27,7 @@
                                   :body (generate-string data)
                                   :basic-auth [(:arvo-user env) (:arvo-pwd env)]
                                   :as :json})]
-    (if (get-in resp [:body :errors])
+    (if (some? (get-in resp [:body :errors]))
       (log/error (:body resp))
       (get-in resp [:body :kysely_linkki]))))
 

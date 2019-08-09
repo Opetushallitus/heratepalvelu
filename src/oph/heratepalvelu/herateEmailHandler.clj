@@ -18,7 +18,7 @@
                                  (str/split alkupvm #"-"))]
     (t/before? (t/today)
                (t/plus (t/local-date years months days)
-                       (t/days 30)))))
+                       (t/days 29)))))
 
 (defn -handleSendEmails [this event context]
   (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
