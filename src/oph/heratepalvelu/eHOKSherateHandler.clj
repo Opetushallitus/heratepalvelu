@@ -17,22 +17,22 @@
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try
-        (let [hoks (parse-string (.getBody msg) true)
-              opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid hoks))
+        (let [herate (parse-string (.getBody msg) true)
+              opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid herate))
               koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
           (if
-            (nil? (s/check herate-schema hoks))
+            (nil? (s/check herate-schema herate))
             (when (and (check-suoritus-type?
                          (first (seq (:suoritukset opiskeluoikeus))))
                        (check-organisaatio-whitelist? koulutustoimija))
-              (save-herate hoks opiskeluoikeus))
-            (log/error (s/check herate-schema hoks))))
+              (save-herate herate opiskeluoikeus))
+            (log/error (s/check herate-schema herate))))
         (catch JsonParseException e
-          (log/error "Virheellinen viesti " e))
+          (log/error "Virhe viestin lukemisessa: " e))
         (catch ExceptionInfo e
           (if (and
-                (:status (:data e))
-                (< 399 (:status (:data e)))
-                (> 500 (:status (:data e))))
-            (log/error "Unhandled client error " e)
+                (:status (ex-data e))
+                (< 399 (:status (ex-data e)))
+                (> 500 (:status (ex-data e))))
+            (log/error "Unhandled client error: " e)
             (throw e)))))))

@@ -8,7 +8,8 @@
     [clojure.tools.logging :as log]
     [schema.core :as s]
     [clj-time.format :as f]
-    [clj-time.coerce :as c])
+    [clj-time.coerce :as c]
+    [clj-time.core :as t])
   (:import (clojure.lang ExceptionInfo)))
 
 (gen-class
@@ -25,9 +26,12 @@
    :sahkoposti         (:sahkoposti hoks)
    :alkupvm            alkupvm})
 
-(defn date-string-to-timestamp [date]
-  (c/to-long (f/parse (:date f/formatters)
-                      date)))
+(defn date-string-to-timestamp
+  ([date-str fmt]
+   (c/to-long (f/parse (fmt f/formatters)
+                       date-str)))
+  ([date-str]
+   (date-string-to-timestamp date-str :date)))
 
 (defn get-vahvistus-pvm [opiskeluoikeus]
   (if-let [vahvistus-pvm (-> (:suoritukset opiskeluoikeus)
@@ -39,13 +43,22 @@
     (log/warn "Opiskeluoikeudessa" (:oid opiskeluoikeus)
               "ei vahvistus päivämäärää")))
 
-(defn update-last-checked [datetime]
-  (ddb/update-item
-    {:key [:s "opiskeluoikeus-last-checked"]}
-    {:update-expr     "SET #value = :value"
-     :expr-attr-names {"#value" "value"}
-     :expr-attr-vals {":value" [:s datetime]}}
-    (:metadata-table env)))
+(defn update-last-checked
+  "Opiskeluoikeuksien aikaleimat eivät ole tarkkoja, vaan transaktion
+   aloituksen aikoja, joten muutoksien hakuhetken jälkeen tietokantaan voi
+   tallentua aikaleimoja menneisyyteen. Hakemalla 1 min bufferilla
+   varmistetaan että kaikki muutokset käsitellään vähintään 1 kerran."
+  [datetime]
+  (let [time-with-buffer
+        (t/minus (f/parse (f/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
+                          datetime)
+                 (t/minutes 1))]
+    (ddb/update-item
+      {:key [:s "opiskeluoikeus-last-checked"]}
+      {:update-expr     "SET #value = :value"
+       :expr-attr-names {"#value" "value"}
+       :expr-attr-vals {":value" [:s (str time-with-buffer)]}}
+      (:metadata-table env))))
 
 (defn -handleUpdatedOpiskeluoikeus [this event context]
   (let [last-checked
