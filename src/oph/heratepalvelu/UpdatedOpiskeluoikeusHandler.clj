@@ -50,8 +50,7 @@
    varmistetaan että kaikki muutokset käsitellään vähintään 1 kerran."
   [datetime]
   (let [time-with-buffer
-        (t/minus (f/parse (f/formatter "yyyy-MM-dd'T'HH:mm:ss.SSSSSS")
-                          datetime)
+        (t/minus datetime
                  (t/minutes 1))]
     (ddb/update-item
       {:key [:s "opiskeluoikeus-last-checked"]}
@@ -60,14 +59,25 @@
        :expr-attr-vals {":value" [:s (str time-with-buffer)]}}
       (:metadata-table env))))
 
+(defn get-kysely-type [suoritus]
+  (cond
+    (= (get-in suoritus [:tyyppi :koodiarvo])
+       "ammatillinentutkinto")
+    "tutkinnon_suorittaneet"
+    (= (get-in suoritus [:tyyppi :koodiarvo])
+       "ammatillinentutkintoosittainen")
+    "tutkinnon_osia_suorittaneet"))
+
 (defn -handleUpdatedOpiskeluoikeus [this event context]
-  (let [last-checked
+  (let [start-time (System/currentTimeMillis)
+        last-checked
         (:value (ddb/get-item
                   {:key [:s "opiskeluoikeus-last-checked"]}
                   (:metadata-table env)))]
     (log/info "Haetaan" last-checked "jälkeen muuttuneet opiskeluoikeudet")
     (loop [opiskeluoikeudet (get-updated-opiskeluoikeudet
-                              last-checked)]
+                              last-checked 0)
+           next-page 1]
       (when (seq opiskeluoikeudet)
         (doseq [opiskeluoikeus opiskeluoikeudet]
           (let [koulustoimija (get-koulutustoimija-oid opiskeluoikeus)
@@ -88,30 +98,14 @@
                                        (:oid opiskeluoikeus)
                                        "ei HOKSia")
                              (throw e))))]
-                (let [herate
-                      (parse-herate
-                        hoks
-                        (cond
-                          (= (get-in suoritus [:tyyppi :koodiarvo])
-                             "ammatillinentutkinto")
-                          "tutkinnon_suorittaneet"
-                          (= (get-in suoritus [:tyyppi :koodiarvo])
-                             "ammatillinentutkintoosittainen")
-                          "tutkinnon_osia_suorittaneet")
-                        vahvistus-pvm)]
-                  (if (nil? (s/check herate-schema herate))
-                    (try
-                      (save-herate herate opiskeluoikeus)
-                      (catch Exception e
-                        (update-last-checked
-                          (:aikaleima opiskeluoikeus))
-                        (throw e)))
-                    (log/error (s/check herate-schema hoks))))))))
-        (update-last-checked (:aikaleima
-                               (last opiskeluoikeudet)))
+                (save-herate
+                  (parse-herate
+                    hoks
+                    (get-kysely-type suoritus)
+                    vahvistus-pvm)
+                  opiskeluoikeus)))))
         (when (> 30000 (.getRemainingTimeInMillis context))
-          ;(recur
-          ;       (get-updated-opiskeluoikeudet
-          ;         (timestamp-to-datetime-string
-          ;           starting-time)))
-          )))))
+          (recur
+            (get-updated-opiskeluoikeudet last-checked next-page)
+            (+ next-page 1)))))
+    (update-last-checked (c/from-long start-time))))

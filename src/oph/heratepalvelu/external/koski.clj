@@ -7,7 +7,7 @@
                       {:basic-auth [(:koski-user env) (:koski-pwd env)]
                        :as :json})))
 
-(defn get-updated-opiskeluoikeudet [datetime-str]
+(defn get-updated-opiskeluoikeudet [datetime-str page]
   (let
     [resp
      (client/get
@@ -16,7 +16,9 @@
                        ;"opiskeluoikeudenTila" "valmistunut"
                        ; Vahvistettu ei ole välttämättä valmistunut Koskessa,
                        ; muutos tähän olisi hyvä Koskessa
-                       "muuttunutJälkeen" datetime-str}
+                       "muuttunutJälkeen" datetime-str
+                       "pageSize" 100
+                       "pageNumber" page}
                           :basic-auth [(:koski-user env) (:koski-pwd env)]
                           :as :json-strict})]
     (sort-by :aikaleima

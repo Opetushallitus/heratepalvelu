@@ -20,13 +20,10 @@
         (let [herate (parse-string (.getBody msg) true)
               opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid herate))
               koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
-          (if
-            (nil? (s/check herate-schema herate))
-            (when (and (check-suoritus-type?
-                         (first (seq (:suoritukset opiskeluoikeus))))
-                       (check-organisaatio-whitelist? koulutustoimija))
-              (save-herate herate opiskeluoikeus))
-            (log/error (s/check herate-schema herate))))
+          (when (and (check-suoritus-type?
+                       (first (seq (:suoritukset opiskeluoikeus))))
+                     (check-organisaatio-whitelist? koulutustoimija))
+            (save-herate herate opiskeluoikeus)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " e))
         (catch ExceptionInfo e

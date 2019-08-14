@@ -2,34 +2,41 @@
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.external.http-client :as client]
-            [cheshire.core :refer [generate-string]]))
+            [cheshire.core :refer [generate-string]]
+            [clojure.string :as str])
+  (:import (clojure.lang ExceptionInfo)))
 
-(defn build-arvo-request-body [alkupvm
+(defn build-arvo-request-body [herate
+                               opiskeluoikeus
                                request-id
-                               kyselytyyppi
-                               koulutustoimija
-                               oppilaitos
-                               tutkintotunnus
-                               suorituskieli]
-  (assoc {} :vastaamisajan_alkupvm          alkupvm
-            :kyselyn_tyyppi                 kyselytyyppi
-            :tutkintotunnus                 tutkintotunnus
-            :tutkinnon_suorituskieli        suorituskieli
-            :koulutustoimija_oid            koulutustoimija
-            :oppilaitos_oid                 oppilaitos
-            :request_id                     request-id
-            :toimipiste_oid                 nil
-            :hankintakoulutuksen_toteuttaja nil))<
+                               koulutustoimija]
+  (let [suoritus (first (:suoritukset opiskeluoikeus))]
+    {:vastaamisajan_alkupvm (:alkupvm herate)
+     :kyselyn_tyyppi (:kyselytyyppi herate)
+     :tutkintotunnus (:koodiarvo
+                       (:tunniste
+                         (:koulutusmoduuli suoritus)))
+     :tutkinnon_suorituskieli (str/lower-case
+                                (:koodiarvo (:suorituskieli suoritus)))
+     :koulutustoimija_oid koulutustoimija
+     :oppilaitos_oid (:oid (:oppilaitos opiskeluoikeus))
+     :request_id request-id
+     :toimipiste_oid                 nil
+     :hankintakoulutuksen_toteuttaja nil}))
 
 (defn get-kyselylinkki [data]
-  (let [resp (client/post (:arvo-url env)
-                                 {:content-type "application/json"
-                                  :body (generate-string data)
-                                  :basic-auth [(:arvo-user env) (:arvo-pwd env)]
-                                  :as :json})]
-    (if (some? (get-in resp [:body :errors]))
-      (log/error (:body resp))
-      (get-in resp [:body :kysely_linkki]))))
+  (try
+    (let [resp (client/post
+                 (:arvo-url env)
+                 {:content-type "application/json"
+                  :body (generate-string data)
+                  :basic-auth [(:arvo-user env) (:arvo-pwd env)]
+                  :as :json})]
+      (get-in resp [:body :kysely_linkki]))
+    (catch ExceptionInfo e
+      (log/error e)
+      (when-not (= 404 (:status (ex-data e)))
+        (throw e)))))
 
 (defn deactivate-kyselylinkki [linkki]
   (log/info "Linkki deaktivoitu"))
