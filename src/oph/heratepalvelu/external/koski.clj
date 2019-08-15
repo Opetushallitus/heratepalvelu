@@ -15,7 +15,7 @@
        {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
                        ;"opiskeluoikeudenTila" "valmistunut"
                        ; Vahvistettu ei ole välttämättä valmistunut Koskessa,
-                       ; muutos tähän olisi hyvä Koskessa
+                       ; muutos tähän olisi hyvä Koskessa tai KJ toimintatavoissa
                        "muuttunutJälkeen" datetime-str
                        "pageSize" 100
                        "pageNumber" page}
