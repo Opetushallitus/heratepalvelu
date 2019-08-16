@@ -35,11 +35,11 @@
                   {:toimija_oppija [:s (:toimija_oppija email)]
                    :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
                   {:update-expr     (str "SET #lahetystila = :lahetystila, "
-                                         "SET #vp-id = :vp-id")
+                                         "#vpid = :vpid")
                    :expr-attr-names {"#lahetystila" "lahetystila"
-                                     "#vp-id" "viestintapalvelu-id"}
+                                     "#vpid" "viestintapalvelu-id"}
                    :expr-attr-vals  {":lahetystila" [:s "viestintapalvelussa"]
-                                     ":vp-id" [:n id]}}))
+                                     ":vpid" [:n id]}}))
             (catch AwsServiceException e
               (log/error "Viesti " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
               (log/error e))
