@@ -73,7 +73,6 @@
   (s/checker herate-schema))
 
 (defn save-herate [herate opiskeluoikeus]
-  (s/validate herate-schema herate)
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
   (if (some? (herate-checker herate))
     (log/error (herate-checker herate))

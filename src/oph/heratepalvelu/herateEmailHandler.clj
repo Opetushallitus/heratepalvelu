@@ -28,33 +28,35 @@
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [email lahetettavat]
-        (let [time (System/currentTimeMillis)
-              id (:id (send-email email))]
+        (if (has-time-to-answer? (:alkupvm email))
           (try
-            (if (has-time-to-answer? (:alkupvm email))
-              (ddb/update-item
-                {:toimija_oppija [:s (:toimija_oppija email)]
-                 :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-                {:update-expr     (str "SET #lahetystila = :lahetystila, "
-                                       "SET #vp-id = :vp-id")
-                 :expr-attr-names {"#lahetystila" "lahetystila"
-                                   "#vp-id" "viestintapalvelu-id"}
-                 :expr-attr-vals  {":lahetystila" [:s "viestintapalvelussa"]
-                                     ":vp-id" [:n id]}})
-              (ddb/update-item
-                {:toimija_oppija [:s (:toimija_oppija email)]
-                 :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-                {:update-expr     "SET #lahetystila = :lahetystila"
-                 :expr-attr-names {"#lahetystila" "lahetystila"}
-                 :expr-attr-vals {":lahetystila" [:s "vastausaika_loppunut_ennen_lahetysta"]}}))
-            (log/info "Viesti lähetetty ja lähetystila tallennettu tietokantaan, id " id
-                      " Aika: " (- (System/currentTimeMillis) time) "ms")
+            (let [id (:id (send-email email))]
+                (ddb/update-item
+                  {:toimija_oppija [:s (:toimija_oppija email)]
+                   :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+                  {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                         "SET #vp-id = :vp-id")
+                   :expr-attr-names {"#lahetystila" "lahetystila"
+                                     "#vp-id" "viestintapalvelu-id"}
+                   :expr-attr-vals  {":lahetystila" [:s "viestintapalvelussa"]
+                                     ":vp-id" [:n id]}}))
             (catch AwsServiceException e
-              (log/error "Viesti " id " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
+              (log/error "Viesti " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
               (log/error e))
             (catch Exception e
               (log/error "Virhe viestin lähetyksessä!" email)
-              (log/error e)))))
+              (log/error e)))
+          (try
+            (ddb/update-item
+              {:toimija_oppija [:s (:toimija_oppija email)]
+               :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+              {:update-expr     "SET #lahetystila = :lahetystila"
+               :expr-attr-names {"#lahetystila" "lahetystila"}
+               :expr-attr-vals {":lahetystila" [:s "vastausaika_loppunut_ennen_lahetysta"]}})
+            (catch Exception e
+              (log/error "Virhe lähetystilan päivityksessä herätteelle, jonka vastausaika umpeutunut" email)
+              (log/error e))))
+        (log/info "Viesti käsitelty ja lähetystila tallennettu tietokantaan"))
       (when (> 30000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
                                  :alkupvm     [:le [:s (.toString (t/today))]]}
