@@ -24,4 +24,5 @@
   :source-paths ["src"]
   :java-source-paths ["src/java"]
   :target-path "target/%s"
-  :profiles {:uberjar {:aot :all}})
+  :profiles {:uberjar {:aot :all}
+             :test {:resource-paths ["test/resources"]}})
