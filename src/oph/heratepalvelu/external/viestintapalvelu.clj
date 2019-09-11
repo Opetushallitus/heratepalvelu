@@ -18,7 +18,8 @@
   (let [resp (cas-authenticated-post
                (:viestintapalvelu-url env)
                {:recipient [{:email (:sahkoposti data)}]
-                :email {:from "no-reply@opintopolku.fi"
+                :email {:callingProcess "heratepalvelu"
+                        :from "no-reply@opintopolku.fi"
                         :subject "Ammattikoulu palaute"
                         :isHtml true
                         :body (amispalaute-html data)}}
