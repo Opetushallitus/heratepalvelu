@@ -60,7 +60,6 @@
   (str "<!DOCTYPE html>"
        (html [:html {:lang (:suorituskieli data)}
               [:head
-               [:title "amispalaute"]
                [:meta {:charset "UTF-8"}]]
               [:body
                (cond
