@@ -4,6 +4,11 @@
             [clj-time.core :refer [now]])
   (:use hiccup.core))
 
+(def horizontal-line
+  [:table {:cellspacing "0" :cellpadding "0" :border "0" :width "100%" :style "width: 100% !important;"}
+   [:tr
+    [:td {:align "left" :valign "top" :width "600px" :height "1" :style "background-color: #f0f0f0; border-collapse:collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; mso-line-height-rule: exactly; line-height: 1px;"}]]])
+
 (defn- amispalaute-body-alkukysely [link]
   [:div
    [:p "Hyvä opiskelija!"]
@@ -12,14 +17,14 @@
    [:p "Palaute annetaan nimettömänä. Vastauksiasi käytetään ammatillisen koulutuksen kehittämiseen."]
    [:a {:href link} link]
    [:p "Terveisin oppilaitoksesi"]
-   [:hr]
+   horizontal-line
    [:p "Bästa studerande!"]
    [:p "Din personliga utvecklingsplan för kunnandet (PUK) har nu godkänts och studierna ska snart börja. En lyckad studiestart och god planering skapar en bra grund för att du ska kunna nå dina mål. Därför är det viktigt att vi får höra dina erfarenheter och kommentarer. Vi vill gärna höra dina åsikter om hur vi har lyckats och vad vi kunde göra bättre i fortsättningen."]
    [:p "Vi hoppas att du tar dig tid att svara på den här enkäten. Det tar ungefär 10–15 minuter att svara. Frågorna berör de inledande studierna, uppgörandet av PUK och studieklimatet."]
    [:p "Responsen ges anonymt. Dina svar används för att utveckla yrkesutbildningen."]
    [:a {:href link} link]
    [:p "Hälsningar, din läroanstalt"]
-   [:hr]
+   horizontal-line
    [:p "Dear student!"]
    [:p "Your personal competence development plan has now been approved and you are about to begin your studies. A successful beginning and a sound plan lay a good foundation for achieving your goals. This is why your experiences matter. Tell us what we did well and what we could do even better."]
    [:p "We would like you to spend some 10 to 15 minutes on responding to this survey. The questions concern the starting phase of vocational education and training, the preparation of your personal competence plan, and the study atmosphere."]
@@ -37,7 +42,7 @@
    [:p "Kiitos, että vastaat!"]
    [:a {:href link} link]
    [:p "Terveisin oppilaitoksesi"]
-   [:hr]
+   horizontal-line
    [:p "Hej!"]
    [:p "Grattis, du har slutfört dina yrkesinriktade studier."]
    [:p "Dina erfarenheter av utbildningen är viktiga för oss. Vi vill gärna höra dina åsikter om hur vi har lyckats och vad vi kunde göra bättre i fortsättningen."]
@@ -46,7 +51,7 @@
    [:p "Tack för att du svarar!"]
    [:a {:href link} link]
    [:p "Hälsningar, din läroanstalt"]
-   [:hr]
+   horizontal-line
    [:p "Dear graduate!"]
    [:p "Congratulations! You have now finished the vocational studies you set as your goal."]
    [:p "Your experiences of education and training matter. Tell us what we did well and what we could do even better."]
