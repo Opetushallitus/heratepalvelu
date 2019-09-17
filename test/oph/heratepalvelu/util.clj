@@ -4,7 +4,7 @@
             [clojure.java.io :as io]
             [clojure.string :as string])
   (:import (com.amazonaws.services.lambda.runtime.events SQSEvent)
-           (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage)
+           (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage ScheduledEvent)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
 
@@ -51,6 +51,10 @@
     {:organisaatio-oid "1.2.246.562.10.346830761111"
      :kayttoonottopvm "3019-07-01"}))
 
+(def dummy-opiskeluoikeus-oid "1.2.246.562.24.10442483592")
+(def dummy-request-id "1d6c30bb-a2d9-5540-aa1a-65410fc2f8f5")
+(def dummy-scheduled-resources "arn:aws:events:eu-west-1:123456789:rule/test-service-rule")
+
 (def mock-herate-sqs-message
   (doto (SQSEvent$SQSMessage.)
     (.setMessageId "19dd0b57-b21e-4ac1-bd88-01bbb068cb78")
@@ -59,7 +63,7 @@
                 {:kyselytyyppi "HOKS_hyvaksytty"
                  :alkupvm "2019-05-20"
                  :sahkoposti "testi@testi.fi"
-                 :opiskeluoikeus-oid "1.2.246.562.24.10442483592"
+                 :opiskeluoikeus-oid dummy-opiskeluoikeus-oid
                  :ehoks-id 1337
                  :oppija-oid "1.2.246.562.24.10442483592"}))
     (.setMd5OfBody "436c176af9d103ffaa0478f38c3091ed")
@@ -70,8 +74,23 @@
 (defn mock-handler-event [handler]
   (cond
     (= :ehoksherate handler)
-      (doto (SQSEvent.)
-        (.setRecords (list mock-herate-sqs-message)))))
+    (doto (SQSEvent.)
+      (.setRecords (list mock-herate-sqs-message)))
+    (= :scheduledherate handler)
+    (doto (ScheduledEvent.)
+      (.setId "d77bcbc4-0b2b-4d45-9694-b1df99175cfb")
+      (.setDetailType "Scheduled Event")
+      (.setResources (list dummy-scheduled-resources)))))
+
+(defn reify-context []
+  (reify com.amazonaws.services.lambda.runtime.Context
+    (getAwsRequestId [this]
+      dummy-request-id)
+    (getRemainingTimeInMillis [this]
+      100)))
+
+(defn mock-handler-context []
+  (reify-context))
 
 (defn mock-get-koulutustoimija-oid [_]
   (str "1.2.246.562.10.346830761110"))

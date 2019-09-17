@@ -1,11 +1,39 @@
-(ns oph.heratepalvelu.eHOKSherateHandler-test
+(ns oph.heratepalvelu.logging_test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.eHOKSherateHandler :refer :all]
+            [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.util :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (use-fixtures :once clean-logs)
+
+(deftest test-caller-log-herate-ehoks
+  (testing "caller-log logs request info for eHOKSherateHandler"
+    (log-caller-details "handleHOKSherate"
+                        (mock-handler-event :ehoksherate)
+                        (mock-handler-context))
+    (is (true? (did-log? "Lambdaa handleHOKSherate kutsuttiin" "INFO")))
+    (is (true? (did-log? dummy-opiskeluoikeus-oid "INFO")))
+    (is (true? (did-log? (str "RequestId: " dummy-request-id) "INFO")))))
+
+(deftest test-caller-log-herate-email
+  (testing "caller-log logs request info for herateEmailHandler"
+    (log-caller-details "handleSendEmails"
+                        (mock-handler-event :scheduledherate)
+                        (mock-handler-context))
+    (is (true? (did-log? "Lambdaa handleSendEmails kutsuttiin" "INFO")))
+    (is (true? (did-log? dummy-scheduled-resources "INFO")))
+    (is (true? (did-log? (str "RequestId: " dummy-request-id) "INFO")))))
+
+(deftest test-caller-log-herate-updatedopiskeluoikeus
+  (testing "caller-log logs request info for herateEmailHandler"
+    (log-caller-details "handleUpdatedOpiskeluoikeus"
+                        (mock-handler-event :scheduledherate)
+                        (mock-handler-context))
+    (is (true? (did-log? "Lambdaa handleUpdatedOpiskeluoikeus kutsuttiin" "INFO")))
+    (is (true? (did-log? dummy-scheduled-resources "INFO")))
+    (is (true? (did-log? (str "RequestId: " dummy-request-id) "INFO")))))
 
 (deftest test-ehoksherate-aws-service-exception
   (testing "Failed DynamoDB put throws exception and logs error"
@@ -18,7 +46,10 @@
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item-aws-exception
        oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki]
       (do
-        (is (thrown? AwsServiceException (-handleHOKSherate nil (mock-handler-event :ehoksherate))))
+        (is (thrown? AwsServiceException (-handleHOKSherate
+                                           nil
+                                           (mock-handler-event :ehoksherate)
+                                           (mock-handler-context))))
         (is (true? (did-log? "Virhe tietokantaan tallennettaessa" "ERROR")))
         (is (true? (did-log? "Linkki deaktivoitu" "INFO")))))))
 
@@ -33,6 +64,6 @@
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item-cond-check-exception
        oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki]
       (do
-        (-handleHOKSherate nil (mock-handler-event :ehoksherate))
+        (-handleHOKSherate nil (mock-handler-event :ehoksherate) (mock-handler-context))
         (is (true? (did-log? "Tämän kyselyn linkki on jo toimituksessa oppilaalle" "WARN")))
         (is (true? (did-log? "Linkki deaktivoitu" "INFO")))))))
