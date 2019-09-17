@@ -4,6 +4,7 @@
     [oph.heratepalvelu.external.ehoks :refer [get-hoks-by-opiskeluoikeus]]
     [oph.heratepalvelu.db.dynamodb :as ddb]
     [oph.heratepalvelu.common :refer :all]
+    [oph.heratepalvelu.log.caller-log :refer :all]
     [environ.core :refer [env]]
     [clojure.tools.logging :as log]
     [schema.core :as s]
@@ -69,6 +70,7 @@
     "tutkinnon_osia_suorittaneet"))
 
 (defn -handleUpdatedOpiskeluoikeus [this event context]
+  (log-caller-details "handleUpdatedOpiskeluoikeus" event context)
   (let [start-time (System/currentTimeMillis)
         last-checked
         (:value (ddb/get-item

@@ -3,6 +3,7 @@
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.external.koski :refer [get-opiskeluoikeus]]
             [oph.heratepalvelu.common :refer :all]
+            [oph.heratepalvelu.log.caller-log :refer :all]
             [environ.core :refer [env]]
             [schema.core :as s])
   (:import (com.fasterxml.jackson.core JsonParseException)
@@ -13,7 +14,8 @@
   :methods [[^:static handleHOKSherate
              [com.amazonaws.services.lambda.runtime.events.SQSEvent] void]])
 
-(defn -handleHOKSherate [this event]
+(defn -handleHOKSherate [this event context]
+  (log-caller-details "handleHOKSherate" event context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try
