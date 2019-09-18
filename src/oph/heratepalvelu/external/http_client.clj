@@ -20,3 +20,7 @@
 (defn post [url & [options]]
   (wrap-aws-xray url :post
                  #(client/post url (merge-options options))))
+
+(defn delete [url & [options]]
+  (wrap-aws-xray url :delete
+                 #(client/delete url (merge-options options))))

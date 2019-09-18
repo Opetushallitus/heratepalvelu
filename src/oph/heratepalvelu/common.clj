@@ -98,7 +98,7 @@
           (try
             (log/info "Tallennetaan kantaan " (str koulutustoimija "/" oppija)
                       " " (str kyselytyyppi "/" laskentakausi))
-            (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+            (ddb/put-item {:toimija_oppija [:n (str koulutustoimija "/" oppija)]
                            :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]
                            :kyselylinkki [:s kyselylinkki]
                            :sahkoposti [:s (:sahkoposti herate)]

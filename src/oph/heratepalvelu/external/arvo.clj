@@ -39,4 +39,6 @@
         (throw e)))))
 
 (defn deactivate-kyselylinkki [linkki]
-  (log/info "Linkki deaktivoitu"))
+  (let [tunnus (last (str/split linkki #"/"))]
+    (client/delete (str (:arvo-url env) "/" tunnus)
+                   {:basic-auth [(:arvo-user env) (:arvo-pwd env)]})))
