@@ -59,6 +59,14 @@
        :expr-attr-vals {":value" [:s (str time-with-buffer)]}}
       (:metadata-table env))))
 
+(defn update-last-page [page]
+  (ddb/update-item
+    {:key [:s "opiskeluoikeus-last-page"]}
+    {:update-expr     "SET #value = :value"
+     :expr-attr-names {"#value" "value"}
+     :expr-attr-vals {":value" [:s (str page)]}}
+    (:metadata-table env)))
+
 (defn get-kysely-type [suoritus]
   (cond
     (= (get-in suoritus [:tyyppi :koodiarvo])
@@ -73,11 +81,15 @@
         last-checked
         (:value (ddb/get-item
                   {:key [:s "opiskeluoikeus-last-checked"]}
-                  (:metadata-table env)))]
+                  (:metadata-table env)))
+        last-page
+        (Integer. (:value (ddb/get-item
+                            {:key [:s "opiskeluoikeus-last-page"]}
+                            (:metadata-table env))))]
     (log/info "Haetaan" last-checked "jälkeen muuttuneet opiskeluoikeudet")
     (loop [opiskeluoikeudet (get-updated-opiskeluoikeudet
-                              last-checked 0)
-           next-page 1]
+                              last-checked last-page)
+           next-page (+ last-page 1)]
       (when (seq opiskeluoikeudet)
         (doseq [opiskeluoikeus opiskeluoikeudet]
           (let [koulustoimija (get-koulutustoimija-oid opiskeluoikeus)
@@ -104,8 +116,10 @@
                     (get-kysely-type suoritus)
                     vahvistus-pvm)
                   opiskeluoikeus)))))
-        (when (> 30000 (.getRemainingTimeInMillis context))
+        (if (< 30000 (.getRemainingTimeInMillis context))
           (recur
             (get-updated-opiskeluoikeudet last-checked next-page)
-            (+ next-page 1)))))
-    (update-last-checked (c/from-long start-time))))
+            (+ next-page 1))
+          (update-last-page next-page))))
+    (update-last-checked (c/from-long start-time))
+    (update-last-page 0)))
