@@ -12,7 +12,8 @@
 (gen-class
   :name "oph.heratepalvelu.eHOKSherateHandler"
   :methods [[^:static handleHOKSherate
-             [com.amazonaws.services.lambda.runtime.events.SQSEvent] void]])
+             [com.amazonaws.services.lambda.runtime.events.SQSEvent
+              com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleHOKSherate [this event context]
   (log-caller-details "handleHOKSherate" event context)
