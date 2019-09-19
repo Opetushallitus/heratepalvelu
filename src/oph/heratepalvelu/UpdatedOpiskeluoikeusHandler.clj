@@ -60,6 +60,14 @@
        :expr-attr-vals {":value" [:s (str time-with-buffer)]}}
       (:metadata-table env))))
 
+(defn update-last-page [page]
+  (ddb/update-item
+    {:key [:s "opiskeluoikeus-last-page"]}
+    {:update-expr     "SET #value = :value"
+     :expr-attr-names {"#value" "value"}
+     :expr-attr-vals {":value" [:s (str page)]}}
+    (:metadata-table env)))
+
 (defn get-kysely-type [suoritus]
   (cond
     (= (get-in suoritus [:tyyppi :koodiarvo])
@@ -75,39 +83,48 @@
         last-checked
         (:value (ddb/get-item
                   {:key [:s "opiskeluoikeus-last-checked"]}
-                  (:metadata-table env)))]
-    (log/info "Haetaan" last-checked "jälkeen muuttuneet opiskeluoikeudet")
+                  (:metadata-table env)))
+        last-page
+        (Integer. (:value (ddb/get-item
+                            {:key [:s "opiskeluoikeus-last-page"]}
+                            (:metadata-table env))))]
+    (log/info "Käsitellään" last-checked "jälkeen muuttuneet opiskeluoikeudet")
     (loop [opiskeluoikeudet (get-updated-opiskeluoikeudet
-                              last-checked 0)
-           next-page 1]
-      (when (seq opiskeluoikeudet)
-        (doseq [opiskeluoikeus opiskeluoikeudet]
-          (let [koulustoimija (get-koulutustoimija-oid opiskeluoikeus)
-                suoritus (first (seq (:suoritukset opiskeluoikeus)))
-                vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
-            (when (and (some? vahvistus-pvm)
-                       (check-suoritus-type? suoritus)
-                       (check-organisaatio-whitelist?
-                         koulustoimija
-                         (date-string-to-timestamp
-                           vahvistus-pvm)))
-              (if-let [hoks
-                       (try
-                         (get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))
-                         (catch ExceptionInfo e
-                           (if (= 404 (:status (ex-data e)))
-                             (log/warn "Opiskeluoikeudella"
-                                       (:oid opiskeluoikeus)
-                                       "ei HOKSia")
-                             (throw e))))]
-                (save-herate
-                  (parse-herate
-                    hoks
-                    (get-kysely-type suoritus)
-                    vahvistus-pvm)
-                  opiskeluoikeus)))))
-        (when (> 30000 (.getRemainingTimeInMillis context))
-          (recur
-            (get-updated-opiskeluoikeudet last-checked next-page)
-            (+ next-page 1)))))
-    (update-last-checked (c/from-long start-time))))
+                              last-checked last-page)
+           next-page (+ last-page 1)]
+      (if (seq opiskeluoikeudet)
+        (do (doseq [opiskeluoikeus opiskeluoikeudet]
+              (let [koulustoimija (get-koulutustoimija-oid opiskeluoikeus)
+                    suoritus (first (seq (:suoritukset opiskeluoikeus)))
+                    vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
+                (when (and (some? vahvistus-pvm)
+                           (check-suoritus-type? suoritus)
+                           (check-organisaatio-whitelist?
+                             koulustoimija
+                             (date-string-to-timestamp
+                               vahvistus-pvm)))
+                  (if-let [hoks
+                           (try
+                             (get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))
+                             (catch ExceptionInfo e
+                               (if (= 404 (:status (ex-data e)))
+                                 (log/warn "Opiskeluoikeudella"
+                                           (:oid opiskeluoikeus)
+                                           "ei HOKSia")
+                                 (throw e))))]
+                    (save-herate
+                      (parse-herate
+                        hoks
+                        (get-kysely-type suoritus)
+                        vahvistus-pvm)
+                      opiskeluoikeus)))))
+            (log/info (str "Käsitelty " (count opiskeluoikeudet)
+                           " opiskeluoikeutta, sivu " (- next-page 1)))
+            (if (< 30000 (.getRemainingTimeInMillis context))
+              (recur
+                (get-updated-opiskeluoikeudet last-checked next-page)
+                (+ next-page 1))
+              (update-last-page next-page)))
+        (do
+          (update-last-checked (c/from-long start-time))
+          (update-last-page 0))))))

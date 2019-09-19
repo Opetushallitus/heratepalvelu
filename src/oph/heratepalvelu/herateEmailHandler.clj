@@ -59,7 +59,7 @@
               (log/error "Virhe lähetystilan päivityksessä herätteelle, jonka vastausaika umpeutunut" email)
               (log/error e))))
         (log/info "Viesti käsitelty ja lähetystila tallennettu tietokantaan"))
-      (when (> 30000 (.getRemainingTimeInMillis context))
+      (when (< 30000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
                                  :alkupvm     [:le [:s (.toString (t/today))]]}
                                 {:index "lahetysIndex"
