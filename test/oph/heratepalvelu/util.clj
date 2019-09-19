@@ -114,6 +114,8 @@
 
 (defn mock-get-kyselylinkki [_] "https://kysely.linkki/12345")
 
+(defn mock-deactivate-kyselylinkki [_] nil)
+
 (defn mock-put-item-aws-exception [_ _]
   (throw (-> (AwsServiceException/builder)
              (.message "exception")

@@ -44,14 +44,14 @@
        oph.heratepalvelu.common/check-duplicate-herate? mock-check-duplicate-herate-true?
        oph.heratepalvelu.common/check-organisaatio-whitelist? mock-check-organisaatio-whitelist-true?
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item-aws-exception
-       oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki]
+       oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki
+       oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki]
       (do
         (is (thrown? AwsServiceException (-handleHOKSherate
                                            nil
                                            (mock-handler-event :ehoksherate)
                                            (mock-handler-context))))
-        (is (true? (did-log? "Virhe tietokantaan tallennettaessa" "ERROR")))
-        (is (true? (did-log? "Linkki deaktivoitu" "INFO")))))))
+        (is (true? (did-log? "Virhe tietokantaan tallennettaessa" "ERROR")))))))
 
 (deftest test-ehoksherate-cond-check-exception
   (testing "Failed conditional check throws exception and logs warn"
@@ -62,8 +62,8 @@
        oph.heratepalvelu.common/check-duplicate-herate? mock-check-duplicate-herate-true?
        oph.heratepalvelu.common/check-organisaatio-whitelist? mock-check-organisaatio-whitelist-true?
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item-cond-check-exception
-       oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki]
+       oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki
+       oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki]
       (do
         (-handleHOKSherate nil (mock-handler-event :ehoksherate) (mock-handler-context))
-        (is (true? (did-log? "Tämän kyselyn linkki on jo toimituksessa oppilaalle" "WARN")))
-        (is (true? (did-log? "Linkki deaktivoitu" "INFO")))))))
+        (is (true? (did-log? "Tämän kyselyn linkki on jo toimituksessa oppilaalle" "WARN")))))))
