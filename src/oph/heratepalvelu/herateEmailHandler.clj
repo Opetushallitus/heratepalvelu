@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.herateEmailHandler
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email]]
+            [oph.heratepalvelu.log.caller-log :refer :all]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [cheshire.core :refer [parse-string]]
@@ -21,6 +22,7 @@
                        (t/days 29)))))
 
 (defn -handleSendEmails [this event context]
+  (log-caller-details "handleSendEmails" event context)
   (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
                                         :alkupvm     [:le [:s (.toString (t/today))]]}
                                        {:index "lahetysIndex"
