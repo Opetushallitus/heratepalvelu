@@ -35,4 +35,5 @@
                 (< 399 (:status (ex-data e)))
                 (> 500 (:status (ex-data e))))
             (log/error "Unhandled client error: " e)
-            (throw e)))))))
+            (do (log/error e)
+                (throw e))))))))
