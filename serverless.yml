@@ -74,6 +74,7 @@ functions:
     name: ${self:custom.stack}-eHOKSherateHandler
     memorySize: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehokshandler-memory~true}
     timeout: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehokshandler-timeout~true}
+    reservedConcurrency: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/ehokshandler-concurrency~true}
     handler: oph.heratepalvelu.eHOKSherateHandler::handleHOKSherate
     events:
       - sqs:
@@ -81,6 +82,7 @@ functions:
             Fn::GetAtt:
               - eHOKSHerateQueue
               - Arn
+          batchsize: 1
     environment:
       caller_id: ${self:custom.stack}-herateEmailHandler
   herateEmailHandler:

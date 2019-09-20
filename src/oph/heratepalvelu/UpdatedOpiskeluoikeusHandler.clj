@@ -112,12 +112,15 @@
                                            (:oid opiskeluoikeus)
                                            "ei HOKSia")
                                  (throw e))))]
-                    (save-herate
-                      (parse-herate
-                        hoks
-                        (get-kysely-type suoritus)
-                        vahvistus-pvm)
-                      opiskeluoikeus)))))
+                    (if (:osaamisen-hankkimisen-tarve hoks)
+                      (save-herate
+                        (parse-herate
+                          hoks
+                          (get-kysely-type suoritus)
+                          vahvistus-pvm)
+                        opiskeluoikeus)
+                      (log/info
+                        "Ei osaamisen hankkimisen tarvetta hoksissa " (:id hoks)))))))
             (log/info (str "Käsitelty " (count opiskeluoikeudet)
                            " opiskeluoikeutta, sivu " (- next-page 1)))
             (if (< 30000 (.getRemainingTimeInMillis context))
