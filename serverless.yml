@@ -82,7 +82,7 @@ functions:
             Fn::GetAtt:
               - eHOKSHerateQueue
               - Arn
-          batchsize: 1
+          batchSize: 1
     environment:
       caller_id: ${self:custom.stack}-herateEmailHandler
   herateEmailHandler:
