@@ -4,8 +4,7 @@
             [oph.heratepalvelu.external.koski :refer [get-opiskeluoikeus]]
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [environ.core :refer [env]]
-            [schema.core :as s])
+            [environ.core :refer [env]])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (clojure.lang ExceptionInfo)))
 

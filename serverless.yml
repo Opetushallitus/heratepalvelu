@@ -186,6 +186,7 @@ resources:
       Type: AWS::SQS::Queue
       Properties:
         QueueName: ${self:custom.eHOKSherateQueue}
+        MessageRetentionPeriod: 1209600
         RedrivePolicy:
           deadLetterTargetArn:
             Fn::GetAtt:
@@ -195,4 +196,5 @@ resources:
     eHOKSherateDLQ:
       Type: AWS::SQS::Queue
       Properties:
+        MessageRetentionPeriod: 1209600
         QueueName: ${self:custom.eHOKSherateDLQ}

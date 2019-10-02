@@ -75,7 +75,7 @@
 (defn save-herate [herate opiskeluoikeus]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
   (if (some? (herate-checker herate))
-    (log/error (herate-checker herate))
+    (log/error {:herate herate :msg (herate-checker herate)})
     (let [kyselytyyppi (:kyselytyyppi herate)
           alkupvm (:alkupvm herate)
           koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
@@ -127,4 +127,5 @@
               (throw e))
             (catch Exception e
               (deactivate-kyselylinkki kyselylinkki)
+              (log/error "Unknown error " e)
               (throw e))))))))
