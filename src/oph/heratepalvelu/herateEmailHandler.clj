@@ -21,6 +21,13 @@
                (t/plus (t/local-date years months days)
                        (t/days 29)))))
 
+(defn answer-time-started? [alkupvm]
+  (let [[years months days] (map #(Integer. %)
+                                 (str/split alkupvm #"-"))]
+    (not (t/after?
+           (t/local-date years months days)
+           (t/today)))))
+
 (defn -handleSendEmails [this event context]
   (log-caller-details "handleSendEmails" event context)
   (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
@@ -30,7 +37,9 @@
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [email lahetettavat]
-        (if (has-time-to-answer? (:alkupvm email))
+        (if (and
+              (answer-time-started? (:alkupvm email))
+              (has-time-to-answer? (:alkupvm email)))
           (try
             (let [id (:id (send-email email))]
                 (ddb/update-item
