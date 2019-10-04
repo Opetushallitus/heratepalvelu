@@ -35,8 +35,16 @@ provider:
         - sqs:SendMessage
       Resource:
         - Fn::GetAtt:
-            - eHOKSherateDLQ
-            - Arn
+          - eHOKSherateDLQ
+          - Arn
+    - Effect: Allow
+      Action:
+        - sqs:GetQueueUrl
+        - sqs:SendMessage
+      Resource:
+        - Fn::GetAtt:
+          - eHOKSHerateQueue
+          - Arn
     - Effect: Allow
       Action:
         - dynamodb:GetItem
@@ -46,7 +54,6 @@ provider:
     herate_table: ${self:custom.herateTable}
     orgwhitelist_table: ${self:custom.orgWhitelistTable}
     metadata_table: ${self:custom.metadataTable}
-    region: ${self:custom.region}
     cas_url: ${self:custom.virkailija_url}/cas
     cas_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-user~true}
     cas_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-pwd~true}
@@ -105,6 +112,21 @@ functions:
       ehoks_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/virkailija-url~true}/ehoks-virkailija-backend/api/v1/
     events:
       - schedule: cron(${ssm:/${self:custom.stage}/serverless/heratepalvelu/updatedoohandler-cron~true})
+  DLQresendHandler:
+    name: ${self:custom.stack}-DLQresendHandler
+    memorySize: 512
+    timeout: 30
+    handler: oph.heratepalvelu.DLQresendHandler::handleDLQresend
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - eHOKSherateDLQ
+              - Arn
+          enabled: false
+    environment:
+      queue_name: ${self:custom.eHOKSherateQueue}
+      stage: ${self:custom.stage}
 
 resources:
   Description: Herätepalvelu Arvo-kyselylinkkien lähettämiseen
