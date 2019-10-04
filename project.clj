@@ -14,6 +14,7 @@
                  [com.amazonaws/aws-lambda-java-events "2.2.7"]
                  [software.amazon.awssdk/dynamodb "2.10.56"]
                  [software.amazon.awssdk/ssm "2.10.56"]
+                 [software.amazon.awssdk/sqs "2.10.60"]
                  [org.apache.logging.log4j/log4j-api "2.13.0"]
                  [org.apache.logging.log4j/log4j-core "2.13.0"]
                  [org.apache.logging.log4j/log4j-slf4j-impl "2.13.0"]
