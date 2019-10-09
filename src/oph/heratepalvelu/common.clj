@@ -119,7 +119,8 @@
             (catch ConditionalCheckFailedException e
               (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                         oppija " koulutustoimijalla " koulutustoimija
-                        "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm))
+                        "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm) ")"
+                        "Deaktivoidaan kyselylinkki, request-id " uuid)
               (deactivate-kyselylinkki kyselylinkki))
             (catch AwsServiceException e
               (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)

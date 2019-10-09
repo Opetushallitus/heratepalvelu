@@ -123,11 +123,11 @@
                         "Ei osaamisen hankkimisen tarvetta hoksissa " (:id hoks)))))))
             (log/info (str "Käsitelty " (count opiskeluoikeudet)
                            " opiskeluoikeutta, sivu " (- next-page 1)))
-            (if (< 30000 (.getRemainingTimeInMillis context))
+            (update-last-page next-page)
+            (when (< 120000 (.getRemainingTimeInMillis context))
               (recur
                 (get-updated-opiskeluoikeudet last-checked next-page)
-                (+ next-page 1))
-              (update-last-page next-page)))
+                (+ next-page 1))))
         (do
           (update-last-checked (c/from-long start-time))
           (update-last-page 0))))))

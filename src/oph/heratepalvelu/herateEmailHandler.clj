@@ -21,13 +21,6 @@
                (t/plus (t/local-date years months days)
                        (t/days 29)))))
 
-(defn answer-time-started? [alkupvm]
-  (let [[years months days] (map #(Integer. %)
-                                 (str/split alkupvm #"-"))]
-    (not (t/after?
-           (t/local-date years months days)
-           (t/today)))))
-
 (defn -handleSendEmails [this event context]
   (log-caller-details "handleSendEmails" event context)
   (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
@@ -37,20 +30,18 @@
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [email lahetettavat]
-        (if (and
-              (answer-time-started? (:alkupvm email))
-              (has-time-to-answer? (:alkupvm email)))
+        (if (has-time-to-answer? (:alkupvm email))
           (try
             (let [id (:id (send-email email))]
-                (ddb/update-item
-                  {:toimija_oppija [:s (:toimija_oppija email)]
-                   :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-                  {:update-expr     (str "SET #lahetystila = :lahetystila, "
-                                         "#vpid = :vpid")
-                   :expr-attr-names {"#lahetystila" "lahetystila"
-                                     "#vpid" "viestintapalvelu-id"}
-                   :expr-attr-vals  {":lahetystila" [:s "viestintapalvelussa"]
-                                     ":vpid" [:n id]}}))
+              (ddb/update-item
+                {:toimija_oppija [:s (:toimija_oppija email)]
+                 :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+                {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                       "#vpid = :vpid")
+                 :expr-attr-names {"#lahetystila" "lahetystila"
+                                   "#vpid" "viestintapalvelu-id"}
+                 :expr-attr-vals  {":lahetystila" [:s "viestintapalvelussa"]
+                                   ":vpid" [:n id]}}))
             (catch AwsServiceException e
               (log/error "Viesti " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
               (log/error e))
@@ -66,8 +57,7 @@
                :expr-attr-vals {":lahetystila" [:s "vastausaika_loppunut_ennen_lahetysta"]}})
             (catch Exception e
               (log/error "Virhe lähetystilan päivityksessä herätteelle, jonka vastausaika umpeutunut" email)
-              (log/error e))))
-        (log/info "Viesti käsitelty ja lähetystila tallennettu tietokantaan"))
+              (log/error e)))))
       (when (< 30000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
                                  :alkupvm     [:le [:s (.toString (t/today))]]}
