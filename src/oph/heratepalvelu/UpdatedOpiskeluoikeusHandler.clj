@@ -129,5 +129,5 @@
                 (get-updated-opiskeluoikeudet last-checked next-page)
                 (+ next-page 1))))
         (do
-          (update-last-checked (c/from-long start-time))
-          (update-last-page 0))))))
+          (update-last-page 0)
+          (update-last-checked (c/from-long start-time)))))))
