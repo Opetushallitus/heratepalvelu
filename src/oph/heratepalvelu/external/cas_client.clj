@@ -5,7 +5,8 @@
             [environ.core :refer [env]]
             [cheshire.core :as json]
             [clj-http.client :refer [request]]
-            [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]])
+            [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]]
+            [oph.heratepalvelu.external.aws-ssm :as ssm])
   (:import (fi.vm.sade.utils.cas CasParams
                                  TicketGrantingTicketClient
                                  ServiceTicketClient)
@@ -15,9 +16,12 @@
 
 (def client (atom nil))
 
+(def ^:private pwd (delay
+                     (ssm/get-secret (:cas-pwd-name env))))
+
 (defn- init-client []
   (let [username   (:cas-user env)
-        password   (:cas-pwd env)
+        password   @pwd
         cas-url    (:cas-url env)
         cas-params (cas-params "/ryhmasahkoposti-service" username password)
         cas-client (cas-client cas-url)]
@@ -76,7 +80,7 @@
 
 (defn get-service-ticket [service suffix]
   (let [username    (:cas-user env)
-        password    (:cas-pwd env)
+        password    @pwd
         params      (CasParams/apply service suffix username password)
         service-uri (get-uri (str (:virkailija-url env) service "/" suffix))
         cas-uri     (get-uri (:cas-url env))]

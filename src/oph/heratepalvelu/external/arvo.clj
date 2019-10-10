@@ -3,8 +3,12 @@
             [environ.core :refer [env]]
             [oph.heratepalvelu.external.http-client :as client]
             [cheshire.core :refer [generate-string]]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [oph.heratepalvelu.external.aws-ssm :as ssm])
   (:import (clojure.lang ExceptionInfo)))
+
+(def ^:private pwd (delay
+                     (ssm/get-secret (:arvo-pwd-name env))))
 
 (defn build-arvo-request-body [herate
                                opiskeluoikeus
@@ -30,7 +34,7 @@
                  (:arvo-url env)
                  {:content-type "application/json"
                   :body (generate-string data)
-                  :basic-auth [(:arvo-user env) (:arvo-pwd env)]
+                  :basic-auth [(:arvo-user env) @pwd]
                   :as :json})]
       (get-in resp [:body :kysely_linkki]))
     (catch ExceptionInfo e
@@ -41,4 +45,4 @@
 (defn deactivate-kyselylinkki [linkki]
   (let [tunnus (last (str/split linkki #"/"))]
     (client/delete (str (:arvo-url env) "/" tunnus)
-                   {:basic-auth [(:arvo-user env) (:arvo-pwd env)]})))
+                   {:basic-auth [(:arvo-user env) @pwd]})))

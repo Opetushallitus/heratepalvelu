@@ -42,6 +42,11 @@ provider:
         - dynamodb:GetItem
       Resource:
         - "arn:aws:dynamodb:${self:custom.region}:*:table/${self:custom.orgWhitelistTable}"
+    - Effect: Allow
+      Action:
+        - ssm:GetParameter
+      Resource:
+        - "arn:aws:ssm:${self:custom.region}:*:parameter/${self:custom.stage}/serverless/${self:service}/*"
   environment:
     herate_table: ${self:custom.herateTable}
     orgwhitelist_table: ${self:custom.orgWhitelistTable}
@@ -49,13 +54,13 @@ provider:
     region: ${self:custom.region}
     cas_url: ${self:custom.virkailija_url}/cas
     cas_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-user~true}
-    cas_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-pwd~true}
+    cas_pwd_name: "/${self:custom.stage}/serverless/heratepalvelu/cas-pwd"
     arvo_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-url~true}
     arvo_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-user~true}
-    arvo_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-pwd~true}
+    arvo_pwd_name: "/${self:custom.stage}/serverless/heratepalvelu/arvo-pwd"
     koski_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-url~true}
     koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user~true}
-    koski_pwd: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-pwd~true}
+    koski_pwd_name: "/${self:custom.stage}/serverless/heratepalvelu/koski-pwd"
     organisaatio_url: ${self:custom.virkailija_url}/organisaatio-service/rest/organisaatio/v4/
     virkailija_url: ${self:custom.virkailija_url}
 

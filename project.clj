@@ -13,6 +13,7 @@
                  [com.amazonaws/aws-lambda-java-core "1.2.0"]
                  [com.amazonaws/aws-lambda-java-events "2.2.6"]
                  [software.amazon.awssdk/dynamodb "2.5.54"]
+                 [software.amazon.awssdk/ssm "2.5.54"]
                  [org.apache.logging.log4j/log4j-api "2.11.2"]
                  [org.apache.logging.log4j/log4j-core "2.11.2"]
                  [org.apache.logging.log4j/log4j-slf4j-impl "2.11.2"]
