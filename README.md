@@ -46,6 +46,10 @@ jonka jälkeen deployn voit tehdä komennoilla
 
 Stageja ovat samat ympäristönimet kuin muissakin palveluissa (esim. 'pallero'), default arvona 'sieni'.
 
+Jos haluat määrittää erikseen käytettävän profiilin, käytä vipua `--aws-profile <profiili>`. Jos serverless valittaa
+puuttuvasta profiilista, vaikka se olisi oikein konfiguroitu, niin seuraavan komennon ajaminen ennen deployta pitäisi
+korjata se: `export AWS_SDK_LOAD_CONFIG=1`.
+
 Yksikkötestit voit ajaa komennolla
 
 `lein test`
