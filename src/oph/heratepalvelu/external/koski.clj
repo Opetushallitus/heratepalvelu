@@ -7,7 +7,7 @@
                      (ssm/get-secret (:koski-pwd-name env))))
 
 (defn get-opiskeluoikeus [oid]
-  (:body (client/get (str (:koski-url env) "opiskeluoikeus/" oid)
+  (:body (client/get (str (:koski-url env) "/opiskeluoikeus/" oid)
                       {:basic-auth [(:koski-user env) @pwd]
                        :as :json})))
 
@@ -15,7 +15,7 @@
   (let
     [resp
      (client/get
-       (str (:koski-url env) "oppija/")
+       (str (:koski-url env) "/oppija/")
        {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
                        "muuttunutJälkeen" datetime-str
                        "pageSize" 100

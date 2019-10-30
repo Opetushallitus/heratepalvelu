@@ -51,7 +51,6 @@ provider:
     herate_table: ${self:custom.herateTable}
     orgwhitelist_table: ${self:custom.orgWhitelistTable}
     metadata_table: ${self:custom.metadataTable}
-    region: ${self:custom.region}
     cas_url: ${self:custom.virkailija_url}/cas
     cas_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-user~true}
     cas_pwd_name: "/${self:custom.stage}/serverless/heratepalvelu/cas-pwd"
