@@ -81,7 +81,7 @@
                {:recipient [{:email (:sahkoposti data)}]
                 :email {:callingProcess "heratepalvelu"
                         :from "no-reply@opintopolku.fi"
-                        :subject "Ammattikoulu palaute"
+                        :subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
                         :isHtml true
                         :body (amispalaute-html data)}}
                {:as :json})]
