@@ -21,7 +21,7 @@ export class HeratepalveluStack extends cdk.Stack {
     super(scope, id, props);
 
     const git = require("git-utils");
-    const repo = git.open("..");
+    const repo = git.open(".");
 
     const status = repo.getStatus();
     const aheadBehindCount = repo.getAheadBehindCount();
@@ -29,8 +29,9 @@ export class HeratepalveluStack extends cdk.Stack {
     if (Object.entries(status).length !== 0
       || aheadBehindCount.ahead !== 0
       || aheadBehindCount.behind !== 0) {
-      console.log("Uncommited changes:\n");
+      console.log("Uncommited changes or local is ahead/behind of remote:\n");
       console.log(status);
+      console.log(aheadBehindCount);
       throw new Error();
     }
 
