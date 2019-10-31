@@ -122,9 +122,7 @@ export class HeratepalveluStack extends cdk.Stack {
         queue: herateDeadLetterQueue,
         maxReceiveCount: 5
       },
-      visibilityTimeout: Duration.seconds(
-        Token.asNumber(getParameterFromSsm("ehokshandler-timeout"))
-      ),
+      visibilityTimeout: Duration.seconds(60),
       retentionPeriod: Duration.days(14)
     });
 
