@@ -136,8 +136,8 @@ export class HeratepalveluStack extends cdk.Stack {
       herate_table: herateTable.tableName,
       orgwhitelist_table: organisaatioWhitelistTable.tableName,
       metadata_table: metadataTable.tableName,
-      organisaatio_url: `${envVars.virkailja_url}/organisaatio-service/rest/organisaatio/v4/`,
-      cas_url: `${envVars.virkailja_url}/cas`,
+      organisaatio_url: `${envVars.virkailija_url}/organisaatio-service/rest/organisaatio/v4/`,
+      cas_url: `${envVars.virkailija_url}/cas`,
       stage: envName
     };
 
@@ -180,9 +180,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         caller_id: `${id}-herateEmailHandler`,
-        viestintapalvelu_url: `${getEnvVarFromSsm(
-          "virkailija-url"
-        )}/ryhmasahkoposti-service/email`
+        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
       },
       memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
       timeout: Duration.seconds(
@@ -206,9 +204,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         caller_id: `${id}-updatedOpiskeluoikeusHandler`,
-        ehoks_url: `${getEnvVarFromSsm(
-          "virkailija-url"
-        )}/ehoks-virkailija-backend/api/v1}`
+        ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1}`
       },
       handler:
         "oph.heratepalvelu.UpdatedOpiskeluoikeusHandler::handleUpdatedOpiskeluoikeus",
