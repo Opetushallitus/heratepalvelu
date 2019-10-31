@@ -8,7 +8,9 @@
   (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private pwd (delay
-                     (ssm/get-secret (:arvo-pwd-name env))))
+                     (ssm/get-secret
+                       (str (:stage env)
+                            "/serverless/heratepalvelu/arvo-pwd"))))
 
 (defn build-arvo-request-body [herate
                                opiskeluoikeus

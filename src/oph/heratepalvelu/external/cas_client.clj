@@ -17,7 +17,9 @@
 (def client (atom nil))
 
 (def ^:private pwd (delay
-                     (ssm/get-secret (:cas-pwd-name env))))
+                     (ssm/get-secret
+                       (str (:stage env)
+                            "/serverless/heratepalvelu/cas-pwd"))))
 
 (defn- init-client []
   (let [username   (:cas-user env)

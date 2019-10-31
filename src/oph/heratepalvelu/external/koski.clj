@@ -4,7 +4,9 @@
             [environ.core :refer [env]]))
 
 (def ^:private pwd (delay
-                     (ssm/get-secret (:koski-pwd-name env))))
+                     (ssm/get-secret
+                       (str (:stage env)
+                            "/serverless/heratepalvelu/koski-pwd"))))
 
 (defn get-opiskeluoikeus [oid]
   (:body (client/get (str (:koski-url env) "/opiskeluoikeus/" oid)

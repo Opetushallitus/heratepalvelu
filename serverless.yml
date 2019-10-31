@@ -53,15 +53,13 @@ provider:
     metadata_table: ${self:custom.metadataTable}
     cas_url: ${self:custom.virkailija_url}/cas
     cas_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/cas-user~true}
-    cas_pwd_name: "/${self:custom.stage}/serverless/heratepalvelu/cas-pwd"
     arvo_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-url~true}
     arvo_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/arvo-user~true}
-    arvo_pwd_name: "/${self:custom.stage}/serverless/heratepalvelu/arvo-pwd"
     koski_url: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-url~true}
     koski_user: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/koski-user~true}
-    koski_pwd_name: "/${self:custom.stage}/serverless/heratepalvelu/koski-pwd"
     organisaatio_url: ${self:custom.virkailija_url}/organisaatio-service/rest/organisaatio/v4/
     virkailija_url: ${self:custom.virkailija_url}
+    stage: ${self:custom.stage}
 
 package:
   artifact: target/uberjar/${self:service}-0.1.0-SNAPSHOT-standalone.jar
@@ -88,7 +86,7 @@ functions:
               - Arn
           batchSize: 1
     environment:
-      caller_id: ${self:custom.stack}-herateEmailHandler
+      caller_id: ${self:custom.stack}-eHOKSherateHandler
   herateEmailHandler:
     name: ${self:custom.stack}-herateEmailHandler
     memorySize: ${ssm:/${self:custom.stage}/serverless/heratepalvelu/emailhandler-memory~true}
