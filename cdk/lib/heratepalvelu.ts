@@ -62,8 +62,12 @@ export class HeratepalveluStack extends cdk.Stack {
         name: "toimija_oppija",
         type: dynamodb.AttributeType.STRING
       },
-      sortKey: { name: "tyyppi_kausi", type: dynamodb.AttributeType.STRING },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST
+      sortKey: {
+        name: "tyyppi_kausi",
+        type: dynamodb.AttributeType.STRING
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      serverSideEncryption: true
     });
 
     herateTable.addGlobalSecondaryIndex({
@@ -94,33 +98,34 @@ export class HeratepalveluStack extends cdk.Stack {
           name: "organisaatio-oid",
           type: dynamodb.AttributeType.STRING
         },
-        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        serverSideEncryption: true
       }
     );
-
-    const organisaatioWhitelistTableCfn = organisaatioWhitelistTable.node
-      .defaultChild as dynamodb.CfnTable;
-    organisaatioWhitelistTableCfn.sseSpecification = { sseEnabled: true };
 
     const metadataTable = new dynamodb.Table(this, "MetadataTable", {
       partitionKey: {
         name: "key",
         type: dynamodb.AttributeType.STRING
       },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      serverSideEncryption: true
     });
 
-    const metadataTableCfn = metadataTable.node
-      .defaultChild as dynamodb.CfnTable;
-    metadataTableCfn.sseSpecification = { sseEnabled: true };
-    const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue");
+    const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
+      retentionPeriod: Duration.days(14)
+    });
 
     const ehoksHerateQueue = new sqs.Queue(this, "HerateQueue", {
       queueName: `${id}-eHOKSHerateQueue`,
       deadLetterQueue: {
         queue: herateDeadLetterQueue,
         maxReceiveCount: 5
-      }
+      },
+      visibilityTimeout: Duration.seconds(
+        Token.asNumber(getParameterFromSsm("ehokshandler-timeout"))
+      ),
+      retentionPeriod: Duration.days(14)
     });
 
     let envVars = envVarsList.reduce((envVarsObject: any, key: string) => {
@@ -160,6 +165,8 @@ export class HeratepalveluStack extends cdk.Stack {
       },
       handler: "oph.heratepalvelu.eHOKSherateHandler::handleHOKSherate",
       memorySize: Token.asNumber(getParameterFromSsm("ehokshandler-memory")),
+      reservedConcurrentExecutions:
+        Token.asNumber(getParameterFromSsm("ehokshandler-concurrency")),
       timeout: Duration.seconds(
         Token.asNumber(getParameterFromSsm("ehokshandler-timeout"))
       ),
@@ -167,7 +174,7 @@ export class HeratepalveluStack extends cdk.Stack {
     });
     ehoksHerateAsset.grantRead(ehoksHerateHandler);
 
-    ehoksHerateHandler.addEventSource(new SqsEventSource(ehoksHerateQueue));
+    ehoksHerateHandler.addEventSource(new SqsEventSource(ehoksHerateQueue, { batchSize: 1 }));
 
     const herateEmailHandler = new lambda.Function(this, "HerateEmailHandler", {
       runtime: lambda.Runtime.JAVA_8,
@@ -179,7 +186,7 @@ export class HeratepalveluStack extends cdk.Stack {
           "virkailija-url"
         )}/ryhmasahkoposti-service/email`
       },
-      memorySize: Token.asNumber(getParameterFromSsm("ehokshandler-memory")),
+      memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
       timeout: Duration.seconds(
         Token.asNumber(getParameterFromSsm("emailhandler-timeout"))
       ),
