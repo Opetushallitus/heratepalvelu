@@ -24,7 +24,11 @@ export class HeratepalveluStack extends cdk.Stack {
     const repo = git.open("..");
 
     const status = repo.getStatus();
-    if (Object.entries(status).length !== 0) {
+    const aheadBehindCount = repo.getAheadBehindCount();
+
+    if (Object.entries(status).length !== 0
+      || aheadBehindCount.ahead !== 0
+      || aheadBehindCount.behind !== 0) {
       console.log("Uncommited changes:\n");
       console.log(status);
       throw new Error();
