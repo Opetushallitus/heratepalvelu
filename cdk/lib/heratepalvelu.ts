@@ -6,8 +6,10 @@ import lambda = require("@aws-cdk/aws-lambda");
 import s3assets = require("@aws-cdk/aws-s3-assets");
 import sqs = require("@aws-cdk/aws-sqs");
 import ssm = require("@aws-cdk/aws-ssm");
+import iam = require("@aws-cdk/aws-iam");
 import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
-import { Duration, Token } from "@aws-cdk/core";
+import {Duration, Tag, Token} from "@aws-cdk/core";
+
 
 export class HeratepalveluStack extends cdk.Stack {
   constructor(
@@ -17,6 +19,14 @@ export class HeratepalveluStack extends cdk.Stack {
     props?: cdk.StackProps
   ) {
     super(scope, id, props);
+
+    const git = require("git-utils");
+    const repo = git.open("..");
+
+    console.log(repo.getStatus());
+    console.log(repo.getStatus() == {});
+
+    Tag.add(this, "Deployed version", repo.getReferenceTarget(repo.getHead()));
 
     const getParameterFromSsm = (parameterName: string): string => {
       return ssm.StringParameter.valueForStringParameter(
@@ -28,8 +38,6 @@ export class HeratepalveluStack extends cdk.Stack {
     const getEnvVarFromSsm = (parameterName: string): string => {
       return getParameterFromSsm(parameterName.replace("_", "-"));
     };
-
-    const envStackName = `heratepalvelu-${envName}`;
 
     const envVarsList = [
       "cas_user",
@@ -99,7 +107,7 @@ export class HeratepalveluStack extends cdk.Stack {
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue");
 
     const ehoksHerateQueue = new sqs.Queue(this, "HerateQueue", {
-      queueName: `${envStackName}-eHOKSHerateQueue`,
+      queueName: `${id}-eHOKSHerateQueue`,
       deadLetterQueue: {
         queue: herateDeadLetterQueue,
         maxReceiveCount: 5
@@ -117,7 +125,8 @@ export class HeratepalveluStack extends cdk.Stack {
       orgwhitelist_table: organisaatioWhitelistTable.tableName,
       metadata_table: metadataTable.tableName,
       organisaatio_url: `${envVars.virkailja_url}/organisaatio-service/rest/organisaatio/v4/`,
-      cas_url: `${envVars.virkailja_url}/cas`
+      cas_url: `${envVars.virkailja_url}/cas`,
+      stage: envName
     };
 
     const ehoksHerateAsset = new s3assets.Asset(
@@ -138,7 +147,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
-        caller_id: `${envStackName}-herateEmailHandler`
+        caller_id: `${id}-eHOKSherateHandler`
       },
       handler: "oph.heratepalvelu.eHOKSherateHandler::handleHOKSherate",
       memorySize: Token.asNumber(getParameterFromSsm("ehokshandler-memory")),
@@ -156,7 +165,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
-        caller_id: `${envStackName}-herateEmailHandler`,
+        caller_id: `${id}-herateEmailHandler`,
         viestintapalvelu_url: `${getEnvVarFromSsm(
           "virkailija-url"
         )}/ryhmasahkoposti-service/email`
@@ -165,7 +174,8 @@ export class HeratepalveluStack extends cdk.Stack {
       timeout: Duration.seconds(
         Token.asNumber(getParameterFromSsm("emailhandler-timeout"))
       ),
-      handler: "oph.heratepalvelu.herateEmailHandler::handleSendEmails"
+      handler: "oph.heratepalvelu.herateEmailHandler::handleSendEmails",
+      tracing: lambda.Tracing.ACTIVE
     });
     ehoksHerateAsset.grantRead(herateEmailHandler);
 
@@ -181,7 +191,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
-        caller_id: `${envStackName}-updatedOpiskeluoikeusHandler`,
+        caller_id: `${id}-updatedOpiskeluoikeusHandler`,
         ehoks_url: `${getEnvVarFromSsm(
           "virkailija-url"
         )}/ehoks-virkailija-backend/api/v1}`
@@ -193,7 +203,8 @@ export class HeratepalveluStack extends cdk.Stack {
       ),
       timeout: Duration.seconds(
         Token.asNumber(getParameterFromSsm("updatedoohandler-timeout"))
-      )
+      ),
+      tracing: lambda.Tracing.ACTIVE
     });
 
     [ehoksHerateHandler, herateEmailHandler, updatedOoHandler].forEach(
@@ -201,6 +212,11 @@ export class HeratepalveluStack extends cdk.Stack {
         metadataTable.grantReadWriteData(lambdaFunction);
         herateTable.grantReadWriteData(lambdaFunction);
         organisaatioWhitelistTable.grantReadData(lambdaFunction);
+        lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/serverless/heratepalvelu/*`],
+          actions: ['ssm:GetParameter']
+        }));
       }
     );
 
