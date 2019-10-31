@@ -23,8 +23,12 @@ export class HeratepalveluStack extends cdk.Stack {
     const git = require("git-utils");
     const repo = git.open("..");
 
-    console.log(repo.getStatus());
-    console.log(repo.getStatus() == {});
+    const status = repo.getStatus();
+    if (Object.entries(status).length !== 0) {
+      console.log("Uncommited changes:\n");
+      console.log(status);
+      throw new Error();
+    }
 
     Tag.add(this, "Deployed version", repo.getReferenceTarget(repo.getHead()));
 
