@@ -18,7 +18,7 @@
 
 (def ^:private pwd (delay
                      (ssm/get-secret
-                       (str (:stage env)
+                       (str "/" (:stage env)
                             "/serverless/heratepalvelu/cas-pwd"))))
 
 (defn- init-client []

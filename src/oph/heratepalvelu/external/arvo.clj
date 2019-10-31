@@ -9,7 +9,7 @@
 
 (def ^:private pwd (delay
                      (ssm/get-secret
-                       (str (:stage env)
+                       (str "/" (:stage env)
                             "/serverless/heratepalvelu/arvo-pwd"))))
 
 (defn build-arvo-request-body [herate

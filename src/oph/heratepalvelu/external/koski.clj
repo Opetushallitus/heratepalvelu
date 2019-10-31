@@ -5,7 +5,7 @@
 
 (def ^:private pwd (delay
                      (ssm/get-secret
-                       (str (:stage env)
+                       (str "/" (:stage env)
                             "/serverless/heratepalvelu/koski-pwd"))))
 
 (defn get-opiskeluoikeus [oid]
