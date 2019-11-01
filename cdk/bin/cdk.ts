@@ -3,6 +3,6 @@ import cdk = require("@aws-cdk/core");
 import { HeratepalveluStack } from "../lib/heratepalvelu";
 
 const app = new cdk.App();
-new HeratepalveluStack(app, "sieni-heratepalvelu", 'sieni');
-new HeratepalveluStack(app, "pallero-heratepalvelu", 'pallero');
-new HeratepalveluStack(app, "sade-heratepalvelu", 'sade');
+new HeratepalveluStack(app, "sieni-services-heratepalvelu", 'sieni');
+new HeratepalveluStack(app, "pallero-services-heratepalvelu", 'pallero');
+new HeratepalveluStack(app, "sade-services-heratepalvelu", 'sade');
