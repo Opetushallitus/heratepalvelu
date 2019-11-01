@@ -31,33 +31,38 @@ Katso esimerkkiä olemassa olevista tietueista.
 
 ### Kehitysympäristö
 
+
 Palvelu on kirjoitettu Clojurella, ja projektinhallintaan käytetään Leiningeniä. Deploy-työkaluna
-käytetään Serverless Frameworkia.
+käytetään AWS CDK:ta. AWS profiilien hallintaan aws-vault -työkalun käyttö on suositeltavaa.
 
-Serverless Frameworkin saat asennettua
+`npm install -g aws-cdk`
 
-``npm install -g serverless``
+`brew install cask aws-vault`
+(muokkaa käyttämääsi paketinhallintaan sopivaksi)
 
-jonka jälkeen deployn voit tehdä komennoilla
+Stageja ovat samat ympäristönimet kuin muissakin palveluissa (esim. 'pallero').
+
+Deploy cdk:lla tapahtuu seuraavanlaisin komennoin:
+
+Paketin buildaaminen
 
 `lein uberjar`
 
-`sls deploy -s <stage>`
+Deploy
 
-Stageja ovat samat ympäristönimet kuin muissakin palveluissa (esim. 'pallero'), default arvona 'sieni'.
+`cd cdk`
 
-Jos haluat määrittää erikseen käytettävän profiilin, käytä vipua `--aws-profile <profiili>`. Jos serverless valittaa
-puuttuvasta profiilista, vaikka se olisi oikein konfiguroitu, niin seuraavan komennon ajaminen ennen deployta pitäisi
-korjata se: `export AWS_SDK_LOAD_CONFIG=1`.
+Testiympäristöihin
+
+`aws-vault exec oph-dev -- cdk deploy pallero-services-heratepalvelu`
+
+Tuotantoon
+
+`aws-vault exec oph-prod -- cdk deploy sade-services-heratepalvelu`
 
 Yksikkötestit voit ajaa komennolla
 
 `lein test`
-
-Lisätietoja Serverless-työkalusta löydät [dokumentaatiosta](https://serverless.com/framework/docs/) 
-tai komennolla
-
-`sls --help`
 
 Ympäristömuuttujat löytyvät SSM Parameter Storesta ja Lambda ajojen välistä tilaa voi tarvittaessa
 tallentaa key-value pareina metadata-tauluun.
