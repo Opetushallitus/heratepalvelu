@@ -81,6 +81,7 @@
                {:recipient [{:email (:sahkoposti data)}]
                 :email {:callingProcess "heratepalvelu"
                         :from "no-reply@opintopolku.fi"
+                        :sender "Amis-palaute-respons-feedback"
                         :subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
                         :isHtml true
                         :body (amispalaute-html data)}}
