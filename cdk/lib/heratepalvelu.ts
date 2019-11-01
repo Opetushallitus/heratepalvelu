@@ -170,7 +170,6 @@ export class HeratepalveluStack extends cdk.Stack {
       ),
       tracing: lambda.Tracing.ACTIVE
     });
-    ehoksHerateAsset.grantRead(ehoksHerateHandler);
 
     ehoksHerateHandler.addEventSource(new SqsEventSource(ehoksHerateQueue, { batchSize: 1 }));
 
@@ -189,7 +188,6 @@ export class HeratepalveluStack extends cdk.Stack {
       handler: "oph.heratepalvelu.herateEmailHandler::handleSendEmails",
       tracing: lambda.Tracing.ACTIVE
     });
-    ehoksHerateAsset.grantRead(herateEmailHandler);
 
     new events.Rule(this, "HerateEmailScheduleRule", {
       schedule: events.Schedule.expression(
