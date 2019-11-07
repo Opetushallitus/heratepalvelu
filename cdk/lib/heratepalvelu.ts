@@ -131,10 +131,6 @@ export class HeratepalveluStack extends cdk.Stack {
       return envVarsObject;
     }, {});
 
-    ehoksHerateQueue.grantSendMessages(
-      {grantPrincipal: new iam.ArnPrincipal("arn:aws:iam::225588084137:role/sade-services-ehoks-virkailija-ECSTaskRole-*")}
-    );
-
     envVars = {
       ...envVars,
       herate_table: herateTable.tableName,
