@@ -133,7 +133,7 @@ export class HeratepalveluStack extends cdk.Stack {
 
     ehoksHerateQueue.grant(
       {grantPrincipal: new iam.ArnPrincipal("arn:aws:iam::225588084137:role/sade-services-ehoks-virkailija-ECSTaskRole-*")},
-      "SendMessage", "GetQueueUrl"
+      "sqs:SendMessage", "sqs:GetQueueUrl"
     );
 
     envVars = {
