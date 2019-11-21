@@ -6,6 +6,7 @@
             [oph.heratepalvelu.external.organisaatio :refer [get-organisaatio]]
             [oph.heratepalvelu.external.arvo :refer :all]
             [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.ehoks :refer [add-kyselytunnus-to-hoks]]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
@@ -116,6 +117,10 @@
                            :viestintapalvelu-id [:n "-1"]}
                           {:cond-expr (str "attribute_not_exists(oppija_toimija) AND "
                                            "attribute_not_exists(tyyppi_kausi)")})
+            (add-kyselytunnus-to-hoks (:ehoks-id herate)
+                                      {:kyselylinkki kyselylinkki
+                                       :tyyppi kyselytyyppi
+                                       :alkupvm alkupvm})
             (catch ConditionalCheckFailedException e
               (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                         oppija " koulutustoimijalla " koulutustoimija
