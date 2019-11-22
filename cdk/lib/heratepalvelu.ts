@@ -202,7 +202,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         caller_id: `${id}-updatedOpiskeluoikeusHandler`,
-        ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1}`
+        ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler:
         "oph.heratepalvelu.UpdatedOpiskeluoikeusHandler::handleUpdatedOpiskeluoikeus",
