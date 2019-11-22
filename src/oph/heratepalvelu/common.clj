@@ -117,10 +117,13 @@
                            :viestintapalvelu-id [:n "-1"]}
                           {:cond-expr (str "attribute_not_exists(oppija_toimija) AND "
                                            "attribute_not_exists(tyyppi_kausi)")})
-            (add-kyselytunnus-to-hoks (:ehoks-id herate)
-                                      {:kyselylinkki kyselylinkki
-                                       :tyyppi kyselytyyppi
-                                       :alkupvm alkupvm})
+            (try
+              (add-kyselytunnus-to-hoks (:ehoks-id herate)
+                                        {:kyselylinkki kyselylinkki
+                                         :tyyppi kyselytyyppi
+                                         :alkupvm alkupvm})
+              (catch Exception e
+                (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
             (catch ConditionalCheckFailedException e
               (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                         oppija " koulutustoimijalla " koulutustoimija
