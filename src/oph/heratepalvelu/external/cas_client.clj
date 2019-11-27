@@ -38,7 +38,7 @@
 
 (defn- create-params [cas-session-id body]
   (cond-> {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)
-                              "Caller-Id" (:caller-id env)
+                              "Caller-Id" (str "1.2.246.562.10.00000000001." (:caller-id env))
                               "clientSubSystemCode" (:caller-id env)}
            :redirect-strategy :none}
           (some? body)
