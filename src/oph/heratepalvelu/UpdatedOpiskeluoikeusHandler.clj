@@ -27,13 +27,6 @@
    :sahkoposti         (:sahkoposti hoks)
    :alkupvm            alkupvm})
 
-(defn date-string-to-timestamp
-  ([date-str fmt]
-   (c/to-long (f/parse (fmt f/formatters)
-                       date-str)))
-  ([date-str]
-   (date-string-to-timestamp date-str :date)))
-
 (defn get-vahvistus-pvm [opiskeluoikeus]
   (if-let [vahvistus-pvm (-> (:suoritukset opiskeluoikeus)
                              (seq)

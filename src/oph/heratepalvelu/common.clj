@@ -26,6 +26,13 @@
 (defn generate-uuid []
   (.toString (UUID/randomUUID)))
 
+(defn date-string-to-timestamp
+  ([date-str fmt]
+   (c/to-long (f/parse (fmt f/formatters)
+                       date-str)))
+  ([date-str]
+   (date-string-to-timestamp date-str :date)))
+
 (defn get-koulutustoimija-oid [opiskeluoikeus]
   (if-let [koulutustoimija-oid (:oid (:koulutustoimija opiskeluoikeus))]
     koulutustoimija-oid

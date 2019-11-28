@@ -40,7 +40,7 @@ export class HeratepalveluStack extends cdk.Stack {
     const getParameterFromSsm = (parameterName: string): string => {
       return ssm.StringParameter.valueForStringParameter(
         this,
-        `/${envName}/serverless/heratepalvelu/${parameterName}`
+        `/${envName}/services/heratepalvelu/${parameterName}`
       );
     };
 
@@ -222,7 +222,7 @@ export class HeratepalveluStack extends cdk.Stack {
         organisaatioWhitelistTable.grantReadData(lambdaFunction);
         lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
-          resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/serverless/heratepalvelu/*`],
+          resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],
           actions: ['ssm:GetParameter']
         }));
       }
