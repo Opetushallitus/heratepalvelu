@@ -104,7 +104,7 @@
    :koulutustoimija {:oid "1.2.246.562.10.346830761110"}
    :oppilaitos {:oid "1.2.246.562.10.52251087186"}})
 
-(defn mock-check-organisaatio-whitelist-true? [_] true)
+(defn mock-check-organisaatio-whitelist-true? [_ _] true)
 
 (defn mock-check-organisaatio-whitelist-false? [_] false)
 

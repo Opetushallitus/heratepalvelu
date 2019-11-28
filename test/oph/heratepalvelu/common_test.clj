@@ -42,3 +42,8 @@
               (check-organisaatio-whitelist? "1.2.246.562.10.346830761111")))
         (is (nil?
               (check-organisaatio-whitelist? "1.2.246.562.10.346830761112")))))))
+
+(deftest test-date-string-to-timestamp
+  (testing "Transforming date-string to timestamp"
+    (is (= (date-string-to-timestamp "1970-01-01") 0))
+    (is (= (date-string-to-timestamp "2019-08-01") 1564617600000))))
