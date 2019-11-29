@@ -1,7 +1,9 @@
 (ns oph.heratepalvelu.common-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.common :refer :all]
-            [oph.heratepalvelu.util :refer :all]))
+            [oph.heratepalvelu.util :refer :all]
+            [clj-time.core :as t]
+            [clj-time.coerce :as c]))
 
 (deftest test-get-koulutustoimija-oid
   (testing "Get koulutustoimija oid"
@@ -41,7 +43,10 @@
         (is (nil?
               (check-organisaatio-whitelist? "1.2.246.562.10.346830761111")))
         (is (nil?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761112")))))))
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761112")))
+        (is (nil?
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761113"
+                                             (c/to-long (t/today)))))))))
 
 (deftest test-date-string-to-timestamp
   (testing "Transforming date-string to timestamp"

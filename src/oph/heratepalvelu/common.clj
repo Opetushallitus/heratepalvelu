@@ -64,7 +64,7 @@
      (if
        (when (:kayttoonottopvm item)
          (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-             (* 1000 timestamp)))
+             timestamp))
        true
        (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa")))))
 
