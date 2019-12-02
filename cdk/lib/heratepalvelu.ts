@@ -159,7 +159,8 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
-        caller_id: `${id}-eHOKSherateHandler`
+        caller_id: `${id}-eHOKSherateHandler`,
+        ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler: "oph.heratepalvelu.eHOKSherateHandler::handleHOKSherate",
       memorySize: Token.asNumber(getParameterFromSsm("ehokshandler-memory")),
