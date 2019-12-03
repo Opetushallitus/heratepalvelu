@@ -54,7 +54,7 @@
     (= "1.2.246.562.10.346830761113"
        (last (:organisaatio-oid conds)))
     {:organisaatio-oid "1.2.246.562.10.346830761113"
-     :kayttoonottopvm  (str (t/plus (t/today) (t/days 1)))}))
+     :kayttoonottopvm  (str (t/plus (t/today) (t/months 1)))}))
 
 (def dummy-opiskeluoikeus-oid "1.2.246.562.24.10442483592")
 (def dummy-request-id "1d6c30bb-a2d9-5540-aa1a-65410fc2f8f5")
@@ -109,7 +109,7 @@
    :koulutustoimija {:oid "1.2.246.562.10.346830761110"}
    :oppilaitos {:oid "1.2.246.562.10.52251087186"}})
 
-(defn mock-check-organisaatio-whitelist-true? [_ _] true)
+(defn mock-check-organisaatio-whitelist-true? [_] true)
 
 (defn mock-check-organisaatio-whitelist-false? [_] false)
 

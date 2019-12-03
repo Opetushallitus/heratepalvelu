@@ -46,7 +46,10 @@
               (check-organisaatio-whitelist? "1.2.246.562.10.346830761112")))
         (is (nil?
               (check-organisaatio-whitelist? "1.2.246.562.10.346830761113"
-                                             (c/to-long (t/today)))))))))
+                                             (c/to-long (t/minus (t/today) (t/days 1))))))
+        (is (true?
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761110"
+                                             (c/to-long (t/minus (t/today) (t/days 1))))))))))
 
 (deftest test-date-string-to-timestamp
   (testing "Transforming date-string to timestamp"

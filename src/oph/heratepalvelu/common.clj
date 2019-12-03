@@ -62,9 +62,12 @@
    (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                             (:orgwhitelist-table env))]
      (if
-       (when (:kayttoonottopvm item)
+       (and
+         (:kayttoonottopvm item)
          (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-             timestamp))
+             timestamp)
+         (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
+             (c/to-long (t/today))))
        true
        (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa")))))
 
