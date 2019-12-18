@@ -77,7 +77,8 @@
          (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
              (c/to-long (t/today))))
        true
-       (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa")))))
+       (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa,"
+                 " tai herätepvm on ennen käyttöönotto päivämäärää")))))
 
 (defn check-duplicate-herate? [oppija koulutustoimija laskentakausi kyselytyyppi]
   (if
