@@ -43,13 +43,17 @@
         (is (nil?
               (check-organisaatio-whitelist? "1.2.246.562.10.346830761111")))
         (is (nil?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761112")))
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761111"
+                                             (c/to-long (t/minus (t/today) (t/days 1))))))
         (is (nil?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761113"
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761111"
+                                             (c/to-long (t/plus (t/today) (t/days 1))))))
+        (is (nil?
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761112"
                                              (c/to-long (t/minus (t/today) (t/days 1))))))
         (is (true?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761110"
-                                             (c/to-long (t/minus (t/today) (t/days 1))))))))))
+              (check-organisaatio-whitelist? "1.2.246.562.10.346830761112"
+                                             (c/to-long (t/plus (t/today) (t/days 1))))))))))
 
 (deftest test-date-string-to-timestamp
   (testing "Transforming date-string to timestamp"

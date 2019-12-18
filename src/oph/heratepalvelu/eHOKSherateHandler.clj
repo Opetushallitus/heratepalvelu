@@ -25,7 +25,8 @@
           (when (and (check-suoritus-type?
                        (first (seq (:suoritukset opiskeluoikeus))))
                      (check-organisaatio-whitelist?
-                       koulutustoimija))
+                       koulutustoimija (date-string-to-timestamp
+                                         (:alkupvm herate))))
             (save-herate herate opiskeluoikeus)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " e))
