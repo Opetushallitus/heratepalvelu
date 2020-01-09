@@ -25,6 +25,16 @@ export class HeratepalveluStack extends cdk.Stack {
 
     const status = repo.getStatus();
     const aheadBehindCount = repo.getAheadBehindCount();
+    const upstreamBranch = repo.getUpstreamBranch();
+
+    if (!upstreamBranch) {
+      throw new Error("No upstream branch");
+    }
+
+    if (envName === "sade" && upstreamBranch !== "refs/remotes/origin/master") {
+      console.log(upstreamBranch);
+      throw new Error("Only master can be deployed to production");
+    }
 
     if (Object.entries(status).length !== 0
       || aheadBehindCount.ahead !== 0
