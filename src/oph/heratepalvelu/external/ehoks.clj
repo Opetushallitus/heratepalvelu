@@ -23,3 +23,6 @@
      :content-type "application/json"
      :body (generate-string data)
      :as :json}))
+
+(defn call-maintenance-endpoints []
+  (log/debug "ehoks/call-maintenance-endpoints"))
