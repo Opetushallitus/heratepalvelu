@@ -1,6 +1,6 @@
 (ns oph.heratepalvelu.logging_test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.eHOKSherateHandler :refer :all]
+            [oph.heratepalvelu.AMISherateHandler :refer :all]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.util :refer :all])
@@ -47,7 +47,7 @@
        oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki
        oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki]
       (do
-        (is (thrown? AwsServiceException (-handleHOKSherate
+        (is (thrown? AwsServiceException (-handleAMISherate
                                            nil
                                            (mock-handler-event :ehoksherate)
                                            (mock-handler-context))))
@@ -65,5 +65,5 @@
        oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki
        oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki]
       (do
-        (-handleHOKSherate nil (mock-handler-event :ehoksherate) (mock-handler-context))
+        (-handleAMISherate nil (mock-handler-event :ehoksherate) (mock-handler-context))
         (is (true? (did-log? "Tämän kyselyn linkki on jo toimituksessa oppilaalle" "WARN")))))))

@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.eHOKSherateHandler
+(ns oph.heratepalvelu.AMISherateHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.external.koski :refer [get-opiskeluoikeus]]
@@ -9,13 +9,13 @@
            (clojure.lang ExceptionInfo)))
 
 (gen-class
-  :name "oph.heratepalvelu.eHOKSherateHandler"
-  :methods [[^:static handleHOKSherate
+  :name "oph.heratepalvelu.AMISherateHandler"
+  :methods [[^:static handleAMISherate
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn -handleHOKSherate [this event context]
-  (log-caller-details "handleHOKSherate" event context)
+(defn -handleAMISherate [this event context]
+  (log-caller-details "handleAMISherate" event context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try

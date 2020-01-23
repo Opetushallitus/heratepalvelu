@@ -18,6 +18,24 @@
   (log-caller-details "handleTPOherate" event context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
-      (let [herate (parse-string (.getBody msg) true)
-            opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid herate))
-            koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]))))
+      (try
+        (let [herate (parse-string (.getBody msg) true)
+              opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid herate))
+              koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
+          (when (check-suoritus-type?
+                  (first (seq (:suoritukset opiskeluoikeus))))
+            (
+
+              )))
+        (catch JsonParseException e
+          (log/error "Virhe viestin lukemisessa: " e))
+        (catch ExceptionInfo e
+          (if (and
+                (:status (ex-data e))
+                (< 399 (:status (ex-data e)))
+                (> 500 (:status (ex-data e))))
+            (if (= 404 (:status (ex-data e)))
+              (log/error "Ei opiskeluoikeutta " (:opiskeluoikeus-oid (parse-string (.getBody msg) true)))
+              (log/error "Unhandled client error: " e))
+            (do (log/error e)
+                (throw e))))))))
