@@ -16,36 +16,14 @@ export class HeratepalveluStack extends cdk.Stack {
     scope: cdk.App,
     id: string,
     envName: string,
+    version: string,
     props?: cdk.StackProps
   ) {
     super(scope, id, props);
 
-    const git = require("git-utils");
-    const repo = git.open(".");
 
-    const status = repo.getStatus();
-    const aheadBehindCount = repo.getAheadBehindCount();
-    const upstreamBranch = repo.getUpstreamBranch();
 
-    if (!upstreamBranch) {
-      throw new Error("No upstream branch");
-    }
-
-    if (envName === "sade" && upstreamBranch !== "refs/remotes/origin/master") {
-      console.log(upstreamBranch);
-      throw new Error("Only master can be deployed to production");
-    }
-
-    if (Object.entries(status).length !== 0
-      || aheadBehindCount.ahead !== 0
-      || aheadBehindCount.behind !== 0) {
-      console.log("Uncommited changes or local is ahead/behind of remote:\n");
-      console.log(status);
-      console.log(aheadBehindCount);
-      throw new Error();
-    }
-
-    Tag.add(this, "Deployed version", repo.getReferenceTarget(repo.getHead()));
+    Tag.add(this, "Deployed version", version);
 
     const getParameterFromSsm = (parameterName: string): string => {
       return ssm.StringParameter.valueForStringParameter(
