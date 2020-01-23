@@ -122,14 +122,28 @@ export class HeratepalveluStack extends cdk.Stack {
       serverSideEncryption: true
     });
 
-    const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
+    const AMISherateDeadLetterQueue = new sqs.Queue(this, "AMISHerateDeadLetterQueue", {
       retentionPeriod: Duration.days(14)
     });
 
-    const ehoksHerateQueue = new sqs.Queue(this, "HerateQueue", {
+    const AMISHerateQueue = new sqs.Queue(this, "AMISHerateQueue", {
       queueName: `${id}-eHOKSHerateQueue`,
       deadLetterQueue: {
-        queue: herateDeadLetterQueue,
+        queue: AMISherateDeadLetterQueue,
+        maxReceiveCount: 5
+      },
+      visibilityTimeout: Duration.seconds(60),
+      retentionPeriod: Duration.days(14)
+    });
+
+    const TPOherateDeadLetterQueue = new sqs.Queue(this, "TPOHerateDeadLetterQueue", {
+      retentionPeriod: Duration.days(14)
+    });
+
+    const TPOHerateQueue = new sqs.Queue(this, "TPOHerateQueue", {
+      queueName: `${id}-eHOKSHerateQueue`,
+      deadLetterQueue: {
+        queue: TPOherateDeadLetterQueue,
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
@@ -164,15 +178,15 @@ export class HeratepalveluStack extends cdk.Stack {
       ehoksHerateAsset.s3ObjectKey
     );
 
-    const ehoksHerateHandler = new lambda.Function(this, "EhoksHerateHandler", {
+    const AMISHerateHandler = new lambda.Function(this, "AMISHerateHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
       environment: {
         ...envVars,
-        caller_id: `${id}-eHOKSherateHandler`,
+        caller_id: `${id}-AMISherateHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
-      handler: "oph.heratepalvelu.eHOKSherateHandler::handleHOKSherate",
+      handler: "oph.heratepalvelu.AMISherateHandler::handleAMISherate",
       memorySize: Token.asNumber(getParameterFromSsm("ehokshandler-memory")),
       reservedConcurrentExecutions:
         Token.asNumber(getParameterFromSsm("ehokshandler-concurrency")),
@@ -182,7 +196,7 @@ export class HeratepalveluStack extends cdk.Stack {
       tracing: lambda.Tracing.ACTIVE
     });
 
-    ehoksHerateHandler.addEventSource(new SqsEventSource(ehoksHerateQueue, { batchSize: 1 }));
+    AMISHerateHandler.addEventSource(new SqsEventSource(AMISHerateQueue, { batchSize: 1 }));
 
     const herateEmailHandler = new lambda.Function(this, "HerateEmailHandler", {
       runtime: lambda.Runtime.JAVA_8,
@@ -226,7 +240,28 @@ export class HeratepalveluStack extends cdk.Stack {
       tracing: lambda.Tracing.ACTIVE
     });
 
-    [ehoksHerateHandler, herateEmailHandler, updatedOoHandler].forEach(
+    const TPOHerateHandler = new lambda.Function(this, "TPOHerateHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...envVars,
+        caller_id: `${id}-TPOherateHandler`,
+        ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
+      },
+      handler: "oph.heratepalvelu.TPOherateHandler::handleTPOherate",
+      memorySize: Token.asNumber(getParameterFromSsm("tpohandler-memory")),
+      reservedConcurrentExecutions:
+        Token.asNumber(getParameterFromSsm("tpohandler-concurrency")),
+      timeout: Duration.seconds(
+        Token.asNumber(getParameterFromSsm("tpohandler-timeout"))
+      ),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    TPOHerateHandler.addEventSource(new SqsEventSource(TPOHerateQueue, { batchSize: 1 }));
+
+
+    [AMISHerateHandler, herateEmailHandler, updatedOoHandler, TPOHerateHandler].forEach(
       lambdaFunction => {
         metadataTable.grantReadWriteData(lambdaFunction);
         herateTable.grantReadWriteData(lambdaFunction);
