@@ -95,7 +95,8 @@
                            (check-organisaatio-whitelist?
                              koulustoimija
                              (date-string-to-timestamp
-                               vahvistus-pvm)))
+                               vahvistus-pvm))
+                           (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus)))
                   (if-let [hoks
                            (try
                              (get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))

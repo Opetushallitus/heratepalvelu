@@ -26,7 +26,8 @@
                        (first (seq (:suoritukset opiskeluoikeus))))
                      (check-organisaatio-whitelist?
                        koulutustoimija (date-string-to-timestamp
-                                         (:alkupvm herate))))
+                                         (:alkupvm herate)))
+                     (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus)))
             (save-herate herate opiskeluoikeus)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " e))
