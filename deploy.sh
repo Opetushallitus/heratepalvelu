@@ -4,9 +4,6 @@ env=$1
 qa="pallero"
 prod="sade"
 
-echo "$env"
-echo "$qa"
-
 if lein test ; then
   lein uberjar
   cd cdk || exit $?
