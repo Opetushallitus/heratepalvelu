@@ -45,7 +45,7 @@ export class HeratepalveluStack extends cdk.Stack {
       "virkailija_url"
     ];
 
-    const herateTable = new dynamodb.Table(this, "HerateTable", {
+    const AMISherateTable = new dynamodb.Table(this, "AMISHerateTable", {
       partitionKey: {
         name: "toimija_oppija",
         type: dynamodb.AttributeType.STRING
@@ -58,7 +58,7 @@ export class HeratepalveluStack extends cdk.Stack {
       serverSideEncryption: true
     });
 
-    herateTable.addGlobalSecondaryIndex({
+    AMISherateTable.addGlobalSecondaryIndex({
       indexName: "lahetysIndex",
       partitionKey: {
         name: "lahetystila",
@@ -105,7 +105,7 @@ export class HeratepalveluStack extends cdk.Stack {
     });
 
     const AMISHerateQueue = new sqs.Queue(this, "AMISHerateQueue", {
-      queueName: `${id}-eHOKSHerateQueue`,
+      queueName: `${id}-AMISHerateQueue`,
       deadLetterQueue: {
         queue: AMISherateDeadLetterQueue,
         maxReceiveCount: 5
@@ -119,7 +119,7 @@ export class HeratepalveluStack extends cdk.Stack {
     });
 
     const TPOHerateQueue = new sqs.Queue(this, "TPOHerateQueue", {
-      queueName: `${id}-eHOKSHerateQueue`,
+      queueName: `${id}-TPOHerateQueue`,
       deadLetterQueue: {
         queue: TPOherateDeadLetterQueue,
         maxReceiveCount: 5
@@ -135,7 +135,7 @@ export class HeratepalveluStack extends cdk.Stack {
 
     envVars = {
       ...envVars,
-      herate_table: herateTable.tableName,
+      herate_table: AMISherateTable.tableName,
       orgwhitelist_table: organisaatioWhitelistTable.tableName,
       metadata_table: metadataTable.tableName,
       organisaatio_url: `${envVars.virkailija_url}/organisaatio-service/rest/organisaatio/v4/`,
@@ -242,7 +242,7 @@ export class HeratepalveluStack extends cdk.Stack {
     [AMISHerateHandler, herateEmailHandler, updatedOoHandler, TPOHerateHandler].forEach(
       lambdaFunction => {
         metadataTable.grantReadWriteData(lambdaFunction);
-        herateTable.grantReadWriteData(lambdaFunction);
+        AMISherateTable.grantReadWriteData(lambdaFunction);
         organisaatioWhitelistTable.grantReadData(lambdaFunction);
         lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
