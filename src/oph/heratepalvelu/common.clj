@@ -20,7 +20,7 @@
               :kyselytyyppi       s/Str
               :opiskeluoikeus-oid s/Str
               :oppija-oid         s/Str
-              :sahkoposti         s/Str
+              :sahkoposti         (s/both s/Str (s/pred not-empty))
               :alkupvm            s/Str})
 
 (defn generate-uuid []
