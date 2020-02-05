@@ -13,21 +13,23 @@ if (!upstreamBranch) {
   throw new Error("No upstream branch");
 }
 
-if (Object.entries(status).length !== 0
-  || aheadBehindCount.ahead !== 0
-  || aheadBehindCount.behind !== 0) {
-  console.log("Uncommited changes or local is ahead/behind of remote:\n");
-  console.log(status);
-  console.log(aheadBehindCount);
-  throw new Error();
-}
+const canDeploy = !(Object.entries(status).length !== 0 || aheadBehindCount.ahead !== 0 || aheadBehindCount.behind !== 0);
 
 const version = repo.getReferenceTarget(repo.getHead());
 
 const app = new cdk.App();
-new HeratepalveluStack(app, "sieni-services-heratepalvelu", 'sieni', version);
-new HeratepalveluStack(app, "pallero-services-heratepalvelu", 'pallero', version);
 
-if (upstreamBranch === "refs/remotes/origin/master") {
-  new HeratepalveluStack(app, "sade-services-heratepalvelu", 'sade', version);
+if (canDeploy) {
+  new HeratepalveluStack(app, "sieni-services-heratepalvelu", 'sieni', version);
+  new HeratepalveluStack(app, "pallero-services-heratepalvelu", 'pallero', version);
+
+  if (upstreamBranch === "refs/remotes/origin/master") {
+    new HeratepalveluStack(app, "sade-services-heratepalvelu", 'sade', version);
+  }
+} else {
+  console.log("Uncommited changes or local is ahead/behind of remote:\n");
+  console.log(status);
+  console.log(aheadBehindCount);
+
+  new HeratepalveluStack(app, "sieni-services-heratepalvelu", 'sieni', version);
 }

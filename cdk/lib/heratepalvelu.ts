@@ -21,8 +21,6 @@ export class HeratepalveluStack extends cdk.Stack {
   ) {
     super(scope, id, props);
 
-
-
     Tag.add(this, "Deployed version", version);
 
     const getParameterFromSsm = (parameterName: string): string => {
@@ -59,6 +57,39 @@ export class HeratepalveluStack extends cdk.Stack {
     });
 
     AMISherateTable.addGlobalSecondaryIndex({
+      indexName: "lahetysIndex",
+      partitionKey: {
+        name: "lahetystila",
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: "alkupvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      nonKeyAttributes: [
+        "sahkoposti",
+        "kyselylinkki",
+        "suorituskieli",
+        "viestintapalvelu-id",
+        "kyselytyyppi"
+      ],
+      projectionType: dynamodb.ProjectionType.INCLUDE
+    });
+
+    const TPOherateTable = new dynamodb.Table(this, "TPOHerateTable", {
+      partitionKey: {
+        name: "toimija_oppija",
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: "tyyppi_kausi",
+        type: dynamodb.AttributeType.STRING
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      serverSideEncryption: true
+    });
+
+    TPOherateTable.addGlobalSecondaryIndex({
       indexName: "lahetysIndex",
       partitionKey: {
         name: "lahetystila",
@@ -135,7 +166,6 @@ export class HeratepalveluStack extends cdk.Stack {
 
     envVars = {
       ...envVars,
-      herate_table: AMISherateTable.tableName,
       orgwhitelist_table: organisaatioWhitelistTable.tableName,
       metadata_table: metadataTable.tableName,
       organisaatio_url: `${envVars.virkailija_url}/organisaatio-service/rest/organisaatio/v4/`,
@@ -161,6 +191,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
+        herate_table: AMISherateTable.tableName,
         caller_id: `${id}-AMISherateHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
@@ -181,6 +212,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
+        herate_table: AMISherateTable.tableName,
         caller_id: `${id}-herateEmailHandler`,
         viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
       },
@@ -204,6 +236,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
+        herate_table: AMISherateTable.tableName,
         caller_id: `${id}-updatedOpiskeluoikeusHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
@@ -223,6 +256,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
+        herate_table: TPOherateTable.tableName,
         caller_id: `${id}-TPOherateHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
