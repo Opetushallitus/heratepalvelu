@@ -76,40 +76,7 @@ export class HeratepalveluStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
 
-    const AMISherateTable = new dynamodb.Table(this, "AMISHerateTable", {
-      partitionKey: {
-        name: "toimija_oppija",
-        type: dynamodb.AttributeType.STRING
-      },
-      sortKey: {
-        name: "tyyppi_kausi",
-        type: dynamodb.AttributeType.STRING
-      },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      serverSideEncryption: true
-    });
-
-    AMISherateTable.addGlobalSecondaryIndex({
-      indexName: "lahetysIndex",
-      partitionKey: {
-        name: "lahetystila",
-        type: dynamodb.AttributeType.STRING
-      },
-      sortKey: {
-        name: "alkupvm",
-        type: dynamodb.AttributeType.STRING
-      },
-      nonKeyAttributes: [
-        "sahkoposti",
-        "kyselylinkki",
-        "suorituskieli",
-        "viestintapalvelu-id",
-        "kyselytyyppi"
-      ],
-      projectionType: dynamodb.ProjectionType.INCLUDE
-    });
-
-    // const TPOherateTable = new dynamodb.Table(this, "TPOHerateTable", {
+    // const AMISherateTable = new dynamodb.Table(this, "AMISHerateTable", {
     //   partitionKey: {
     //     name: "toimija_oppija",
     //     type: dynamodb.AttributeType.STRING
@@ -122,7 +89,7 @@ export class HeratepalveluStack extends cdk.Stack {
     //   serverSideEncryption: true
     // });
     //
-    // TPOherateTable.addGlobalSecondaryIndex({
+    // AMISherateTable.addGlobalSecondaryIndex({
     //   indexName: "lahetysIndex",
     //   partitionKey: {
     //     name: "lahetystila",
@@ -178,20 +145,6 @@ export class HeratepalveluStack extends cdk.Stack {
       retentionPeriod: Duration.days(14)
     });
 
-    // const TPOherateDeadLetterQueue = new sqs.Queue(this, "TPOHerateDeadLetterQueue", {
-    //   retentionPeriod: Duration.days(14)
-    // });
-    //
-    // const TPOHerateQueue = new sqs.Queue(this, "TPOHerateQueue", {
-    //   queueName: `${id}-TPOHerateQueue`,
-    //   deadLetterQueue: {
-    //     queue: TPOherateDeadLetterQueue,
-    //     maxReceiveCount: 5
-    //   },
-    //   visibilityTimeout: Duration.seconds(60),
-    //   retentionPeriod: Duration.days(14)
-    // });
-
     let envVars = envVarsList.reduce((envVarsObject: any, key: string) => {
       envVarsObject[key] = getEnvVarFromSsm(key);
       return envVarsObject;
@@ -224,7 +177,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
-        herate_table: AMISherateTable.tableName,
+        herate_table: herateTable.tableName,
         caller_id: `${id}-AMISherateHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
@@ -245,7 +198,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
-        herate_table: AMISherateTable.tableName,
+        herate_table: herateTable.tableName,
         caller_id: `${id}-herateEmailHandler`,
         viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
       },
@@ -269,7 +222,7 @@ export class HeratepalveluStack extends cdk.Stack {
       code: lambdaCode,
       environment: {
         ...envVars,
-        herate_table: AMISherateTable.tableName,
+        herate_table: herateTable.tableName,
         caller_id: `${id}-updatedOpiskeluoikeusHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
@@ -291,46 +244,25 @@ export class HeratepalveluStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(updatedOoHandler)]
     });
 
-    // const TPOHerateHandler = new lambda.Function(this, "TPOHerateHandler", {
+    // const migrateHandler = new lambda.Function(this, "migrateHandler", {
     //   runtime: lambda.Runtime.JAVA_8,
     //   code: lambdaCode,
     //   environment: {
-    //     ...envVars,
-    //     herate_table: TPOherateTable.tableName,
-    //     caller_id: `${id}-TPOherateHandler`,
-    //     ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
+    //     herate_table: herateTable.tableName,
+    //     amis_table: AMISherateTable.tableName
     //   },
-    //   handler: "oph.heratepalvelu.TPOherateHandler::handleTPOherate",
-    //   memorySize: Token.asNumber(getParameterFromSsm("tpohandler-memory")),
-    //   reservedConcurrentExecutions:
-    //     Token.asNumber(getParameterFromSsm("tpohandler-concurrency")),
+    //   handler: "oph.heratepalvelu.migrateHandler::handleMigration",
+    //   memorySize: 2048,
     //   timeout: Duration.seconds(
-    //     Token.asNumber(getParameterFromSsm("tpohandler-timeout"))
+    //     15 * 60
     //   ),
     //   tracing: lambda.Tracing.ACTIVE
     // });
-    //
-    // TPOHerateHandler.addEventSource(new SqsEventSource(TPOHerateQueue, { batchSize: 1 }));
 
-    const migrateHandler = new lambda.Function(this, "migrateHandler", {
-      runtime: lambda.Runtime.JAVA_8,
-      code: lambdaCode,
-      environment: {
-        herate_table: herateTable.tableName,
-        amis_table: AMISherateTable.tableName
-      },
-      handler: "oph.heratepalvelu.migrateHandler::handleMigration",
-      memorySize: 2048,
-      timeout: Duration.seconds(
-        15 * 60
-      ),
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    [AMISHerateHandler, herateEmailHandler, updatedOoHandler, migrateHandler].forEach(
+    [AMISHerateHandler, herateEmailHandler, updatedOoHandler].forEach(
       lambdaFunction => {
         metadataTable.grantReadWriteData(lambdaFunction);
-        AMISherateTable.grantReadWriteData(lambdaFunction);
+        //AMISherateTable.grantReadWriteData(lambdaFunction);
         herateTable.grantReadWriteData(lambdaFunction);
         organisaatioWhitelistTable.grantReadData(lambdaFunction);
         lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
