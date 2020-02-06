@@ -23,9 +23,9 @@
 
 (defn -handleMigration [this event context]
   (loop [scanreq (-> (ScanRequest/builder)
-                    (.consistentRead true)
-                    (.tableName (:herate-table env))
-                    (.build))]
+                     (.consistentRead true)
+                     (.tableName (:herate-table env))
+                     (.build))]
     (let [res (.scan ddb-client scanreq)]
       (doseq [item (.items res)]
         (.putItem ddb-client (-> (PutItemRequest/builder)
