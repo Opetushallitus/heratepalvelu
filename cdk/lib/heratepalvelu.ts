@@ -267,7 +267,7 @@ export class HeratepalveluStack extends cdk.Stack {
       },
       handler: "oph.heratepalvelu.DLQresendHandler::handleDLQresend",
       memorySize: 1024,
-      timeout: Duration.seconds(60),
+      timeout: Duration.seconds(30),
       tracing: lambda.Tracing.ACTIVE
     });
 
