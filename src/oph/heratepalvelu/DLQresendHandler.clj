@@ -31,7 +31,7 @@
                           (.queueName (:queue-name env))
                           (.build))))]
     (doseq [msg messages]
-      (log/info msq)
+      (log/info msg)
       (try
         (.sendMessage sqs-client (-> (SendMessageRequest/builder)
                                      (.queueUrl queue-url)
