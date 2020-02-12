@@ -30,13 +30,12 @@
                       (-> (GetQueueUrlRequest/builder)
                           (.queueName (:queue-name env))
                           (.build))))]
-    (when (not= "sade" (:stage env))
-      (doseq [msg messages]
-        (try
-          (.sendMessage sqs-client (-> (SendMessageRequest/builder)
-                                       (.queueUrl queue-url)
-                                       (.messageBody (.getBody msg))
-                                       (.build)))
-          (catch Exception e
-            (log/error msg)
-            (log/error e)))))))
+    (doseq [msg messages]
+      (log/info msq)
+      (try
+        (.sendMessage sqs-client (-> (SendMessageRequest/builder)
+                                     (.queueUrl queue-url)
+                                     (.messageBody (.getBody msg))
+                                     (.build)))
+        (catch Exception e
+          (log/error e))))))
