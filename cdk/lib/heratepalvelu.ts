@@ -131,14 +131,14 @@ export class HeratepalveluStack extends cdk.Stack {
       serverSideEncryption: true
     });
 
-    const AMISherateDeadLetterQueue = new sqs.Queue(this, "AMISHerateDeadLetterQueue", {
+    const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
       retentionPeriod: Duration.days(14)
     });
 
-    const AMISHerateQueue = new sqs.Queue(this, "AMISHerateQueue", {
-      queueName: `${id}-AMISHerateQueue`,
+    const ehoksHerateQueue = new sqs.Queue(this, "HerateQueue", {
+      queueName: `${id}-eHOKSHerateQueue`,
       deadLetterQueue: {
-        queue: AMISherateDeadLetterQueue,
+        queue: herateDeadLetterQueue,
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
@@ -191,7 +191,7 @@ export class HeratepalveluStack extends cdk.Stack {
       tracing: lambda.Tracing.ACTIVE
     });
 
-    AMISHerateHandler.addEventSource(new SqsEventSource(AMISHerateQueue, { batchSize: 1 }));
+    AMISHerateHandler.addEventSource(new SqsEventSource(ehoksHerateQueue, { batchSize: 1, }));
 
     const herateEmailHandler = new lambda.Function(this, "HerateEmailHandler", {
       runtime: lambda.Runtime.JAVA_8,
@@ -258,6 +258,26 @@ export class HeratepalveluStack extends cdk.Stack {
     //   ),
     //   tracing: lambda.Tracing.ACTIVE
     // });
+
+    const dlqResendHandler = new lambda.Function(this, "DLQresendHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        queue_name: ehoksHerateQueue.queueName
+      },
+      handler: "oph.heratepalvelu.DLQresendHandler::handleDLQresend",
+      memorySize: 1024,
+      timeout: Duration.seconds(60),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    dlqResendHandler.addEventSource(new SqsEventSource(herateDeadLetterQueue, { batchSize: 1 }));
+
+    dlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [ehoksHerateQueue.queueArn],
+      actions: ['sqs:GetQueueUrl', "sqs:SendMessage"]
+    }));
 
     [AMISHerateHandler, herateEmailHandler, updatedOoHandler].forEach(
       lambdaFunction => {
