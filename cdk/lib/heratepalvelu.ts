@@ -207,7 +207,7 @@ export class HeratepalveluStack extends cdk.Stack {
       timeout: Duration.seconds(
         Token.asNumber(getParameterFromSsm("emailhandler-timeout"))
       ),
-      handler: "oph.heratepalvelu.herateEmailHandler::handleSendEmails",
+      handler: "oph.heratepalvelu.AMISherateEmailHandler::handleSendAMISEmails",
       tracing: lambda.Tracing.ACTIVE
     });
 
