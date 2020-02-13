@@ -275,8 +275,14 @@ export class HeratepalveluStack extends cdk.Stack {
     dlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       resources: [ehoksHerateQueue.queueArn, herateDeadLetterQueue.queueArn],
-      actions: ['sqs:GetQueueUrl', "sqs:SendMessage", "sqs:ReceiveMessage"]
-    }));
+      actions: [
+        "sqs:GetQueueUrl",
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ]}));
 
     new CfnEventSourceMapping(this, "DLQResendEventSourceMapping", {
       eventSourceArn: herateDeadLetterQueue.queueArn,
