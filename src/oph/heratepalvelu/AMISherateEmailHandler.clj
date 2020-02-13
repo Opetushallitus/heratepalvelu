@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.herateEmailHandler
+(ns oph.heratepalvelu.AMISherateEmailHandler
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email]]
             [oph.heratepalvelu.log.caller-log :refer :all]
@@ -9,8 +9,8 @@
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
-  :name "oph.heratepalvelu.herateEmailHandler"
-  :methods [[^:static handleSendEmails
+  :name "oph.heratepalvelu.AMISherateEmailHandler"
+  :methods [[^:static handleSendAMISEmails
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
@@ -21,8 +21,8 @@
                (t/plus (t/local-date years months days)
                        (t/days 29)))))
 
-(defn -handleSendEmails [this event context]
-  (log-caller-details "handleSendEmails" event context)
+(defn -handleSendAMISEmails [this event context]
+  (log-caller-details "handleSendAMISEmails" event context)
   (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
                                         :alkupvm     [:le [:s (.toString (t/today))]]}
                                        {:index "lahetysIndex"

@@ -1,6 +1,6 @@
-(ns oph.heratepalvelu.herateEmailHandler-test
+(ns oph.heratepalvelu.AMISherateEmailHandler-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.herateEmailHandler :as h]
+            [oph.heratepalvelu.AMISherateEmailHandler :as h]
             [clj-time.core :as t]
             [clj-time.format :as f]))
 

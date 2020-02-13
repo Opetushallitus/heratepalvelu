@@ -24,12 +24,12 @@
 (defn -handleMigration [this event context]
   (loop [scanreq (-> (ScanRequest/builder)
                      (.consistentRead true)
-                     (.tableName (:herate-table env))
+                     (.tableName (:from-table env))
                      (.build))]
     (let [res (.scan ddb-client scanreq)]
       (doseq [item (.items res)]
         (.putItem ddb-client (-> (PutItemRequest/builder)
-                                 (.tableName (:amis-table env))
+                                 (.tableName (:to-table env))
                                  (.item item)
                                  (.build))))
       (when (.hasLastEvaluatedKey res)
