@@ -44,6 +44,10 @@ export class HeratepalveluStack extends cdk.Stack {
       "virkailija_url"
     ];
 
+    /////////////////
+    // DynamoDB
+    /////////////////
+
     // const herateTable = new dynamodb.Table(this, "HerateTable", {
     //   partitionKey: {
     //     name: "toimija_oppija",
@@ -110,6 +114,39 @@ export class HeratepalveluStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
 
+    const TPOherateTable = new dynamodb.Table(this, "TPOHerateTable", {
+      partitionKey: {
+        name: "toimija_oppija",
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: "tyyppi_kausi",
+        type: dynamodb.AttributeType.STRING
+      },
+      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+      serverSideEncryption: true
+    });
+
+    TPOherateTable.addGlobalSecondaryIndex({
+      indexName: "lahetysIndex",
+      partitionKey: {
+        name: "lahetystila",
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: "alkupvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      nonKeyAttributes: [
+        "sahkoposti",
+        "kyselylinkki",
+        "suorituskieli",
+        "viestintapalvelu-id",
+        "kyselytyyppi"
+      ],
+      projectionType: dynamodb.ProjectionType.INCLUDE
+    });
+
     const organisaatioWhitelistTable = new dynamodb.Table(
       this,
       "OrganisaatioWhitelistTable",
@@ -132,6 +169,10 @@ export class HeratepalveluStack extends cdk.Stack {
       serverSideEncryption: true
     });
 
+    /////////////////
+    // SQS
+    /////////////////
+
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
       retentionPeriod: Duration.days(14)
     });
@@ -146,6 +187,36 @@ export class HeratepalveluStack extends cdk.Stack {
       retentionPeriod: Duration.days(14)
     });
 
+    const TPOherateDeadLetterQueue = new sqs.Queue(this, "TPOHerateDeadLetterQueue", {
+      retentionPeriod: Duration.days(14)
+    });
+
+    const TPOHerateQueue = new sqs.Queue(this, "TPOHerateQueue", {
+      queueName: `${id}-TPOHerateQueue`,
+      deadLetterQueue: {
+        queue: TPOherateDeadLetterQueue,
+        maxReceiveCount: 5
+      },
+      visibilityTimeout: Duration.seconds(60),
+      retentionPeriod: Duration.days(14)
+    });
+
+    /////////////////
+    // S3
+    /////////////////
+
+    const ehoksHerateAsset = new s3assets.Asset(
+      this,
+      "EhoksHerateLambdaAsset",
+      {
+        path: "../target/uberjar/heratepalvelu-0.1.0-SNAPSHOT-standalone.jar"
+      }
+    );
+
+    /////////////////
+    // Lambda
+    /////////////////
+
     let envVars = envVarsList.reduce((envVarsObject: any, key: string) => {
       envVarsObject[key] = getEnvVarFromSsm(key);
       return envVarsObject;
@@ -159,14 +230,6 @@ export class HeratepalveluStack extends cdk.Stack {
       cas_url: `${envVars.virkailija_url}/cas`,
       stage: envName
     };
-
-    const ehoksHerateAsset = new s3assets.Asset(
-      this,
-      "EhoksHerateLambdaAsset",
-      {
-        path: "../target/uberjar/heratepalvelu-0.1.0-SNAPSHOT-standalone.jar"
-      }
-    );
 
     const lambdaCode = lambda.Code.fromBucket(
       ehoksHerateAsset.bucket,
@@ -245,6 +308,27 @@ export class HeratepalveluStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(updatedOoHandler)]
     });
 
+    const TPOHerateHandler = new lambda.Function(this, "TPOHerateHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...envVars,
+        herate_table: TPOherateTable.tableName,
+        caller_id: `${id}-TPOherateHandler`,
+        ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
+      },
+      handler: "oph.heratepalvelu.TPOherateHandler::handleTPOherate",
+      memorySize: Token.asNumber(getParameterFromSsm("tpohandler-memory")),
+      reservedConcurrentExecutions:
+        Token.asNumber(getParameterFromSsm("tpohandler-concurrency")),
+      timeout: Duration.seconds(
+        Token.asNumber(getParameterFromSsm("tpohandler-timeout"))
+      ),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    TPOHerateHandler.addEventSource(new SqsEventSource(TPOHerateQueue, { batchSize: 1 }));
+
     // const migrateHandler = new lambda.Function(this, "migrateHandler", {
     //   runtime: lambda.Runtime.JAVA_8,
     //   code: lambdaCode,
@@ -291,11 +375,13 @@ export class HeratepalveluStack extends cdk.Stack {
       enabled: false
     });
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler].forEach(
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, TPOHerateHandler].forEach(
       lambdaFunction => {
         metadataTable.grantReadWriteData(lambdaFunction);
         AMISherateTable.grantReadWriteData(lambdaFunction);
         organisaatioWhitelistTable.grantReadData(lambdaFunction);
+        TPOherateTable.grantReadWriteData(lambdaFunction);
+
         lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
           resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],
