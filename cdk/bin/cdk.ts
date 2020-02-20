@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 import cdk = require("@aws-cdk/core");
-import { HeratepalveluStack } from "../lib/heratepalvelu";
+import { Construct } from "@aws-cdk/core";
+import { HeratepalveluAMISStack } from "../lib/AMIS";
+import { HeratepalveluTEPStack } from "../lib/tyoelamapalaute";
 
 const git = require("git-utils");
 const repo = git.open(".");
@@ -20,16 +22,21 @@ const version = repo.getReferenceTarget(repo.getHead());
 const app = new cdk.App();
 
 if (canDeploy) {
-  new HeratepalveluStack(app, "sieni-services-heratepalvelu", 'sieni', version);
-  new HeratepalveluStack(app, "pallero-services-heratepalvelu", 'pallero', version);
+  new HeratepalveluAMISStack(app, "sieni-services-heratepalvelu", "sieni", version);
+  new HeratepalveluAMISStack(app, "pallero-services-heratepalvelu", "pallero", version);
+
+  new HeratepalveluTEPStack(app, "sieni-services-heratepalvelu-tep", "sieni", version);
+  new HeratepalveluTEPStack(app, "pallero-services-heratepalvelu-tep", "pallero", version);
 
   if (upstreamBranch === "refs/remotes/origin/master") {
-    new HeratepalveluStack(app, "sade-services-heratepalvelu", 'sade', version);
+    new HeratepalveluAMISStack(app, "sade-services-heratepalvelu", "", version);
+    new HeratepalveluTEPStack(app, "sade-services-heratepalvelu-tep", "sade", version);
   }
 } else {
   console.log("Uncommited changes or local is ahead/behind of remote:\n");
   console.log(status);
   console.log(aheadBehindCount);
 
-  new HeratepalveluStack(app, "sieni-services-heratepalvelu", 'sieni', version);
+  new HeratepalveluAMISStack(app, "sieni-services-heratepalvelu", 'sieni', version);
+  new HeratepalveluTEPStack(app, "sieni-services-heratepalvelu-tep", "sieni", version);
 }
