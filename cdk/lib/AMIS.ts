@@ -7,7 +7,7 @@ import s3assets = require("@aws-cdk/aws-s3-assets");
 import sqs = require("@aws-cdk/aws-sqs");
 import iam = require("@aws-cdk/aws-iam");
 import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
-import { Duration, Tag, Token } from "@aws-cdk/core";
+import { Duration, Token } from "@aws-cdk/core";
 import { CfnEventSourceMapping } from "@aws-cdk/aws-lambda";
 import { HeratepalveluStack } from "./heratepalvelu";
 

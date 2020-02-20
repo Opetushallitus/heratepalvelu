@@ -1,6 +1,5 @@
 #!/usr/bin/env node
 import cdk = require("@aws-cdk/core");
-import { Construct } from "@aws-cdk/core";
 import { HeratepalveluAMISStack } from "../lib/AMIS";
 import { HeratepalveluTEPStack } from "../lib/tyoelamapalaute";
 
