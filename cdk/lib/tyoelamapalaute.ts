@@ -80,7 +80,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     const ehoksHerateAsset = new s3assets.Asset(
       this,
-      "EhoksHerateLambdaAsset",
+      "EhoksHerateTEPLambdaAsset",
       {
         path: "../target/uberjar/heratepalvelu-0.1.0-SNAPSHOT-standalone.jar"
       }
