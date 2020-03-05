@@ -15,13 +15,28 @@
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
 
-(s/defschema herate-schema
+(s/defschema amis-herate-schema
              {:ehoks-id           s/Num
-              :kyselytyyppi       s/Str
-              :opiskeluoikeus-oid s/Str
-              :oppija-oid         s/Str
+              :kyselytyyppi       (s/both s/Str (s/pred not-empty))
+              :opiskeluoikeus-oid (s/both s/Str (s/pred not-empty))
+              :oppija-oid         (s/both s/Str (s/pred not-empty))
               :sahkoposti         (s/both s/Str (s/pred not-empty))
-              :alkupvm            s/Str})
+              :alkupvm            (s/both s/Str (s/pred not-empty))})
+
+(s/defschema tpo-herate-schema
+  {:tyyppi (s/both s/Str (s/pred not-empty))
+   :alkupvm (s/both s/Str (s/pred not-empty))
+   :loppupvm (s/both s/Str (s/pred not-empty))
+   :hoks-id s/Num
+   :opiskeluoikeus_oid (s/both s/Str (s/pred not-empty))
+   :oppija-oid (s/both s/Str (s/pred not-empty))
+   :hankkimistapa-id s/Num
+   :hankkimistapa-tyyppi (s/both s/Str (s/pred not-empty))
+   :tutkinnonosa_id s/Num
+   :tyopaikan-nimi (s/both s/Str (s/pred not-empty))
+   :tyopaikan-ytunnus (s/both s/Str (s/pred not-empty))
+   :tyopaikkaohjaaja-email (s/both s/Str (s/pred not-empty))
+   :tyopaikkaohjaaja-nimi (s/both s/Str (s/pred not-empty))})
 
 (defn generate-uuid []
   (.toString (UUID/randomUUID)))
@@ -89,13 +104,16 @@
               oppija " koulutustoimijalla " koulutustoimija
               "(tyyppi '" kyselytyyppi "' kausi " laskentakausi ")")))
 
-(def herate-checker
-  (s/checker herate-schema))
+(def amis-herate-checker
+  (s/checker amis-herate-schema))
+
+(def tpo-herate-checker
+  (s/checker tpo-herate-schema))
 
 (defn save-herate [herate opiskeluoikeus]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
-  (if (some? (herate-checker herate))
-    (log/error {:herate herate :msg (herate-checker herate)})
+  (if (some? (amis-herate-checker herate))
+    (log/error {:herate herate :msg (amis-herate-checker herate)})
     (let [kyselytyyppi (:kyselytyyppi herate)
           alkupvm (:alkupvm herate)
           koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
