@@ -19,6 +19,7 @@
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try
+        (log/info (parse-string (.getBody msg) true))
         (let [herate (parse-string (.getBody msg) true)
               opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid herate))
               koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
