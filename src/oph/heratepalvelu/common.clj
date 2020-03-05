@@ -28,11 +28,11 @@
    :alkupvm (s/both s/Str (s/pred not-empty))
    :loppupvm (s/both s/Str (s/pred not-empty))
    :hoks-id s/Num
-   :opiskeluoikeus_oid (s/both s/Str (s/pred not-empty))
+   :opiskeluoikeus-oid (s/both s/Str (s/pred not-empty))
    :oppija-oid (s/both s/Str (s/pred not-empty))
    :hankkimistapa-id s/Num
    :hankkimistapa-tyyppi (s/both s/Str (s/pred not-empty))
-   :tutkinnonosa_id s/Num
+   :tutkinnonosa-id s/Num
    :tyopaikan-nimi (s/both s/Str (s/pred not-empty))
    :tyopaikan-ytunnus (s/both s/Str (s/pred not-empty))
    :tyopaikkaohjaaja-email (s/both s/Str (s/pred not-empty))
