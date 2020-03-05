@@ -24,5 +24,11 @@
      :body (generate-string data)
      :as :json}))
 
-(defn call-maintenance-endpoints []
-  (log/debug "ehoks/call-maintenance-endpoints"))
+(defn start-tyoelamajaksot-process [start end]
+  (client/get
+    (str (:ehoks-url env) "hoks/heratepalvelu/tyoelamajaksot")
+    {:headers {:ticket (cas/get-service-ticket
+                         "/ehoks-virkailija-backend"
+                         "cas-security-check")}
+     :content-type "application/json"
+     :as :json}))

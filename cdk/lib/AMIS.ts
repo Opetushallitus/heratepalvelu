@@ -236,6 +236,19 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         "sqs:GetQueueAttributes"
       ]}));
 
+    const eHOKSMaintenanceHandler = new lambda.Function(this, "eHOKSMaintenanceHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        metadata_table: metadataTable.tableName,
+      },
+      handler: "oph.heratepalvelu.eHOKSMaintenanceHandler::handleMaintenance",
+      memorySize: 512,
+      tracing: lambda.Tracing.ACTIVE
+    });
+    metadataTable.grantReadWriteData(eHOKSMaintenanceHandler);
+
     new CfnEventSourceMapping(this, "DLQResendEventSourceMapping", {
       eventSourceArn: herateDeadLetterQueue.queueArn,
       functionName: dlqResendHandler.functionName,

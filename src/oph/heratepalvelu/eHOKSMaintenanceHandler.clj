@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.eHOKSMaintenanceHandler
   (:require [oph.heratepalvelu.external.ehoks :as ehoks]
-            [oph.heratepalvelu.log.caller-log :refer :all]))
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [clj-time.core :as t]))
 
 (gen-class
   :name "oph.heratepalvelu.eHOKSMaintenanceHandler"
@@ -10,4 +11,4 @@
 
 (defn -handleMaintenance [this event context]
   (log-caller-details "handleMaintenance" event context)
-  (ehoks/call-maintenance-endpoints))
+  (ehoks/start-tyoelamajaksot-process "1970-01-01" (str (t/today))))
