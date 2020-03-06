@@ -245,6 +245,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       },
       handler: "oph.heratepalvelu.eHOKSMaintenanceHandler::handleMaintenance",
       memorySize: 512,
+      timeout: Duration.seconds(30),
       tracing: lambda.Tracing.ACTIVE
     });
     metadataTable.grantReadWriteData(eHOKSMaintenanceHandler);

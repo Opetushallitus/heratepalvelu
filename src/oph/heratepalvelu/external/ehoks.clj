@@ -31,4 +31,5 @@
                          "/ehoks-virkailija-backend"
                          "cas-security-check")}
      :content-type "application/json"
+     :query-params {"start" start "end" end}
      :as :json}))
