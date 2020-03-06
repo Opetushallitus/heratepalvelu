@@ -26,7 +26,7 @@
 
 (defn start-tyoelamajaksot-process [start end]
   (client/get
-    (str (:ehoks-url env) "hoks/heratepalvelu/tyoelamajaksot")
+    (str (:ehoks-url env) "heratepalvelu/tyoelamajaksot")
     {:headers {:ticket (cas/get-service-ticket
                          "/ehoks-virkailija-backend"
                          "cas-security-check")}
