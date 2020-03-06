@@ -15,7 +15,7 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleAMISherate [this event context]
-  (log-caller-details "handleAMISherate" event context)
+  (log-caller-details-with-body "handleAMISherate" event context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try

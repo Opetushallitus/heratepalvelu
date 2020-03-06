@@ -10,5 +10,5 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleMaintenance [this event context]
-  (log-caller-details "handleMaintenance" event context)
+  (log-caller-details-with-rules "handleMaintenance" event context)
   (ehoks/start-tyoelamajaksot-process "1970-01-01" (str (t/today))))

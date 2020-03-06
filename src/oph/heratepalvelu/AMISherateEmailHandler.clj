@@ -22,7 +22,7 @@
                        (t/days 29)))))
 
 (defn -handleSendAMISEmails [this event context]
-  (log-caller-details "handleSendAMISEmails" event context)
+  (log-caller-details-with-rules "handleSendAMISEmails" event context)
   (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
                                         :alkupvm     [:le [:s (.toString (t/today))]]}
                                        {:index "lahetysIndex"

@@ -19,19 +19,16 @@
   [event]
   (.getResources event))
 
-(defn log-caller-details [name event context]
-  (cond
-    (= name "handleHOKSherate")
-      (let [request-id (.getAwsRequestId context)
-            body (get-sqs-event-messages event)]
-        (log/info (str "Lambdaa " name
-                       " kutsuttiin syötteellä " body
-                       " (RequestId: " request-id " )")))
-    (or
-      (= name "handleSendEmails")
-      (= name "handleUpdatedOpiskeluoikeus"))
-        (let [request-id (.getAwsRequestId context)
-              rules (parse-schedule-rules event)]
-          (log/info (str "Lambdaa " name
-                         " kutsuttiin ajastetusti säännöillä " rules
-                         " (RequestId: " request-id " )")))))
+(defn log-caller-details-with-rules [name event context]
+  (let [request-id (.getAwsRequestId context)
+        rules (parse-schedule-rules event)]
+    (log/info (str "Lambdaa " name
+                   " kutsuttiin ajastetusti säännöillä " rules
+                   " (RequestId: " request-id " )"))))
+
+(defn log-caller-details-with-body [name event context]
+  (let [request-id (.getAwsRequestId context)
+        body (get-sqs-event-messages event)]
+    (log/info (str "Lambdaa " name
+                   " kutsuttiin syötteellä " body
+                   " (RequestId: " request-id " )"))))

@@ -15,7 +15,7 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleTPOherate [this event context]
-  (log-caller-details "handleTPOherate" event context)
+  (log-caller-details-with-body "handleTPOherate" event context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try
