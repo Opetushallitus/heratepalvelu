@@ -244,8 +244,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         metadata_table: metadataTable.tableName,
       },
       handler: "oph.heratepalvelu.eHOKSMaintenanceHandler::handleMaintenance",
-      memorySize: 512,
-      timeout: Duration.seconds(30),
+      memorySize: 1024,
+      timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
     });
     metadataTable.grantReadWriteData(eHOKSMaintenanceHandler);
@@ -257,7 +257,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       enabled: false
     });
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler].forEach(
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, eHOKSMaintenanceHandler].forEach(
       lambdaFunction => {
         lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
           effect: iam.Effect.ALLOW,
