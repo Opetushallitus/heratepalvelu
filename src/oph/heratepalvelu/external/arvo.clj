@@ -2,6 +2,7 @@
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.external.http-client :as client]
+            [oph.heratepalvelu.external.organisaatio :as org]
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
             [oph.heratepalvelu.external.aws-ssm :as ssm])
@@ -11,6 +12,17 @@
                      (ssm/get-secret
                        (str "/" (:stage env)
                             "/services/heratepalvelu/arvo-pwd"))))
+
+(defn get-toimipiste [suoritus]
+  (let [oid (:oid (:toimipiste suoritus))
+        org (org/get-organisaatio oid)
+        org-tyyppi (:tyyppi org)]
+    (if (or (= org-tyyppi "organisaatiotyyppi_03")
+              (= org-tyyppi "organisaatiotyyppi_04"))
+      (do (log/info "toimipiste-oid: " oid)
+          oid)
+      (do (log/info "Toimipiste tieto väärällä tyypillä " oid org-tyyppi)
+          nil))))
 
 (defn build-arvo-request-body [herate
                                opiskeluoikeus
@@ -27,7 +39,7 @@
      :koulutustoimija_oid koulutustoimija
      :oppilaitos_oid (:oid (:oppilaitos opiskeluoikeus))
      :request_id request-id
-     :toimipiste_oid                 nil
+     :toimipiste_oid                 (get-toimipiste suoritus)
      :hankintakoulutuksen_toteuttaja nil}))
 
 (defn get-kyselylinkki [data]
