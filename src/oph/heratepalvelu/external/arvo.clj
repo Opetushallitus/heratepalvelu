@@ -18,10 +18,8 @@
         org (org/get-organisaatio oid)
         org-tyypit (:tyypit org)]
     (if (some #{"organisaatiotyyppi_03"} org-tyypit)
-      (do (log/info "toimipiste-oid: " oid)
-          oid)
-      (do (log/info "Toimipiste tieto väärällä tyypillä " oid org-tyypit)
-          nil))))
+      oid
+      nil)))
 
 (defn build-arvo-request-body [herate
                                opiskeluoikeus
