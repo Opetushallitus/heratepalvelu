@@ -17,9 +17,7 @@
   (let [oid (:oid (:toimipiste suoritus))
         org (org/get-organisaatio oid)
         org-tyypit (:tyypit org)]
-    (if (some #(or (= %1 "organisaatiotyyppi_03")
-                   (= %1 "organisaatiotyyppi_04"))
-              org-tyypit)
+    (if (some #{"organisaatiotyyppi_03"} org-tyypit)
       (do (log/info "toimipiste-oid: " oid)
           oid)
       (do (log/info "Toimipiste tieto väärällä tyypillä " oid org-tyypit)
