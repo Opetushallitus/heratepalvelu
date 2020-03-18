@@ -61,7 +61,7 @@
    [:p [:a {:href link} link]]
    [:p "With best regards, your educational institution"]])
 
-(defn- amispalaute-html [data]
+(defn amispalaute-html [data]
   (str "<!DOCTYPE html>"
        (html [:html {:lang (:suorituskieli data)}
               [:head
@@ -75,15 +75,25 @@
                  (= (:kyselytyyppi data) "tutkinnon_osia_suorittaneet")
                  (amispalaute-body-loppukysely (:kyselylinkki data)))]])))
 
-(defn send-email [data]
+(defn amismuistutus-html [data]
+  (str "<!DOCTYPE html>"
+       (html [:html {:lang (:suorituskieli data)}
+              [:head
+               [:meta {:charset "UTF-8"}]]
+              [:body
+               (str "MUISTUTUS " (:kyselylinkki data))]])))
+
+(defn send-email [email]
+  "Send email to viestintäpalvelu, parameter 'email' is a map containing keys
+  :email (email address) :subject (email subject) and :body (message body html)"
   (let [resp (cas-authenticated-post
                (:viestintapalvelu-url env)
-               {:recipient [{:email (:sahkoposti data)}]
+               {:recipient [{:email (:address email)}]
                 :email {:callingProcess "heratepalvelu"
                         :from "no-reply@opintopolku.fi"
                         :sender "Amis-palaute-respons-feedback"
-                        :subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
+                        :subject (:subject email)
                         :isHtml true
-                        :body (amispalaute-html data)}}
+                        :body (:body email)}}
                {:as :json})]
     (:body resp)))

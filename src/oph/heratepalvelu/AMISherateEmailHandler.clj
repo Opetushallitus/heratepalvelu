@@ -1,6 +1,6 @@
 (ns oph.heratepalvelu.AMISherateEmailHandler
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.viestintapalvelu :refer [send-email]]
+            [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amispalaute-html]]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
@@ -32,7 +32,9 @@
       (doseq [email lahetettavat]
         (if (has-time-to-answer? (:alkupvm email))
           (try
-            (let [id (:id (send-email email))]
+            (let [id (:id (send-email {:subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
+                                       :body (amispalaute-html email)
+                                       :address (:sahkoposti email)}))]
               (ddb/update-item
                 {:toimija_oppija [:s (:toimija_oppija email)]
                  :tyyppi_kausi   [:s (:tyyppi_kausi email)]}

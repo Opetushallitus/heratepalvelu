@@ -57,3 +57,9 @@
   (let [tunnus (last (str/split linkki #"/"))]
     (client/delete (str (:arvo-url env) "/" tunnus)
                    {:basic-auth [(:arvo-user env) @pwd]})))
+
+(defn get-kyselylinkki-status [linkki]
+  (let [tunnus (last (str/split linkki #"/"))]
+    (:body (client/get (str (:arvo-url env) "/status/" tunnus)
+                       {:basic-auth [(:arvo-user env) @pwd]
+                        :as :json}))))
