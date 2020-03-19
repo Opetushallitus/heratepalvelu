@@ -17,8 +17,11 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn has-time-to-answer [loppupvm]
-  (let [end (f/parse (:date-time f/formatters) loppupvm)]
-    (not (t/before? end (t/today)))))
+  (when loppupvm
+    (let [enddate (first (str/split loppupvm #"T"))
+          [years months days] (map #(Integer. %)
+                                   (str/split enddate #"-"))]
+      (not (t/before? (t/local-date years months days) (t/today))))))
 
 (defn -handleSendAMISMuistutus [this event context]
   (log-caller-details "handleSendAMISMuistutus" event context)
@@ -30,6 +33,7 @@
     (when (seq muistutettavat)
       (doseq [email muistutettavat]
         (let [status (get-kyselylinkki-status (:kyselylinkki email))]
+          (log/info status)
           (if (and (not (:vastattu status))
                    (has-time-to-answer (:voimassa_loppupvm status)))
             (try
