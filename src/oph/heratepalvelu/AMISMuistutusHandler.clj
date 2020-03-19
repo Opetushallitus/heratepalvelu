@@ -16,7 +16,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn has-time-to-answer [loppupvm]
+(defn has-time-to-answer? [loppupvm]
   (when loppupvm
     (let [enddate (first (str/split loppupvm #"T"))
           [years months days] (map #(Integer. %)
@@ -34,7 +34,7 @@
       (doseq [email muistutettavat]
         (let [status (get-kyselylinkki-status (:kyselylinkki email))]
           (if (and (not (:vastattu status))
-                   (has-time-to-answer (:voimassa_loppupvm status)))
+                   (has-time-to-answer? (:voimassa_loppupvm status)))
             (try
               (let [id (:id (send-email {:subject "Palaute muistutus"
                                          :body (amismuistutus-html email)
