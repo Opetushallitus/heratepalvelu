@@ -33,7 +33,6 @@
     (when (seq muistutettavat)
       (doseq [email muistutettavat]
         (let [status (get-kyselylinkki-status (:kyselylinkki email))]
-          (log/info status)
           (if (and (not (:vastattu status))
                    (has-time-to-answer (:voimassa_loppupvm status)))
             (try
@@ -64,9 +63,9 @@
                  :expr-attr-vals {":lahetystila" [:s "vastattu_tai_vastausaika_loppunut_ennen_muistutusta"]}})
               (catch Exception e
                 (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
-                (log/error e)))))))
-    (when (< 30000 (.getRemainingTimeInMillis context))
-      (recur (ddb/query-items {:lahetystila [:eq [:s "viestintapalvelussa"]]
-                               :alkupvm     [:eq [:s (.toString (t/minus (t/today) (t/weeks 3)))]]}
-                              {:index "lahetysIndex"
-                               :limit 100})))))
+                (log/error e))))))
+      (when (< 30000 (.getRemainingTimeInMillis context))
+        (recur (ddb/query-items {:lahetystila [:eq [:s "viestintapalvelussa"]]
+                                 :alkupvm     [:eq [:s (.toString (t/minus (t/today) (t/weeks 3)))]]}
+                                {:index "lahetysIndex"
+                                 :limit 100}))))))
