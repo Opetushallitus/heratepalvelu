@@ -3,11 +3,10 @@
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amismuistutus-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
             [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.common :refer [has-time-to-answer?]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
-            [clj-time.format :as f]
-            [cheshire.core :refer [parse-string]]
-            [clojure.string :as str])
+            [cheshire.core :refer [parse-string]])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -15,13 +14,6 @@
   :methods [[^:static handleSendAMISMuistutus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
-
-(defn has-time-to-answer? [loppupvm]
-  (when loppupvm
-    (let [enddate (first (str/split loppupvm #"T"))
-          [years months days] (map #(Integer. %)
-                                   (str/split enddate #"-"))]
-      (not (t/before? (t/local-date years months days) (t/today))))))
 
 (defn -handleSendAMISMuistutus [this event context]
   (log-caller-details "handleSendAMISMuistutus" event context)

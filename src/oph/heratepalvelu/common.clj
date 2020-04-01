@@ -26,6 +26,13 @@
 (defn generate-uuid []
   (.toString (UUID/randomUUID)))
 
+(defn has-time-to-answer? [loppupvm]
+  (when loppupvm
+    (let [enddate (first (str/split loppupvm #"T"))
+          [years months days] (map #(Integer. %)
+                                   (str/split enddate #"-"))]
+      (not (t/before? (t/local-date years months days) (t/today))))))
+
 (defn date-string-to-timestamp
   ([date-str fmt]
    (c/to-long (f/parse (fmt f/formatters)

@@ -59,3 +59,14 @@
   (testing "Transforming date-string to timestamp"
     (is (= (date-string-to-timestamp "1970-01-01") 0))
     (is (= (date-string-to-timestamp "2019-08-01") 1564617600000))))
+
+(deftest test-has-time-to-answer
+  (let [date1 (t/today)
+        date2 (t/plus (t/now) (t/days 1))
+        date3 (t/minus  (t/now) (t/days 1))]
+    (is (true? (has-time-to-answer?
+                 (str date1))))
+    (is (true? (has-time-to-answer?
+                 (str date2))))
+    (is (false? (has-time-to-answer?
+                  (str date3))))))
