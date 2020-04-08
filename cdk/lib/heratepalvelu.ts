@@ -104,6 +104,7 @@ export class HeratepalveluStack extends cdk.Stack {
         "sahkoposti",
         "kyselylinkki",
         "suorituskieli",
+        "viestintapalvelu-id",
         "kyselytyyppi"
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE
