@@ -31,8 +31,7 @@
     (is (true? (check-suoritus-type?
                  {:suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]})))
     (is (true? (check-suoritus-type?
-                 {:suoritukset [{:suoritukset [{:tyyppi {:koodiarvo "valma"}}]}
-                                {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]})))))
+                 {:suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]})))))
 
 (deftest test-check-organisaatio-whitelist
   (testing "Check organisaatio whitelist"
