@@ -104,7 +104,25 @@ export class HeratepalveluStack extends cdk.Stack {
         "sahkoposti",
         "kyselylinkki",
         "suorituskieli",
-        "viestintapalvelu-id",
+        "kyselytyyppi"
+      ],
+      projectionType: dynamodb.ProjectionType.INCLUDE
+    });
+
+    AMISherateTable.addGlobalSecondaryIndex({
+      indexName: "muistutusIndex",
+      partitionKey: {
+        name: "muistutukset",
+        type: dynamodb.AttributeType.NUMBER
+      },
+      sortKey: {
+        name: "lahetyspvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      nonKeyAttributes: [
+        "sahkoposti",
+        "kyselylinkki",
+        "suorituskieli",
         "kyselytyyppi"
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE

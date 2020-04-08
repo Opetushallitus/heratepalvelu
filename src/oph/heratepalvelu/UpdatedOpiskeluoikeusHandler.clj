@@ -91,7 +91,7 @@
                     suoritus (first (seq (:suoritukset opiskeluoikeus)))
                     vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
                 (when (and (some? vahvistus-pvm)
-                           (check-suoritus-type? suoritus)
+                           (check-suoritus-type? opiskeluoikeus)
                            (check-organisaatio-whitelist?
                              koulustoimija
                              (date-string-to-timestamp

@@ -27,11 +27,12 @@
 
 (deftest test-check-suoritus-type
   (testing "Check suoritustype"
-    (is (nil? (check-suoritus-type? {:tyyppi {:koodiarvo "valma"}})))
+    (is (nil? (check-suoritus-type? {:suoritukset [{:tyyppi {:koodiarvo "valma"}}]})))
     (is (true? (check-suoritus-type?
-                 {:tyyppi {:koodiarvo "ammatillinentutkinto"}})))
+                 {:suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]})))
     (is (true? (check-suoritus-type?
-                 {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}})))))
+                 {:suoritukset [{:suoritukset [{:tyyppi {:koodiarvo "valma"}}]}
+                                {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]})))))
 
 (deftest test-check-organisaatio-whitelist
   (testing "Check organisaatio whitelist"
