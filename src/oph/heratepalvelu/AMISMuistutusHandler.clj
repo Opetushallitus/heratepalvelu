@@ -39,7 +39,7 @@
                                  "#muistutuspvm" (str "muistutus" n "-pvm")}
                :expr-attr-vals  {":muistutukset" [:n n]
                                  ":vpid" [:n id]
-                                 ":tarkistettu" [:b false]
+                                 ":tarkistettu" [:bool false]
                                  ":muistutuspvm" [:s (str (t/today))]}}))
           (catch AwsServiceException e
             (log/error "Muistutus " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
