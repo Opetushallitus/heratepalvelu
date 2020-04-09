@@ -22,7 +22,7 @@
         (let [herate (parse-string (.getBody msg) true)
               opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid herate))
               koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
-          (when (and (check-suoritus-type? opiskeluoikeus)
+          (when (and (check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
                      (check-organisaatio-whitelist?
                        koulutustoimija (date-string-to-timestamp
                                          (:alkupvm herate)))

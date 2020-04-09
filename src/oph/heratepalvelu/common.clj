@@ -56,13 +56,15 @@
       (str year "-" (+ (Integer/parseInt year) 1))
       (str (- (Integer/parseInt year) 1) "-" year))))
 
-(defn check-suoritus-type? [opiskeluoikeus]
-  (let [suoritus (first (seq (:suoritukset opiskeluoikeus)))]
-    (if (or (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkinto")
-            (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkintoosittainen"))
-      true
-      (log/info "Väärä suoritustyyppi '"(:koodiarvo (:tyyppi suoritus))"'"
-                " opiskeluoikeudessa " (:oid opiskeluoikeus)))))
+(defn check-suoritus-type? [suoritus]
+  (or (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkinto")
+      (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkintoosittainen")))
+
+(defn check-opiskeluoikeus-suoritus-types? [opiskeluoikeus]
+  (if (some check-suoritus-type?
+            (:suoritukset opiskeluoikeus))
+    true
+    (log/info "Väärä suoritustyyppi opiskeluoikeudessa " (:oid opiskeluoikeus))))
 
 (defn check-organisaatio-whitelist?
   ([koulutustoimija]

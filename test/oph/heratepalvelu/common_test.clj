@@ -26,12 +26,22 @@
     (is (= "2018-2019" (kausi "2019-06-30")))))
 
 (deftest test-check-suoritus-type
-  (testing "Check suoritustype"
-    (is (nil? (check-suoritus-type? {:suoritukset [{:tyyppi {:koodiarvo "valma"}}]})))
-    (is (true? (check-suoritus-type?
+  (testing "Check suoritus type"
+    (is (false? (check-suoritus-type? {:tyyppi {:koodiarvo "valma"}})))
+    (is (true? (check-suoritus-type? {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}})))
+    (is (true? (check-suoritus-type? {:tyyppi {:koodiarvo "ammatillinentutkinto"}})))))
+
+(deftest test-check-opiskeluoikeus-suoritus-types
+  (testing "Check opiskeluoikeus suoritus types"
+    (is (nil? (check-opiskeluoikeus-suoritus-types? {:suoritukset [{:tyyppi {:koodiarvo "valma"}}]})))
+    (is (true? (check-opiskeluoikeus-suoritus-types?
                  {:suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]})))
-    (is (true? (check-suoritus-type?
-                 {:suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]})))))
+    (is (true? (check-opiskeluoikeus-suoritus-types?
+                 {:suoritukset [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}
+                                {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]})))
+    (is (nil? (check-opiskeluoikeus-suoritus-types?
+                 {:suoritukset [{:tyyppi {:koodiarvo "valma"}}
+                                {:tyyppi {:koodiarvo "telma"}}]})))))
 
 (deftest test-check-organisaatio-whitelist
   (testing "Check organisaatio whitelist"

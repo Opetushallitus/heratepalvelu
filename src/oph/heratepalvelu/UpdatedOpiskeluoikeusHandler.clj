@@ -28,11 +28,13 @@
    :alkupvm            alkupvm})
 
 (defn get-vahvistus-pvm [opiskeluoikeus]
-  (if-let [vahvistus-pvm (-> (:suoritukset opiskeluoikeus)
-                             (seq)
-                             (first)
-                             (:vahvistus)
-                             (:päivä))]
+  (if-let [vahvistus-pvm
+           (reduce
+             (fn [val suoritus]
+               (when
+                 (check-suoritus-type? suoritus)
+                 (reduced (get-in suoritus [:vahvistus :päivä]))))
+             nil (:suoritukset opiskeluoikeus))]
     vahvistus-pvm
     (log/warn "Opiskeluoikeudessa" (:oid opiskeluoikeus)
               "ei vahvistus päivämäärää")))
