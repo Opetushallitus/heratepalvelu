@@ -30,7 +30,7 @@
 (defn get-vahvistus-pvm [opiskeluoikeus]
   (if-let [vahvistus-pvm
            (reduce
-             (fn [val suoritus]
+             (fn [_ suoritus]
                (when
                  (check-suoritus-type? suoritus)
                  (reduced (get-in suoritus [:vahvistus :päivä]))))
@@ -93,7 +93,6 @@
                     suoritus (first (seq (:suoritukset opiskeluoikeus)))
                     vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
                 (when (and (some? vahvistus-pvm)
-                           (check-suoritus-type? opiskeluoikeus)
                            (check-organisaatio-whitelist?
                              koulustoimija
                              (date-string-to-timestamp
