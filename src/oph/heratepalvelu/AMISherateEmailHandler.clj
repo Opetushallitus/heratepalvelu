@@ -35,7 +35,7 @@
                    :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
                   {:update-expr     (str "SET #lahetystila = :lahetystila, "
                                          "#vpid = :vpid, "
-                                         "#lahetyspvm = :lahetyspvm"
+                                         "#lahetyspvm = :lahetyspvm, "
                                          "#muistutukset = :muistutukset")
                    :expr-attr-names {"#lahetystila" "lahetystila"
                                      "#vpid" "viestintapalvelu-id"
