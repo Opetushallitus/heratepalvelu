@@ -47,7 +47,7 @@
                   :body (generate-string data)
                   :basic-auth [(:arvo-user env) @pwd]
                   :as :json})]
-      (get-in resp [:body :kysely_linkki]))
+      (:body resp))
     (catch ExceptionInfo e
       (log/error e)
       (when-not (= 404 (:status (ex-data e)))

@@ -117,52 +117,54 @@
           (str/lower-case (:koodiarvo (:suorituskieli suoritus)))]
       (when (check-duplicate-herate?
               oppija koulutustoimija laskentakausi kyselytyyppi)
-        (if-let [kyselylinkki
-                 (get-kyselylinkki
-                   (build-arvo-request-body
-                     herate
-                     opiskeluoikeus
-                     uuid
-                     koulutustoimija))]
-          (try
-            (log/info "Tallennetaan kantaan " (str koulutustoimija "/" oppija)
-                      " " (str kyselytyyppi "/" laskentakausi))
-            (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
-                           :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]
-                           :kyselylinkki [:s kyselylinkki]
-                           :sahkoposti [:s (:sahkoposti herate)]
-                           :suorituskieli [:s suorituskieli]
-                           :lahetystila [:s "ei_lahetetty"]
-                           :alkupvm [:s alkupvm]
-                           :request-id [:s uuid]
-                           :oppilaitos [:s oppilaitos]
-                           :ehoks-id [:n (str (:ehoks-id herate))]
-                           :opiskeluoikeus-oid [:s (:oid opiskeluoikeus)]
-                           :oppija-oid [:s oppija]
-                           :koulutustoimija [:s koulutustoimija]
-                           :kyselytyyppi [:s kyselytyyppi]
-                           :rahoituskausi [:s laskentakausi]
-                           :viestintapalvelu-id [:n "-1"]}
-                          {:cond-expr (str "attribute_not_exists(oppija_toimija) AND "
-                                           "attribute_not_exists(tyyppi_kausi)")})
+        (let [arvo-resp (get-kyselylinkki
+                          (build-arvo-request-body
+                            herate
+                            opiskeluoikeus
+                            uuid
+                            koulutustoimija))
+              voimassa-loppupvm (:voimassa_loppupvm arvo-resp)]
+          (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
             (try
-              (add-kyselytunnus-to-hoks (:ehoks-id herate)
-                                        {:kyselylinkki kyselylinkki
-                                         :tyyppi kyselytyyppi
-                                         :alkupvm alkupvm})
+              (log/info "Tallennetaan kantaan " (str koulutustoimija "/" oppija)
+                        " " (str kyselytyyppi "/" laskentakausi))
+              (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                             :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]
+                             :kyselylinkki [:s kyselylinkki]
+                             :sahkoposti [:s (:sahkoposti herate)]
+                             :suorituskieli [:s suorituskieli]
+                             :lahetystila [:s "ei_lahetetty"]
+                             :alkupvm [:s alkupvm]
+                             :request-id [:s uuid]
+                             :oppilaitos [:s oppilaitos]
+                             :ehoks-id [:n (str (:ehoks-id herate))]
+                             :opiskeluoikeus-oid [:s (:oid opiskeluoikeus)]
+                             :oppija-oid [:s oppija]
+                             :koulutustoimija [:s koulutustoimija]
+                             :kyselytyyppi [:s kyselytyyppi]
+                             :rahoituskausi [:s laskentakausi]
+                             :viestintapalvelu-id [:n "-1"]
+                             :voimassa-loppupvm voimassa-loppupvm}
+                            {:cond-expr (str "attribute_not_exists(oppija_toimija) AND "
+                                             "attribute_not_exists(tyyppi_kausi)")})
+              (try
+                (add-kyselytunnus-to-hoks (:ehoks-id herate)
+                                          {:kyselylinkki kyselylinkki
+                                           :tyyppi kyselytyyppi
+                                           :alkupvm alkupvm})
+                (catch Exception e
+                  (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
+              (catch ConditionalCheckFailedException e
+                (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
+                          oppija " koulutustoimijalla " koulutustoimija
+                          "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm) ")"
+                          "Deaktivoidaan kyselylinkki, request-id " uuid)
+                (deactivate-kyselylinkki kyselylinkki))
+              (catch AwsServiceException e
+                (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
+                (deactivate-kyselylinkki kyselylinkki)
+                (throw e))
               (catch Exception e
-                (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
-            (catch ConditionalCheckFailedException e
-              (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
-                        oppija " koulutustoimijalla " koulutustoimija
-                        "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm) ")"
-                        "Deaktivoidaan kyselylinkki, request-id " uuid)
-              (deactivate-kyselylinkki kyselylinkki))
-            (catch AwsServiceException e
-              (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
-              (deactivate-kyselylinkki kyselylinkki)
-              (throw e))
-            (catch Exception e
-              (deactivate-kyselylinkki kyselylinkki)
-              (log/error "Unknown error " e)
-              (throw e))))))))
+                (deactivate-kyselylinkki kyselylinkki)
+                (log/error "Unknown error " e)
+                (throw e)))))))))

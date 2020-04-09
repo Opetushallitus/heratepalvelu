@@ -31,15 +31,15 @@
                :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
               {:update-expr    (str "SET #muistutukset = :muistutukset, "
                                     "#vpid = :vpid, "
-                                    "#tarkistettu = :tarkistettu, "
+                                    "#lahetystila = :lahetystila, "
                                     "#muistutuspvm = :muistutuspvm")
                :expr-attr-names {"#muistutukset" "muistutukset"
                                  "#vpid" "viestintapalvelu-id"
-                                 "#tarkistettu" "tarkistettu"
-                                 "#muistutuspvm" (str "muistutus" n "-pvm")}
+                                 "#lahetystila" "lahetystila"
+                                 "#muistutuspvm" (str n ".-muistutus-lahetetty")}
                :expr-attr-vals  {":muistutukset" [:n n]
                                  ":vpid" [:n id]
-                                 ":tarkistettu" [:bool false]
+                                 ":lahetystila" [:s "viestintapalvelussa"]
                                  ":muistutuspvm" [:s (str (t/today))]}}))
           (catch AwsServiceException e
             (log/error "Muistutus " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")

@@ -117,7 +117,7 @@
 
 (defn mock-check-duplicate-herate-false? [_ _ _ _] false)
 
-(defn mock-get-kyselylinkki [_] "https://kysely.linkki/12345")
+(defn mock-get-kyselylinkki [_] {:kysely_linkki "https://kysely.linkki/12345"})
 
 (defn mock-deactivate-kyselylinkki [_] nil)
 
