@@ -58,6 +58,7 @@
             (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
             (log/error e)))))))
 
+; Estä 1. ja 2. muistutuksen lähteminen samassa ajossa???
 (defn- query-muistukset [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
                     :lahetyspvm  [:le

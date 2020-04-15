@@ -63,14 +63,18 @@
      :expr-attr-vals {":value" [:s (str page)]}}
     (:metadata-table env)))
 
-(defn get-kysely-type [suoritus]
-  (cond
-    (= (get-in suoritus [:tyyppi :koodiarvo])
-       "ammatillinentutkinto")
-    "tutkinnon_suorittaneet"
-    (= (get-in suoritus [:tyyppi :koodiarvo])
-       "ammatillinentutkintoosittainen")
-    "tutkinnon_osia_suorittaneet"))
+(defn get-kysely-type [opiskeluoikeus]
+  (let [tyyppi (reduce
+                 (fn [_ suoritus]
+                   (when
+                     (check-suoritus-type? suoritus)
+                     (reduced (get-in suoritus [:tyyppi :koodiarvo]))))
+                 nil (:suoritukset opiskeluoikeus))]
+    (cond
+      (= tyyppi "ammatillinentutkinto")
+      "tutkinnon_suorittaneet"
+      (= tyyppi "ammatillinentutkintoosittainen")
+      "tutkinnon_osia_suorittaneet")))
 
 (defn -handleUpdatedOpiskeluoikeus [this event context]
   (log-caller-details "handleUpdatedOpiskeluoikeus" event context)
@@ -90,7 +94,6 @@
       (if (seq opiskeluoikeudet)
         (do (doseq [opiskeluoikeus opiskeluoikeudet]
               (let [koulustoimija (get-koulutustoimija-oid opiskeluoikeus)
-                    suoritus (first (seq (:suoritukset opiskeluoikeus)))
                     vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
                 (when (and (some? vahvistus-pvm)
                            (check-organisaatio-whitelist?
@@ -111,7 +114,7 @@
                       (save-herate
                         (parse-herate
                           hoks
-                          (get-kysely-type suoritus)
+                          (get-kysely-type opiskeluoikeus)
                           vahvistus-pvm)
                         opiskeluoikeus)
                       (log/info

@@ -31,8 +31,25 @@
 
 (deftest test-get-kysely-type
   (testing "Get correct kyselytyyppi from suoritus"
-    (is (= (get-kysely-type {:tyyppi {:koodiarvo "ammatillinentutkinto"}})
+    (is (= (get-kysely-type {:oid "1.2.246.562.15.82039738925"
+                             :koulutustoimija {:oid "1.2.246.562.10.35751498086"}
+                             :suoritukset [{:suorituskieli {:koodiarvo "FI"}
+                                            :tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}
+                                            :vahvistus {:päivä "2019-07-24"}}
+                                           {:suorituskieli {:koodiarvo "FI"}
+                                            :tyyppi {:koodiarvo "ammatillinentutkinto"}
+                                            :vahvistus {:päivä "2019-07-23"}}]})
             "tutkinnon_suorittaneet"))
-    (is (= (get-kysely-type {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}})
+    (is (= (get-kysely-type {:oid "1.2.246.562.15.82039738925"
+                             :koulutustoimija {:oid "1.2.246.562.10.35751498086"}
+                             :suoritukset [{:suorituskieli {:koodiarvo "FI"}
+                                            :tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}
+                                            :vahvistus {:päivä "2019-07-24"}}
+                                           {:suorituskieli {:koodiarvo "FI"}
+                                            :tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}
+                                            :vahvistus {:päivä "2019-07-23"}}]})
            "tutkinnon_osia_suorittaneet"))
-    (is (nil? (get-kysely-type {:tyyppi {:koodiarvo "adaaf"}})))))
+    (is (nil? (get-kysely-type {:oid "1.2.246.562.15.82039738925"
+                                :koulutustoimija {:oid "1.2.246.562.10.35751498086"}
+                                :suoritukset [{:suorituskieli {:koodiarvo "FI"}
+                                               :tyyppi {:koodiarvo "valma"}}]})))))
