@@ -1,7 +1,8 @@
 (ns oph.heratepalvelu.EmailStatusHandler
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -34,12 +35,12 @@
                 {:update-expr    (str "#lahetystila = :lahetystila")
                  :expr-attr-names {"#lahetystila" "lahetystila"}
                  :expr-attr-vals  {":lahetystila" [:s "lahetys_epaonnistunut"]}})))
-          (catch (catch AwsServiceException e
-                   (log/error "Tarkistustilan tallennus epäonnistui" email)
-                   (log/error e))
-                 (catch Exception e
-                   (log/error email)
-                   (log/error e))))))
+          (catch AwsServiceException e
+            (log/error "Tarkistustilan tallennus epäonnistui" email)
+            (log/error e))
+          (catch Exception e
+            (log/error email)
+            (log/error e)))))
     (when (and (seq emails)
                (< 30000 (.getRemainingTimeInMillis context)))
       (recur (ddb/query-items {:lahetystila [:eq [:s "viestintapalvelussa"]]}
