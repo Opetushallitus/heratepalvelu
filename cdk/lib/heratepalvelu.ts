@@ -237,6 +237,30 @@ export class HeratepalveluStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(AMISherateEmailHandler)]
     });
 
+    const emailStatusHandler = new lambda.Function(this, "EmailStatusHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `${id}-emailStatusHandler`,
+        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
+      },
+      memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
+      timeout: Duration.seconds(
+          Token.asNumber(getParameterFromSsm("emailhandler-timeout"))
+      ),
+      handler: "oph.heratepalvelu.EmailStatusHandler::handleEmailStatus",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "EmailStatusScheduleRule", {
+      schedule: events.Schedule.expression(
+          `cron(${getParameterFromSsm("emailhandler-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(emailStatusHandler)]
+    });
+
     // const AMISMuistutusHandler = new lambda.Function(this, "AMISMuistutusHandler", {
     //   runtime: lambda.Runtime.JAVA_8,
     //   code: lambdaCode,
@@ -334,7 +358,7 @@ export class HeratepalveluStack extends cdk.Stack {
       enabled: false
     });
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, emailStatusHandler
       // , AMISMuistutusHandler
     ].forEach(
       lambdaFunction => {
