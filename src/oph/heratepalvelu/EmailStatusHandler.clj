@@ -23,7 +23,7 @@
             (ddb/update-item
               {:toimija_oppija [:s (:toimija_oppija email)]
                :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-              {:update-expr    "#lahetystila = :lahetystila"
+              {:update-expr    "SET #lahetystila = :lahetystila"
                :expr-attr-names {"#lahetystila" "lahetystila"}
                :expr-attr-vals  {":lahetystila" [:s "lahetys_onnistunut"]}})
             (when (or (not= (:numberOfFailedSendings email) 0)
@@ -32,7 +32,7 @@
               (ddb/update-item
                 {:toimija_oppija [:s (:toimija_oppija email)]
                  :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-                {:update-expr    "#lahetystila = :lahetystila"
+                {:update-expr    "SET #lahetystila = :lahetystila"
                  :expr-attr-names {"#lahetystila" "lahetystila"}
                  :expr-attr-vals  {":lahetystila" [:s "lahetys_epaonnistunut"]}})))
           (catch AwsServiceException e
