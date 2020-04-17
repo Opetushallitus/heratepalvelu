@@ -171,6 +171,16 @@
                                            :alkupvm alkupvm})
                 (catch Exception e
                   (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
+              (when (has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
+                (log/info (str "Nayttotutkinto:"
+                               {:hoks-id (:ehoks-id herate)
+                                :opiskeluoikeus-oid (:oid opiskeluoikeus)
+                                :koulutuksenjarjestaja koulutustoimija
+                                :tutkintotunnus (get-in suoritus [:koulutusmoduuli
+                                                                  :tunniste
+                                                                  :koodiarvo])
+                                :kyselytunnus (last (str/split kyselylinkki #"/"))}
+                               )))
               (catch ConditionalCheckFailedException e
                 (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                           oppija " koulutustoimijalla " koulutustoimija
@@ -184,14 +194,4 @@
               (catch Exception e
                 (deactivate-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
-                (throw e)))
-            (when (has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
-              (log/info (str "Nayttotutkinto:"
-                             {:hoks-id (:ehoks-id herate)
-                              :opiskeluoikeus-oid (:oid opiskeluoikeus)
-                              :koulutuksenjarjestaja koulutustoimija
-                              :tutkintotunnus (get-in suoritus [:koulutusmoduuli
-                                                                :tunniste
-                                                                :koodiarvo])
-                              :kyselytunnus (last (str/split kyselylinkki #"/"))}
-                             )))))))))
+                (throw e)))))))))
