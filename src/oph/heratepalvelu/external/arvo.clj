@@ -24,20 +24,20 @@
 (defn build-arvo-request-body [herate
                                opiskeluoikeus
                                request-id
-                               koulutustoimija]
-  (let [suoritus (first (:suoritukset opiskeluoikeus))]
-    {:vastaamisajan_alkupvm (:alkupvm herate)
-     :kyselyn_tyyppi (:kyselytyyppi herate)
-     :tutkintotunnus (:koodiarvo
-                       (:tunniste
-                         (:koulutusmoduuli suoritus)))
-     :tutkinnon_suorituskieli (str/lower-case
-                                (:koodiarvo (:suorituskieli suoritus)))
-     :koulutustoimija_oid koulutustoimija
-     :oppilaitos_oid (:oid (:oppilaitos opiskeluoikeus))
-     :request_id request-id
-     :toimipiste_oid                 (get-toimipiste suoritus)
-     :hankintakoulutuksen_toteuttaja nil}))
+                               koulutustoimija
+                               suoritus]
+  {:vastaamisajan_alkupvm   (:alkupvm herate)
+   :kyselyn_tyyppi          (:kyselytyyppi herate)
+   :tutkintotunnus          (get-in suoritus [:koulutusmoduuli
+                                              :tunniste
+                                              :koodiarvo])
+   :tutkinnon_suorituskieli (str/lower-case
+                              (:koodiarvo (:suorituskieli suoritus)))
+   :koulutustoimija_oid     koulutustoimija
+   :oppilaitos_oid          (:oid (:oppilaitos opiskeluoikeus))
+   :request_id              request-id
+   :toimipiste_oid          (get-toimipiste suoritus)
+   :hankintakoulutuksen_toteuttaja nil})
 
 (defn get-kyselylinkki [data]
   (try

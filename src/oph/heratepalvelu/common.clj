@@ -66,6 +66,19 @@
     true
     (log/info "Väärä suoritustyyppi opiskeluoikeudessa " (:oid opiskeluoikeus))))
 
+(defn get-suoritus [opiskeluoikeus]
+  "Haetaan tutkinto/tutkinnon osa suoritus"
+  (reduce
+    (fn [_ suoritus]
+      (when (check-suoritus-type? suoritus)
+        (reduced suoritus)))
+    nil (:suoritukset opiskeluoikeus)))
+
+(defn has-nayttotutkintoonvalmistavakoulutus? [opiskeluoikeus]
+  (some (fn [suoritus]
+          (= (:koodiarvo (:tyyppi suoritus)) "nayttotutkintoonvalmistavakoulutus"))
+        (:suoritukset opiskeluoikeus)))
+
 (defn check-organisaatio-whitelist?
   ([koulutustoimija]
    (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
@@ -110,7 +123,7 @@
     (let [kyselytyyppi (:kyselytyyppi herate)
           alkupvm (:alkupvm herate)
           koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
-          suoritus (first (seq (:suoritukset opiskeluoikeus)))
+          suoritus (get-suoritus opiskeluoikeus)
           oppija (str (:oppija-oid herate))
           laskentakausi (kausi alkupvm)
           uuid (generate-uuid)
@@ -124,7 +137,8 @@
                             herate
                             opiskeluoikeus
                             uuid
-                            koulutustoimija))
+                            koulutustoimija
+                            suoritus))
               voimassa-loppupvm (:voimassa_loppupvm arvo-resp)]
           (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
             (try
@@ -146,7 +160,8 @@
                              :kyselytyyppi [:s kyselytyyppi]
                              :rahoituskausi [:s laskentakausi]
                              :viestintapalvelu-id [:n "-1"]
-                             :voimassa-loppupvm [:s (or voimassa-loppupvm "-")]}
+                             :voimassa-loppupvm [:s (or voimassa-loppupvm "-")]
+                             :tallennuspvm [:s (str (t/today))]}
                             {:cond-expr (str "attribute_not_exists(oppija_toimija) AND "
                                              "attribute_not_exists(tyyppi_kausi)")})
               (try
@@ -169,4 +184,14 @@
               (catch Exception e
                 (deactivate-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
-                (throw e)))))))))
+                (throw e)))
+            (when (has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
+              (log/info (str "Nayttotutkinto:"
+                             {:hoks-id (:ehoks-id herate)
+                              :opiskeluoikeus-oid (:oid opiskeluoikeus)
+                              :koulutuksenjarjestaja koulutustoimija
+                              :tutkintotunnus (get-in suoritus [:koulutusmoduuli
+                                                                :tunniste
+                                                                :koodiarvo])
+                              :kyselytunnus (last (str/split kyselylinkki #"/"))}
+                             )))))))))

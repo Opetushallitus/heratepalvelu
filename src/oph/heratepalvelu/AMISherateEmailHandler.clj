@@ -55,9 +55,12 @@
               (ddb/update-item
                 {:toimija_oppija [:s (:toimija_oppija email)]
                  :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-                {:update-expr     "SET #lahetystila = :lahetystila"
-                 :expr-attr-names {"#lahetystila" "lahetystila"}
-                 :expr-attr-vals {":lahetystila" [:s "vastausaika_loppunut_ennen_lahetysta"]}})
+                {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                       "#lahetyspvm = :lahetyspvm")
+                 :expr-attr-names {"#lahetystila" "lahetystila"
+                                   "#lahetyspvm" "lahetyspvm"}
+                 :expr-attr-vals {":lahetystila" [:s "vastausaika_loppunut_ennen_lahetysta"]
+                                  ":lahetyspvm" [:s (str (t/today))]}})
               (catch Exception e
                 (log/error "Virhe lähetystilan päivityksessä herätteelle, jonka vastausaika umpeutunut" email)
                 (log/error e))))))

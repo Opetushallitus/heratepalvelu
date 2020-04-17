@@ -64,12 +64,9 @@
     (:metadata-table env)))
 
 (defn get-kysely-type [opiskeluoikeus]
-  (let [tyyppi (reduce
-                 (fn [_ suoritus]
-                   (when
-                     (check-suoritus-type? suoritus)
-                     (reduced (get-in suoritus [:tyyppi :koodiarvo]))))
-                 nil (:suoritukset opiskeluoikeus))]
+  (let [tyyppi (get-in
+                 (get-suoritus opiskeluoikeus)
+                 [:tyyppi :koodiarvo])]
     (cond
       (= tyyppi "ammatillinentutkinto")
       "tutkinnon_suorittaneet"
