@@ -179,7 +179,8 @@
                            :tutkintotunnus (get-in suoritus [:koulutusmoduuli
                                                              :tunniste
                                                              :koodiarvo])
-                           :kyselytunnus (last (str/split kyselylinkki #"/"))}))
+                           :kyselytunnus (last (str/split kyselylinkki #"/"))
+                           :voimassa-loppupvm voimassa-loppupvm}))
               (catch ConditionalCheckFailedException e
                 (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                           oppija " koulutustoimijalla " koulutustoimija
