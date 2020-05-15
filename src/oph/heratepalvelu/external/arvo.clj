@@ -4,7 +4,6 @@
             [oph.heratepalvelu.external.http-client :as client]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.external.organisaatio :as org]
-            [oph.heratepalvelu.common :as c]
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
             [oph.heratepalvelu.external.aws-ssm :as ssm])
@@ -27,10 +26,10 @@
   (let [oid (first
               (filter
                 (fn [oid]
-                  (let [opiskeluoikeus (koski/get-opiskeluoikeus oid)
-                        suoritus (c/get-suoritus opiskeluoikeus)]
-                    (= "ammatillinentutkinto"
-                       (:koodiarvo (:tyyppi suoritus)))))
+                  (let [opiskeluoikeus (koski/get-opiskeluoikeus oid)]
+                    (not-empty (filter #(= (:koodiarvo (:tyyppi %1))
+                                           "ammatillinentutkinto")
+                                       (:suoritukset opiskeluoikeus)))))
                 oids))]
     (log/info "Hankintakoulutus:" oid)
     oid))

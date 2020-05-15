@@ -97,6 +97,9 @@
 (defn mock-handler-context []
   (reify-context))
 
+(defn mock-get-hankintakoulutus-oids-empty [_]
+  [])
+
 (defn mock-get-koulutustoimija-oid [_]
   (str "1.2.246.562.10.346830761110"))
 

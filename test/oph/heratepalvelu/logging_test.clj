@@ -45,7 +45,8 @@
        oph.heratepalvelu.common/check-organisaatio-whitelist? mock-check-organisaatio-whitelist-true?
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item-aws-exception
        oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki
-       oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki]
+       oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki
+       oph.heratepalvelu.external.ehoks/get-hankintakoulutus-oids mock-get-hankintakoulutus-oids-empty]
       (do
         (is (thrown? AwsServiceException (-handleAMISherate
                                            nil
@@ -63,7 +64,8 @@
        oph.heratepalvelu.common/check-organisaatio-whitelist? mock-check-organisaatio-whitelist-true?
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item-cond-check-exception
        oph.heratepalvelu.external.arvo/get-kyselylinkki mock-get-kyselylinkki
-       oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki]
+       oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki
+       oph.heratepalvelu.external.ehoks/get-hankintakoulutus-oids mock-get-hankintakoulutus-oids-empty]
       (do
         (-handleAMISherate nil (mock-handler-event :ehoksherate) (mock-handler-context))
         (is (true? (did-log? "Tämän kyselyn linkki on jo toimituksessa oppilaalle" "WARN")))))))
