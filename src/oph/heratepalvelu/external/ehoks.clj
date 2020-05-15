@@ -24,5 +24,12 @@
      :body (generate-string data)
      :as :json}))
 
-(defn call-maintenance-endpoints []
-  (log/debug "ehoks/call-maintenance-endpoints"))
+(defn get-hankintakoulutus-oids [hoks-id]
+  (:data
+    (:body
+      (client/get
+        (str (:ehoks-url env) "hoks/" hoks-id "/hankintakoulutukset")
+        {:headers {:ticket (cas/get-service-ticket
+                             "/ehoks-virkailija-backend"
+                             "cas-security-check")}
+         :as :json}))))

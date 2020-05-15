@@ -2,7 +2,9 @@
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.external.http-client :as client]
+            [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.common :as c]
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
             [oph.heratepalvelu.external.aws-ssm :as ssm])
@@ -21,11 +23,24 @@
       oid
       nil)))
 
+(defn get-hankintakoulutuksen-toteuttaja [oids]
+  (let [oid (first
+              (filter
+                (fn [oid]
+                  (let [opiskeluoikeus (koski/get-opiskeluoikeus oid)
+                        suoritus (c/get-suoritus opiskeluoikeus)]
+                    (= "ammatillinentutkinto"
+                       (:koodiarvo (:tyyppi suoritus)))))
+                oids))]
+    (log/info "Hankintakoulutus:" oid)
+    oid))
+
 (defn build-arvo-request-body [herate
                                opiskeluoikeus
                                request-id
                                koulutustoimija
-                               suoritus]
+                               suoritus
+                               hankintakoulutus-opiskeluoikeudet]
   {:vastaamisajan_alkupvm   (:alkupvm herate)
    :kyselyn_tyyppi          (:kyselytyyppi herate)
    :tutkintotunnus          (get-in suoritus [:koulutusmoduuli
@@ -37,7 +52,8 @@
    :oppilaitos_oid          (:oid (:oppilaitos opiskeluoikeus))
    :request_id              request-id
    :toimipiste_oid          (get-toimipiste suoritus)
-   :hankintakoulutuksen_toteuttaja nil})
+   :hankintakoulutuksen_toteuttaja (get-hankintakoulutuksen-toteuttaja
+                                     hankintakoulutus-opiskeluoikeudet)})
 
 (defn get-kyselylinkki [data]
   (try
