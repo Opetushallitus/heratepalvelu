@@ -23,13 +23,14 @@
       nil)))
 
 (defn get-hankintakoulutuksen-toteuttaja [oids]
-  (log/info oids)
+  (log/info "oids:" oids)
   (let [opiskeluoikeudet (map koski/get-opiskeluoikeus oids)
         toteuttaja-oid
         (get-in
           (first
             (filter
               (fn [opiskeluoikeus]
+                (log/info opiskeluoikeus)
                 (some
                   #(= "ammatillinentutkinto"
                       (get-in % [:tyyppi :koodiarvo]))
