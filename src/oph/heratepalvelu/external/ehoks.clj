@@ -25,11 +25,10 @@
      :as :json}))
 
 (defn get-hankintakoulutus-oids [hoks-id]
-  (let [resp (client/get
-               (str (:ehoks-url env) "hoks/" hoks-id "/hankintakoulutukset")
-               {:headers {:ticket (cas/get-service-ticket
-                                    "/ehoks-virkailija-backend"
-                                    "cas-security-check")}
-                :as :json})]
-    (log/info resp)
-    (get-in resp [:body :data])))
+  (:body
+    (client/get
+      (str (:ehoks-url env) "hoks/" hoks-id "/hankintakoulutukset")
+      {:headers {:ticket (cas/get-service-ticket
+                           "/ehoks-virkailija-backend"
+                           "cas-security-check")}
+       :as :json})))
