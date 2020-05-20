@@ -23,16 +23,21 @@
       nil)))
 
 (defn get-hankintakoulutuksen-toteuttaja [oids]
-  (let [oid (first
-              (filter
-                (fn [oid]
-                  (let [opiskeluoikeus (koski/get-opiskeluoikeus oid)]
-                    (not-empty (filter #(= (:koodiarvo (:tyyppi %1))
-                                           "ammatillinentutkinto")
-                                       (:suoritukset opiskeluoikeus)))))
-                oids))]
-    (log/info "Hankintakoulutus:" oid)
-    oid))
+  (log/info oids)
+  (let [opiskeluoikeudet (map koski/get-opiskeluoikeus oids)
+        toteuttaja-oid
+        (get-in
+          (first
+            (filter
+              (fn [opiskeluoikeus]
+                (some
+                  #(= "ammatillinentutkinto"
+                      (get-in % [:tyyppi :koodiarvo]))
+                  (:suoritukset opiskeluoikeus)))
+              opiskeluoikeudet))
+          [:koulutustoimija :oid])]
+    (log/info "Hankintakoulutuksen toteuttaja:" toteuttaja-oid)
+    toteuttaja-oid))
 
 (defn build-arvo-request-body [herate
                                opiskeluoikeus
