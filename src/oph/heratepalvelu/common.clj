@@ -129,9 +129,7 @@
           uuid (generate-uuid)
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
           suorituskieli (str/lower-case
-                          (:koodiarvo (:suorituskieli suoritus)))
-          hankintakoulutus-opiskeluoikeudet (get-hankintakoulutus-oids
-                                              (:ehoks-id herate))]
+                          (:koodiarvo (:suorituskieli suoritus)))]
       (when (check-duplicate-herate?
               oppija koulutustoimija laskentakausi kyselytyyppi)
         (let [arvo-resp (get-kyselylinkki
@@ -140,8 +138,7 @@
                             opiskeluoikeus
                             uuid
                             koulutustoimija
-                            suoritus
-                            hankintakoulutus-opiskeluoikeudet))
+                            suoritus))
               voimassa-loppupvm (:voimassa_loppupvm arvo-resp)]
           (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
             (try

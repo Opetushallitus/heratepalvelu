@@ -4,6 +4,7 @@
             [oph.heratepalvelu.external.http-client :as client]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
             [oph.heratepalvelu.external.aws-ssm :as ssm])
@@ -22,30 +23,28 @@
       oid
       nil)))
 
-(defn get-hankintakoulutuksen-toteuttaja [oids]
-  (log/info "oids:" oids)
-  (let [opiskeluoikeudet (map koski/get-opiskeluoikeus oids)
+(defn get-hankintakoulutuksen-toteuttaja [ehoks-id]
+  (let [oids (ehoks/get-hankintakoulutus-oids ehoks-id)
+        opiskeluoikeudet (map koski/get-opiskeluoikeus oids)
         toteuttaja-oid
         (get-in
           (first
             (filter
               (fn [opiskeluoikeus]
-                (log/info opiskeluoikeus)
                 (some
                   #(= "ammatillinentutkinto"
                       (get-in % [:tyyppi :koodiarvo]))
                   (:suoritukset opiskeluoikeus)))
               opiskeluoikeudet))
           [:koulutustoimija :oid])]
-    (log/info "Hankintakoulutuksen toteuttaja:" toteuttaja-oid)
+    (log/info "Hoks " ehoks-id ", hankintakoulutuksen toteuttaja:" toteuttaja-oid)
     toteuttaja-oid))
 
 (defn build-arvo-request-body [herate
                                opiskeluoikeus
                                request-id
                                koulutustoimija
-                               suoritus
-                               hankintakoulutus-opiskeluoikeudet]
+                               suoritus]
   {:vastaamisajan_alkupvm   (:alkupvm herate)
    :kyselyn_tyyppi          (:kyselytyyppi herate)
    :tutkintotunnus          (get-in suoritus [:koulutusmoduuli
@@ -58,7 +57,7 @@
    :request_id              request-id
    :toimipiste_oid          (get-toimipiste suoritus)
    :hankintakoulutuksen_toteuttaja (get-hankintakoulutuksen-toteuttaja
-                                     hankintakoulutus-opiskeluoikeudet)})
+                                     (:ehoks-id herate))})
 
 (defn get-kyselylinkki [data]
   (try
