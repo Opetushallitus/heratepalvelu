@@ -125,10 +125,14 @@
                  (.updateExpression (:update-expr options))
                  (cond->
                    (:expr-attr-names options)
-                   (.expressionAttributeNames (:expr-attr-names options))
+                   (.expressionAttributeNames
+                     (:expr-attr-names options))
                    (:expr-attr-vals options)
                    (.expressionAttributeValues
-                     (map-vals-to-attribute-values (:expr-attr-vals options))))
+                     (map-vals-to-attribute-values (:expr-attr-vals options)))
+                   (:cond-expr options)
+                   (.conditionExpression
+                     (:cond-expr options)))
                  (.build))]
      (.updateItem ddb-client req))))
 
