@@ -47,7 +47,7 @@
   [datetime]
   (let [time-with-buffer
         (t/minus datetime
-                 (t/minutes 1))]
+                 (t/minutes 5))]
     (ddb/update-item
       {:key [:s "opiskeluoikeus-last-checked"]}
       {:update-expr     "SET #value = :value"

@@ -162,7 +162,7 @@
                              :viestintapalvelu-id [:n "-1"]
                              :voimassa-loppupvm [:s (or voimassa-loppupvm "-")]
                              :tallennuspvm [:s (str (t/today))]}
-                            {:cond-expr (str "attribute_not_exists(oppija_toimija) AND "
+                            {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
                                              "attribute_not_exists(tyyppi_kausi)")})
               (try
                 (add-kyselytunnus-to-hoks (:ehoks-id herate)

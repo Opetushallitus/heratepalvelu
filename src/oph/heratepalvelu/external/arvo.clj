@@ -24,21 +24,17 @@
       nil)))
 
 (defn get-hankintakoulutuksen-toteuttaja [ehoks-id]
-  (let [oids (ehoks/get-hankintakoulutus-oids ehoks-id)
-        opiskeluoikeudet (map koski/get-opiskeluoikeus oids)
-        toteuttaja-oid
-        (get-in
-          (first
-            (filter
-              (fn [opiskeluoikeus]
-                (some
-                  #(= "ammatillinentutkinto"
-                      (get-in % [:tyyppi :koodiarvo]))
-                  (:suoritukset opiskeluoikeus)))
-              opiskeluoikeudet))
-          [:koulutustoimija :oid])]
-    (log/info "Hoks " ehoks-id ", hankintakoulutuksen toteuttaja:" toteuttaja-oid)
-    toteuttaja-oid))
+  (let [oids (ehoks/get-hankintakoulutus-oids ehoks-id)]
+    (when (not-empty oids)
+      (if (> (count oids) 1)
+        (log/warn "Enemmän kuin yksi linkitetty opiskeluoikeus! HOKS-id: " ehoks-id)
+        (let [opiskeluoikeus (koski/get-opiskeluoikeus (first oids))
+              toteuttaja-oid
+              (get-in
+                opiskeluoikeus
+                [:koulutustoimija :oid])]
+          (log/info "Hoks " ehoks-id ", hankintakoulutuksen toteuttaja:" toteuttaja-oid)
+          toteuttaja-oid)))))
 
 (defn build-arvo-request-body [herate
                                opiskeluoikeus
