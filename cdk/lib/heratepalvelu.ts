@@ -364,7 +364,7 @@ export class HeratepalveluStack extends cdk.Stack {
       enabled: false
     });
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, AMISEmailResendHandler
       // , AMISMuistutusHandler
     ].forEach(
       lambdaFunction => {
