@@ -2,7 +2,9 @@
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.external.http-client :as client]
+            [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
             [oph.heratepalvelu.external.aws-ssm :as ssm])
@@ -21,6 +23,19 @@
       oid
       nil)))
 
+(defn get-hankintakoulutuksen-toteuttaja [ehoks-id]
+  (let [oids (ehoks/get-hankintakoulutus-oids ehoks-id)]
+    (when (not-empty oids)
+      (if (> (count oids) 1)
+        (log/warn "Enemmän kuin yksi linkitetty opiskeluoikeus! HOKS-id: " ehoks-id)
+        (let [opiskeluoikeus (koski/get-opiskeluoikeus (first oids))
+              toteuttaja-oid
+              (get-in
+                opiskeluoikeus
+                [:koulutustoimija :oid])]
+          (log/info "Hoks " ehoks-id ", hankintakoulutuksen toteuttaja:" toteuttaja-oid)
+          toteuttaja-oid)))))
+
 (defn build-arvo-request-body [herate
                                opiskeluoikeus
                                request-id
@@ -37,7 +52,8 @@
    :oppilaitos_oid          (:oid (:oppilaitos opiskeluoikeus))
    :request_id              request-id
    :toimipiste_oid          (get-toimipiste suoritus)
-   :hankintakoulutuksen_toteuttaja nil})
+   :hankintakoulutuksen_toteuttaja (get-hankintakoulutuksen-toteuttaja
+                                     (:ehoks-id herate))})
 
 (defn get-kyselylinkki [data]
   (try

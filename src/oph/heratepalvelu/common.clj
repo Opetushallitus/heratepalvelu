@@ -6,7 +6,7 @@
             [oph.heratepalvelu.external.organisaatio :refer [get-organisaatio]]
             [oph.heratepalvelu.external.arvo :refer :all]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.ehoks :refer [add-kyselytunnus-to-hoks]]
+            [oph.heratepalvelu.external.ehoks :refer :all]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
@@ -128,8 +128,8 @@
           laskentakausi (kausi alkupvm)
           uuid (generate-uuid)
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
-          suorituskieli
-          (str/lower-case (:koodiarvo (:suorituskieli suoritus)))]
+          suorituskieli (str/lower-case
+                          (:koodiarvo (:suorituskieli suoritus)))]
       (when (check-duplicate-herate?
               oppija koulutustoimija laskentakausi kyselytyyppi)
         (let [arvo-resp (get-kyselylinkki
@@ -162,7 +162,7 @@
                              :viestintapalvelu-id [:n "-1"]
                              :voimassa-loppupvm [:s (or voimassa-loppupvm "-")]
                              :tallennuspvm [:s (str (t/today))]}
-                            {:cond-expr (str "attribute_not_exists(oppija_toimija) AND "
+                            {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
                                              "attribute_not_exists(tyyppi_kausi)")})
               (try
                 (add-kyselytunnus-to-hoks (:ehoks-id herate)
