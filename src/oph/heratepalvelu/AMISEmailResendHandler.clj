@@ -18,7 +18,8 @@
   {:koulutustoimija s/Str
    :oppija-oid s/Str
    :kyselytyyppi s/Str
-   :alkupvm s/Str})
+   :alkupvm s/Str
+   :email s/Str})
 
 (defn -handleEmailResend [this event context]
   (let [messages (seq (.getRecords event))]
@@ -34,9 +35,12 @@
             (ddb/update-item
               {:toimija_oppija [:s toimija-oppija]
                :tyyppi_kausi   [:s tyyppi-kausi]}
-              {:update-expr     (str "SET #lahetystila = :lahetystila")
-               :expr-attr-names {"#lahetystila" "lahetystila"}
+              {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                     "#sahkoposti = :sahkoposti")
+               :expr-attr-names {"#lahetystila" "lahetystila"
+                                 "#sahkoposti" "sahkoposti"}
                :expr-attr-vals  {":lahetystila" [:s "ei_lahetetty"]
+                                 ":sahkoposti" [:s (:email herate)]
                                  ":tyyppi-kausi" [:s toimija-oppija]
                                  ":toimija-oppija" [:s tyyppi-kausi]}
                :cond-expr (str "toimija_oppija = :toimija-oppija"

@@ -165,6 +165,20 @@ export class HeratepalveluStack extends cdk.Stack {
       retentionPeriod: Duration.days(14)
     });
 
+    const ehoksAmisResendDLQueue = new sqs.Queue(this, "AmisResendDLQueue", {
+      retentionPeriod: Duration.days(14)
+    });
+
+    const ehoksAmisResendQueue = new sqs.Queue(this, "AmisResendQueue", {
+      queueName: `${id}-eHOKSAmisResendQueue`,
+      deadLetterQueue: {
+        queue: ehoksAmisResendDLQueue,
+        maxReceiveCount: 5
+      },
+      visibilityTimeout: Duration.seconds(60),
+      retentionPeriod: Duration.days(14)
+    });
+
     let envVars = envVarsList.reduce((envVarsObject: any, key: string) => {
       envVarsObject[key] = getEnvVarFromSsm(key);
       return envVarsObject;
@@ -260,6 +274,22 @@ export class HeratepalveluStack extends cdk.Stack {
     //   ),
     //   targets: [new targets.LambdaFunction(AMISMuistutusHandler)]
     // });
+
+    const AMISEmailResendHandler = new lambda.Function(this, "AMISEmailResendHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `${id}-AMISEmailResendHandler`
+      },
+      handler: "oph.heratepalvelu.AMISEmailResendHandler::handleEmailResend",
+      memorySize: Token.asNumber(getParameterFromSsm("ehokshandler-memory")),
+      timeout: Duration.seconds(10),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    AMISEmailResendHandler.addEventSource(new SqsEventSource(ehoksAmisResendQueue, { batchSize: 1, }));
 
     const updatedOoHandler = new lambda.Function(this, "UpdatedOOHandler", {
       runtime: lambda.Runtime.JAVA_8,
