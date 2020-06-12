@@ -284,8 +284,8 @@ export class HeratepalveluStack extends cdk.Stack {
         caller_id: `${id}-AMISEmailResendHandler`
       },
       handler: "oph.heratepalvelu.AMISEmailResendHandler::handleEmailResend",
-      memorySize: Token.asNumber(getParameterFromSsm("ehokshandler-memory")),
-      timeout: Duration.seconds(10),
+      memorySize: 512,
+      timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
     });
 
