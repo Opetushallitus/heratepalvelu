@@ -6,7 +6,8 @@
             [oph.heratepalvelu.common :refer [kausi]]
             [environ.core :refer [env]]
             [schema.core :as s])
-  (:import (com.fasterxml.jackson.core JsonParseException)))
+  (:import (com.fasterxml.jackson.core JsonParseException)
+           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
 
 (gen-class
   :name "oph.heratepalvelu.AMISEmailResendHandler"
@@ -32,19 +33,21 @@
                                 (kausi (:alkupvm herate)))
               schema-check (s/check resend-schema herate)]
           (if (nil? schema-check)
-            (ddb/update-item
-              {:toimija_oppija [:s toimija-oppija]
-               :tyyppi_kausi   [:s tyyppi-kausi]}
-              {:update-expr     (str "SET #lahetystila = :lahetystila, "
-                                     "#sahkoposti = :sahkoposti")
-               :expr-attr-names {"#lahetystila" "lahetystila"
-                                 "#sahkoposti" "sahkoposti"}
-               :expr-attr-vals  {":lahetystila" [:s "ei_lahetetty"]
-                                 ":sahkoposti" [:s (:email herate)]
-                                 ":tyyppi-kausi" [:s toimija-oppija]
-                                 ":toimija-oppija" [:s tyyppi-kausi]}
-               :cond-expr (str "toimija_oppija = :toimija-oppija"
-                               " AND tyyppi_kausi = :tyyppi-kausi")})
+            (try
+              (ddb/update-item
+                {:toimija_oppija [:s toimija-oppija]
+                 :tyyppi_kausi   [:s tyyppi-kausi]}
+                {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                       "#sahkoposti = :sahkoposti")
+                 :expr-attr-names {"#lahetystila" "lahetystila"
+                                   "#sahkoposti" "sahkoposti"}
+                 :expr-attr-vals  {":lahetystila" [:s "ei_lahetetty"]
+                                   ":sahkoposti" [:s (:email herate)]}
+                 :cond-expr (str "attribute_exists(toimija_oppija) AND "
+                                 "attribute_exists(tyyppi_kausi)")})
+              (catch ConditionalCheckFailedException e
+                (log/error "Ei kyselylinkkiä herätteelle"
+                           toimija-oppija "/" tyyppi-kausi)))
             (log/error schema-check)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " e))))))
