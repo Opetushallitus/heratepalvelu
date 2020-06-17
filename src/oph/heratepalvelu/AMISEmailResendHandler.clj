@@ -20,7 +20,7 @@
    :oppija-oid s/Str
    :kyselytyyppi s/Str
    :alkupvm s/Str
-   :email s/Str})
+   :sahkoposti s/Str})
 
 (defn -handleEmailResend [this event context]
   (let [messages (seq (.getRecords event))]
@@ -42,7 +42,7 @@
                  :expr-attr-names {"#lahetystila" "lahetystila"
                                    "#sahkoposti" "sahkoposti"}
                  :expr-attr-vals  {":lahetystila" [:s "ei_lahetetty"]
-                                   ":sahkoposti" [:s (:email herate)]}
+                                   ":sahkoposti" [:s (:sahkoposti herate)]}
                  :cond-expr (str "attribute_exists(toimija_oppija) AND "
                                  "attribute_exists(tyyppi_kausi)")})
               (catch ConditionalCheckFailedException e

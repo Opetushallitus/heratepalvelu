@@ -130,8 +130,9 @@
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
           suorituskieli (str/lower-case
                           (:koodiarvo (:suorituskieli suoritus)))]
-      (when true (check-duplicate-herate?
-                   oppija koulutustoimija laskentakausi kyselytyyppi)
+      (when
+        (check-duplicate-herate?
+          oppija koulutustoimija laskentakausi kyselytyyppi)
         (let [arvo-resp (get-kyselylinkki
                           (build-arvo-request-body
                             herate

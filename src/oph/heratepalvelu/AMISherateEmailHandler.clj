@@ -2,6 +2,7 @@
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amispalaute-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
+            [oph.heratepalvelu.external.ehoks :refe [add-lahetys-info-to-kyselytunnus]]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.common :refer [has-time-to-answer?]]
             [clojure.tools.logging :as log]
@@ -29,7 +30,8 @@
             (try
               (let [id (:id (send-email {:subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
                                          :body (amispalaute-html email)
-                                         :address (:sahkoposti email)}))]
+                                         :address (:sahkoposti email)}))
+                    lahetyspvm (str (t/today))]
                 (ddb/update-item
                   {:toimija_oppija [:s (:toimija_oppija email)]
                    :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
@@ -43,8 +45,12 @@
                                      "#muistutukset" "muistutukset"}
                    :expr-attr-vals  {":lahetystila" [:s "viestintapalvelussa"]
                                      ":vpid" [:n id]
-                                     ":lahetyspvm" [:s (str (t/today))]
-                                     ":muistutukset" [:n 0]}}))
+                                     ":lahetyspvm" [:s lahetyspvm]
+                                     ":muistutukset" [:n 0]}})
+                (add-lahetys-info-to-kyselytunnus
+                  {:kyselylinkki (:kyselylinkki email)
+                   :lahetyspvm lahetyspvm
+                   :sahkoposti (:sahkoposti email)}))
               (catch AwsServiceException e
                 (log/error "Viesti " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
                 (log/error e))
