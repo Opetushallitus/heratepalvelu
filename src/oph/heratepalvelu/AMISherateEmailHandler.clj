@@ -2,7 +2,7 @@
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amispalaute-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
-            [oph.heratepalvelu.external.ehoks :refe [add-lahetys-info-to-kyselytunnus]]
+            [oph.heratepalvelu.external.ehoks :refer [add-lahetys-info-to-kyselytunnus]]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.common :refer [has-time-to-answer?]]
             [clojure.tools.logging :as log]
