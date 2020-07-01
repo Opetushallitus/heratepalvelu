@@ -234,7 +234,8 @@ export class HeratepalveluStack extends cdk.Stack {
         ...envVars,
         herate_table: AMISherateTable.tableName,
         caller_id: `${id}-AMISherateEmailHandler`,
-        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
+        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`,
+        ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
       timeout: Duration.seconds(
