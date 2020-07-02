@@ -169,7 +169,8 @@
                 (add-kyselytunnus-to-hoks (:ehoks-id herate)
                                           {:kyselylinkki kyselylinkki
                                            :tyyppi       kyselytyyppi
-                                           :alkupvm      alkupvm})
+                                           :alkupvm      alkupvm
+                                           :lahetystila  "ei_lahetetty"})
                 (catch Exception e
                   (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
               (when (has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)

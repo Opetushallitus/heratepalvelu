@@ -50,7 +50,8 @@
                 (add-lahetys-info-to-kyselytunnus
                   {:kyselylinkki (:kyselylinkki email)
                    :lahetyspvm lahetyspvm
-                   :sahkoposti (:sahkoposti email)}))
+                   :sahkoposti (:sahkoposti email)
+                   :lahetystila "viestintapalvelussa"}))
               (catch AwsServiceException e
                 (log/error "Viesti " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
                 (log/error e))

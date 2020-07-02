@@ -44,39 +44,6 @@ export class HeratepalveluStack extends cdk.Stack {
       "virkailija_url"
     ];
 
-    // const herateTable = new dynamodb.Table(this, "HerateTable", {
-    //   partitionKey: {
-    //     name: "toimija_oppija",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   sortKey: {
-    //     name: "tyyppi_kausi",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-    //   serverSideEncryption: true
-    // });
-    //
-    // herateTable.addGlobalSecondaryIndex({
-    //   indexName: "lahetysIndex",
-    //   partitionKey: {
-    //     name: "lahetystila",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   sortKey: {
-    //     name: "alkupvm",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   nonKeyAttributes: [
-    //     "sahkoposti",
-    //     "kyselylinkki",
-    //     "suorituskieli",
-    //     "viestintapalvelu-id",
-    //     "kyselytyyppi"
-    //   ],
-    //   projectionType: dynamodb.ProjectionType.INCLUDE
-    // });
-
     const AMISherateTable = new dynamodb.Table(this, "AMISHerateTable", {
       partitionKey: {
         name: "toimija_oppija",
@@ -319,21 +286,6 @@ export class HeratepalveluStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(updatedOoHandler)]
     });
 
-    // const migrateHandler = new lambda.Function(this, "migrateHandler", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambdaCode,
-    //   environment: {
-    //     from_table: "",
-    //     to_table: AMISherateTable.tableName
-    //   },
-    //   handler: "oph.heratepalvelu.migrateHandler::handleMigration",
-    //   memorySize: 2048,
-    //   timeout: Duration.seconds(
-    //     15 * 60
-    //   ),
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-
     const dlqResendHandler = new lambda.Function(this, "DLQresendHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
@@ -342,7 +294,7 @@ export class HeratepalveluStack extends cdk.Stack {
       },
       handler: "oph.heratepalvelu.DLQresendHandler::handleDLQresend",
       memorySize: 1024,
-      timeout: Duration.seconds(30),
+      timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
     });
 
