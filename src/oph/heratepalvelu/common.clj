@@ -23,6 +23,15 @@
               :sahkoposti         (s/constrained s/Str not-empty)
               :alkupvm            s/Str})
 
+(def lahetystilat
+  {:ei-lahetetty "ei_lahetetty"
+   :viestintapalvelussa "viestintapalvelussa"
+   :vastausaika-loppunut "vastausaika_loppunut_ennen_lahetysta"
+   :vastattu "vastattu_tai_vastausaika_loppunut"
+   :success "success"
+   :failed "failed"
+   :bounced "bounced"})
+
 (defn generate-uuid []
   (.toString (UUID/randomUUID)))
 
@@ -150,7 +159,7 @@
                              :kyselylinkki        [:s kyselylinkki]
                              :sahkoposti          [:s (:sahkoposti herate)]
                              :suorituskieli       [:s suorituskieli]
-                             :lahetystila         [:s "ei_lahetetty"]
+                             :lahetystila         [:s (:ei-lahetetty lahetystilat)]
                              :alkupvm             [:s alkupvm]
                              :request-id          [:s uuid]
                              :oppilaitos          [:s oppilaitos]
@@ -170,7 +179,7 @@
                                           {:kyselylinkki kyselylinkki
                                            :tyyppi       kyselytyyppi
                                            :alkupvm      alkupvm
-                                           :lahetystila  "ei_lahetetty"})
+                                           :lahetystila  (:ei-lahetetty lahetystilat)})
                 (catch Exception e
                   (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
               (when (has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)

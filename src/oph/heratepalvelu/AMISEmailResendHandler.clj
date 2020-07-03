@@ -3,7 +3,7 @@
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.common :refer [kausi]]
+            [oph.heratepalvelu.common :refer [kausi lahetystilat]]
             [environ.core :refer [env]]
             [schema.core :as s])
   (:import (com.fasterxml.jackson.core JsonParseException)
@@ -41,7 +41,7 @@
                                        "#sahkoposti = :sahkoposti")
                  :expr-attr-names {"#lahetystila" "lahetystila"
                                    "#sahkoposti" "sahkoposti"}
-                 :expr-attr-vals  {":lahetystila" [:s "ei_lahetetty"]
+                 :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty lahetystilat)]
                                    ":sahkoposti" [:s (:sahkoposti herate)]}
                  :cond-expr (str "attribute_exists(toimija_oppija) AND "
                                  "attribute_exists(tyyppi_kausi)")})
