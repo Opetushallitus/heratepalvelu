@@ -119,7 +119,8 @@ export class HeratepalveluStack extends cdk.Stack {
     });
 
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      visibilityTimeout: (Duration.seconds(60))
     });
 
     const ehoksHerateQueue = new sqs.Queue(this, "HerateQueue", {
