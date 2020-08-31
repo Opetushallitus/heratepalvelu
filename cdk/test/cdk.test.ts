@@ -1,21 +1,21 @@
 import { expect as expectCDK, haveResource } from '@aws-cdk/assert';
-import cdk = require('@aws-cdk/core');
-import Cdk = require('../lib/cdk-stack');
+import { App } from '@aws-cdk/core';
+import { HeratepalveluStack} from "../lib/heratepalvelu";
 
 test('SQS Queue Created', () => {
-    const app = new cdk.App();
-    // WHEN
-    const stack = new Cdk.CdkStack(app, 'MyTestStack');
-    // THEN
-    expectCDK(stack).to(haveResource("AWS::SQS::Queue",{
-      VisibilityTimeout: 300
-    }));
+  const app = new App();
+  // WHEN
+  const stack = new HeratepalveluStack(app, 'TestHeratePalveluStack', 'sieni', '1');
+  // THEN
+  expectCDK(stack).to(haveResource("AWS::SQS::Queue",{
+     VisibilityTimeout: 300
+  }));
 });
 
 test('SNS Topic Created', () => {
-  const app = new cdk.App();
+  const app = new App();
   // WHEN
-  const stack = new Cdk.CdkStack(app, 'MyTestStack');
+  const stack = new HeratepalveluStack(app, 'TestHeratePalveluStack', 'sieni', '1');
   // THEN
   expectCDK(stack).to(haveResource("AWS::SNS::Topic"));
 });
