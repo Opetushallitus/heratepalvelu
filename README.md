@@ -37,7 +37,7 @@ käytetään AWS CDK:ta. AWS profiilien hallintaan aws-vault -työkalun käyttö
 
 `npm install -g aws-cdk`
 
-`brew install cask aws-vault`
+`brew cask install aws-vault`
 (muokkaa käyttämääsi paketinhallintaan sopivaksi)
 
 Stageja ovat samat ympäristönimet kuin muissakin palveluissa (esim. 'pallero').
