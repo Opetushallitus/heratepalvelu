@@ -65,7 +65,12 @@
                                   [:s (.toString
                                         (t/minus
                                           (t/today)
-                                          (t/days (* 5 n))))]]}
+                                          (t/days (* 5 n))))]]
+                    :lahetyspvm  [:gt
+                                  [:s (.toString
+                                        (t/minus
+                                          (t/today)
+                                          (t/days (* 5 (+ n 1)))))]]}
                    {:index "muistutusIndex"
                     :limit 100}))
 
