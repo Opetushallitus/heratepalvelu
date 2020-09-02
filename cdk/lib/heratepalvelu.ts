@@ -8,7 +8,7 @@ import sqs = require("@aws-cdk/aws-sqs");
 import ssm = require("@aws-cdk/aws-ssm");
 import iam = require("@aws-cdk/aws-iam");
 import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
-import { Duration, Tag, Token } from "@aws-cdk/core";
+import { Duration, Tags, Token } from "@aws-cdk/core";
 import { CfnEventSourceMapping } from "@aws-cdk/aws-lambda";
 
 
@@ -22,7 +22,7 @@ export class HeratepalveluStack extends cdk.Stack {
   ) {
     super(scope, id, props);
 
-    Tag.add(this, "Deployed version", version);
+    Tags.of(this).add("Deployed version", version);
 
     const getParameterFromSsm = (parameterName: string): string => {
       return ssm.StringParameter.valueForStringParameter(
