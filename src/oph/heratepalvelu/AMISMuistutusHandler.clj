@@ -65,8 +65,8 @@
                                   [:s (.toString
                                         (t/minus
                                           (t/today)
-                                          (t/days (* 5 n))))]]
-                    :lahetyspvm  [:gt
+                                          (t/days (* 5 n))))]
+                                  :gt
                                   [:s (.toString
                                         (t/minus
                                           (t/today)
