@@ -318,8 +318,8 @@ export class HeratepalveluStack extends cdk.Stack {
       enabled: false
     });
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, AMISEmailResendHandler
-      // , AMISMuistutusHandler
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler,
+      AMISEmailResendHandler, AMISMuistutusHandler
     ].forEach(
       lambdaFunction => {
         metadataTable.grantReadWriteData(lambdaFunction);
