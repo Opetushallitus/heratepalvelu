@@ -61,16 +61,15 @@
 ; Estä 1. ja 2. muistutuksen lähteminen samassa ajossa???
 (defn- query-muistukset [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
-                    :lahetyspvm  [:le
-                                  [:s (.toString
-                                        (t/minus
-                                          (t/today)
-                                          (t/days (* 5 n))))]
-                                  :gt
-                                  [:s (.toString
-                                        (t/minus
-                                          (t/today)
-                                          (t/days (* 5 (+ n 1)))))]]}
+                    :lahetyspvm  [:between
+                                  [[:s (.toString
+                                         (t/minus
+                                           (t/today)
+                                           (t/days (- (* 5 (+ n 1)) 1))))]
+                                   [:s (.toString
+                                         (t/minus
+                                           (t/today)
+                                           (t/days (* 5 n))))]]]}
                    {:index "muistutusIndex"
                     :limit 100}))
 
