@@ -2,17 +2,17 @@
   (:require [oph.heratepalvelu.external.http-client :as client]
             [oph.heratepalvelu.external.cas-client :as cas]
             [environ.core :refer [env]]
-            [clojure.tools.logging :as log]
             [cheshire.core :refer [generate-string]]))
 
 (defn get-hoks-by-opiskeluoikeus [opiskeluoikeus-oid]
   (:data
-    (:body (client/get
-             (str (:ehoks-url env) "hoks/opiskeluoikeus/" opiskeluoikeus-oid)
-             {:headers {:ticket (cas/get-service-ticket
-                                  "/ehoks-virkailija-backend"
-                                  "cas-security-check")}
-              :as :json}))))
+    (:body
+      (client/get
+        (str (:ehoks-url env) "hoks/opiskeluoikeus/" opiskeluoikeus-oid)
+        {:headers {:ticket (cas/get-service-ticket
+                             "/ehoks-virkailija-backend"
+                             "cas-security-check")}
+         :as :json}))))
 
 (defn add-kyselytunnus-to-hoks [hoks-id data]
   (client/post
@@ -32,3 +32,13 @@
                            "/ehoks-virkailija-backend"
                            "cas-security-check")}
        :as :json})))
+
+(defn add-lahetys-info-to-kyselytunnus [data]
+  (client/patch
+    (str (:ehoks-url env) "hoks/kyselylinkki")
+    {:headers {:ticket (cas/get-service-ticket
+                         "/ehoks-virkailija-backend"
+                         "cas-security-check")}
+     :content-type "application/json"
+     :body (generate-string data)
+     :as :json}))

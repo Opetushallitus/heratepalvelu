@@ -44,39 +44,6 @@ export class HeratepalveluStack extends cdk.Stack {
       "virkailija_url"
     ];
 
-    // const herateTable = new dynamodb.Table(this, "HerateTable", {
-    //   partitionKey: {
-    //     name: "toimija_oppija",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   sortKey: {
-    //     name: "tyyppi_kausi",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-    //   serverSideEncryption: true
-    // });
-    //
-    // herateTable.addGlobalSecondaryIndex({
-    //   indexName: "lahetysIndex",
-    //   partitionKey: {
-    //     name: "lahetystila",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   sortKey: {
-    //     name: "alkupvm",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   nonKeyAttributes: [
-    //     "sahkoposti",
-    //     "kyselylinkki",
-    //     "suorituskieli",
-    //     "viestintapalvelu-id",
-    //     "kyselytyyppi"
-    //   ],
-    //   projectionType: dynamodb.ProjectionType.INCLUDE
-    // });
-
     const AMISherateTable = new dynamodb.Table(this, "AMISHerateTable", {
       partitionKey: {
         name: "toimija_oppija",
@@ -152,13 +119,28 @@ export class HeratepalveluStack extends cdk.Stack {
     });
 
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      visibilityTimeout: (Duration.seconds(60))
     });
 
     const ehoksHerateQueue = new sqs.Queue(this, "HerateQueue", {
       queueName: `${id}-eHOKSHerateQueue`,
       deadLetterQueue: {
         queue: herateDeadLetterQueue,
+        maxReceiveCount: 5
+      },
+      visibilityTimeout: Duration.seconds(60),
+      retentionPeriod: Duration.days(14)
+    });
+
+    const ehoksAmisResendDLQueue = new sqs.Queue(this, "AmisResendDLQueue", {
+      retentionPeriod: Duration.days(14)
+    });
+
+    const ehoksAmisResendQueue = new sqs.Queue(this, "AmisResendQueue", {
+      queueName: `${id}-eHOKSAmisResendQueue`,
+      deadLetterQueue: {
+        queue: ehoksAmisResendDLQueue,
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
@@ -220,7 +202,8 @@ export class HeratepalveluStack extends cdk.Stack {
         ...envVars,
         herate_table: AMISherateTable.tableName,
         caller_id: `${id}-AMISherateEmailHandler`,
-        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
+        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`,
+        ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
       timeout: Duration.seconds(
@@ -261,6 +244,22 @@ export class HeratepalveluStack extends cdk.Stack {
     //   targets: [new targets.LambdaFunction(AMISMuistutusHandler)]
     // });
 
+    const AMISEmailResendHandler = new lambda.Function(this, "AMISEmailResendHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `${id}-AMISEmailResendHandler`
+      },
+      handler: "oph.heratepalvelu.AMISEmailResendHandler::handleEmailResend",
+      memorySize: 1024,
+      timeout: Duration.seconds(60),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    AMISEmailResendHandler.addEventSource(new SqsEventSource(ehoksAmisResendQueue, { batchSize: 1, }));
+
     const updatedOoHandler = new lambda.Function(this, "UpdatedOOHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
@@ -288,21 +287,6 @@ export class HeratepalveluStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(updatedOoHandler)]
     });
 
-    // const migrateHandler = new lambda.Function(this, "migrateHandler", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambdaCode,
-    //   environment: {
-    //     from_table: "",
-    //     to_table: AMISherateTable.tableName
-    //   },
-    //   handler: "oph.heratepalvelu.migrateHandler::handleMigration",
-    //   memorySize: 2048,
-    //   timeout: Duration.seconds(
-    //     15 * 60
-    //   ),
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-
     const dlqResendHandler = new lambda.Function(this, "DLQresendHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
@@ -311,7 +295,7 @@ export class HeratepalveluStack extends cdk.Stack {
       },
       handler: "oph.heratepalvelu.DLQresendHandler::handleDLQresend",
       memorySize: 1024,
-      timeout: Duration.seconds(30),
+      timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
     });
 
@@ -334,7 +318,7 @@ export class HeratepalveluStack extends cdk.Stack {
       enabled: false
     });
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, AMISEmailResendHandler
       // , AMISMuistutusHandler
     ].forEach(
       lambdaFunction => {

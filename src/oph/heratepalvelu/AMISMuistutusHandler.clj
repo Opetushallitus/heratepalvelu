@@ -3,7 +3,7 @@
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amismuistutus-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :refer [has-time-to-answer?]]
+            [oph.heratepalvelu.common :refer [has-time-to-answer? lahetystilat]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [cheshire.core :refer [parse-string]])
@@ -39,7 +39,7 @@
                                  "#muistutuspvm" (str n ".-muistutus-lahetetty")}
                :expr-attr-vals  {":muistutukset" [:n n]
                                  ":vpid" [:n id]
-                                 ":lahetystila" [:s "viestintapalvelussa"]
+                                 ":lahetystila" [:s (:viestintapalvelussa lahetystilat)]
                                  ":muistutuspvm" [:s (str (t/today))]}}))
           (catch AwsServiceException e
             (log/error "Muistutus " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
@@ -53,7 +53,7 @@
              :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
             {:update-expr     "SET #lahetystila = :lahetystila"
              :expr-attr-names {"#lahetystila" "lahetystila"}
-             :expr-attr-vals {":lahetystila" [:s "vastattu_tai_vastausaika_loppunut"]}})
+             :expr-attr-vals {":lahetystila" [:s (:vastattu lahetystilat)]}})
           (catch Exception e
             (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
             (log/error e)))))))

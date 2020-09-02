@@ -2,8 +2,9 @@
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amispalaute-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
+            [oph.heratepalvelu.external.ehoks :refer [add-lahetys-info-to-kyselytunnus]]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :refer [has-time-to-answer?]]
+            [oph.heratepalvelu.common :refer [has-time-to-answer? lahetystilat]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [cheshire.core :refer [parse-string]])
@@ -17,7 +18,7 @@
 
 (defn -handleSendAMISEmails [this event context]
   (log-caller-details "handleSendAMISEmails" event context)
-  (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
+  (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty lahetystilat)]]
                                         :alkupvm     [:le [:s (.toString (t/today))]]}
                                        {:index "lahetysIndex"
                                         :limit 100})]
@@ -29,7 +30,8 @@
             (try
               (let [id (:id (send-email {:subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
                                          :body (amispalaute-html email)
-                                         :address (:sahkoposti email)}))]
+                                         :address (:sahkoposti email)}))
+                    lahetyspvm (str (t/today))]
                 (ddb/update-item
                   {:toimija_oppija [:s (:toimija_oppija email)]
                    :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
@@ -41,10 +43,15 @@
                                      "#vpid" "viestintapalvelu-id"
                                      "#lahetyspvm" "lahetyspvm"
                                      "#muistutukset" "muistutukset"}
-                   :expr-attr-vals  {":lahetystila" [:s "viestintapalvelussa"]
+                   :expr-attr-vals  {":lahetystila" [:s (:viestintapalvelussa lahetystilat)]
                                      ":vpid" [:n id]
-                                     ":lahetyspvm" [:s (str (t/today))]
-                                     ":muistutukset" [:n 0]}}))
+                                     ":lahetyspvm" [:s lahetyspvm]
+                                     ":muistutukset" [:n 0]}})
+                (add-lahetys-info-to-kyselytunnus
+                  {:kyselylinkki (:kyselylinkki email)
+                   :lahetyspvm lahetyspvm
+                   :sahkoposti (:sahkoposti email)
+                   :lahetystila (:viestintapalvelussa lahetystilat)}))
               (catch AwsServiceException e
                 (log/error "Viesti " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
                 (log/error e))
@@ -59,13 +66,13 @@
                                        "#lahetyspvm = :lahetyspvm")
                  :expr-attr-names {"#lahetystila" "lahetystila"
                                    "#lahetyspvm" "lahetyspvm"}
-                 :expr-attr-vals {":lahetystila" [:s "vastausaika_loppunut_ennen_lahetysta"]
+                 :expr-attr-vals {":lahetystila" [:s (:vastausaika-loppunut lahetystilat)]
                                   ":lahetyspvm" [:s (str (t/today))]}})
               (catch Exception e
                 (log/error "Virhe lähetystilan päivityksessä herätteelle, jonka vastausaika umpeutunut" email)
                 (log/error e))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (ddb/query-items {:lahetystila [:eq [:s "ei_lahetetty"]]
+        (recur (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty lahetystilat)]]
                                  :alkupvm     [:le [:s (.toString (t/today))]]}
                                 {:index "lahetysIndex"
                                  :limit 100}))))))
