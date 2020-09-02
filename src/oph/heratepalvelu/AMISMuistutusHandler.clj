@@ -23,7 +23,7 @@
       (if (and (not (:vastattu status))
                (has-time-to-answer? (:voimassa_loppupvm status)))
         (try
-          (let [id (:id (send-email {:subject "Palaute muistutus"
+          (let [id (:id (send-email {:subject "Muistutus-påminnelse-reminder: Vastaa kyselyyn - svara på enkäten - answer the survey"
                                      :body (amismuistutus-html email)
                                      :address (:sahkoposti email)}))]
             (ddb/update-item
