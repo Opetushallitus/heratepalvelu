@@ -51,7 +51,8 @@
           (ddb/update-item
             {:toimija_oppija [:s (:toimija_oppija email)]
              :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-            {:update-expr     "SET #lahetystila = :lahetystila"
+            {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                   "#muistutukset = :muistutukset")
              :expr-attr-names {"#lahetystila" "lahetystila"
                                "#muistutukset" "muistutukset"}
              :expr-attr-vals {":lahetystila" [:s (:vastattu lahetystilat)]
