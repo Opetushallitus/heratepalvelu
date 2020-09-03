@@ -60,7 +60,7 @@
    [:p [:a {:href link} link]]
    [:p "With best regards, your educational institution"]])
 
-(defn amispalaute-body [data]
+(defn- amispalaute-body [data]
   (cond
     (= (:kyselytyyppi data) "aloittaneet")
     (amispalaute-body-alkukysely (:kyselylinkki data))
@@ -69,7 +69,7 @@
     (= (:kyselytyyppi data) "tutkinnon_osia_suorittaneet")
     (amispalaute-body-loppukysely (:kyselylinkki data))))
 
-(defn amismuistutus-body [link]
+(defn- amismuistutus-body [link]
   [:div
    [:p (str "Olethan muistanut antaa palautetta oppilaitokselle!<br/>"
             "Kom ihåg att ge respons till läroanstalten!<br/>"

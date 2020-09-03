@@ -52,8 +52,10 @@
             {:toimija_oppija [:s (:toimija_oppija email)]
              :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
             {:update-expr     "SET #lahetystila = :lahetystila"
-             :expr-attr-names {"#lahetystila" "lahetystila"}
-             :expr-attr-vals {":lahetystila" [:s (:vastattu lahetystilat)]}})
+             :expr-attr-names {"#lahetystila" "lahetystila"
+                               "#muistutukset" "muistutukset"}
+             :expr-attr-vals {":lahetystila" [:s (:vastattu lahetystilat)]
+                              ":muistutukset" [:n n]}})
           (catch Exception e
             (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
             (log/error e)))))))
