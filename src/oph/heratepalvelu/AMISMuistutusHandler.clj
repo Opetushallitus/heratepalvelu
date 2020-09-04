@@ -23,7 +23,7 @@
       (if (and (not (:vastattu status))
                (has-time-to-answer? (:voimassa_loppupvm status)))
         (try
-          (let [id (:id (send-email {:subject "Palaute muistutus"
+          (let [id (:id (send-email {:subject "Muistutus-påminnelse-reminder: Vastaa kyselyyn - svara på enkäten - answer the survey"
                                      :body (amismuistutus-html email)
                                      :address (:sahkoposti email)}))]
             (ddb/update-item
@@ -51,9 +51,12 @@
           (ddb/update-item
             {:toimija_oppija [:s (:toimija_oppija email)]
              :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-            {:update-expr     "SET #lahetystila = :lahetystila"
-             :expr-attr-names {"#lahetystila" "lahetystila"}
-             :expr-attr-vals {":lahetystila" [:s (:vastattu lahetystilat)]}})
+            {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                   "#muistutukset = :muistutukset")
+             :expr-attr-names {"#lahetystila" "lahetystila"
+                               "#muistutukset" "muistutukset"}
+             :expr-attr-vals {":lahetystila" [:s (:vastattu lahetystilat)]
+                              ":muistutukset" [:n n]}})
           (catch Exception e
             (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
             (log/error e)))))))
@@ -61,11 +64,15 @@
 ; Estä 1. ja 2. muistutuksen lähteminen samassa ajossa???
 (defn- query-muistukset [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
-                    :lahetyspvm  [:le
-                                  [:s (.toString
-                                        (t/minus
-                                          (t/today)
-                                          (t/days (* 5 n))))]]}
+                    :lahetyspvm  [:between
+                                  [[:s (.toString
+                                         (t/minus
+                                           (t/today)
+                                           (t/days (- (* 5 (+ n 1)) 1))))]
+                                   [:s (.toString
+                                         (t/minus
+                                           (t/today)
+                                           (t/days (* 5 n))))]]]}
                    {:index "muistutusIndex"
                     :limit 100}))
 

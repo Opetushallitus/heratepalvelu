@@ -220,29 +220,29 @@ export class HeratepalveluStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(AMISherateEmailHandler)]
     });
 
-    // const AMISMuistutusHandler = new lambda.Function(this, "AMISMuistutusHandler", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambdaCode,
-    //   environment: {
-    //     ...envVars,
-    //     herate_table: AMISherateTable.tableName,
-    //     caller_id: `${id}-AMISMuistutusHandler`,
-    //     viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
-    //   },
-    //   memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
-    //   timeout: Duration.seconds(
-    //     Token.asNumber(getParameterFromSsm("emailhandler-timeout"))
-    //   ),
-    //   handler: "oph.heratepalvelu.AMISMuistutusHandler::handleSendAMISMuistutus",
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-    //
-    // new events.Rule(this, "AMISMuistutusScheduleRule", {
-    //   schedule: events.Schedule.expression(
-    //     `cron(${getParameterFromSsm("emailhandler-cron")})`
-    //   ),
-    //   targets: [new targets.LambdaFunction(AMISMuistutusHandler)]
-    // });
+    const AMISMuistutusHandler = new lambda.Function(this, "AMISMuistutusHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `${id}-AMISMuistutusHandler`,
+        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
+      },
+      memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
+      timeout: Duration.seconds(
+        Token.asNumber(getParameterFromSsm("emailhandler-timeout"))
+      ),
+      handler: "oph.heratepalvelu.AMISMuistutusHandler::handleSendAMISMuistutus",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "AMISMuistutusScheduleRule", {
+      schedule: events.Schedule.expression(
+        `cron(${getParameterFromSsm("emailhandler-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(AMISMuistutusHandler)]
+    });
 
     const AMISEmailResendHandler = new lambda.Function(this, "AMISEmailResendHandler", {
       runtime: lambda.Runtime.JAVA_8,
@@ -318,8 +318,8 @@ export class HeratepalveluStack extends cdk.Stack {
       enabled: false
     });
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, AMISEmailResendHandler
-      // , AMISMuistutusHandler
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler,
+      AMISEmailResendHandler, AMISMuistutusHandler
     ].forEach(
       lambdaFunction => {
         metadataTable.grantReadWriteData(lambdaFunction);
