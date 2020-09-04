@@ -74,7 +74,7 @@
                                            (t/today)
                                            (t/days (* 5 n))))]]]}
                    {:index "muistutusIndex"
-                    :limit 100}))
+                    :limit 50}))
 
 (defn -handleSendAMISMuistutus [this event context]
   (log-caller-details "handleSendAMISMuistutus" event context)
