@@ -21,7 +21,7 @@
 
 (defn log-caller-details [name event context]
   (cond
-    (= name "handleHOKSherate")
+    (= name "handleAMISherate")
       (let [request-id (.getAwsRequestId context)
             body (get-sqs-event-messages event)]
         (log/info (str "Lambdaa " name
