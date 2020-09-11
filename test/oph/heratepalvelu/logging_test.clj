@@ -10,10 +10,10 @@
 
 (deftest test-caller-log-herate-ehoks
   (testing "caller-log logs request info for eHOKSherateHandler"
-    (log-caller-details "handleHOKSherate"
+    (log-caller-details "handleAMISherate"
                         (mock-handler-event :ehoksherate)
                         (mock-handler-context))
-    (is (true? (did-log? "Lambdaa handleHOKSherate kutsuttiin" "INFO")))
+    (is (true? (did-log? "Lambdaa handleAMISherate kutsuttiin" "INFO")))
     (is (true? (did-log? dummy-opiskeluoikeus-oid "INFO")))
     (is (true? (did-log? (str "RequestId: " dummy-request-id) "INFO")))))
 
