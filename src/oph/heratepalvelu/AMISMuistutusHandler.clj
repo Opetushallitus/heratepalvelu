@@ -61,7 +61,6 @@
             (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
             (log/error e)))))))
 
-; Estä 1. ja 2. muistutuksen lähteminen samassa ajossa???
 (defn- query-muistukset [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
                     :lahetyspvm  [:between
@@ -84,6 +83,6 @@
     (sendAMISMuistutus muistutettavat2 2)
     (when (and
             (or (seq muistutettavat1) (seq muistutettavat2))
-            (< 30000 (.getRemainingTimeInMillis context)))
+            (< 60000 (.getRemainingTimeInMillis context)))
       (recur (query-muistukset 1)
              (query-muistukset 2)))))
