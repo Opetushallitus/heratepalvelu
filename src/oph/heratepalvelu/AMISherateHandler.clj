@@ -37,6 +37,8 @@
                 (> 500 (:status (ex-data e))))
             (if (= 404 (:status (ex-data e)))
               (log/error "Ei opiskeluoikeutta " (:opiskeluoikeus-oid (parse-string (.getBody msg) true)))
-              (log/error "Unhandled client error: " e))
+              (do
+                (log/error "Unhandled client error: " e)
+                (throw e)))
             (do (log/error e)
                 (throw e))))))))
