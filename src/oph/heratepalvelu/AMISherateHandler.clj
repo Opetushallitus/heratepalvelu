@@ -29,7 +29,7 @@
                      (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus)))
             (save-herate herate opiskeluoikeus)))
         (catch JsonParseException e
-          (log/error "Virhe viestin (" msg ") lukemisessa: " e))
+          (log/error "Virhe viestin lukemisessa: " msg "\n" e))
         (catch ExceptionInfo e
           (if (and
                 (:status (ex-data e))

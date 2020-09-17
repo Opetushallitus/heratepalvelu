@@ -102,7 +102,11 @@ export class HeratepalveluStack extends cdk.Stack {
         name: "kyselylinkki",
         type: dynamodb.AttributeType.STRING
       },
-      projectionType: dynamodb.ProjectionType.KEYS_ONLY
+      nonKeyAttributes: [
+        "sahkoposti",
+        "kyselylinkki"
+      ],
+      projectionType: dynamodb.ProjectionType.INCLUDE
     });
 
     const organisaatioWhitelistTable = new dynamodb.Table(

@@ -27,22 +27,29 @@
               (let [item (first (ddb/query-items
                                   {:kyselylinkki [:eq [:s kyselylinkki]]}
                                   {:index "resendIndex"}))
-                    toimija-oppija (:toimija-oppija item)
-                    tyyppi-kausi (:tyyppi-kausi item)]
+                    toimija-oppija (:toimija_oppija item)
+                    tyyppi-kausi (:tyyppi_kausi item)
+                    sahkoposti (or (not-empty (:sahkoposti herate))
+                                   (:sahkoposti item))]
                 (if item
-                  (ddb/update-item
-                    {:toimija_oppija [:s toimija-oppija]
-                     :tyyppi_kausi   [:s tyyppi-kausi]}
-                    {:update-expr     (str "SET #lahetystila = :lahetystila, "
-                                           "#sahkoposti = :sahkoposti")
-                     :expr-attr-names {"#lahetystila" "lahetystila"
-                                       "#sahkoposti" "sahkoposti"}
-                     :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty lahetystilat)]
-                                       ":sahkoposti" [:s (:sahkoposti herate)]}
-                     :cond-expr (str "attribute_exists(toimija_oppija) AND "
-                                     "attribute_exists(tyyppi_kausi)")})
+                  (do
+                    (when (empty? (:sahkoposti herate))
+                      (log/warn "Ei sähköpostia herätteessä " herate
+                                ", käytetään dynamoon tallennettua " sahkoposti))
+                    (ddb/update-item
+                      {:toimija_oppija [:s toimija-oppija]
+                       :tyyppi_kausi   [:s tyyppi-kausi]}
+                      {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                             "#sahkoposti = :sahkoposti")
+                       :expr-attr-names {"#lahetystila" "lahetystila"
+                                         "#sahkoposti" "sahkoposti"}
+                       :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty lahetystilat)]
+                                         ":sahkoposti" [:s sahkoposti]}}))
                   (log/error "Ei kyselylinkkiä " kyselylinkki)))
               (catch AwsServiceException e
-                (log/error "Virhe kyselylinkin (" kyselylinkki ") päivityksessä" e)))))
+                (log/error "Virhe kyselylinkin (" kyselylinkki
+                           ") päivityksessä tai hakemisessa" e)
+                (throw e)))
+            (log/error "Ei kyselylinkkiä herätteessä " herate)))
         (catch JsonParseException e
-          (log/error "Virhe viestin (" msg ") lukemisessa: " e))))))
+          (log/error "Virhe viestin lukemisessa: " msg "\n" e))))))
