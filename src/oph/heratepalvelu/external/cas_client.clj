@@ -90,4 +90,4 @@
       (reset! tgt (.run (TicketGrantingTicketClient/getTicketGrantingTicket
                           cas-uri cl/client params (:caller-id env)))))
     (.run (ServiceTicketClient/getServiceTicketFromTgt
-            cl/client service-uri @tgt (:caller-id env)))))
+            cl/client service-uri (:caller-id env) @tgt))))
