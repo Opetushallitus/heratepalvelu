@@ -96,6 +96,15 @@ export class HeratepalveluStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
 
+    AMISherateTable.addGlobalSecondaryIndex({
+      indexName: "resendIndex",
+      partitionKey: {
+        name: "kyselylinkki",
+        type: dynamodb.AttributeType.STRING
+      },
+      projectionType: dynamodb.ProjectionType.KEYS_ONLY
+    });
+
     const organisaatioWhitelistTable = new dynamodb.Table(
       this,
       "OrganisaatioWhitelistTable",

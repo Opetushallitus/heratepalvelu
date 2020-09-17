@@ -7,7 +7,7 @@
             [environ.core :refer [env]]
             [schema.core :as s])
   (:import (com.fasterxml.jackson.core JsonParseException)
-           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
+           (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
   :name "oph.heratepalvelu.AMISEmailResendHandler"
@@ -15,39 +15,34 @@
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(s/defschema resend-schema
-  {:koulutustoimija s/Str
-   :oppija-oid s/Str
-   :kyselytyyppi s/Str
-   :alkupvm s/Str
-   :sahkoposti s/Str})
-
 (defn -handleEmailResend [this event context]
+  (log-caller-details "handleEmailResend" event context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try
         (let [herate (parse-string (.getBody msg) true)
-              toimija-oppija (str (:koulutustoimija herate) "/"
-                                  (:oppija-oid herate))
-              tyyppi-kausi (str (:kyselytyyppi herate) "/"
-                                (kausi (:alkupvm herate)))
-              schema-check (s/check resend-schema herate)]
-          (if (nil? schema-check)
+              kyselylinkki (:kyselylinkki herate)]
+          (if (not-empty kyselylinkki)
             (try
-              (ddb/update-item
-                {:toimija_oppija [:s toimija-oppija]
-                 :tyyppi_kausi   [:s tyyppi-kausi]}
-                {:update-expr     (str "SET #lahetystila = :lahetystila, "
-                                       "#sahkoposti = :sahkoposti")
-                 :expr-attr-names {"#lahetystila" "lahetystila"
-                                   "#sahkoposti" "sahkoposti"}
-                 :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty lahetystilat)]
-                                   ":sahkoposti" [:s (:sahkoposti herate)]}
-                 :cond-expr (str "attribute_exists(toimija_oppija) AND "
-                                 "attribute_exists(tyyppi_kausi)")})
-              (catch ConditionalCheckFailedException e
-                (log/error "Ei kyselylinkkiä herätteelle"
-                           toimija-oppija "/" tyyppi-kausi)))
-            (log/error schema-check)))
+              (let [item (first (ddb/query-items
+                                  {:kyselylinkki [:eq [:s kyselylinkki]]}
+                                  {:index "resendIndex"}))
+                    toimija-oppija (:toimija-oppija item)
+                    tyyppi-kausi (:tyyppi-kausi item)]
+                (if item
+                  (ddb/update-item
+                    {:toimija_oppija [:s toimija-oppija]
+                     :tyyppi_kausi   [:s tyyppi-kausi]}
+                    {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                           "#sahkoposti = :sahkoposti")
+                     :expr-attr-names {"#lahetystila" "lahetystila"
+                                       "#sahkoposti" "sahkoposti"}
+                     :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty lahetystilat)]
+                                       ":sahkoposti" [:s (:sahkoposti herate)]}
+                     :cond-expr (str "attribute_exists(toimija_oppija) AND "
+                                     "attribute_exists(tyyppi_kausi)")})
+                  (log/error "Ei kyselylinkkiä " kyselylinkki)))
+              (catch AwsServiceException e
+                (log/error "Virhe kyselylinkin (" kyselylinkki ") päivityksessä" e)))))
         (catch JsonParseException e
-          (log/error "Virhe viestin lukemisessa: " e))))))
+          (log/error "Virhe viestin (" msg ") lukemisessa: " e))))))
