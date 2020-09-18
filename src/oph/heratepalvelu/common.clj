@@ -13,7 +13,8 @@
             [schema.core :as s])
   (:import (java.util UUID)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
+           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)
+           (clojure.lang ExceptionInfo)))
 
 (s/defschema herate-schema
              {:ehoks-id           s/Num
@@ -41,6 +42,20 @@
           [years months days] (map #(Integer. %)
                                    (str/split enddate #"-"))]
       (not (t/before? (t/local-date years months days) (t/today))))))
+
+(defn send-lahetys-data-to-ehoks [toimija-oppija tyyppi-kausi data]
+  (try
+    (add-lahetys-info-to-kyselytunnus data)
+    (catch ExceptionInfo e
+      (if (= 404 (:status (ex-data e)))
+        (let [item (ddb/get-item {:toimija_oppija [:s toimija-oppija]
+                                  :tyyppi_kausi [:s tyyppi-kausi]})]
+          (add-kyselytunnus-to-hoks
+            (:ehoks-id item)
+            (assoc data
+              :alkupvm (:alkupvm item)
+              :tyyppi (:kyselytyyppi item))))
+        (throw e)))))
 
 (defn date-string-to-timestamp
   ([date-str fmt]

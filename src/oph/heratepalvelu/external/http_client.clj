@@ -5,7 +5,7 @@
             [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]]))
 
 (def client-options
-  {:headers {"Caller-Id" (str "1.2.246.562.10.00000000001." (:caller-id env))}})
+  {:headers {"Caller-Id" (:caller-id env)}})
 
 (defn- merge-options [options]
   (merge (assoc client-options :headers

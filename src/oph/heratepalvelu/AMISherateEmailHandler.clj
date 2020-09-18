@@ -2,9 +2,8 @@
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amispalaute-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
-            [oph.heratepalvelu.external.ehoks :refer [add-lahetys-info-to-kyselytunnus]]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :refer [has-time-to-answer? lahetystilat]]
+            [oph.heratepalvelu.common :refer [has-time-to-answer? lahetystilat send-lahetys-data-to-ehoks]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [cheshire.core :refer [parse-string]])
@@ -47,7 +46,9 @@
                                      ":vpid" [:n id]
                                      ":lahetyspvm" [:s lahetyspvm]
                                      ":muistutukset" [:n 0]}})
-                (add-lahetys-info-to-kyselytunnus
+                (send-lahetys-data-to-ehoks
+                  (:toimija_oppija email)
+                  (:tyyppi_kausi email)
                   {:kyselylinkki (:kyselylinkki email)
                    :lahetyspvm lahetyspvm
                    :sahkoposti (:sahkoposti email)

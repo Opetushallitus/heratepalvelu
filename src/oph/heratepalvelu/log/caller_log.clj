@@ -21,7 +21,8 @@
 
 (defn log-caller-details [name event context]
   (cond
-    (= name "handleAMISherate")
+    (or (= name "handleAMISherate")
+        (= name "handleEmailResend"))
       (let [request-id (.getAwsRequestId context)
             body (get-sqs-event-messages event)]
         (log/info (str "Lambdaa " name
@@ -29,7 +30,8 @@
                        " (RequestId: " request-id " )")))
     (or
       (= name "handleSendEmails")
-      (= name "handleUpdatedOpiskeluoikeus"))
+      (= name "handleUpdatedOpiskeluoikeus")
+      (= name "handleSendAMISMuistutus"))
         (let [request-id (.getAwsRequestId context)
               rules (parse-schedule-rules event)]
           (log/info (str "Lambdaa " name

@@ -27,9 +27,10 @@ if (canDeploy) {
     new HeratepalveluStack(app, "sade-services-heratepalvelu", 'sade', version);
   }
 } else {
-  console.log("Uncommited changes or local is ahead/behind of remote:\n");
+  console.log("\nUncommited changes or local is ahead/behind of remote:\n");
   console.log(status);
   console.log(aheadBehindCount);
+  console.log("\n");
 
   new HeratepalveluStack(app, "sieni-services-heratepalvelu", 'sieni', version);
 }

@@ -96,6 +96,19 @@ export class HeratepalveluStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
 
+    AMISherateTable.addGlobalSecondaryIndex({
+      indexName: "resendIndex",
+      partitionKey: {
+        name: "kyselylinkki",
+        type: dynamodb.AttributeType.STRING
+      },
+      nonKeyAttributes: [
+        "sahkoposti",
+        "kyselylinkki"
+      ],
+      projectionType: dynamodb.ProjectionType.INCLUDE
+    });
+
     const organisaatioWhitelistTable = new dynamodb.Table(
       this,
       "OrganisaatioWhitelistTable",
@@ -180,7 +193,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         herate_table: AMISherateTable.tableName,
-        caller_id: `${id}-AMISherateHandler`,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler: "oph.heratepalvelu.AMISherateHandler::handleAMISherate",
@@ -201,7 +214,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         herate_table: AMISherateTable.tableName,
-        caller_id: `${id}-AMISherateEmailHandler`,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateEmailHandler`,
         viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
@@ -226,7 +239,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         herate_table: AMISherateTable.tableName,
-        caller_id: `${id}-AMISMuistutusHandler`,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISMuistutusHandler`,
         viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
       },
       memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
@@ -250,7 +263,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         herate_table: AMISherateTable.tableName,
-        caller_id: `${id}-AMISEmailResendHandler`
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISEmailResendHandler`
       },
       handler: "oph.heratepalvelu.AMISEmailResendHandler::handleEmailResend",
       memorySize: 1024,
@@ -266,7 +279,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         herate_table: AMISherateTable.tableName,
-        caller_id: `${id}-updatedOpiskeluoikeusHandler`,
+        caller_id: `1.2.246.562.10.00000000001.${id}-updatedOpiskeluoikeusHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler:
