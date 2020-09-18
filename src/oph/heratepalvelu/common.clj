@@ -55,7 +55,7 @@
             (assoc data
               :alkupvm (:alkupvm item)
               :tyyppi (:kyselytyyppi item))))
-        throw e))))
+        (throw e)))))
 
 (defn date-string-to-timestamp
   ([date-str fmt]
