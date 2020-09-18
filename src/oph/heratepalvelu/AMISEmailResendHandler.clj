@@ -15,6 +15,13 @@
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
+(s/defschema resend-schema
+  {:kyselylinkki (s/constrained s/Str not-empty)
+   (s/optional-key :sahkoposti) (s/constrained s/Str not-empty)})
+
+(def resend-checker
+  (s/checker resend-schema))
+
 (defn -handleEmailResend [this event context]
   (log-caller-details "handleEmailResend" event context)
   (let [messages (seq (.getRecords event))]
@@ -22,7 +29,8 @@
       (try
         (let [herate (parse-string (.getBody msg) true)
               kyselylinkki (:kyselylinkki herate)]
-          (if (not-empty kyselylinkki)
+          (if (some? (resend-checker herate))
+            (log/error {:herate herate :msg (resend-checker herate)})
             (try
               (let [item (first (ddb/query-items
                                   {:kyselylinkki [:eq [:s kyselylinkki]]}
@@ -49,7 +57,6 @@
               (catch AwsServiceException e
                 (log/error "Virhe kyselylinkin (" kyselylinkki
                            ") päivityksessä tai hakemisessa" e)
-                (throw e)))
-            (log/error "Ei kyselylinkkiä herätteessä " herate)))
+                (throw e)))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " msg "\n" e))))))
