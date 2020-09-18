@@ -26,7 +26,7 @@
         password   @pwd
         cas-url    (:cas-url env)
         cas-params (cas-params "/ryhmasahkoposti-service" username password)
-        cas-client (cas-client cas-url)]
+        cas-client (cas-client cas-url (:caller-id env))]
     (map->CasClient {:client     cas-client
                      :params     cas-params
                      :session-id (atom nil)})))
