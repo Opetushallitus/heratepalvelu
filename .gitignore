@@ -8,3 +8,6 @@ target
 .lein-env
 .lein-failures
 .lein-repl-history
+.DS_Store
+*.csv
+herate-script.sh
