@@ -16,7 +16,7 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleSendAMISEmails [this event context]
-  (log-caller-details "handleSendAMISEmails" event context)
+  (log-caller-details-scheduled "handleSendAMISEmails" event context)
   (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty lahetystilat)]]
                                         :alkupvm     [:le [:s (.toString (t/today))]]}
                                        {:index "lahetysIndex"

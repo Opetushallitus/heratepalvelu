@@ -23,7 +23,7 @@
   (s/checker resend-schema))
 
 (defn -handleEmailResend [this event context]
-  (log-caller-details "handleEmailResend" event context)
+  (log-caller-details-sqs "handleEmailResend" event context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try

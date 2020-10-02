@@ -10,7 +10,7 @@
 
 (deftest test-caller-log-herate-ehoks
   (testing "caller-log logs request info for eHOKSherateHandler"
-    (log-caller-details "handleAMISherate"
+    (log-caller-details-sqs "handleAMISherate"
                         (mock-handler-event :ehoksherate)
                         (mock-handler-context))
     (is (true? (did-log? "Lambdaa handleAMISherate kutsuttiin" "INFO")))
@@ -19,7 +19,7 @@
 
 (deftest test-caller-log-herate-email
   (testing "caller-log logs request info for herateEmailHandler"
-    (log-caller-details "handleSendEmails"
+    (log-caller-details-scheduled "handleSendEmails"
                         (mock-handler-event :scheduledherate)
                         (mock-handler-context))
     (is (true? (did-log? "Lambdaa handleSendEmails kutsuttiin" "INFO")))
@@ -28,7 +28,7 @@
 
 (deftest test-caller-log-herate-updatedopiskeluoikeus
   (testing "caller-log logs request info for herateEmailHandler"
-    (log-caller-details "handleUpdatedOpiskeluoikeus"
+    (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus"
                         (mock-handler-event :scheduledherate)
                         (mock-handler-context))
     (is (true? (did-log? "Lambdaa handleUpdatedOpiskeluoikeus kutsuttiin" "INFO")))

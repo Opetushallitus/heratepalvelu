@@ -76,7 +76,7 @@
                     :limit 50}))
 
 (defn -handleSendAMISMuistutus [this event context]
-  (log-caller-details "handleSendAMISMuistutus" event context)
+  (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
   (loop [muistutettavat1 (query-muistukset 1)
          muistutettavat2 (query-muistukset 2)]
     (sendAMISMuistutus muistutettavat1 1)
