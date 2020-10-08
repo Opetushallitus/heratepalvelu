@@ -1,7 +1,6 @@
 (ns oph.heratepalvelu.external.viestintapalvelu
   (:require [oph.heratepalvelu.external.cas-client :refer [cas-authenticated-post]]
-            [environ.core :refer [env]]
-            [clj-time.core :refer [now]])
+            [environ.core :refer [env]])
   (:use hiccup.core))
 
 (def horizontal-line
@@ -61,19 +60,30 @@
    [:p [:a {:href link} link]]
    [:p "With best regards, your educational institution"]])
 
+(defn- amispalaute-body [data]
+  (cond
+    (= (:kyselytyyppi data) "aloittaneet")
+    (amispalaute-body-alkukysely (:kyselylinkki data))
+    (= (:kyselytyyppi data) "tutkinnon_suorittaneet")
+    (amispalaute-body-loppukysely (:kyselylinkki data))
+    (= (:kyselytyyppi data) "tutkinnon_osia_suorittaneet")
+    (amispalaute-body-loppukysely (:kyselylinkki data))))
+
+(defn- amismuistutus-body [link]
+  [:div
+   [:p (str "Olethan muistanut antaa palautetta oppilaitokselle!<br/>"
+            "Kom ihåg att ge respons till läroanstalten!<br/>"
+            "Please remember to give feedback to educational institution!")]
+   [:p [:a {:href link} link]]
+   horizontal-line])
+
 (defn amispalaute-html [data]
   (str "<!DOCTYPE html>"
        (html [:html {:lang (:suorituskieli data)}
               [:head
                [:meta {:charset "UTF-8"}]]
               [:body
-               (cond
-                 (= (:kyselytyyppi data) "aloittaneet")
-                 (amispalaute-body-alkukysely (:kyselylinkki data))
-                 (= (:kyselytyyppi data) "tutkinnon_suorittaneet")
-                 (amispalaute-body-loppukysely (:kyselylinkki data))
-                 (= (:kyselytyyppi data) "tutkinnon_osia_suorittaneet")
-                 (amispalaute-body-loppukysely (:kyselylinkki data)))]])))
+               (amispalaute-body data)]])))
 
 (defn amismuistutus-html [data]
   (str "<!DOCTYPE html>"
@@ -81,7 +91,8 @@
               [:head
                [:meta {:charset "UTF-8"}]]
               [:body
-               (str "MUISTUTUS " (:kyselylinkki data))]])))
+               (amismuistutus-body (:kyselylinkki data))
+               (amispalaute-body data)]])))
 
 (defn send-email [email]
   "Send email to viestintäpalvelu, parameter 'email' is a map containing keys

@@ -74,7 +74,7 @@
       "tutkinnon_osia_suorittaneet")))
 
 (defn -handleUpdatedOpiskeluoikeus [this event context]
-  (log-caller-details "handleUpdatedOpiskeluoikeus" event context)
+  (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus" event context)
   (let [start-time (System/currentTimeMillis)
         last-checked
         (:value (ddb/get-item

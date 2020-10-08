@@ -15,7 +15,7 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleAMISherate [this event context]
-  (log-caller-details "handleAMISherate" event context)
+  (log-caller-details-sqs "handleAMISherate" event context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try
@@ -29,7 +29,7 @@
                      (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus)))
             (save-herate herate opiskeluoikeus)))
         (catch JsonParseException e
-          (log/error "Virhe viestin lukemisessa: " e))
+          (log/error "Virhe viestin lukemisessa: " msg "\n" e))
         (catch ExceptionInfo e
           (if (and
                 (:status (ex-data e))
@@ -37,6 +37,8 @@
                 (> 500 (:status (ex-data e))))
             (if (= 404 (:status (ex-data e)))
               (log/error "Ei opiskeluoikeutta " (:opiskeluoikeus-oid (parse-string (.getBody msg) true)))
-              (log/error "Unhandled client error: " e))
+              (do
+                (log/error "Unhandled client error: " e)
+                (throw e)))
             (do (log/error e)
                 (throw e))))))))

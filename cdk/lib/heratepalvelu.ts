@@ -8,7 +8,7 @@ import sqs = require("@aws-cdk/aws-sqs");
 import ssm = require("@aws-cdk/aws-ssm");
 import iam = require("@aws-cdk/aws-iam");
 import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
-import { Duration, Tag, Token } from "@aws-cdk/core";
+import { Duration, Tags, Token } from "@aws-cdk/core";
 import { CfnEventSourceMapping } from "@aws-cdk/aws-lambda";
 
 
@@ -22,7 +22,7 @@ export class HeratepalveluStack extends cdk.Stack {
   ) {
     super(scope, id, props);
 
-    Tag.add(this, "Deployed version", version);
+    Tags.of(this).add("Deployed version", version);
 
     const getParameterFromSsm = (parameterName: string): string => {
       return ssm.StringParameter.valueForStringParameter(
@@ -43,39 +43,6 @@ export class HeratepalveluStack extends cdk.Stack {
       "koski_user",
       "virkailija_url"
     ];
-
-    // const herateTable = new dynamodb.Table(this, "HerateTable", {
-    //   partitionKey: {
-    //     name: "toimija_oppija",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   sortKey: {
-    //     name: "tyyppi_kausi",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-    //   serverSideEncryption: true
-    // });
-    //
-    // herateTable.addGlobalSecondaryIndex({
-    //   indexName: "lahetysIndex",
-    //   partitionKey: {
-    //     name: "lahetystila",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   sortKey: {
-    //     name: "alkupvm",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   nonKeyAttributes: [
-    //     "sahkoposti",
-    //     "kyselylinkki",
-    //     "suorituskieli",
-    //     "viestintapalvelu-id",
-    //     "kyselytyyppi"
-    //   ],
-    //   projectionType: dynamodb.ProjectionType.INCLUDE
-    // });
 
     const AMISherateTable = new dynamodb.Table(this, "AMISHerateTable", {
       partitionKey: {
@@ -129,6 +96,19 @@ export class HeratepalveluStack extends cdk.Stack {
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
 
+    AMISherateTable.addGlobalSecondaryIndex({
+      indexName: "resendIndex",
+      partitionKey: {
+        name: "kyselylinkki",
+        type: dynamodb.AttributeType.STRING
+      },
+      nonKeyAttributes: [
+        "sahkoposti",
+        "kyselylinkki"
+      ],
+      projectionType: dynamodb.ProjectionType.INCLUDE
+    });
+
     const organisaatioWhitelistTable = new dynamodb.Table(
       this,
       "OrganisaatioWhitelistTable",
@@ -152,13 +132,28 @@ export class HeratepalveluStack extends cdk.Stack {
     });
 
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      visibilityTimeout: (Duration.seconds(60))
     });
 
     const ehoksHerateQueue = new sqs.Queue(this, "HerateQueue", {
       queueName: `${id}-eHOKSHerateQueue`,
       deadLetterQueue: {
         queue: herateDeadLetterQueue,
+        maxReceiveCount: 5
+      },
+      visibilityTimeout: Duration.seconds(60),
+      retentionPeriod: Duration.days(14)
+    });
+
+    const ehoksAmisResendDLQueue = new sqs.Queue(this, "AmisResendDLQueue", {
+      retentionPeriod: Duration.days(14)
+    });
+
+    const ehoksAmisResendQueue = new sqs.Queue(this, "AmisResendQueue", {
+      queueName: `${id}-eHOKSAmisResendQueue`,
+      deadLetterQueue: {
+        queue: ehoksAmisResendDLQueue,
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
@@ -198,7 +193,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         herate_table: AMISherateTable.tableName,
-        caller_id: `${id}-AMISherateHandler`,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler: "oph.heratepalvelu.AMISherateHandler::handleAMISherate",
@@ -219,8 +214,9 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         herate_table: AMISherateTable.tableName,
-        caller_id: `${id}-AMISherateEmailHandler`,
-        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateEmailHandler`,
+        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`,
+        ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
       timeout: Duration.seconds(
@@ -237,29 +233,45 @@ export class HeratepalveluStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(AMISherateEmailHandler)]
     });
 
-    // const AMISMuistutusHandler = new lambda.Function(this, "AMISMuistutusHandler", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambdaCode,
-    //   environment: {
-    //     ...envVars,
-    //     herate_table: AMISherateTable.tableName,
-    //     caller_id: `${id}-AMISMuistutusHandler`,
-    //     viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
-    //   },
-    //   memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
-    //   timeout: Duration.seconds(
-    //     Token.asNumber(getParameterFromSsm("emailhandler-timeout"))
-    //   ),
-    //   handler: "oph.heratepalvelu.AMISMuistutusHandler::handleSendAMISMuistutus",
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-    //
-    // new events.Rule(this, "AMISMuistutusScheduleRule", {
-    //   schedule: events.Schedule.expression(
-    //     `cron(${getParameterFromSsm("emailhandler-cron")})`
-    //   ),
-    //   targets: [new targets.LambdaFunction(AMISMuistutusHandler)]
-    // });
+    const AMISMuistutusHandler = new lambda.Function(this, "AMISMuistutusHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISMuistutusHandler`,
+        viestintapalvelu_url: `${envVars.virkailija_url}/ryhmasahkoposti-service/email`
+      },
+      memorySize: Token.asNumber(getParameterFromSsm("emailhandler-memory")),
+      timeout: Duration.seconds(
+        Token.asNumber(getParameterFromSsm("emailhandler-timeout"))
+      ),
+      handler: "oph.heratepalvelu.AMISMuistutusHandler::handleSendAMISMuistutus",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "AMISMuistutusScheduleRule", {
+      schedule: events.Schedule.expression(
+        `cron(${getParameterFromSsm("emailhandler-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(AMISMuistutusHandler)]
+    });
+
+    const AMISEmailResendHandler = new lambda.Function(this, "AMISEmailResendHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISEmailResendHandler`
+      },
+      handler: "oph.heratepalvelu.AMISEmailResendHandler::handleEmailResend",
+      memorySize: 1024,
+      timeout: Duration.seconds(60),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    AMISEmailResendHandler.addEventSource(new SqsEventSource(ehoksAmisResendQueue, { batchSize: 1, }));
 
     const updatedOoHandler = new lambda.Function(this, "UpdatedOOHandler", {
       runtime: lambda.Runtime.JAVA_8,
@@ -267,7 +279,7 @@ export class HeratepalveluStack extends cdk.Stack {
       environment: {
         ...envVars,
         herate_table: AMISherateTable.tableName,
-        caller_id: `${id}-updatedOpiskeluoikeusHandler`,
+        caller_id: `1.2.246.562.10.00000000001.${id}-updatedOpiskeluoikeusHandler`,
         ehoks_url: `${envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler:
@@ -288,21 +300,6 @@ export class HeratepalveluStack extends cdk.Stack {
       targets: [new targets.LambdaFunction(updatedOoHandler)]
     });
 
-    // const migrateHandler = new lambda.Function(this, "migrateHandler", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambdaCode,
-    //   environment: {
-    //     from_table: "",
-    //     to_table: AMISherateTable.tableName
-    //   },
-    //   handler: "oph.heratepalvelu.migrateHandler::handleMigration",
-    //   memorySize: 2048,
-    //   timeout: Duration.seconds(
-    //     15 * 60
-    //   ),
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-
     const dlqResendHandler = new lambda.Function(this, "DLQresendHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
@@ -311,7 +308,7 @@ export class HeratepalveluStack extends cdk.Stack {
       },
       handler: "oph.heratepalvelu.DLQresendHandler::handleDLQresend",
       memorySize: 1024,
-      timeout: Duration.seconds(30),
+      timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
     });
 
@@ -334,8 +331,8 @@ export class HeratepalveluStack extends cdk.Stack {
       enabled: false
     });
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler
-      // , AMISMuistutusHandler
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler,
+      AMISEmailResendHandler, AMISMuistutusHandler
     ].forEach(
       lambdaFunction => {
         metadataTable.grantReadWriteData(lambdaFunction);

@@ -13,7 +13,8 @@
             [schema.core :as s])
   (:import (java.util UUID)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
+           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)
+           (clojure.lang ExceptionInfo)))
 
 (s/defschema herate-schema
              {:ehoks-id           s/Num
@@ -22,6 +23,15 @@
               :oppija-oid         s/Str
               :sahkoposti         (s/constrained s/Str not-empty)
               :alkupvm            s/Str})
+
+(def lahetystilat
+  {:ei-lahetetty "ei_lahetetty"
+   :viestintapalvelussa "viestintapalvelussa"
+   :vastausaika-loppunut "vastausaika_loppunut_ennen_lahetysta"
+   :vastattu "vastattu_tai_vastausaika_loppunut"
+   :success "success"
+   :failed "failed"
+   :bounced "bounced"})
 
 (defn generate-uuid []
   (.toString (UUID/randomUUID)))
@@ -32,6 +42,20 @@
           [years months days] (map #(Integer. %)
                                    (str/split enddate #"-"))]
       (not (t/before? (t/local-date years months days) (t/today))))))
+
+(defn send-lahetys-data-to-ehoks [toimija-oppija tyyppi-kausi data]
+  (try
+    (add-lahetys-info-to-kyselytunnus data)
+    (catch ExceptionInfo e
+      (if (= 404 (:status (ex-data e)))
+        (let [item (ddb/get-item {:toimija_oppija [:s toimija-oppija]
+                                  :tyyppi_kausi [:s tyyppi-kausi]})]
+          (add-kyselytunnus-to-hoks
+            (:ehoks-id item)
+            (assoc data
+              :alkupvm (:alkupvm item)
+              :tyyppi (:kyselytyyppi item))))
+        (throw e)))))
 
 (defn date-string-to-timestamp
   ([date-str fmt]
@@ -130,8 +154,10 @@
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
           suorituskieli (str/lower-case
                           (:koodiarvo (:suorituskieli suoritus)))]
-      (when (check-duplicate-herate?
-              oppija koulutustoimija laskentakausi kyselytyyppi)
+      (when
+        (and (check-duplicate-herate?
+               oppija koulutustoimija laskentakausi kyselytyyppi)
+             (contains? #{"fi" "sv" "en"} suorituskieli))
         (let [arvo-resp (get-kyselylinkki
                           (build-arvo-request-body
                             herate
@@ -144,43 +170,44 @@
             (try
               (log/info "Tallennetaan kantaan " (str koulutustoimija "/" oppija)
                         " " (str kyselytyyppi "/" laskentakausi))
-              (ddb/put-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
-                             :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]
-                             :kyselylinkki [:s kyselylinkki]
-                             :sahkoposti [:s (:sahkoposti herate)]
-                             :suorituskieli [:s suorituskieli]
-                             :lahetystila [:s "ei_lahetetty"]
-                             :alkupvm [:s alkupvm]
-                             :request-id [:s uuid]
-                             :oppilaitos [:s oppilaitos]
-                             :ehoks-id [:n (str (:ehoks-id herate))]
-                             :opiskeluoikeus-oid [:s (:oid opiskeluoikeus)]
-                             :oppija-oid [:s oppija]
-                             :koulutustoimija [:s koulutustoimija]
-                             :kyselytyyppi [:s kyselytyyppi]
-                             :rahoituskausi [:s laskentakausi]
+              (ddb/put-item {:toimija_oppija      [:s (str koulutustoimija "/" oppija)]
+                             :tyyppi_kausi        [:s (str kyselytyyppi "/" laskentakausi)]
+                             :kyselylinkki        [:s kyselylinkki]
+                             :sahkoposti          [:s (:sahkoposti herate)]
+                             :suorituskieli       [:s suorituskieli]
+                             :lahetystila         [:s (:ei-lahetetty lahetystilat)]
+                             :alkupvm             [:s alkupvm]
+                             :request-id          [:s uuid]
+                             :oppilaitos          [:s oppilaitos]
+                             :ehoks-id            [:n (str (:ehoks-id herate))]
+                             :opiskeluoikeus-oid  [:s (:oid opiskeluoikeus)]
+                             :oppija-oid          [:s oppija]
+                             :koulutustoimija     [:s koulutustoimija]
+                             :kyselytyyppi        [:s kyselytyyppi]
+                             :rahoituskausi       [:s laskentakausi]
                              :viestintapalvelu-id [:n "-1"]
-                             :voimassa-loppupvm [:s (or voimassa-loppupvm "-")]
-                             :tallennuspvm [:s (str (t/today))]}
+                             :voimassa-loppupvm   [:s (or voimassa-loppupvm "-")]
+                             :tallennuspvm        [:s (str (t/today))]}
                             {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
                                              "attribute_not_exists(tyyppi_kausi)")})
               (try
                 (add-kyselytunnus-to-hoks (:ehoks-id herate)
                                           {:kyselylinkki kyselylinkki
-                                           :tyyppi kyselytyyppi
-                                           :alkupvm alkupvm})
+                                           :tyyppi       kyselytyyppi
+                                           :alkupvm      alkupvm
+                                           :lahetystila  (:ei-lahetetty lahetystilat)})
                 (catch Exception e
                   (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
               (when (has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
-                (log/info {:nayttotutkinto true
-                           :hoks-id (:ehoks-id herate)
-                           :opiskeluoikeus-oid (:oid opiskeluoikeus)
+                (log/info {:nayttotutkinto        true
+                           :hoks-id               (:ehoks-id herate)
+                           :opiskeluoikeus-oid    (:oid opiskeluoikeus)
                            :koulutuksenjarjestaja koulutustoimija
-                           :tutkintotunnus (get-in suoritus [:koulutusmoduuli
-                                                             :tunniste
-                                                             :koodiarvo])
-                           :kyselytunnus (last (str/split kyselylinkki #"/"))
-                           :voimassa-loppupvm voimassa-loppupvm}))
+                           :tutkintotunnus        (get-in suoritus [:koulutusmoduuli
+                                                                    :tunniste
+                                                                    :koodiarvo])
+                           :kyselytunnus          (last (str/split kyselylinkki #"/"))
+                           :voimassa-loppupvm     voimassa-loppupvm}))
               (catch ConditionalCheckFailedException e
                 (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                           oppija " koulutustoimijalla " koulutustoimija
@@ -194,4 +221,7 @@
               (catch Exception e
                 (deactivate-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
-                (throw e)))))))))
+                (throw e))))))
+      (when (not (contains? #{"fi" "sv" "en"} suorituskieli))
+        (log/warn "Hoks " (:ehoks-id herate) ", opiskeluoikeus " (:oid opiskeluoikeus)
+                  ", suorituskieli " suorituskieli)))))

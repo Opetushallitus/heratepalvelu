@@ -26,7 +26,7 @@
         password   @pwd
         cas-url    (:cas-url env)
         cas-params (cas-params "/ryhmasahkoposti-service" username password)
-        cas-client (cas-client cas-url)]
+        cas-client (cas-client cas-url (:caller-id env))]
     (map->CasClient {:client     cas-client
                      :params     cas-params
                      :session-id (atom nil)})))
@@ -38,7 +38,7 @@
 
 (defn- create-params [cas-session-id body]
   (cond-> {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)
-                              "Caller-Id" (str "1.2.246.562.10.00000000001." (:caller-id env))
+                              "Caller-Id" (:caller-id env)
                               "clientSubSystemCode" (:caller-id env)}
            :redirect-strategy :none}
           (some? body)
@@ -88,6 +88,6 @@
         cas-uri     (get-uri (:cas-url env))]
     (when (nil? @tgt)
       (reset! tgt (.run (TicketGrantingTicketClient/getTicketGrantingTicket
-                          cas-uri cl/client params))))
+                          cas-uri cl/client params (:caller-id env)))))
     (.run (ServiceTicketClient/getServiceTicketFromTgt
-            cl/client service-uri @tgt))))
+            cl/client service-uri (:caller-id env) @tgt))))
