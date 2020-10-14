@@ -155,9 +155,8 @@
           suorituskieli (str/lower-case
                           (:koodiarvo (:suorituskieli suoritus)))]
       (when
-        (and (check-duplicate-herate?
-               oppija koulutustoimija laskentakausi kyselytyyppi)
-             (contains? #{"fi" "sv" "en"} suorituskieli))
+        (check-duplicate-herate?
+          oppija koulutustoimija laskentakausi kyselytyyppi)
         (let [arvo-resp (get-kyselylinkki
                           (build-arvo-request-body
                             herate
@@ -221,7 +220,4 @@
               (catch Exception e
                 (deactivate-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
-                (throw e))))))
-      (when (not (contains? #{"fi" "sv" "en"} suorituskieli))
-        (log/warn "Hoks " (:ehoks-id herate) ", opiskeluoikeus " (:oid opiskeluoikeus)
-                  ", suorituskieli " suorituskieli)))))
+                (throw e)))))))))
