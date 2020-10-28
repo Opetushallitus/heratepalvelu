@@ -20,7 +20,7 @@
   (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty lahetystilat)]]
                                         :alkupvm     [:le [:s (.toString (t/today))]]}
                                        {:index "lahetysIndex"
-                                        :limit 100})]
+                                        :limit 50})]
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [email lahetettavat]
@@ -76,4 +76,4 @@
         (recur (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty lahetystilat)]]
                                  :alkupvm     [:le [:s (.toString (t/today))]]}
                                 {:index "lahetysIndex"
-                                 :limit 100}))))))
+                                 :limit 50}))))))
