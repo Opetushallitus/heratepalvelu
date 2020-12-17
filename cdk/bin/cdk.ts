@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import cdk = require("@aws-cdk/core");
-import { HeratepalveluStack } from "../lib/heratepalvelu";
+import { HeratepalveluAMISStack } from "../lib/amis";
+import { HeratepalveluTEPStack } from "../lib/tep";
 
 const git = require("git-utils");
 const repo = git.open(".");
@@ -15,22 +16,24 @@ if (!upstreamBranch) {
 
 const canDeploy = !(Object.entries(status).length !== 0 || aheadBehindCount.ahead !== 0 || aheadBehindCount.behind !== 0);
 
-const version = repo.getReferenceTarget(repo.getHead());
+const version = canDeploy ? repo.getReferenceTarget(repo.getHead()) : "";
 
 const app = new cdk.App();
 
+new HeratepalveluAMISStack(app, "sieni-services-heratepalvelu", 'sieni', version);
+new HeratepalveluTEPStack(app, "sieni-services-heratepalvelu-tep", 'sieni', version);
+
 if (canDeploy) {
-  new HeratepalveluStack(app, "sieni-services-heratepalvelu", 'sieni', version);
-  new HeratepalveluStack(app, "pallero-services-heratepalvelu", 'pallero', version);
+  new HeratepalveluAMISStack(app, "pallero-services-heratepalvelu", 'pallero', version);
+  new HeratepalveluTEPStack(app, "pallero-services-heratepalvelu-tep", 'pallero', version);
 
   if (upstreamBranch === "refs/remotes/origin/master") {
-    new HeratepalveluStack(app, "sade-services-heratepalvelu", 'sade', version);
+    new HeratepalveluAMISStack(app, "sade-services-heratepalvelu", 'sade', version);
+    new HeratepalveluTEPStack(app, "sade-services-heratepalvelu-tep", 'sade', version);
   }
 } else {
   console.log("\nUncommited changes or local is ahead/behind of remote:\n");
   console.log(status);
   console.log(aheadBehindCount);
   console.log("\n");
-
-  new HeratepalveluStack(app, "sieni-services-heratepalvelu", 'sieni', version);
 }
