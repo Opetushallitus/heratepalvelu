@@ -27,6 +27,8 @@ export class HeratepalveluStack extends cdk.Stack {
   ) {
     super(scope, id, props);
 
+    this.envName = envName;
+
     Tags.of(this).add("Deployed version", version);
 
     const envVarsList = [
