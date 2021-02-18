@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.AMISherateEmailHandler
+(ns oph.heratepalvelu.amis.AMISherateEmailHandler
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amispalaute-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
@@ -10,7 +10,7 @@
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
-  :name "oph.heratepalvelu.AMISherateEmailHandler"
+  :name "oph.heratepalvelu.amis.AMISherateEmailHandler"
   :methods [[^:static handleSendAMISEmails
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])

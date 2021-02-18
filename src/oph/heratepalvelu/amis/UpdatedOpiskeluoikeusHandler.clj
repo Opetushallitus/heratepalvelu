@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.UpdatedOpiskeluoikeusHandler
+(ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler
   (:require
     [oph.heratepalvelu.external.koski :refer [get-updated-opiskeluoikeudet]]
     [oph.heratepalvelu.external.ehoks :refer [get-hoks-by-opiskeluoikeus]]
@@ -14,7 +14,7 @@
   (:import (clojure.lang ExceptionInfo)))
 
 (gen-class
-  :name "oph.heratepalvelu.UpdatedOpiskeluoikeusHandler"
+  :name "oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler"
   :methods [[^:static handleUpdatedOpiskeluoikeus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])

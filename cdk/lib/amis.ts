@@ -162,7 +162,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateHandler`,
         ehoks_url: `${this.envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
-      handler: "oph.heratepalvelu.AMISherateHandler::handleAMISherate",
+      handler: "oph.heratepalvelu.amis.AMISherateHandler::handleAMISherate",
       memorySize: Token.asNumber(this.getParameterFromSsm("ehokshandler-memory")),
       reservedConcurrentExecutions:
         Token.asNumber(this.getParameterFromSsm("ehokshandler-concurrency")),
@@ -189,7 +189,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       timeout: Duration.seconds(
         Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
-      handler: "oph.heratepalvelu.AMISherateEmailHandler::handleSendAMISEmails",
+      handler: "oph.heratepalvelu.amis.AMISherateEmailHandler::handleSendAMISEmails",
       tracing: lambda.Tracing.ACTIVE
     });
 
@@ -214,7 +214,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       timeout: Duration.seconds(
         Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
-      handler: "oph.heratepalvelu.AMISMuistutusHandler::handleSendAMISMuistutus",
+      handler: "oph.heratepalvelu.amis.AMISMuistutusHandler::handleSendAMISMuistutus",
       tracing: lambda.Tracing.ACTIVE
     });
 
@@ -235,7 +235,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         viestintapalvelu_url: `${this.envVars.virkailija_url}/ryhmasahkoposti-service/email`,
         ehoks_url: `${this.envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
-      handler: "oph.heratepalvelu.AMISEmailResendHandler::handleEmailResend",
+      handler: "oph.heratepalvelu.amis.AMISEmailResendHandler::handleEmailResend",
       memorySize: 1024,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
@@ -255,7 +255,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         ehoks_url: `${this.envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler:
-        "oph.heratepalvelu.UpdatedOpiskeluoikeusHandler::handleUpdatedOpiskeluoikeus",
+        "oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler::handleUpdatedOpiskeluoikeus",
       memorySize: Token.asNumber(
           this.getParameterFromSsm("updatedoohandler-memory")
       ),

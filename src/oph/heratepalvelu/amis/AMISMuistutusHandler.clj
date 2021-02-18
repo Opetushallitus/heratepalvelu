@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.AMISMuistutusHandler
+(ns oph.heratepalvelu.amis.AMISMuistutusHandler
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amismuistutus-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
@@ -10,7 +10,7 @@
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
-  :name "oph.heratepalvelu.AMISMuistutusHandler"
+  :name "oph.heratepalvelu.amis.AMISMuistutusHandler"
   :methods [[^:static handleSendAMISMuistutus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
