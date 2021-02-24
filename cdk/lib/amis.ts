@@ -322,7 +322,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler,
-      AMISEmailResendHandler, AMISMuistutusHandler
+      AMISEmailResendHandler, AMISMuistutusHandler, AMISEmailStatusHandler
     ].forEach(
       lambdaFunction => {
         AMISherateTable.grantReadWriteData(lambdaFunction);
