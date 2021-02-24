@@ -7,7 +7,8 @@
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
-            [oph.heratepalvelu.external.aws-ssm :as ssm])
+            [oph.heratepalvelu.external.aws-ssm :as ssm]
+            [clj-time.core :as t])
   (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private pwd (delay
@@ -22,6 +23,26 @@
     (if (some #{"organisaatiotyyppi_03"} org-tyypit)
       oid
       nil)))
+
+(defn get-osaamisala [suoritus opiskeluoikeus-oid]
+  (let [osaamisalat (filter
+                      #(or (nil? (:loppu %1))
+                           (> (compare (:loppu %1)
+                                       (str (t/today)))
+                              0))
+                      (:osaamisala suoritus))]
+    (if (not-empty osaamisalat)
+      (if (> (count osaamisalat) 1)
+        (log/warn "Enemmän kuin yksi voimassoleva osaamisala opiskeluoikeudessa" opiskeluoikeus-oid)
+        (let [osaamisala (first osaamisalat)]
+          (if (or (nil? (:alku osaamisala))
+                  (>= (compare (str (t/today))
+                               (:alku osaamisala))
+                      0))
+            (or (:koodiarvo (:osaamisala osaamisala))
+                (:koodiarvo osaamisala))
+            (log/warn "Osaamisala ei ole alkanut opiskeluoikeudessa" opiskeluoikeus-oid))))
+      (log/warn "Ei osaamisalaa opiskeluoikeudessa" opiskeluoikeus-oid))))
 
 (defn get-hankintakoulutuksen-toteuttaja [ehoks-id]
   (let [oids (ehoks/get-hankintakoulutus-oids ehoks-id)]
@@ -41,6 +62,7 @@
                                request-id
                                koulutustoimija
                                suoritus]
+  (log/info "Osaamisala =" (get-osaamisala suoritus (:oid opiskeluoikeus)))
   {:vastaamisajan_alkupvm   (:alkupvm herate)
    :kyselyn_tyyppi          (:kyselytyyppi herate)
    :tutkintotunnus          (get-in suoritus [:koulutusmoduuli

@@ -1,6 +1,6 @@
 (ns oph.heratepalvelu.logging_test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.AMISherateHandler :refer :all]
+            [oph.heratepalvelu.amis.AMISherateHandler :refer :all]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.util :refer :all])

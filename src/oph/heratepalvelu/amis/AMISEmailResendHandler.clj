@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.AMISEmailResendHandler
+(ns oph.heratepalvelu.amis.AMISEmailResendHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.log.caller-log :refer :all]
@@ -10,7 +10,7 @@
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
-  :name "oph.heratepalvelu.AMISEmailResendHandler"
+  :name "oph.heratepalvelu.amis.AMISEmailResendHandler"
   :methods [[^:static handleEmailResend
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])

@@ -1,6 +1,6 @@
 (ns oph.heratepalvelu.UpdatedOpiskeluoikeusHandler-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.UpdatedOpiskeluoikeusHandler :refer :all]))
+            [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :refer :all]))
 
 (deftest test-get-vahvistus-pvm
   (testing "Get vahvistus pvm"
