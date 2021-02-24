@@ -101,3 +101,12 @@
     (:body (client/get (str (:arvo-url env) "/status/" tunnus)
                        {:basic-auth [(:arvo-user env) @pwd]
                         :as :json}))))
+
+(defn patch-kyselylinkki-metadata [linkki data]
+  (let [tunnus (last (str/split linkki #"/"))]
+    (:body (client/patch
+             (str (:arvo-url env) "/" tunnus "/metatiedot")
+             {:basic-auth [(:arvo-user env) @pwd]
+              :content-type "application/json"
+              :body (generate-string data)
+              :as :json}))))

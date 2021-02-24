@@ -76,4 +76,4 @@
         (recur (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty lahetystilat)]]
                                  :alkupvm     [:le [:s (.toString (t/today))]]}
                                 {:index "lahetysIndex"
-                                 :limit 50}))))))
+                                 :limit 10}))))))

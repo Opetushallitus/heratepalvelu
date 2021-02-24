@@ -48,6 +48,8 @@ export class HeratepalveluStack extends cdk.Stack {
     this.envVars = {
       ...envVarsTemp,
       organisaatio_url: `${envVarsTemp.virkailija_url}/organisaatio-service/rest/organisaatio/v4/`,
+      viestintapalvelu_url: `${envVarsTemp.virkailija_url}/ryhmasahkoposti-service/email`,
+      ehoks_url: `${envVarsTemp.virkailija_url}/ehoks-virkailija-backend/api/v1/`,
       cas_url: `${envVarsTemp.virkailija_url}/cas`,
       stage: envName
     };

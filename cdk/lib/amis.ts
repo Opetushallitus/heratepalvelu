@@ -160,7 +160,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         orgwhitelist_table: organisaatioWhitelistTable.tableName,
         herate_table: AMISherateTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateHandler`,
-        ehoks_url: `${this.envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler: "oph.heratepalvelu.amis.AMISherateHandler::handleAMISherate",
       memorySize: Token.asNumber(this.getParameterFromSsm("ehokshandler-memory")),
@@ -182,8 +181,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         ...this.envVars,
         herate_table: AMISherateTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateEmailHandler`,
-        viestintapalvelu_url: `${this.envVars.virkailija_url}/ryhmasahkoposti-service/email`,
-        ehoks_url: `${this.envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
       timeout: Duration.seconds(
@@ -200,6 +197,29 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(AMISherateEmailHandler)]
     });
 
+    const AMISEmailStatusHandler = new lambda.Function(this, "AMISEmailStatusHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISEmailStatusHandler`
+      },
+      memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      timeout: Duration.seconds(
+          Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
+      ),
+      handler: "oph.heratepalvelu.amis.EmailStatusHandler::handleEmailStatus",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "AMISEmailStatusScheduleRule", {
+      schedule: events.Schedule.expression(
+          `cron(${this.getParameterFromSsm("emailhandler-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(AMISEmailStatusHandler)]
+    });
+
     const AMISMuistutusHandler = new lambda.Function(this, "AMISMuistutusHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
@@ -207,8 +227,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         ...this.envVars,
         herate_table: AMISherateTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISMuistutusHandler`,
-        viestintapalvelu_url: `${this.envVars.virkailija_url}/ryhmasahkoposti-service/email`,
-        ehoks_url: `${this.envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
       timeout: Duration.seconds(
@@ -232,8 +250,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         ...this.envVars,
         herate_table: AMISherateTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISEmailResendHandler`,
-        viestintapalvelu_url: `${this.envVars.virkailija_url}/ryhmasahkoposti-service/email`,
-        ehoks_url: `${this.envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler: "oph.heratepalvelu.amis.AMISEmailResendHandler::handleEmailResend",
       memorySize: 1024,
@@ -252,7 +268,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         metadata_table: metadataTable.tableName,
         herate_table: AMISherateTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-updatedOpiskeluoikeusHandler`,
-        ehoks_url: `${this.envVars.virkailija_url}/ehoks-virkailija-backend/api/v1/`
       },
       handler:
         "oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler::handleUpdatedOpiskeluoikeus",

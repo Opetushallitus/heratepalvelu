@@ -108,3 +108,9 @@
                         :body (:body email)}}
                {:as :json})]
     (:body resp)))
+
+(defn get-email-status [id]
+  (:body (cas-authenticated-post
+           (str (:viestintapalvelu-url env) "/status")
+           id
+           {:as :json})))
