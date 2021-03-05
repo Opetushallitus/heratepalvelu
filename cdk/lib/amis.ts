@@ -197,28 +197,28 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(AMISherateEmailHandler)]
     });
 
-    // const AMISEmailStatusHandler = new lambda.Function(this, "AMISEmailStatusHandler", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambdaCode,
-    //   environment: {
-    //     ...this.envVars,
-    //     herate_table: AMISherateTable.tableName,
-    //     caller_id: `1.2.246.562.10.00000000001.${id}-AMISEmailStatusHandler`
-    //   },
-    //   memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
-    //   timeout: Duration.seconds(
-    //       Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
-    //   ),
-    //   handler: "oph.heratepalvelu.amis.EmailStatusHandler::handleEmailStatus",
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-    //
-    // new events.Rule(this, "AMISEmailStatusScheduleRule", {
-    //   schedule: events.Schedule.expression(
-    //       `cron(${this.getParameterFromSsm("emailhandler-cron")})`
-    //   ),
-    //   targets: [new targets.LambdaFunction(AMISEmailStatusHandler)]
-    // });
+    const AMISEmailStatusHandler = new lambda.Function(this, "AMISEmailStatusHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISEmailStatusHandler`
+      },
+      memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      timeout: Duration.seconds(
+          Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
+      ),
+      handler: "oph.heratepalvelu.amis.EmailStatusHandler::handleEmailStatus",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "AMISEmailStatusScheduleRule", {
+      schedule: events.Schedule.expression(
+          `cron(${this.getParameterFromSsm("emailhandler-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(AMISEmailStatusHandler)]
+    });
 
     const AMISMuistutusHandler = new lambda.Function(this, "AMISMuistutusHandler", {
       runtime: lambda.Runtime.JAVA_8,
@@ -322,8 +322,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler,
-      AMISEmailResendHandler, AMISMuistutusHandler,
-      // AMISEmailStatusHandler
+      AMISEmailResendHandler, AMISMuistutusHandler, AMISEmailStatusHandler
     ].forEach(
       lambdaFunction => {
         AMISherateTable.grantReadWriteData(lambdaFunction);
