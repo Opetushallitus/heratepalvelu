@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.external.viestintapalvelu
   (:require [oph.heratepalvelu.external.cas-client :refer [cas-authenticated-post]]
-            [environ.core :refer [env]])
+            [environ.core :refer [env]]
+            [clojure.tools.logging :as log])
   (:use hiccup.core))
 
 (def horizontal-line
@@ -107,6 +108,7 @@
                         :isHtml true
                         :body (:body email)}}
                {:as :json})]
+    (log/info resp)
     (:body resp)))
 
 (defn get-email-status [id]

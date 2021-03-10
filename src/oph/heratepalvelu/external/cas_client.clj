@@ -37,9 +37,13 @@
       (assoc :body (json/generate-string body))))
 
 (defn- create-params [cas-session-id body]
-  (cond-> {:headers          {"Cookie" (str "JSESSIONID=" @cas-session-id)
-                              "Caller-Id" (:caller-id env)
-                              "clientSubSystemCode" (:caller-id env)}
+  (cond-> {:headers          {"Caller-Id" (:caller-id env)
+                              "clientSubSystemCode" (:caller-id env)
+                              "CSRF" (:caller-id env)}
+           :cookies          {"CSRF" {:value (:caller-id env)
+                                      :path "/"}
+                              "JSESSIONID" {:value (str @cas-session-id)
+                                             :path "/"}}
            :redirect-strategy :none}
           (some? body)
           (request-with-json-body body)))

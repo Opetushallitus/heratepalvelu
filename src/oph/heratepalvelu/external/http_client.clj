@@ -5,7 +5,10 @@
             [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]]))
 
 (def client-options
-  {:headers {"Caller-Id" (:caller-id env)}})
+  {:headers {"Caller-Id" (:caller-id env)
+             "CSRF" (:caller-id env)}
+   :cookies {"CSRF" {:value (:caller-id env)
+                     :path "/"}}})
 
 (defn- merge-options [options]
   (merge (assoc client-options :headers

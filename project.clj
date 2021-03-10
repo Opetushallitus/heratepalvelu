@@ -20,7 +20,7 @@
                  [org.apache.logging.log4j/log4j-slf4j-impl "2.13.0"]
                  [prismatic/schema "1.1.11"]
                  [hiccup "1.0.5"]
-                 [oph/clj-cas "0.6.1-SNAPSHOT"]]
+                 [oph/clj-cas "0.6.2-SNAPSHOT"]]
   :managed-dependencies [[software.amazon.awssdk/aws-core "2.10.56"]
                          [io.netty/netty-buffer "4.1.43.Final"]
                          [org.slf4j/slf4j-api "1.7.28"]
