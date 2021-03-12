@@ -31,7 +31,6 @@
                                          :body (amispalaute-html email)
                                          :address (:sahkoposti email)}))
                     lahetyspvm (str (t/today))]
-                (log/info "Viestintäpalvelu id " id)
                 (ddb/update-item
                   {:toimija_oppija [:s (:toimija_oppija email)]
                    :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
