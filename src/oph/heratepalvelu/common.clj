@@ -157,7 +157,7 @@
       (when
         (check-duplicate-herate?
           oppija koulutustoimija laskentakausi kyselytyyppi)
-        (let [arvo-resp (get-kyselylinkki
+        (let [arvo-resp (get-amis-kyselylinkki
                           (build-arvo-request-body
                             herate
                             opiskeluoikeus
