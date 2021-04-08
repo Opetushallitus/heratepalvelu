@@ -111,11 +111,11 @@
             (catch AwsServiceException e
               (log/error "Virhe tietokantaan tallennettaessa " tunnus " " request-id)
               ;(deactivate-kyselylinkki kyselylinkki)
-              (throw e)))
-          (catch Exception e
-            ;(deactivate-kyselylinkki kyselylinkki)
-            (log/error "Unknown error " e)
-            (throw e))))))
+              (throw e))))
+        (catch Exception e
+          ;(deactivate-kyselylinkki kyselylinkki)
+          (log/error "Unknown error " e)
+          (throw e))))))
 
 (defn -handleJaksoHerate [this event context]
   (log-caller-details-sqs "handleTPOherate" event context)
