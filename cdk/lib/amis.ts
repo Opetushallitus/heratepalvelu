@@ -5,10 +5,9 @@ import targets = require("@aws-cdk/aws-events-targets");
 import lambda = require("@aws-cdk/aws-lambda");
 import s3assets = require("@aws-cdk/aws-s3-assets");
 import sqs = require("@aws-cdk/aws-sqs");
-import ssm = require("@aws-cdk/aws-ssm");
 import iam = require("@aws-cdk/aws-iam");
 import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
-import { Duration, Tags, Token } from "@aws-cdk/core";
+import { Duration, Token } from "@aws-cdk/core";
 import { CfnEventSourceMapping } from "@aws-cdk/aws-lambda";
 import {HeratepalveluStack} from "./heratepalvelu";
 

@@ -112,23 +112,12 @@
               :body         (generate-string data)
               :as           :json}))))
 
-(defn- next-niputus-date [loppupvm]
-  (let [[year month day] (map
-                           #(Integer. %)
-                           (str/split loppupvm #"-"))]
-    (if (< day 16)
-      (c/to-sql-date (t/nth-day-of-the-month year month 16))
-      (c/to-sql-date (t/nth-day-of-the-month
-                       (t/plus
-                         (t/local-date year month day)
-                         (t/months 1))
-                       1)))))
-
 (defn build-jaksotunnus-request-body [herate
                                       opiskeluoikeus
                                       request-id
                                       koulutustoimija
-                                      suoritus]
+                                      suoritus
+                                      niputuspvm]
   {:koulutustoimija_oid      koulutustoimija
    :tyonantaja               (:tyopaikan-ytunnus herate)
    :tyopaikka                (:tyopaikan-nimi herate)
@@ -137,7 +126,7 @@
                                [:koulutusmoduuli
                                 :tunniste
                                 :koodiarvo])
-   :tutkinnon_osa            ""
+   :tutkinnon_osa            (:tutkinnonosa-koodi herate)
    :tutkintonimike           (get-in
                                suoritus
                                [:tutkintonimike
@@ -151,13 +140,12 @@
                                (str/split
                                  (:hankkimistapa-tyyppi herate)
                                  #"_"))
-   :vastaamisajan_alkupvm    (next-niputus-date
-                               (:loppupvm herate))
+   :vastaamisajan_alkupvm    niputuspvm
    :oppilaitos_oid           (:oid (:oppilaitos opiskeluoikeus))
    :toimipiste_oid           (get-toimipiste suoritus)
    :request_id               request-id})
 
-(defn get-jakso-kyselytunnus [data]
+(defn get-jaksotunnus [data]
   (try
     (let [resp (client/post
                  (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus")
