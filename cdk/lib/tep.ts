@@ -101,7 +101,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         ...this.envVars,
         caller_id: `1.2.246.562.10.00000000001.${id}-timedOperationsHandler`,
       },
-      memorySize: Token.asNumber(256),
+      memorySize: Token.asNumber(1024),
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tep.ehoksTimedOperationsHandler::handleTimedOperations",
       tracing: lambda.Tracing.ACTIVE
