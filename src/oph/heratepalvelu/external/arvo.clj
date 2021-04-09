@@ -127,13 +127,13 @@
                                 :tunniste
                                 :koodiarvo])
    :tutkinnon_osa            (:tutkinnonosa-koodi herate)
-   :tutkintonimike           (get-in
-                               suoritus
-                               [:tutkintonimike
-                                :koodiarvo])
-   :osaamisala               (get-osaamisala
-                               suoritus
-                               (:oid opiskeluoikeus))
+   :tutkintonimike           (map
+                               :koodiarvo
+                               (:tutkintonimike suoritus))
+   :osaamisala               (map
+                               #(or (:koodiarvo (:osaamisala %1))
+                                    (:koodiarvo %1))
+                               (:osaamisala suoritus))
    :tyopaikkajakson_alkupvm  (:alkupvm herate)
    :tyopaikkajakson_loppupvm (:loppupvm herate)
    :sopimustyyppi            (last

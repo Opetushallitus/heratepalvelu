@@ -23,21 +23,20 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (s/defschema tep-herate-schema
-             {:tyyppi                 (s/conditional s/Str (s/pred not-empty))
-              :alkupvm                (s/conditional s/Str (s/pred not-empty))
-              :loppupvm               (s/conditional s/Str (s/pred not-empty))
+             {:tyyppi                 (s/conditional not-empty s/Str)
+              :alkupvm                (s/conditional not-empty s/Str)
+              :loppupvm               (s/conditional not-empty s/Str)
               :hoks-id                s/Num
-              :opiskeluoikeus-oid     (s/conditional s/Str (s/pred not-empty))
-              :oppija-oid             (s/conditional s/Str (s/pred not-empty))
+              :opiskeluoikeus-oid     (s/conditional not-empty s/Str)
+              :oppija-oid             (s/conditional not-empty s/Str)
               :hankkimistapa-id       s/Num
-              :hankkimistapa-tyyppi   (s/conditional s/Str (s/pred not-empty))
+              :hankkimistapa-tyyppi   (s/conditional not-empty s/Str)
               :tutkinnonosa-id        s/Num
-              :tutkinnonosa-koodi     s/Str
-              :tyopaikan-nimi         (s/conditional s/Str (s/pred not-empty))
-              :tyopaikan-ytunnus      (s/conditional s/Str (s/pred not-empty))
-              (s/optional-key :tyopaikkaohjaaja-email)
-                                      (s/conditional s/Str (s/pred not-empty))
-              :tyopaikkaohjaaja-nimi  (s/conditional s/Str (s/pred not-empty))})
+              :tutkinnonosa-koodi     (s/maybe s/Str)
+              :tyopaikan-nimi         (s/conditional not-empty s/Str)
+              :tyopaikan-ytunnus      (s/conditional not-empty s/Str)
+              :tyopaikkaohjaaja-email (s/maybe s/Str)
+              :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)})
 
 (def tep-herate-checker
   (s/checker tep-herate-schema))
@@ -48,61 +47,73 @@
     true
     (log/warn "Osaamisenhankkimistapa id:llä " id "on jo käsitelty.")))
 
-(defn- next-niputus-date [loppupvm]
-  (let [[year month day] (map
-                           #(Integer. %)
-                           (str/split loppupvm #"-"))]
-    (if (< day 16)
-      (coerce/to-sql-date (t/nth-day-of-the-month year month 16))
-      (coerce/to-sql-date (t/nth-day-of-the-month
-                       (t/plus
-                         (t/local-date year month day)
-                         (t/months 1))
-                       1)))))
-
 (defn save-jaksotunnus [herate opiskeluoikeus koulutustoimija]
   (let [tapa-id (:hankkimistapa-id herate)]
     (when (check-duplicate-hankkimistapa tapa-id)
       (try
         (let [request-id (c/generate-uuid)
-              niputuspvm (next-niputus-date (:loppupvm herate))
-              arvo-resp (arvo/get-jaksotunnus
-                          (arvo/build-jaksotunnus-request-body
-                            herate
-                            opiskeluoikeus
-                            request-id
-                            koulutustoimija
-                            (c/get-suoritus opiskeluoikeus)
-                            niputuspvm))
-              tunnus (:tunnus arvo-resp)]
+              niputuspvm (c/next-niputus-date (:loppupvm herate))
+              suoritus   (c/get-suoritus opiskeluoikeus)
+              tutkinto   (get-in
+                           suoritus
+                           [:koulutusmoduuli
+                            :tunniste
+                            :koodiarvo])
+              arvo-resp  (arvo/get-jaksotunnus
+                           (arvo/build-jaksotunnus-request-body
+                             herate
+                             opiskeluoikeus
+                             request-id
+                             koulutustoimija
+                             suoritus
+                             (coerce/to-sql-date niputuspvm)))
+              tunnus (:tunnus arvo-resp)
+              db-data {:hankkimistapa-id     [:n tapa-id]
+                       :hankkimistapa-tyyppi [:s (:hankkimistapa-tyyppi herate)]
+                       :tyopaikan-nimi       [:s (:tyopaikan-nimi herate)]
+                       :tyopaikan-ytunnus    [:s (:tyopaikan-ytunnus herate)]
+                       :tunnus               [:s tunnus]
+                       :ohjaaja-nimi         [:s (:tyopaikkaohjaaja-nimi herate)]
+                       :jakso-alkupvm        [:s (:alkupvm herate)]
+                       :jakso-loppupvm       [:s (:loppupvm herate)]
+                       :request-id           [:s request-id]
+                       :tutkinto             [:s tutkinto]
+                       :oppilaitos           [:s (:oid (:oppilaitos opiskeluoikeus))]
+                       :hoks-id              [:n (:hoks-id herate)]
+                       :opiskeluoikeus-oid   [:s (:oid opiskeluoikeus)]
+                       :oppija-oid           [:s (:oppija-oid herate)]
+                       :koulutustoimija      [:s koulutustoimija]
+                       :niputuspvm           [:s (coerce/to-sql-date niputuspvm)]
+                       :viimeinen-vastauspvm [:s (coerce/to-sql-date
+                                                   (t/plus
+                                                     niputuspvm
+                                                     (t/days 60)))]
+                       :rahoituskausi        [:s (c/kausi (:loppupvm herate))]
+                       :tallennuspvm         [:s (str (t/today))]
+                       :tutkinnonosa-tyyppi  [:s (:tyyppi herate)]
+                       :tutkinnonosa-id      [:n (:tutkinnonosa-id herate)]}]
           (try
             (ddb/put-item
-              {:hankkimistapa-id [:n tapa-id]
-               :hankkimistapa-tyyppi [:s (:hankkimistapa-tyyppi herate)]
-               :tyopaikan-nimi [:s (:tyopaikan-nimi herate)]
-               :tyopaikan-ytunnus [:s (:tyopaikan-ytunnus herate)]
-               :tunnus           [:s tunnus]
-               :ohjaaja-email     [:s (:tyopaikkaohjaaja-email herate)]
-               :ohjaaja-nimi    [:s (:tyopaikkaohjaaja-nimi herate)]
-               :jakso-alkupvm         [:s (:alkupvm herate)]
-               :jakso-loppupvm  [:s (:loppupvm herate)]
-               :request-id      [:s request-id]
-               :oppilaitos      [:s (:oid (:oppilaitos opiskeluoikeus))]
-               :hoks-id            [:n (str (:hoks-id herate))]
-               :opiskeluoikeus-oid  [:s (:oid opiskeluoikeus)]
-               :oppija-oid          [:s (:oppija-oid herate)]
-               :koulutustoimija     [:s koulutustoimija]
-               :niputuspvm          [:s niputuspvm]
-               :rahoituskausi       [:s (c/kausi (:loppupvm herate))]
-               :tallennuspvm        [:s (str (t/today))]
-               :tutkinnonosa-tyyppi [:s (:tyyppi herate)]
-               :tutkinnonosa-id    [:s (:tutkinnonosa-id herate)]
-               :tutkinnonosa-koodi [:s (:tutkinnonosa-koodi herate)]}
+              (cond-> db-data
+                      (not-empty (:tyopaikkaohjaaja-email herate))
+                      (assoc :ohjaaja-email (:tyopaikkaohjaaja-email herate))
+                      (not-empty (:tutkinnonosa-koodi herate))
+                      (assoc :tutkinnonosa-koodi (:tutkinnonosa-koodi herate)))
               {:cond-expr (str "attribute_not_exists(hankkimistapa-id)")}
               (:jaksotunnus-table env))
             (ddb/put-item
-              {:email [:s (:tyopaikkaohjaaja-email herate)]
-               :nimi [:s (:tyopaikkaohjaaja-nimi herate)]}
+              {:ohjaaja-ytunnus-kj-tutkinto
+                                            [:s (str
+                                                  (:tyopaikkaohjaaja-nimi herate) "/"
+                                                  (:tyopaikan-ytunnus herate) "/"
+                                                  koulutustoimija "/"
+                                                  tutkinto)]
+               :ohjaaja                     [:s (:tyopaikkaohjaaja-nimi herate)]
+               :ytunnus                     [:s (:tyopaikan-ytunnus herate)]
+               :koulutuksenjarjestaja       [:s koulutustoimija]
+               :oppilaitos                  [:s (:oid (:oppilaitos opiskeluoikeus))]
+               :tutkinto                    [:s tutkinto]
+               :niputuspvm                  [:s niputuspvm]}
               {} (:ohjaaja-table env))
             (catch ConditionalCheckFailedException e
               (log/warn "Osaamisenhankkimistapa id:llä " tapa-id "on jo käsitelty.")
@@ -130,7 +141,8 @@
             (when
               (and
                 (c/check-organisaatio-whitelist? koulutustoimija)
-                (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus))
+                (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
+                (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
               (save-jaksotunnus herate opiskeluoikeus koulutustoimija))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " e))

@@ -32,25 +32,31 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       serverSideEncryption: true
     });
 
-    const ohjaajaTable = new dynamodb.Table(this, "ohjaajaTable", {
+    const nippuTable = new dynamodb.Table(this, "nippuTable", {
       partitionKey: {
-        name: "email",
+        name: "ohjaaja-ytunnus-kj-tutkinto",
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: "niputuspvm",
         type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       serverSideEncryption: true
     });
 
-    // nippu-table
-
-    // const nippuTable = new dynamodb.Table(this, "nippuTable", {
-    //   partitionKey: {
-    //     name: "tunniste",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-    //   serverSideEncryption: true
-    // });
+    const organisaatioWhitelistTable = new dynamodb.Table(
+        this,
+        "OrganisaatioWhitelistTable",
+        {
+          partitionKey: {
+            name: "organisaatio-oid",
+            type: dynamodb.AttributeType.STRING
+          },
+          billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+          serverSideEncryption: true
+        }
+    );
 
     // SQS
 
@@ -110,7 +116,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     jaksoHandler.addEventSource(new SqsEventSource(herateQueue, { batchSize: 1 }));
     jaksotunnusTable.grantReadWriteData(jaksoHandler);
-    ohjaajaTable.grantReadWriteData(jaksoHandler);
+    nippuTable.grantReadWriteData(jaksoHandler);
+    organisaatioWhitelistTable.grantReadData(jaksoHandler);
 
     // niputusHandler
 

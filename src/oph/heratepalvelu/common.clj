@@ -90,6 +90,11 @@
     true
     (log/info "Väärä suoritustyyppi opiskeluoikeudessa " (:oid opiskeluoikeus))))
 
+(defn check-sisaltyy-opiskeluoikeuteen? [opiskeluoikeus]
+  (if (:sisältyyOpiskeluoikeuteen opiskeluoikeus)
+    (log/warn "Opiskeluoikeus " (:oid opiskeluoikeus) " sisältyy toiseen opiskeluoikeuteen.")
+    true))
+
 (defn get-suoritus [opiskeluoikeus]
   "Haetaan tutkinto/tutkinnon osa suoritus"
   (reduce
@@ -102,6 +107,30 @@
   (some (fn [suoritus]
           (= (:koodiarvo (:tyyppi suoritus)) "nayttotutkintoonvalmistavakoulutus"))
         (:suoritukset opiskeluoikeus)))
+
+(defn next-niputus-date [pvm]
+  (let [[year month day] (map
+                           #(Integer. %)
+                           (str/split pvm #"-"))]
+    (if (< day 16)
+      (t/nth-day-of-the-month year month 16)
+      (t/nth-day-of-the-month
+        (t/plus
+          (t/local-date year month day)
+          (t/months 1))
+        1))))
+
+(defn previous-niputus-date [pvm]
+  (let [[year month day] (map
+                           #(Integer. %)
+                           (str/split pvm #"-"))]
+    (if (< day 16)
+      (t/nth-day-of-the-month year month 1)
+      (t/nth-day-of-the-month
+        (t/minus
+          (t/local-date year month day)
+          (t/months 1))
+        16))))
 
 (defn check-organisaatio-whitelist?
   ([koulutustoimija]
