@@ -97,9 +97,9 @@
             (ddb/put-item
               (cond-> db-data
                       (not-empty (:tyopaikkaohjaaja-email herate))
-                      (assoc :ohjaaja-email (:tyopaikkaohjaaja-email herate))
+                      (assoc :ohjaaja-email [:s (:tyopaikkaohjaaja-email herate)])
                       (not-empty (:tutkinnonosa-koodi herate))
-                      (assoc :tutkinnonosa-koodi (:tutkinnonosa-koodi herate)))
+                      (assoc :tutkinnonosa-koodi [:s (:tutkinnonosa-koodi herate)]))
               {:cond-expr (str "attribute_not_exists(hankkimistapa-id)")}
               (:jaksotunnus-table env))
             (ddb/put-item
