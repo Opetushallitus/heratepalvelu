@@ -109,7 +109,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     new events.Rule(this, "TimedOperationsScheduleRule", {
       schedule: events.Schedule.expression(
-          "rate(1 hour)"
+          `rate(${this.getParameterFromSsm("timedoperations-rate")})`
       ),
       targets: [new targets.LambdaFunction(timedOperationsHandler)]
     });
