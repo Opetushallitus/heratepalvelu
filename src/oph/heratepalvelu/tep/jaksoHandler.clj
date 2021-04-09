@@ -141,7 +141,7 @@
             (log/error {:herate herate :msg (tep-herate-checker herate)})
             (when
               (and
-                (c/check-organisaatio-whitelist? koulutustoimija)
+                ; (c/check-organisaatio-whitelist? koulutustoimija)
                 (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
                 (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
               (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))
