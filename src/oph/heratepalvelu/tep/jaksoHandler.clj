@@ -9,7 +9,7 @@
             [environ.core :refer [env]]
             [schema.core :as s]
             [clj-time.core :as t]
-            [clj-time.coerce :as coerce]
+            [clj-time.format :as f]
             [oph.heratepalvelu.external.ehoks :as ehoks])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (clojure.lang ExceptionInfo)
@@ -67,7 +67,9 @@
                              request-id
                              koulutustoimija
                              suoritus
-                             (coerce/to-sql-date niputuspvm)))
+                             (f/unparse-local-date
+                               (:year-month-day f/formatters)
+                               niputuspvm)))
               tunnus (:tunnus arvo-resp)
               db-data {:hankkimistapa-id     [:n tapa-id]
                        :hankkimistapa-tyyppi [:s (:hankkimistapa-tyyppi herate)]
@@ -84,8 +86,11 @@
                        :opiskeluoikeus-oid   [:s (:oid opiskeluoikeus)]
                        :oppija-oid           [:s (:oppija-oid herate)]
                        :koulutustoimija      [:s koulutustoimija]
-                       :niputuspvm           [:s (coerce/to-sql-date niputuspvm)]
-                       :viimeinen-vastauspvm [:s (coerce/to-sql-date
+                       :niputuspvm           [:s (f/unparse-local-date
+                                                   (:year-month-day f/formatters)
+                                                   niputuspvm)]
+                       :viimeinen-vastauspvm [:s (f/unparse-local-date
+                                                   (:year-month-day f/formatters)
                                                    (t/plus
                                                      niputuspvm
                                                      (t/days 60)))]

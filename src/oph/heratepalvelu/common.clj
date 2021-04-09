@@ -113,12 +113,10 @@
                            #(Integer. %)
                            (str/split pvm #"-"))]
     (if (< day 16)
-      (t/nth-day-of-the-month year month 16)
-      (t/nth-day-of-the-month
-        (t/plus
-          (t/local-date year month day)
-          (t/months 1))
-        1))))
+      (t/local-date year month 16)
+      (if (= 12 month)
+        (t/local-date (+ year 1) 1 1)
+        (t/local-date year (+ month 1) 1)))))
 
 (defn previous-niputus-date [pvm]
   (let [[year month day] (map
