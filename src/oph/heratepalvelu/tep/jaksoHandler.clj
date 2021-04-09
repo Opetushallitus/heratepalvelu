@@ -115,7 +115,7 @@
                :oppilaitos                  [:s (:oid (:oppilaitos opiskeluoikeus))]
                :tutkinto                    [:s tutkinto]
                :niputuspvm                  [:s niputuspvm]}
-              {} (:ohjaaja-table env))
+              {} (:nippu-table env))
             (catch ConditionalCheckFailedException e
               (log/warn "Osaamisenhankkimistapa id:llä " tapa-id "on jo käsitelty.")
               ;(deactivate-kyselylinkki kyselylinkki)

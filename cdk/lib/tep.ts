@@ -122,6 +122,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       environment: {
         ...this.envVars,
         jaksotunnus_table: jaksotunnusTable.tableName,
+        nippu_table: nippuTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-JaksoHandler`,
       },
       handler: "oph.heratepalvelu.tep.jaksoHandler::handleJaksoHerate",
