@@ -94,9 +94,29 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     // herateHandler
 
+    const timedOperationsHandler = new lambda.Function(this, "timedOperationsHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        caller_id: `1.2.246.562.10.00000000001.${id}-timedOperationsHandler`,
+      },
+      memorySize: Token.asNumber(256),
+      timeout: Duration.seconds(900),
+      handler: "oph.heratepalvelu.tep.ehoksTimedOperationsHandler::handleTimedOperations",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "TimedOperationsScheduleRule", {
+      schedule: events.Schedule.expression(
+          "rate(1 hour)"
+      ),
+      targets: [new targets.LambdaFunction(timedOperationsHandler)]
+    });
+
     // jaksoHandler
 
-    const jaksoHandler = new lambda.Function(this, "JaksoHandler", {
+    const jaksoHandler = new lambda.Function(this, "TEPJaksoHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
       environment: {
@@ -125,7 +145,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     // IAM
 
-    [JaksoHandler].forEach(
+    [jaksoHandler, timedOperationsHandler].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,

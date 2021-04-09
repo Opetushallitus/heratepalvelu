@@ -8,9 +8,9 @@
             [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [environ.core :refer [env]]
             [schema.core :as s]
-            [clojure.string :as str]
             [clj-time.core :as t]
-            [clj-time.coerce :as coerce])
+            [clj-time.coerce :as coerce]
+            [oph.heratepalvelu.external.ehoks :as ehoks])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (clojure.lang ExceptionInfo)
            (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)
@@ -33,6 +33,7 @@
               :hankkimistapa-tyyppi   (s/conditional not-empty s/Str)
               :tutkinnonosa-id        s/Num
               :tutkinnonosa-koodi     (s/maybe s/Str)
+              :tutkinnonosa-nimi      (s/maybe s/Str)
               :tyopaikan-nimi         (s/conditional not-empty s/Str)
               :tyopaikan-ytunnus      (s/conditional not-empty s/Str)
               :tyopaikkaohjaaja-email (s/maybe s/Str)
@@ -143,7 +144,9 @@
                 (c/check-organisaatio-whitelist? koulutustoimija)
                 (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
                 (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
-              (save-jaksotunnus herate opiskeluoikeus koulutustoimija))))
+              (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))
+          (ehoks/patch-osaamisenhankkimistapa-tep-kasitelty
+            (:hankkimistapa-id herate)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " e))
         (catch ExceptionInfo e
