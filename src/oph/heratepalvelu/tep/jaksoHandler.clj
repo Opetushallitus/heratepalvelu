@@ -98,7 +98,6 @@
                        :tallennuspvm         [:s (str (t/today))]
                        :tutkinnonosa-tyyppi  [:s (:tyyppi herate)]
                        :tutkinnonosa-id      [:n (:tutkinnonosa-id herate)]}]
-          (log/info arvo-resp)
           (try
             (ddb/put-item
               (cond-> db-data

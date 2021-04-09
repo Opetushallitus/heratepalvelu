@@ -153,7 +153,7 @@
                   :body         (generate-string data)
                   :basic-auth   [(:arvo-user env) @pwd]
                   :as           :json})]
-      (:body resp))
+      resp)
     (catch ExceptionInfo e
       (log/error e)
       (when-not (= 404 (:status (ex-data e)))
