@@ -25,7 +25,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     const jaksotunnusTable = new dynamodb.Table(this, "jaksotunnusTable", {
       partitionKey: {
-        name: "hankkimistapa-id",
+        name: "hankkimistapa_id",
         type: dynamodb.AttributeType.NUMBER
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
@@ -34,7 +34,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     const nippuTable = new dynamodb.Table(this, "nippuTable", {
       partitionKey: {
-        name: "ohjaaja-ytunnus-kj-tutkinto",
+        name: "ohjaaja_ytunnus_kj_tutkinto",
         type: dynamodb.AttributeType.STRING
       },
       sortKey: {

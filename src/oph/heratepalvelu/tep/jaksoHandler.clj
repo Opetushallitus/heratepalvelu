@@ -71,44 +71,46 @@
                                (:year-month-day f/formatters)
                                niputuspvm)))
               tunnus (:tunnus (:body arvo-resp))
-              db-data {:hankkimistapa-id     [:n tapa-id]
-                       :hankkimistapa-tyyppi [:s (:hankkimistapa-tyyppi herate)]
-                       :tyopaikan-nimi       [:s (:tyopaikan-nimi herate)]
-                       :tyopaikan-ytunnus    [:s (:tyopaikan-ytunnus herate)]
+              db-data {:hankkimistapa_id     [:n tapa-id]
+                       :hankkimistapa_tyyppi [:s (:hankkimistapa-tyyppi herate)]
+                       :tyopaikan_nimi       [:s (:tyopaikan-nimi herate)]
+                       :tyopaikan_ytunnus    [:s (:tyopaikan-ytunnus herate)]
                        :tunnus               [:s tunnus]
-                       :ohjaaja-nimi         [:s (:tyopaikkaohjaaja-nimi herate)]
-                       :jakso-alkupvm        [:s (:alkupvm herate)]
-                       :jakso-loppupvm       [:s (:loppupvm herate)]
-                       :request-id           [:s request-id]
+                       :ohjaaja_nimi         [:s (:tyopaikkaohjaaja-nimi herate)]
+                       :jakso_alkupvm        [:s (:alkupvm herate)]
+                       :jakso_loppupvm       [:s (:loppupvm herate)]
+                       :request_id           [:s request-id]
                        :tutkinto             [:s tutkinto]
                        :oppilaitos           [:s (:oid (:oppilaitos opiskeluoikeus))]
-                       :hoks-id              [:n (:hoks-id herate)]
-                       :opiskeluoikeus-oid   [:s (:oid opiskeluoikeus)]
-                       :oppija-oid           [:s (:oppija-oid herate)]
+                       :hoks_id              [:n (:hoks-id herate)]
+                       :opiskeluoikeus_oid   [:s (:oid opiskeluoikeus)]
+                       :oppija_oid           [:s (:oppija-oid herate)]
                        :koulutustoimija      [:s koulutustoimija]
                        :niputuspvm           [:s (f/unparse-local-date
                                                    (:year-month-day f/formatters)
                                                    niputuspvm)]
-                       :viimeinen-vastauspvm [:s (f/unparse-local-date
+                       :viimeinen_vastauspvm [:s (f/unparse-local-date
                                                    (:year-month-day f/formatters)
                                                    (t/plus
                                                      niputuspvm
                                                      (t/days 60)))]
                        :rahoituskausi        [:s (c/kausi (:loppupvm herate))]
                        :tallennuspvm         [:s (str (t/today))]
-                       :tutkinnonosa-tyyppi  [:s (:tyyppi herate)]
-                       :tutkinnonosa-id      [:n (:tutkinnonosa-id herate)]}]
+                       :tutkinnonosa_tyyppi  [:s (:tyyppi herate)]
+                       :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]}]
           (try
             (ddb/put-item
               (cond-> db-data
                       (not-empty (:tyopaikkaohjaaja-email herate))
-                      (assoc :ohjaaja-email [:s (:tyopaikkaohjaaja-email herate)])
+                      (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
                       (not-empty (:tutkinnonosa-koodi herate))
-                      (assoc :tutkinnonosa-koodi [:s (:tutkinnonosa-koodi herate)]))
+                      (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
+                      (not-empty (:tutkinnonosa-nimi herate))
+                      (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)]))
               {:cond-expr (str "attribute_not_exists(hankkimistapa-id)")}
               (:jaksotunnus-table env))
             (ddb/put-item
-              {:ohjaaja-ytunnus-kj-tutkinto
+              {:ohjaaja_ytunnus_kj_tutkinto
                                             [:s (str
                                                   (:tyopaikkaohjaaja-nimi herate) "/"
                                                   (:tyopaikan-ytunnus herate) "/"
