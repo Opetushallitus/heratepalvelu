@@ -118,32 +118,33 @@
                                       koulutustoimija
                                       suoritus
                                       niputuspvm]
-  {:koulutustoimija_oid      koulutustoimija
-   :tyonantaja               (:tyopaikan-ytunnus herate)
-   :tyopaikka                (:tyopaikan-nimi herate)
-   :tutkintotunnus           (get-in
-                               suoritus
-                               [:koulutusmoduuli
-                                :tunniste
-                                :koodiarvo])
-   :tutkinnon_osa            (:tutkinnonosa-koodi herate)
-   :tutkintonimike           (map
-                               :koodiarvo
-                               (:tutkintonimike suoritus))
-   :osaamisala               (map
-                               #(or (:koodiarvo (:osaamisala %1))
-                                    (:koodiarvo %1))
-                               (:osaamisala suoritus))
-   :tyopaikkajakson_alkupvm  (:alkupvm herate)
-   :tyopaikkajakson_loppupvm (:loppupvm herate)
-   :sopimustyyppi            (last
-                               (str/split
-                                 (:hankkimistapa-tyyppi herate)
-                                 #"_"))
-   :vastaamisajan_alkupvm    niputuspvm
-   :oppilaitos_oid           (:oid (:oppilaitos opiskeluoikeus))
-   :toimipiste_oid           (get-toimipiste suoritus)
-   :request_id               request-id})
+  {:koulutustoimija_oid       koulutustoimija
+   :tyonantaja                (:tyopaikan-ytunnus herate)
+   :tyopaikka                 (:tyopaikan-nimi herate)
+   :tutkintotunnus            (get-in
+                                suoritus
+                                [:koulutusmoduuli
+                                 :tunniste
+                                 :koodiarvo])
+   :tutkinnon_osa             (:tutkinnonosa-koodi herate)
+   :paikallinen_tutkinnon_osa (:tutkinnonosa-nimi herate)
+   :tutkintonimike            (map
+                                :koodiarvo
+                                (:tutkintonimike suoritus))
+   :osaamisala                (map
+                                #(or (:koodiarvo (:osaamisala %1))
+                                     (:koodiarvo %1))
+                                (:osaamisala suoritus))
+   :tyopaikkajakson_alkupvm   (:alkupvm herate)
+   :tyopaikkajakson_loppupvm  (:loppupvm herate)
+   :sopimustyyppi             (last
+                                (str/split
+                                  (:hankkimistapa-tyyppi herate)
+                                  #"_"))
+   :vastaamisajan_alkupvm     niputuspvm
+   :oppilaitos_oid            (:oid (:oppilaitos opiskeluoikeus))
+   :toimipiste_oid            (get-toimipiste suoritus)
+   :request_id                request-id})
 
 (defn get-jaksotunnus [data]
   (try

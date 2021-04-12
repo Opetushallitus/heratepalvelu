@@ -70,7 +70,7 @@
                              (f/unparse-local-date
                                (:year-month-day f/formatters)
                                niputuspvm)))
-              tunnus (:tunnus arvo-resp)
+              tunnus (:tunnus (:body arvo-resp))
               db-data {:hankkimistapa-id     [:n tapa-id]
                        :hankkimistapa-tyyppi [:s (:hankkimistapa-tyyppi herate)]
                        :tyopaikan-nimi       [:s (:tyopaikan-nimi herate)]
