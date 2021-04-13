@@ -43,7 +43,7 @@
   (s/checker tep-herate-schema))
 
 (defn check-duplicate-hankkimistapa [id]
-  (if (empty? (ddb/get-item {:hankkimistapa-id [:n id]}
+  (if (empty? (ddb/get-item {:hankkimistapa_id [:n id]}
                             (:jaksotunnus-table env)))
     true
     (log/warn "Osaamisenhankkimistapa id:llä " id "on jo käsitelty.")))
