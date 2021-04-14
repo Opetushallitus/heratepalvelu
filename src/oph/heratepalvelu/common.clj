@@ -184,7 +184,7 @@
       (when
         (check-duplicate-herate?
           oppija koulutustoimija laskentakausi kyselytyyppi)
-        (let [arvo-resp (get-amis-kyselylinkki
+        (let [arvo-resp (create-amis-kyselylinkki
                           (build-arvo-request-body
                             herate
                             opiskeluoikeus
@@ -239,12 +239,12 @@
                           oppija " koulutustoimijalla " koulutustoimija
                           "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm) ")"
                           "Deaktivoidaan kyselylinkki, request-id " uuid)
-                (deactivate-kyselylinkki kyselylinkki))
+                (delete-amis-kyselylinkki kyselylinkki))
               (catch AwsServiceException e
                 (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
-                (deactivate-kyselylinkki kyselylinkki)
+                (delete-amis-kyselylinkki kyselylinkki)
                 (throw e))
               (catch Exception e
-                (deactivate-kyselylinkki kyselylinkki)
+                (delete-amis-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
                 (throw e)))))))))

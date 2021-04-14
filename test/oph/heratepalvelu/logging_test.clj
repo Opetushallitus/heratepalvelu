@@ -44,8 +44,8 @@
        oph.heratepalvelu.common/check-duplicate-herate? mock-check-duplicate-herate-true?
        oph.heratepalvelu.common/check-organisaatio-whitelist? mock-check-organisaatio-whitelist-true?
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item-aws-exception
-       oph.heratepalvelu.external.arvo/get-amis-kyselylinkki mock-get-kyselylinkki
-       oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki
+       oph.heratepalvelu.external.arvo/create-amis-kyselylinkki mock-get-kyselylinkki
+       oph.heratepalvelu.external.arvo/delete-amis-kyselylinkki mock-deactivate-kyselylinkki
        oph.heratepalvelu.external.ehoks/get-hankintakoulutus-oids mock-get-hankintakoulutus-oids-empty]
       (do
         (is (thrown? AwsServiceException (-handleAMISherate
@@ -63,8 +63,8 @@
        oph.heratepalvelu.common/check-duplicate-herate? mock-check-duplicate-herate-true?
        oph.heratepalvelu.common/check-organisaatio-whitelist? mock-check-organisaatio-whitelist-true?
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item-cond-check-exception
-       oph.heratepalvelu.external.arvo/get-amis-kyselylinkki mock-get-kyselylinkki
-       oph.heratepalvelu.external.arvo/deactivate-kyselylinkki mock-deactivate-kyselylinkki
+       oph.heratepalvelu.external.arvo/create-amis-kyselylinkki mock-get-kyselylinkki
+       oph.heratepalvelu.external.arvo/delete-amis-kyselylinkki mock-deactivate-kyselylinkki
        oph.heratepalvelu.external.ehoks/get-hankintakoulutus-oids mock-get-hankintakoulutus-oids-empty]
       (do
         (-handleAMISherate nil (mock-handler-event :ehoksherate) (mock-handler-context))

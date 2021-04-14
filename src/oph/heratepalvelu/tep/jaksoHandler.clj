@@ -60,7 +60,7 @@
                            [:koulutusmoduuli
                             :tunniste
                             :koodiarvo])
-              arvo-resp  (arvo/get-jaksotunnus
+              arvo-resp  (arvo/create-jaksotunnus
                            (arvo/build-jaksotunnus-request-body
                              herate
                              opiskeluoikeus
@@ -97,41 +97,47 @@
                        :rahoituskausi        [:s (c/kausi (:loppupvm herate))]
                        :tallennuspvm         [:s (str (t/today))]
                        :tutkinnonosa_tyyppi  [:s (:tyyppi herate)]
-                       :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]}]
-          (try
-            (ddb/put-item
-              (cond-> db-data
-                      (not-empty (:tyopaikkaohjaaja-email herate))
-                      (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
-                      (not-empty (:tutkinnonosa-koodi herate))
-                      (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
-                      (not-empty (:tutkinnonosa-nimi herate))
-                      (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)]))
-              {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
-              (:jaksotunnus-table env))
-            (ddb/put-item
-              {:ohjaaja_ytunnus_kj_tutkinto
-                                            [:s (str
-                                                  (:tyopaikkaohjaaja-nimi herate) "/"
-                                                  (:tyopaikan-ytunnus herate) "/"
-                                                  koulutustoimija "/"
-                                                  tutkinto)]
-               :ohjaaja                     [:s (:tyopaikkaohjaaja-nimi herate)]
-               :ytunnus                     [:s (:tyopaikan-ytunnus herate)]
-               :koulutuksenjarjestaja       [:s koulutustoimija]
-               :tutkinto                    [:s tutkinto]
-               :niputuspvm                  [:s (str niputuspvm)]}
-              {} (:nippu-table env))
-            (catch ConditionalCheckFailedException e
-              (log/warn "Osaamisenhankkimistapa id:llä " tapa-id "on jo käsitelty.")
-              ;(deactivate-kyselylinkki kyselylinkki)
-              )
-            (catch AwsServiceException e
-              (log/error "Virhe tietokantaan tallennettaessa " tunnus " " request-id)
-              ;(deactivate-kyselylinkki kyselylinkki)
-              (throw e))))
+                       :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]
+                       :ohjaaja_ytunnus_kj_tutkinto
+                                             [:s (str
+                                                   (:tyopaikkaohjaaja-nimi herate) "/"
+                                                   (:tyopaikan-ytunnus herate) "/"
+                                                   koulutustoimija "/"
+                                                   tutkinto)]}]
+          (when (some? tunnus)
+            (try
+              (ddb/put-item
+                (cond-> db-data
+                        (not-empty (:tyopaikkaohjaaja-email herate))
+                        (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
+                        (not-empty (:tutkinnonosa-koodi herate))
+                        (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
+                        (not-empty (:tutkinnonosa-nimi herate))
+                        (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)]))
+                {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
+                (:jaksotunnus-table env))
+              (ddb/put-item
+                {:ohjaaja_ytunnus_kj_tutkinto
+                                              [:s (str
+                                                    (:tyopaikkaohjaaja-nimi herate) "/"
+                                                    (:tyopaikan-ytunnus herate) "/"
+                                                    koulutustoimija "/"
+                                                    tutkinto)]
+                 :ohjaaja                     [:s (:tyopaikkaohjaaja-nimi herate)]
+                 :ytunnus                     [:s (:tyopaikan-ytunnus herate)]
+                 :koulutuksenjarjestaja       [:s koulutustoimija]
+                 :tutkinto                    [:s tutkinto]
+                 :kasitelty                   [:bool false]
+                 :niputuspvm                  [:s (str niputuspvm)]}
+                {} (:nippu-table env))
+              (catch ConditionalCheckFailedException e
+                (log/warn "Osaamisenhankkimistapa id:llä " tapa-id "on jo käsitelty.")
+                (arvo/delete-jaksotunnus tunnus))
+              (catch AwsServiceException e
+                (log/error "Virhe tietokantaan tallennettaessa " tunnus " " request-id)
+                (arvo/delete-jaksotunnus tunnus)
+                (throw e)))))
         (catch Exception e
-          ;(deactivate-kyselylinkki kyselylinkki)
           (log/error "Unknown error " e)
           (throw e))))))
 

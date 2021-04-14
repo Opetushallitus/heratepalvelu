@@ -78,7 +78,7 @@
    :hankintakoulutuksen_toteuttaja (get-hankintakoulutuksen-toteuttaja
                                      (:ehoks-id herate))})
 
-(defn get-amis-kyselylinkki [data]
+(defn create-amis-kyselylinkki [data]
   (try
     (let [resp (client/post
                  (str (:arvo-url env) "vastauslinkki/v1")
@@ -92,7 +92,7 @@
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
 
-(defn deactivate-kyselylinkki [linkki]
+(defn delete-amis-kyselylinkki [linkki]
   (let [tunnus (last (str/split linkki #"/"))]
     (client/delete (str (:arvo-url env) "vastauslinkki/v1/" tunnus)
                    {:basic-auth [(:arvo-user env) @pwd]})))
@@ -150,7 +150,7 @@
    :toimipiste_oid            (get-toimipiste suoritus)
    :request_id                request-id})
 
-(defn get-jaksotunnus [data]
+(defn create-jaksotunnus [data]
   (try
     (let [resp (client/post
                  (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus")
@@ -158,12 +158,16 @@
                   :body         (generate-string data)
                   :basic-auth   [(:arvo-user env) @pwd]
                   :as           :json})]
-      (log/info resp)
       resp)
     (catch ExceptionInfo e
       (log/error e)
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
+
+(defn delete-jaksotunnus [tunnus]
+  (client/delete
+    (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
+    {:basic-auth   [(:arvo-user env) @pwd]}))
 
 (defn- rand-str [len]
   (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
@@ -182,7 +186,7 @@
      :voimassa_alkupvm    (str (t/today))
      :request_id          request-id}))
 
-(defn get-nippu-kyselylinkki [data]
+(defn create-nippu-kyselylinkki [data]
   (try
     (let [resp (client/post
                  (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/nippu")
@@ -195,3 +199,8 @@
       (log/error e)
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
+
+(defn delete-nippukyselylinkki [tunniste]
+  (client/delete
+    (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" tunniste)
+    {:basic-auth   [(:arvo-user env) @pwd]}))
