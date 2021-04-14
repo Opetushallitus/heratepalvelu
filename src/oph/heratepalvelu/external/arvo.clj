@@ -118,13 +118,10 @@
                                       koulutustoimija
                                       suoritus
                                       niputuspvm]
-      (log/info "Osaamisalat " (map
-                                 #(or (:koodiarvo (:osaamisala %1))
-                                      (:koodiarvo %1))
-                                 (:osaamisala suoritus)))
-      (log/info "Tutkintonimikkeet " (map
-                                       :koodiarvo
-                                       (:tutkintonimike suoritus)))
+
+  (log/info "Opiskeluoikeus " (:oid opiskeluoikeus))
+  (log/info "Osaamisalat " (:osaamisala suoritus))
+  (log/info "Tutkintonimikkeet " (:tutkintonimike suoritus))
   {:koulutustoimija_oid       koulutustoimija
    :tyonantaja                (:tyopaikan-ytunnus herate)
    :tyopaikka                 (:tyopaikan-nimi herate)
