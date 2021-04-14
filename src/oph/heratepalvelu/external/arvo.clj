@@ -185,7 +185,7 @@
 (defn get-nippu-kyselylinkki [data]
   (try
     (let [resp (client/post
-                 (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/niputa")
+                 (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/nippu")
                  {:content-type "application/json"
                   :body         (generate-string data)
                   :basic-auth   [(:arvo-user env) @pwd]
