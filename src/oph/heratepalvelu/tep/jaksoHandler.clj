@@ -107,7 +107,7 @@
                       (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
                       (not-empty (:tutkinnonosa-nimi herate))
                       (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)]))
-              {:cond-expr (str "attribute_not_exists(hankkimistapa-id)")}
+              {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
               (:jaksotunnus-table env))
             (ddb/put-item
               {:ohjaaja_ytunnus_kj_tutkinto
