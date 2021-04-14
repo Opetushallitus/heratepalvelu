@@ -119,9 +119,8 @@
                :ohjaaja                     [:s (:tyopaikkaohjaaja-nimi herate)]
                :ytunnus                     [:s (:tyopaikan-ytunnus herate)]
                :koulutuksenjarjestaja       [:s koulutustoimija]
-               :oppilaitos                  [:s (:oid (:oppilaitos opiskeluoikeus))]
                :tutkinto                    [:s tutkinto]
-               :niputuspvm                  [:s niputuspvm]}
+               :niputuspvm                  [:s (str niputuspvm)]}
               {} (:nippu-table env))
             (catch ConditionalCheckFailedException e
               (log/warn "Osaamisenhankkimistapa id:llä " tapa-id "on jo käsitelty.")
