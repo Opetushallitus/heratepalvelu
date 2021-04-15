@@ -8,7 +8,8 @@
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
             [oph.heratepalvelu.external.aws-ssm :as ssm]
-            [clj-time.core :as t])
+            [clj-time.core :as t]
+            [clj-time.coerce :as c])
   (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private pwd (delay
@@ -63,50 +64,143 @@
                                koulutustoimija
                                suoritus]
   (log/info "Osaamisala =" (get-osaamisala suoritus (:oid opiskeluoikeus)))
-  {:vastaamisajan_alkupvm   (:alkupvm herate)
-   :kyselyn_tyyppi          (:kyselytyyppi herate)
-   :tutkintotunnus          (get-in suoritus [:koulutusmoduuli
-                                              :tunniste
-                                              :koodiarvo])
-   :tutkinnon_suorituskieli (str/lower-case
-                              (:koodiarvo (:suorituskieli suoritus)))
-   :koulutustoimija_oid     koulutustoimija
-   :oppilaitos_oid          (:oid (:oppilaitos opiskeluoikeus))
-   :request_id              request-id
-   :toimipiste_oid          (get-toimipiste suoritus)
+  {:vastaamisajan_alkupvm          (:alkupvm herate)
+   :kyselyn_tyyppi                 (:kyselytyyppi herate)
+   :tutkintotunnus                 (get-in suoritus [:koulutusmoduuli
+                                                     :tunniste
+                                                     :koodiarvo])
+   :tutkinnon_suorituskieli        (str/lower-case
+                                     (:koodiarvo (:suorituskieli suoritus)))
+   :koulutustoimija_oid            koulutustoimija
+   :oppilaitos_oid                 (:oid (:oppilaitos opiskeluoikeus))
+   :request_id                     request-id
+   :toimipiste_oid                 (get-toimipiste suoritus)
    :hankintakoulutuksen_toteuttaja (get-hankintakoulutuksen-toteuttaja
                                      (:ehoks-id herate))})
 
-(defn get-kyselylinkki [data]
+(defn create-amis-kyselylinkki [data]
   (try
     (let [resp (client/post
-                 (:arvo-url env)
+                 (str (:arvo-url env) "vastauslinkki/v1")
                  {:content-type "application/json"
-                  :body (generate-string data)
-                  :basic-auth [(:arvo-user env) @pwd]
-                  :as :json})]
+                  :body         (generate-string data)
+                  :basic-auth   [(:arvo-user env) @pwd]
+                  :as           :json})]
       (:body resp))
     (catch ExceptionInfo e
       (log/error e)
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
 
-(defn deactivate-kyselylinkki [linkki]
+(defn delete-amis-kyselylinkki [linkki]
   (let [tunnus (last (str/split linkki #"/"))]
-    (client/delete (str (:arvo-url env) "/" tunnus)
+    (client/delete (str (:arvo-url env) "vastauslinkki/v1/" tunnus)
                    {:basic-auth [(:arvo-user env) @pwd]})))
 
 (defn get-kyselylinkki-status [linkki]
   (let [tunnus (last (str/split linkki #"/"))]
-    (:body (client/get (str (:arvo-url env) "/status/" tunnus)
+    (:body (client/get (str (:arvo-url env) "vastauslinkki/v1/status/" tunnus)
                        {:basic-auth [(:arvo-user env) @pwd]
-                        :as :json}))))
+                        :as         :json}))))
 
 (defn patch-kyselylinkki-metadata [linkki data]
   (let [tunnus (last (str/split linkki #"/"))]
     (:body (client/patch
-             (str (:arvo-url env) "/" tunnus "/metatiedot")
-             {:basic-auth [(:arvo-user env) @pwd]
+             (str (:arvo-url env) "vastauslinkki/v1/" tunnus "/metatiedot")
+             {:basic-auth   [(:arvo-user env) @pwd]
               :content-type "application/json"
-              :body (generate-string data)
-              :as :json}))))
+              :body         (generate-string data)
+              :as           :json}))))
+
+(defn build-jaksotunnus-request-body [herate
+                                      opiskeluoikeus
+                                      request-id
+                                      koulutustoimija
+                                      suoritus
+                                      niputuspvm]
+
+  (log/info "Opiskeluoikeus " (:oid opiskeluoikeus))
+  (log/info "Osaamisalat " (:osaamisala suoritus))
+  (log/info "Tutkintonimikkeet " (:tutkintonimike suoritus))
+  {:koulutustoimija_oid       koulutustoimija
+   :tyonantaja                (:tyopaikan-ytunnus herate)
+   :tyopaikka                 (:tyopaikan-nimi herate)
+   :tutkintotunnus            (get-in
+                                suoritus
+                                [:koulutusmoduuli
+                                 :tunniste
+                                 :koodiarvo])
+   :tutkinnon_osa             (:tutkinnonosa-koodi herate)
+   :paikallinen_tutkinnon_osa (:tutkinnonosa-nimi herate)
+   :tutkintonimike            (map
+                                :koodiarvo
+                                (:tutkintonimike suoritus))
+   :osaamisala                (map
+                                #(or (:koodiarvo (:osaamisala %1))
+                                     (:koodiarvo %1))
+                                (:osaamisala suoritus))
+   :tyopaikkajakson_alkupvm   (:alkupvm herate)
+   :tyopaikkajakson_loppupvm  (:loppupvm herate)
+   :sopimustyyppi             (last
+                                (str/split
+                                  (:hankkimistapa-tyyppi herate)
+                                  #"_"))
+   :vastaamisajan_alkupvm     niputuspvm
+   :oppilaitos_oid            (:oid (:oppilaitos opiskeluoikeus))
+   :toimipiste_oid            (get-toimipiste suoritus)
+   :request_id                request-id})
+
+(defn create-jaksotunnus [data]
+  (try
+    (let [resp (client/post
+                 (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus")
+                 {:content-type "application/json"
+                  :body         (generate-string data)
+                  :basic-auth   [(:arvo-user env) @pwd]
+                  :as           :json})]
+      resp)
+    (catch ExceptionInfo e
+      (log/error e)
+      (when-not (= 404 (:status (ex-data e)))
+        (throw e)))))
+
+(defn delete-jaksotunnus [tunnus]
+  (client/delete
+    (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
+    {:basic-auth   [(:arvo-user env) @pwd]}))
+
+(defn- rand-str [len]
+  (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
+
+(defn build-niputus-request-body [koulutustoimija
+                                  oppilaitos
+                                  tunnukset
+                                  request-id]
+  (let [oppilaitos (org/get-organisaatio oppilaitos)
+        oppilaitos-nimi (str/join (str/split (:fi (:nimi oppilaitos)) #"\s"))
+        tunniste (str oppilaitos-nimi "_" (t/today) "_" (rand-str 6))]
+    {:koulutustoimija_oid koulutustoimija
+     :oppilaitos_oid      oppilaitos
+     :tunniste            tunniste
+     :tunnukset           tunnukset
+     :voimassa_alkupvm    (str (t/today))
+     :request_id          request-id}))
+
+(defn create-nippu-kyselylinkki [data]
+  (try
+    (let [resp (client/post
+                 (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/nippu")
+                 {:content-type "application/json"
+                  :body         (generate-string data)
+                  :basic-auth   [(:arvo-user env) @pwd]
+                  :as           :json})]
+      (:body resp))
+    (catch ExceptionInfo e
+      (log/error e)
+      (when-not (= 404 (:status (ex-data e)))
+        (throw e)))))
+
+(defn delete-nippukyselylinkki [tunniste]
+  (client/delete
+    (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" tunniste)
+    {:basic-auth   [(:arvo-user env) @pwd]}))

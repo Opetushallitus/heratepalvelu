@@ -26,7 +26,7 @@
                      (check-organisaatio-whitelist?
                        koulutustoimija (date-string-to-timestamp
                                          (:alkupvm herate)))
-                     (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus)))
+                     (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
             (save-herate herate opiskeluoikeus)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " msg "\n" e))

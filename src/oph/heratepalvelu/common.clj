@@ -90,6 +90,11 @@
     true
     (log/info "Väärä suoritustyyppi opiskeluoikeudessa " (:oid opiskeluoikeus))))
 
+(defn check-sisaltyy-opiskeluoikeuteen? [opiskeluoikeus]
+  (if (:sisältyyOpiskeluoikeuteen opiskeluoikeus)
+    (log/warn "Opiskeluoikeus " (:oid opiskeluoikeus) " sisältyy toiseen opiskeluoikeuteen.")
+    true))
+
 (defn get-suoritus [opiskeluoikeus]
   "Haetaan tutkinto/tutkinnon osa suoritus"
   (reduce
@@ -102,6 +107,28 @@
   (some (fn [suoritus]
           (= (:koodiarvo (:tyyppi suoritus)) "nayttotutkintoonvalmistavakoulutus"))
         (:suoritukset opiskeluoikeus)))
+
+(defn next-niputus-date [pvm]
+  (let [[year month day] (map
+                           #(Integer. %)
+                           (str/split pvm #"-"))]
+    (if (< day 16)
+      (t/local-date year month 16)
+      (if (= 12 month)
+        (t/local-date (+ year 1) 1 1)
+        (t/local-date year (+ month 1) 1)))))
+
+(defn previous-niputus-date [pvm]
+  (let [[year month day] (map
+                           #(Integer. %)
+                           (str/split pvm #"-"))]
+    (if (< day 16)
+      (t/nth-day-of-the-month year month 1)
+      (t/nth-day-of-the-month
+        (t/minus
+          (t/local-date year month day)
+          (t/months 1))
+        16))))
 
 (defn check-organisaatio-whitelist?
   ([koulutustoimija]
@@ -157,7 +184,7 @@
       (when
         (check-duplicate-herate?
           oppija koulutustoimija laskentakausi kyselytyyppi)
-        (let [arvo-resp (get-kyselylinkki
+        (let [arvo-resp (create-amis-kyselylinkki
                           (build-arvo-request-body
                             herate
                             opiskeluoikeus
@@ -212,12 +239,12 @@
                           oppija " koulutustoimijalla " koulutustoimija
                           "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm) ")"
                           "Deaktivoidaan kyselylinkki, request-id " uuid)
-                (deactivate-kyselylinkki kyselylinkki))
+                (delete-amis-kyselylinkki kyselylinkki))
               (catch AwsServiceException e
                 (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
-                (deactivate-kyselylinkki kyselylinkki)
+                (delete-amis-kyselylinkki kyselylinkki)
                 (throw e))
               (catch Exception e
-                (deactivate-kyselylinkki kyselylinkki)
+                (delete-amis-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
                 (throw e)))))))))
