@@ -9,6 +9,7 @@ import iam = require("@aws-cdk/aws-iam");
 import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
 import { Duration, Token } from "@aws-cdk/core";
 import { HeratepalveluStack } from "./heratepalvelu";
+import {CfnEventSourceMapping} from "@aws-cdk/aws-lambda";
 
 
 export class HeratepalveluTEPStack extends HeratepalveluStack {
@@ -144,6 +145,39 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     // niputusHandler
 
     // emailHandler
+
+    // DLQ tyhjennys
+
+    const dlqResendHandler = new lambda.Function(this, "TEP-DLQresendHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        queue_name: herateQueue.queueName
+      },
+      handler: "oph.heratepalvelu.DLQresendHandler::handleDLQresend",
+      memorySize: 1024,
+      timeout: Duration.seconds(60),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    dlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [herateQueue.queueArn, herateDeadLetterQueue.queueArn],
+      actions: [
+        "sqs:GetQueueUrl",
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ]}));
+
+    new CfnEventSourceMapping(this, "DLQResendEventSourceMapping", {
+      eventSourceArn: herateDeadLetterQueue.queueArn,
+      functionName: dlqResendHandler.functionName,
+      batchSize: 1,
+      enabled: false
+    });
 
     // IAM
 

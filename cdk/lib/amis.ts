@@ -289,7 +289,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     organisaatioWhitelistTable.grantReadData(updatedOoHandler);
     metadataTable.grantReadWriteData(updatedOoHandler);
 
-    const dlqResendHandler = new lambda.Function(this, "DLQresendHandler", {
+    const dlqResendHandler = new lambda.Function(this, "AMIS-DLQresendHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
       environment: {
