@@ -130,7 +130,10 @@
                                 [:koulutusmoduuli
                                  :tunniste
                                  :koodiarvo])
-   :tutkinnon_osa             (:tutkinnonosa-koodi herate)
+   :tutkinnon_osa             (last
+                                (str/split
+                                  (:tutkinnonosa-koodi herate)
+                                  #"_"))
    :paikallinen_tutkinnon_osa (:tutkinnonosa-nimi herate)
    :tutkintonimike            (map
                                 :koodiarvo
