@@ -14,7 +14,7 @@
       (ddb/update-item
         {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]
          :niputuspvm                  [:s (:niputuspvm item)]}
-        {:update-expr     "REMOVE kasitelty, SET #value = :value"
+        {:update-expr     "REMOVE kasitelty  SET #value = :value"
          :expr-attr-names {"#value" "kasittelytila"}
          :expr-attr-vals {":value" [:s "ei_niputettu"]}}
         (:nippu-table env)))))
