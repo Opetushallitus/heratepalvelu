@@ -152,7 +152,8 @@
 (defn scan [filter-exp table]
   (let [req (-> (ScanRequest/builder)
                 (.filterExpression filter-exp)
-                (.tableName table))
+                (.tableName table)
+                (.build))
         response (.scan ddb-client req)
         items (.items response)]
     (into [] (map
