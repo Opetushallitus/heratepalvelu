@@ -7,7 +7,8 @@
                                                            UpdateItemRequest
                                                            Condition
                                                            AttributeValue
-                                                           GetItemRequest)
+                                                           GetItemRequest
+                                                           ScanRequest)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap DefaultSdkAutoConstructList)
            (software.amazon.awssdk.core.client.config ClientOverrideConfiguration)
@@ -147,3 +148,13 @@
           response (.getItem ddb-client req)
           item (.item response)]
       (map-attribute-values-to-vals item))))
+
+(defn scan [filter-exp table]
+  (let [req (-> (ScanRequest/builder)
+                (.filterExpression filter-exp)
+                (.tableName table))
+        response (.scan ddb-client req)
+        items (.items response)]
+    (into [] (map
+               map-attribute-values-to-vals
+               items))))

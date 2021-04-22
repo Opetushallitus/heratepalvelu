@@ -10,7 +10,8 @@
             [schema.core :as s]
             [clj-time.core :as t]
             [clj-time.format :as f]
-            [oph.heratepalvelu.external.ehoks :as ehoks])
+            [oph.heratepalvelu.external.ehoks :as ehoks]
+            [clojure.string :as str])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (clojure.lang ExceptionInfo)
            (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)
@@ -72,7 +73,10 @@
                                niputuspvm)))
               tunnus (:tunnus (:body arvo-resp))
               db-data {:hankkimistapa_id     [:n tapa-id]
-                       :hankkimistapa_tyyppi [:s (:hankkimistapa-tyyppi herate)]
+                       :hankkimistapa_tyyppi [:s (last
+                                                   (str/split
+                                                     (:hankkimistapa-tyyppi herate)
+                                                     #"_"))]
                        :tyopaikan_nimi       [:s (:tyopaikan-nimi herate)]
                        :tyopaikan_ytunnus    [:s (:tyopaikan-ytunnus herate)]
                        :tunnus               [:s tunnus]
@@ -127,7 +131,7 @@
                  :ytunnus                     [:s (:tyopaikan-ytunnus herate)]
                  :koulutuksenjarjestaja       [:s koulutustoimija]
                  :tutkinto                    [:s tutkinto]
-                 :kasitelty                   [:bool false]
+                 :kasittelytila               [:s "ei_niputettu"]
                  :niputuspvm                  [:s (str niputuspvm)]}
                 {} (:nippu-table env))
               (catch ConditionalCheckFailedException e
