@@ -186,13 +186,18 @@
    :request_id          request-id})
 
 (defn create-nippu-kyselylinkki [data]
-  (let [resp (client/post
-               (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/nippu")
-               {:content-type "application/json"
-                :body         (generate-string data)
-                :basic-auth   [(:arvo-user env) @pwd]
-                :as           :json})]
-    (:body resp)))
+  (try
+    (let [resp (client/post
+                 (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/nippu")
+                 {:content-type "application/json"
+                  :body         (generate-string data)
+                  :basic-auth   [(:arvo-user env) @pwd]
+                  :as           :json})]
+      (:body resp))
+    (catch ExceptionInfo e
+      (log/error e)
+      (when-not (= 404 (:status (ex-data e)))
+        (throw e)))))
 
 (defn delete-nippukyselylinkki [tunniste]
   (client/delete

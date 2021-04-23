@@ -53,24 +53,26 @@
                         tunniste
                         (sequence tunnukset)
                         request-id))]
-      (try
-        (ddb/update-item
-          {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-           :niputuspvm                  [:s (:niputuspvm nippu)]}
-          {:update-expr     (str "SET #tila = :tila, "
-                                 "#linkki = :linkki, "
-                                 "#voimassa = :voimassa")
-           :expr-attr-names {"#tila" "kasittelytila"
-                             "#linkki" "kyselylinkki"
-                             "#voimassa" "voimassaloppupvm"}
-           :expr-attr-vals {":tila"     [:s (:ei-lahetetty c/kasittelytilat)]
-                            ":linkki"   [:s (:nippulinkki arvo-resp)]
-                            ":voimassa" [:s (:voimassa_loppupvm arvo-resp)]}}
-          (:nippu-table env))
-        (catch AwsServiceException e
-          (log/error "Virhe DynamoDB tallennuksessa " e)
-          (arvo/delete-nippukyselylinkki (:tunniste nippu))
-          (throw e)))
+      (if (some? (:nippulinkki arvo-resp))
+        (try
+          (ddb/update-item
+            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+             :niputuspvm                  [:s (:niputuspvm nippu)]}
+            {:update-expr     (str "SET #tila = :tila, "
+                                   "#linkki = :linkki, "
+                                   "#voimassa = :voimassa")
+             :expr-attr-names {"#tila" "kasittelytila"
+                               "#linkki" "kyselylinkki"
+                               "#voimassa" "voimassaloppupvm"}
+             :expr-attr-vals {":tila"     [:s (:ei-lahetetty c/kasittelytilat)]
+                              ":linkki"   [:s (:nippulinkki arvo-resp)]
+                              ":voimassa" [:s (:voimassa_loppupvm arvo-resp)]}}
+            (:nippu-table env))
+          (catch AwsServiceException e
+            (log/error "Virhe DynamoDB tallennuksessa " e)
+            (arvo/delete-nippukyselylinkki (:tunniste nippu))
+            (throw e)))
+        (log/error "Ei tunnusta " nippu request-id))
       (doseq [n prev]
         (try
           (ddb/update-item
