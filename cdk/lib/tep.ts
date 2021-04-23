@@ -192,7 +192,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE
     });
 
-    new events.Rule(this, "TimedOperationsScheduleRule", {
+    new events.Rule(this, "niputusHandlerScheduleRule", {
       schedule: events.Schedule.expression(
         `rate(20 minutes)`
       ),
