@@ -193,6 +193,7 @@
                   :body         (generate-string data)
                   :basic-auth   [(:arvo-user env) @pwd]
                   :as           :json})]
+      (log/info resp)
       (:body resp))
     (catch ExceptionInfo e
       (log/error e)
