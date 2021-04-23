@@ -3,7 +3,7 @@
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.external.arvo :as arvo]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.common :refer [lahetystilat]]
+            [oph.heratepalvelu.common :refer [kasittelytilat]]
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
@@ -15,17 +15,17 @@
 
 (defn -handleEmailStatus [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (loop [emails (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa lahetystilat)]]}
+  (loop [emails (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa kasittelytilat)]]}
                                  {:index "lahetysIndex"
                                   :limit 100})]
     (doseq [email emails]
       (let [status (vp/get-email-status (:viestintapalvelu-id email))
             tila (if (= (:numberOfSuccessfulSendings status) 1)
-                   (:success lahetystilat)
+                   (:success kasittelytilat)
                    (if (= (:numberOfBouncedSendings email) 1)
-                     (:bounced lahetystilat)
+                     (:bounced kasittelytilat)
                      (when (= (:numberOfFailedSendings status) 1)
-                       (:failed lahetystilat))))]
+                       (:failed kasittelytilat))))]
         (if tila
           (try
             (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) {:tila tila})
@@ -47,6 +47,6 @@
             (log/info status)))))
     (when (and (seq emails)
                (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa lahetystilat)]]}
+      (recur (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa kasittelytilat)]]}
                               {:index "lahetysIndex"
                                :limit 10})))))

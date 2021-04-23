@@ -121,8 +121,7 @@
                 {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
                 (:jaksotunnus-table env))
               (ddb/put-item
-                {:ohjaaja_ytunnus_kj_tutkinto
-                                              [:s (str
+                {:ohjaaja_ytunnus_kj_tutkinto [:s (str
                                                     (:tyopaikkaohjaaja-nimi herate) "/"
                                                     (:tyopaikan-ytunnus herate) "/"
                                                     koulutustoimija "/"
@@ -131,7 +130,7 @@
                  :ytunnus                     [:s (:tyopaikan-ytunnus herate)]
                  :koulutuksenjarjestaja       [:s koulutustoimija]
                  :tutkinto                    [:s tutkinto]
-                 :kasittelytila               [:s "ei_niputettu"]
+                 :kasittelytila               [:s (:ei-niputettu c/kasittelytilat)]
                  :niputuspvm                  [:s (str niputuspvm)]}
                 {} (:nippu-table env))
               (catch ConditionalCheckFailedException e

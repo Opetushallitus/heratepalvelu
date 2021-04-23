@@ -173,22 +173,17 @@
     (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
     {:basic-auth   [(:arvo-user env) @pwd]}))
 
-(defn- rand-str [len]
-  (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
-
 (defn build-niputus-request-body [koulutustoimija
                                   oppilaitos
+                                  tunniste
                                   tunnukset
                                   request-id]
-  (let [oppilaitos (org/get-organisaatio oppilaitos)
-        oppilaitos-nimi (str/join (str/split (:fi (:nimi oppilaitos)) #"\s"))
-        tunniste (str oppilaitos-nimi "_" (t/today) "_" (rand-str 6))]
-    {:koulutustoimija_oid koulutustoimija
-     :oppilaitos_oid      oppilaitos
-     :tunniste            tunniste
-     :tunnukset           tunnukset
-     :voimassa_alkupvm    (str (t/today))
-     :request_id          request-id}))
+  {:koulutustoimija_oid koulutustoimija
+   :oppilaitos_oid      oppilaitos
+   :tunniste            tunniste
+   :tunnukset           tunnukset
+   :voimassa_alkupvm    (str (t/today))
+   :request_id          request-id})
 
 (defn create-nippu-kyselylinkki [data]
   (try

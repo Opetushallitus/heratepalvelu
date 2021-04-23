@@ -32,14 +32,3 @@
     (log/info (str "Lambdaa " name
                    " kutsuttiin ajastetusti säännöillä " rules
                    " (RequestId: " request-id " )"))))
-
-(defn log-caller-details []
-  (cond
-    (or (= name "handleAMISherate")
-        (= name "handleEmailResend"))
-
-    (or
-      (= name "handleSendAMISEmails")
-      (= name "handleUpdatedOpiskeluoikeus")
-      (= name "handleSendAMISMuistutus"))
-        ))

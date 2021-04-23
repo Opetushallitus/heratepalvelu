@@ -33,6 +33,24 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       serverSideEncryption: true
     });
 
+    jaksotunnusTable.addGlobalSecondaryIndex({
+      indexName: "niputusIndex",
+      partitionKey: {
+        name: "ohjaaja_ytunnus_kj_tutkinto",
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: "niputuspvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      nonKeyAttributes: [
+        "tunnus",
+        "oppilaitos",
+        "tyopaikan_nimi"
+      ],
+      projectionType: dynamodb.ProjectionType.INCLUDE
+    });
+
     const nippuTable = new dynamodb.Table(this, "nippuTable", {
       partitionKey: {
         name: "ohjaaja_ytunnus_kj_tutkinto",
@@ -57,7 +75,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       nonKeyAttributes: [
-        "ohjaaja_ytunnus_kj_tutkinto"
+        "ohjaaja_ytunnus_kj_tutkinto",
+        "koulutuksenjarjestaja"
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
@@ -160,6 +179,29 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     // niputusHandler
 
+    const niputusHandler = new lambda.Function(this, "niputusHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        caller_id: `1.2.246.562.10.00000000001.${id}-niputusHandler`,
+      },
+      memorySize: Token.asNumber(1024),
+      timeout: Duration.seconds(900),
+      handler: "oph.heratepalvelu.tep.niputusHandler::handleNiputus",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "TimedOperationsScheduleRule", {
+      schedule: events.Schedule.expression(
+        `rate(20 minutes)`
+      ),
+      targets: [new targets.LambdaFunction(niputusHandler)]
+    });
+
+    jaksotunnusTable.grantReadData(niputusHandler);
+    nippuTable.grantReadWriteData(niputusHandler);
+
     // emailHandler
 
     // DLQ tyhjennys
@@ -195,29 +237,29 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       enabled: false
     });
 
-    const dbUpdateHandler = new lambda.Function(this, "dbUpdateHandler", {
-      runtime: lambda.Runtime.JAVA_8,
-      code: lambdaCode,
-      environment: {
-        nippu_table: nippuTable.tableName
-      },
-      memorySize: Token.asNumber(1024),
-      timeout: Duration.seconds(900),
-      handler: "oph.heratepalvelu.tep.dbChanger::handleDBUpdate",
-      tracing: lambda.Tracing.ACTIVE
-    });
-    nippuTable.grantReadWriteData(dbUpdateHandler);
-
-    new events.Rule(this, "dbUpdateHandlerScheduleRule", {
-      schedule: events.Schedule.expression(
-        `rate(20 minutes)`
-      ),
-      targets: [new targets.LambdaFunction(dbUpdateHandler)]
-    });
+    // const dbUpdateHandler = new lambda.Function(this, "dbUpdateHandler", {
+    //   runtime: lambda.Runtime.JAVA_8,
+    //   code: lambdaCode,
+    //   environment: {
+    //     nippu_table: nippuTable.tableName
+    //   },
+    //   memorySize: Token.asNumber(1024),
+    //   timeout: Duration.seconds(900),
+    //   handler: "oph.heratepalvelu.tep.dbChanger::handleDBUpdate",
+    //   tracing: lambda.Tracing.ACTIVE
+    // });
+    // nippuTable.grantReadWriteData(dbUpdateHandler);
+    //
+    // new events.Rule(this, "dbUpdateHandlerScheduleRule", {
+    //   schedule: events.Schedule.expression(
+    //     `rate(20 minutes)`
+    //   ),
+    //   targets: [new targets.LambdaFunction(dbUpdateHandler)]
+    // });
 
     // IAM
 
-    [jaksoHandler, timedOperationsHandler].forEach(
+    [jaksoHandler, timedOperationsHandler, niputusHandler].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
