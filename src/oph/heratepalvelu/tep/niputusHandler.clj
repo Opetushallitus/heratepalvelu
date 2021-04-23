@@ -25,7 +25,7 @@
                {:filter-expression (str "kasittelytila = " (:ei-niputettu c/kasittelytilat))}
                (:nippu-table env))
         niput (filter #(< 0 (compare (:niputuspvm %1)
-                                      (t/minus (t/today) (t/days 60))))
+                                      (str (t/minus (t/today) (t/days 60)))))
                       (conj prev nippu))
         jaksot (flatten
                  (map
