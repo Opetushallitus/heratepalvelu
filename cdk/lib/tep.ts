@@ -64,22 +64,22 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       serverSideEncryption: true
     });
 
-    nippuTable.addGlobalSecondaryIndex({
-      indexName: "niputusIndex",
-      partitionKey: {
-        name: "kasittelytila",
-        type: dynamodb.AttributeType.STRING
-      },
-      sortKey: {
-        name: "niputuspvm",
-        type: dynamodb.AttributeType.STRING
-      },
-      nonKeyAttributes: [
-        "ohjaaja_ytunnus_kj_tutkinto",
-        "koulutuksenjarjestaja"
-      ],
-      projectionType: dynamodb.ProjectionType.INCLUDE
-    });
+    // nippuTable.addGlobalSecondaryIndex({
+    //   indexName: "niputusIndex",
+    //   partitionKey: {
+    //     name: "kasittelytila",
+    //     type: dynamodb.AttributeType.STRING
+    //   },
+    //   sortKey: {
+    //     name: "niputuspvm",
+    //     type: dynamodb.AttributeType.STRING
+    //   },
+    //   nonKeyAttributes: [
+    //     "ohjaaja_ytunnus_kj_tutkinto",
+    //     "koulutuksenjarjestaja"
+    //   ],
+    //   projectionType: dynamodb.ProjectionType.INCLUDE
+    // });
 
     const organisaatioWhitelistTable = new dynamodb.Table(
         this,
