@@ -182,6 +182,7 @@
    :oppilaitos_oid      oppilaitos
    :tunniste            tunniste
    :tunnukset           tunnukset
+   :tutkintotunnus      ""
    :voimassa_alkupvm    (str (t/today))
    :request_id          request-id})
 

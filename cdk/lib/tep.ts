@@ -76,7 +76,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       },
       nonKeyAttributes: [
         "ohjaaja_ytunnus_kj_tutkinto",
-        "koulutuksenjarjestaja"
+        "koulutuksenjarjestaja",
+        "tutkinto"
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
