@@ -50,6 +50,7 @@
                       (arvo/build-niputus-request-body
                         (:koulutuksenjarjestaja nippu)
                         (first (sequence oppilaitokset))
+                        (:tutkinto nippu)
                         tunniste
                         (sequence tunnukset)
                         request-id))]

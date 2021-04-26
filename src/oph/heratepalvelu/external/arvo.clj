@@ -175,6 +175,7 @@
 
 (defn build-niputus-request-body [koulutustoimija
                                   oppilaitos
+                                  tutkinto
                                   tunniste
                                   tunnukset
                                   request-id]
@@ -182,7 +183,7 @@
    :oppilaitos_oid      oppilaitos
    :tunniste            tunniste
    :tunnukset           tunnukset
-   :tutkintotunnus      ""
+   :tutkintotunnus      tutkinto
    :voimassa_alkupvm    (str (t/today))
    :request_id          request-id})
 
