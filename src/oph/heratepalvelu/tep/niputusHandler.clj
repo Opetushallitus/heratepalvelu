@@ -48,10 +48,8 @@
                      "_" (t/today) "_" (c/rand-str 6))
           arvo-resp (arvo/create-nippu-kyselylinkki
                       (arvo/build-niputus-request-body
-                        (:koulutuksenjarjestaja nippu)
-                        (first (sequence oppilaitokset))
-                        (:tutkinto nippu)
                         tunniste
+                        (assoc nippu :tyopaikka (:tyopaikan_nimi (first jaksot)))
                         (sequence tunnukset)
                         request-id))]
       (if (some? (:nippulinkki arvo-resp))
