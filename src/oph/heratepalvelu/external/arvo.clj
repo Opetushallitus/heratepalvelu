@@ -173,17 +173,16 @@
     (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
     {:basic-auth   [(:arvo-user env) @pwd]}))
 
-(defn build-niputus-request-body [koulutustoimija
-                                  oppilaitos
-                                  tutkinto
-                                  tunniste
+(defn build-niputus-request-body [tunniste
+                                  nippu
                                   tunnukset
                                   request-id]
-  {:koulutustoimija_oid koulutustoimija
-   :oppilaitos_oid      oppilaitos
-   :tunniste            tunniste
+  {:tunniste            tunniste
+   :koulutustoimija_oid (:koulutuksenjarjestaja nippu)
+   :tutkintotunnus      (:tutkinto nippu)
+   :tyonantaja          (:ytunnus nippu)
+   :tyopaikka           (:tyopaikka nippu)
    :tunnukset           tunnukset
-   :tutkintotunnus      tutkinto
    :voimassa_alkupvm    (str (t/today))
    :request_id          request-id})
 

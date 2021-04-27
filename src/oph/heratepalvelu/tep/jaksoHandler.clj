@@ -128,6 +128,7 @@
                                                     tutkinto)]
                  :ohjaaja                     [:s (:tyopaikkaohjaaja-nimi herate)]
                  :ytunnus                     [:s (:tyopaikan-ytunnus herate)]
+                 :tyopaikka                   [:s (:tyopaikan-nimi herate)]
                  :koulutuksenjarjestaja       [:s koulutustoimija]
                  :tutkinto                    [:s tutkinto]
                  :kasittelytila               [:s (:ei-niputettu c/kasittelytilat)]
