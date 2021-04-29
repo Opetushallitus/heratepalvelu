@@ -75,7 +75,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       nonKeyAttributes: [
-        "ohjaaja_ytunnus_kj_tutkinto",
         "koulutuksenjarjestaja",
         "tutkinto",
         "ytunnus",
