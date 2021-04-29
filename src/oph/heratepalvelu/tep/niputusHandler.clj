@@ -35,13 +35,7 @@
                                       {:index "niputusIndex"}
                                       (:jaksotunnus-table env)))
                    niput))
-        {tunnukset :tunnukset oppilaitokset :oppilaitokset}
-        (reduce
-          (fn [res item]
-            {:tunnukset (conj (:tunnukset res) (:tunnus item))
-             :oppilaitokset (conj (:oppilaitokset res) (:oppilaitos item))})
-          {:tunnukset #{} :oppilaitokset #{}}
-          jaksot)]
+        tunnukset (map :tunnus jaksot)]
     (let [tunniste (str
                      (str/join
                        (str/split (:tyopaikan_nimi (first jaksot)) #"\s"))
