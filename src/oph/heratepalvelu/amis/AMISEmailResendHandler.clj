@@ -3,7 +3,7 @@
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.common :refer [kausi lahetystilat]]
+            [oph.heratepalvelu.common :refer [kausi kasittelytilat]]
             [environ.core :refer [env]]
             [schema.core :as s])
   (:import (com.fasterxml.jackson.core JsonParseException)
@@ -51,7 +51,7 @@
                                              "#sahkoposti = :sahkoposti")
                        :expr-attr-names {"#lahetystila" "lahetystila"
                                          "#sahkoposti" "sahkoposti"}
-                       :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty lahetystilat)]
+                       :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty kasittelytilat)]
                                          ":sahkoposti" [:s sahkoposti]}}))
                   (log/error "Ei kyselylinkkiä " kyselylinkki)))
               (catch AwsServiceException e

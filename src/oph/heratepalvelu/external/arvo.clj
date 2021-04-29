@@ -173,31 +173,28 @@
     (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
     {:basic-auth   [(:arvo-user env) @pwd]}))
 
-(defn- rand-str [len]
-  (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
-
-(defn build-niputus-request-body [koulutustoimija
-                                  oppilaitos
+(defn build-niputus-request-body [tunniste
+                                  nippu
                                   tunnukset
                                   request-id]
-  (let [oppilaitos (org/get-organisaatio oppilaitos)
-        oppilaitos-nimi (str/join (str/split (:fi (:nimi oppilaitos)) #"\s"))
-        tunniste (str oppilaitos-nimi "_" (t/today) "_" (rand-str 6))]
-    {:koulutustoimija_oid koulutustoimija
-     :oppilaitos_oid      oppilaitos
-     :tunniste            tunniste
-     :tunnukset           tunnukset
-     :voimassa_alkupvm    (str (t/today))
-     :request_id          request-id}))
+  {:tunniste            tunniste
+   :koulutustoimija_oid (:koulutuksenjarjestaja nippu)
+   :tutkintotunnus      (:tutkinto nippu)
+   :tyonantaja          (:ytunnus nippu)
+   :tyopaikka           (:tyopaikka nippu)
+   :tunnukset           tunnukset
+   :voimassa_alkupvm    (str (t/today))
+   :request_id          request-id})
 
 (defn create-nippu-kyselylinkki [data]
   (try
     (let [resp (client/post
-                 (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/nippu")
+                 (str (:arvo-url env) "tyoelamapalaute/v1/nippu")
                  {:content-type "application/json"
                   :body         (generate-string data)
                   :basic-auth   [(:arvo-user env) @pwd]
                   :as           :json})]
+      (log/info resp)
       (:body resp))
     (catch ExceptionInfo e
       (log/error e)

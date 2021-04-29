@@ -3,7 +3,7 @@
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amispalaute-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :refer [has-time-to-answer? lahetystilat send-lahetys-data-to-ehoks]]
+            [oph.heratepalvelu.common :refer [has-time-to-answer? kasittelytilat send-lahetys-data-to-ehoks]]
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [cheshire.core :refer [parse-string]])
@@ -17,7 +17,7 @@
 
 (defn -handleSendAMISEmails [this event context]
   (log-caller-details-scheduled "handleSendAMISEmails" event context)
-  (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty lahetystilat)]]
+  (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty kasittelytilat)]]
                                         :alkupvm     [:le [:s (.toString (t/today))]]}
                                        {:index "lahetysIndex"
                                         :limit 50})]
@@ -42,7 +42,7 @@
                                      "#vpid" "viestintapalvelu-id"
                                      "#lahetyspvm" "lahetyspvm"
                                      "#muistutukset" "muistutukset"}
-                   :expr-attr-vals  {":lahetystila" [:s (:viestintapalvelussa lahetystilat)]
+                   :expr-attr-vals  {":lahetystila" [:s (:viestintapalvelussa kasittelytilat)]
                                      ":vpid" [:n id]
                                      ":lahetyspvm" [:s lahetyspvm]
                                      ":muistutukset" [:n 0]}})
@@ -52,7 +52,7 @@
                   {:kyselylinkki (:kyselylinkki email)
                    :lahetyspvm lahetyspvm
                    :sahkoposti (:sahkoposti email)
-                   :lahetystila (:viestintapalvelussa lahetystilat)}))
+                   :lahetystila (:viestintapalvelussa kasittelytilat)}))
               (catch AwsServiceException e
                 (log/error "Viesti " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
                 (log/error e))
@@ -67,13 +67,13 @@
                                        "#lahetyspvm = :lahetyspvm")
                  :expr-attr-names {"#lahetystila" "lahetystila"
                                    "#lahetyspvm" "lahetyspvm"}
-                 :expr-attr-vals {":lahetystila" [:s (:vastausaika-loppunut lahetystilat)]
+                 :expr-attr-vals {":lahetystila" [:s (:vastausaika-loppunut kasittelytilat)]
                                   ":lahetyspvm" [:s (str (t/today))]}})
               (catch Exception e
                 (log/error "Virhe lähetystilan päivityksessä herätteelle, jonka vastausaika umpeutunut" email)
                 (log/error e))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty lahetystilat)]]
+        (recur (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty kasittelytilat)]]
                                  :alkupvm     [:le [:s (.toString (t/today))]]}
                                 {:index "lahetysIndex"
                                  :limit 10}))))))

@@ -109,7 +109,9 @@
                                            (:index options)
                                            (.indexName (:index options))
                                            (:limit options)
-                                           (.limit (int (:limit options))))
+                                           (.limit (int (:limit options)))
+                                           (:filter-expression options)
+                                           (.filterExpression (:filter-expression options)))
                                          (.build)))
          items (.items response)]
      (into [] (map
@@ -149,9 +151,11 @@
           item (.item response)]
       (map-attribute-values-to-vals item))))
 
-(defn scan [filter-exp table]
+(defn scan [options table]
   (let [req (-> (ScanRequest/builder)
-                (.filterExpression filter-exp)
+                (cond->
+                  (:filter-expression options)
+                  (.filterExpression (:filter-expression options)))
                 (.tableName table)
                 (.build))
         response (.scan ddb-client req)
