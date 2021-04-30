@@ -6,9 +6,11 @@
             [clojure.tools.logging :as log]
             [clj-time.core :as t]
             [environ.core :refer [env]]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [clj-http.util :as util])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (clojure.lang ExceptionInfo)))
+           (clojure.lang ExceptionInfo)
+           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
 
 (gen-class
   :name "oph.heratepalvelu.tep.niputusHandler"
@@ -36,10 +38,10 @@
                                       (:jaksotunnus-table env)))
                    niput))
         tunnukset (map :tunnus jaksot)]
-    (let [tunniste (str
-                     (str/join
-                       (str/split (:tyopaikan_nimi (first jaksot)) #"\s"))
-                     "_" (t/today) "_" (c/rand-str 6))
+    (let [tunniste (util/url-encode
+                     (str
+                       (str/join (str/split (:tyopaikan_nimi (first jaksot)) #"\s"))
+                       "_" (t/today) "_" (c/rand-str 6)))
           arvo-resp (arvo/create-nippu-kyselylinkki
                       (arvo/build-niputus-request-body
                         tunniste
@@ -53,17 +55,24 @@
              :niputuspvm                  [:s (:niputuspvm nippu)]}
             {:update-expr     (str "SET #tila = :tila, "
                                    "#linkki = :linkki, "
-                                   "#voimassa = :voimassa")
+                                   "#voimassa = :voimassa, "
+                                   "#req = :req")
+             :cond-expr (str "attribute_not_exists(linkki)")
              :expr-attr-names {"#tila" "kasittelytila"
                                "#linkki" "kyselylinkki"
-                               "#voimassa" "voimassaloppupvm"}
+                               "#voimassa" "voimassaloppupvm"
+                               "#req" "request_id"}
              :expr-attr-vals {":tila"     [:s (:ei-lahetetty c/kasittelytilat)]
                               ":linkki"   [:s (:nippulinkki arvo-resp)]
-                              ":voimassa" [:s (:voimassa_loppupvm arvo-resp)]}}
+                              ":voimassa" [:s (:voimassa_loppupvm arvo-resp)]
+                              ":req"      [:s request-id]}}
             (:nippu-table env))
+          (catch ConditionalCheckFailedException e
+            (log/warn "Nipulla " (:ohjaaja_ytunnus_kj_tutkinto nippu) " on jo kantaan tallennettu kyselylinkki.")
+            (arvo/delete-nippukyselylinkki tunniste))
           (catch AwsServiceException e
             (log/error "Virhe DynamoDB tallennuksessa " e)
-            (arvo/delete-nippukyselylinkki (:tunniste nippu))
+            (arvo/delete-nippukyselylinkki tunniste)
             (throw e)))
         (log/error "Ei tunnusta " nippu request-id))
       (doseq [n prev]
@@ -72,8 +81,7 @@
             {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto n)]
              :niputuspvm                  [:s (:niputuspvm n)]}
             {:update-expr     (str "SET #tila = :tila, "
-                                   "#linkki = :linkki, "
-                                   "#voimassa = :voimassa")
+                                   "#sisaltyy = :sisaltyy")
              :expr-attr-names {"#tila" "kasittelytila"
                                "#sisaltyy" "sisaltyy"}
              :expr-attr-vals {":tila"     [:s (:yhdistetty c/kasittelytilat)]

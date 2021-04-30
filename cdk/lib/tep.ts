@@ -51,6 +51,19 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
 
+    jaksotunnusTable.addGlobalSecondaryIndex({
+      indexName: "uniikkiusIndex",
+      partitionKey: {
+        name: "tunnus",
+        type: dynamodb.AttributeType.STRING
+      },
+      nonKeyAttributes: [
+        "request_id",
+        "hoks_id"
+      ],
+      projectionType: dynamodb.ProjectionType.INCLUDE
+    });
+
     const nippuTable = new dynamodb.Table(this, "nippuTable", {
       partitionKey: {
         name: "ohjaaja_ytunnus_kj_tutkinto",

@@ -49,6 +49,14 @@
     true
     (log/warn "Osaamisenhankkimistapa id:llä " id "on jo käsitelty.")))
 
+(defn check-duplicate-tunnus [tunnus]
+  (let [items (ddb/query-items {:tunnus [:s tunnus]}
+                               {:index "uniikkiusIndex"}
+                               (:jaksotunnus-table env))]
+    (if (empty? items)
+      true
+      (log/error "Tunnus " tunnus " on jo käytössä. " items))))
+
 (defn save-jaksotunnus [herate opiskeluoikeus koulutustoimija]
   (let [tapa-id (:hankkimistapa-id herate)]
     (when (check-duplicate-hankkimistapa tapa-id)
