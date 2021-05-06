@@ -74,7 +74,21 @@
             (log/error "Virhe DynamoDB tallennuksessa " e)
             (arvo/delete-nippukyselylinkki tunniste)
             (throw e)))
-        (log/error "Ei tunnusta " nippu request-id))
+        (do (log/error "Virhe niputuksessa " nippu request-id)
+            (ddb/update-item
+              {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+               :niputuspvm                  [:s (:niputuspvm nippu)]}
+              {:update-expr     (str "SET #tila = :tila, "
+                                     "#reason = :reason, "
+                                     "#req = :req")
+               :cond-expr (str "attribute_not_exists(linkki)")
+               :expr-attr-names {"#tila" "kasittelytila"
+                                 "#reason" "reason"
+                                 "#req" "request_id"}
+               :expr-attr-vals {":tila"     [:s "niputusvirhe"]
+                                ":reason"   [:s arvo-resp]
+                                ":req"      [:s request-id]}}
+              (:nippu-table env))))
       (doseq [n prev]
         (try
           (ddb/update-item

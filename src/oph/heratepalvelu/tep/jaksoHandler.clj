@@ -116,7 +116,8 @@
                                                    (:tyopaikan-ytunnus herate) "/"
                                                    koulutustoimija "/"
                                                    tutkinto)]}]
-          (when (some? tunnus)
+          (when (and (some? tunnus)
+                     (check-duplicate-tunnus tunnus))
             (try
               (ddb/put-item
                 (cond-> db-data
