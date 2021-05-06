@@ -81,12 +81,11 @@
               {:update-expr     (str "SET #tila = :tila, "
                                      "#reason = :reason, "
                                      "#req = :req")
-               :cond-expr (str "attribute_not_exists(linkki)")
                :expr-attr-names {"#tila" "kasittelytila"
                                  "#reason" "reason"
                                  "#req" "request_id"}
                :expr-attr-vals {":tila"     [:s "niputusvirhe"]
-                                ":reason"   [:s arvo-resp]
+                                ":reason"   [:s (or (str arvo-resp) "no reason in response")]
                                 ":req"      [:s request-id]}}
               (:nippu-table env))))
       (doseq [n prev]
