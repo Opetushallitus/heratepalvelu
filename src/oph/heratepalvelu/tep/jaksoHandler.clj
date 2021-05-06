@@ -50,7 +50,7 @@
     (log/warn "Osaamisenhankkimistapa id:llä " id "on jo käsitelty.")))
 
 (defn check-duplicate-tunnus [tunnus]
-  (let [items (ddb/query-items {:tunnus [:s tunnus]}
+  (let [items (ddb/query-items {:tunnus [:eq [:s tunnus]]}
                                {:index "uniikkiusIndex"}
                                (:jaksotunnus-table env))]
     (if (empty? items)
