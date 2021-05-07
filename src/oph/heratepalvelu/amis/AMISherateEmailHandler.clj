@@ -29,7 +29,8 @@
             (try
               (let [id (:id (send-email {:subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
                                          :body (amispalaute-html email)
-                                         :address (:sahkoposti email)}))
+                                         :address (:sahkoposti email)
+                                         :sender "Amis-palaute-respons-feedback"}))
                     lahetyspvm (str (t/today))]
                 (ddb/update-item
                   {:toimija_oppija [:s (:toimija_oppija email)]

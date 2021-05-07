@@ -118,41 +118,43 @@
                                       koulutustoimija
                                       suoritus
                                       niputuspvm]
-
-  (log/info "Opiskeluoikeus " (:oid opiskeluoikeus))
-  (log/info "Osaamisalat " (:osaamisala suoritus))
-  (log/info "Tutkintonimikkeet " (:tutkintonimike suoritus))
-  {:koulutustoimija_oid       koulutustoimija
-   :tyonantaja                (:tyopaikan-ytunnus herate)
-   :tyopaikka                 (:tyopaikan-nimi herate)
-   :tutkintotunnus            (get-in
-                                suoritus
-                                [:koulutusmoduuli
-                                 :tunniste
-                                 :koodiarvo])
-   :tutkinnon_osa             (when (:tutkinnonosa-koodi herate)
-                                (last
+  (let [osaamisalat (filter
+                      #(or (nil? (:loppu %1))
+                           (> (compare (:loppu %1)
+                                       (str (t/today)))
+                              0))
+                      (:osaamisala suoritus))]
+    {:koulutustoimija_oid       koulutustoimija
+     :tyonantaja                (:tyopaikan-ytunnus herate)
+     :tyopaikka                 (:tyopaikan-nimi herate)
+     :tutkintotunnus            (get-in
+                                  suoritus
+                                  [:koulutusmoduuli
+                                   :tunniste
+                                   :koodiarvo])
+     :tutkinnon_osa             (when (:tutkinnonosa-koodi herate)
+                                  (last
+                                    (str/split
+                                      (:tutkinnonosa-koodi herate)
+                                      #"_")))
+     :paikallinen_tutkinnon_osa (:tutkinnonosa-nimi herate)
+     :tutkintonimike            (map
+                                  :koodiarvo
+                                  (:tutkintonimike suoritus))
+     :osaamisala                (map
+                                  #(or (:koodiarvo (:osaamisala %1))
+                                       (:koodiarvo %1))
+                                  osaamisalat)
+     :tyopaikkajakson_alkupvm   (:alkupvm herate)
+     :tyopaikkajakson_loppupvm  (:loppupvm herate)
+     :sopimustyyppi             (last
                                   (str/split
-                                    (:tutkinnonosa-koodi herate)
-                                    #"_")))
-   :paikallinen_tutkinnon_osa (:tutkinnonosa-nimi herate)
-   :tutkintonimike            (map
-                                :koodiarvo
-                                (:tutkintonimike suoritus))
-   :osaamisala                (map
-                                #(or (:koodiarvo (:osaamisala %1))
-                                     (:koodiarvo %1))
-                                (:osaamisala suoritus))
-   :tyopaikkajakson_alkupvm   (:alkupvm herate)
-   :tyopaikkajakson_loppupvm  (:loppupvm herate)
-   :sopimustyyppi             (last
-                                (str/split
-                                  (:hankkimistapa-tyyppi herate)
-                                  #"_"))
-   :vastaamisajan_alkupvm     niputuspvm
-   :oppilaitos_oid            (:oid (:oppilaitos opiskeluoikeus))
-   :toimipiste_oid            (get-toimipiste suoritus)
-   :request_id                request-id})
+                                    (:hankkimistapa-tyyppi herate)
+                                    #"_"))
+     :vastaamisajan_alkupvm     niputuspvm
+     :oppilaitos_oid            (:oid (:oppilaitos opiskeluoikeus))
+     :toimipiste_oid            (get-toimipiste suoritus)
+     :request_id                request-id}))
 
 (defn create-jaksotunnus [data]
   (try

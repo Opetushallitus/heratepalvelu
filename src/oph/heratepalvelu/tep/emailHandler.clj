@@ -1,1 +1,97 @@
-(ns oph.heratepalvelu.tep.emailHandler)
+(ns oph.heratepalvelu.tep.emailHandler
+  (:require [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.viestintapalvelu :as vp]
+            [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.common :as c]
+            [clojure.tools.logging :as log]
+            [environ.core :refer [env]]
+            [clj-time.core :as t]
+            [cheshire.core :refer [parse-string]])
+  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
+
+(gen-class
+  :name "oph.heratepalvelu.tep.EmailHandler"
+  :methods [[^:static handleSendTEPEmails
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]])
+
+(defn- pilotti-lahetysosoite [email jaksot]
+  (let [item (ddb/get-item {:organisaatio-oid [:s (:koulutuksenjarjestaja email)]}
+                           (:orgwhitelist-table env))
+        osoite (:pilottiosoite item)]
+    (when (some? osoite)
+      (if (= "ohjaaja" osoite)
+        (some :ohjaaja_email jaksot)
+        osoite))))
+
+(defn -handleSendTEPEmails [this event context]
+  (log-caller-details-scheduled "handleSendTEPEmails" event context)
+  (loop [lahetettavat (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
+                                        :niputuspvm    [:le [:s (.toString (t/today))]]}
+                                       {:index "niputusIndex"
+                                        :limit 20}
+                                       (:nippu-table env))]
+    (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
+    (when (seq lahetettavat)
+      (doseq [email lahetettavat]
+        (let [jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
+                                       :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
+                                      {:index "niputusIndex"}
+                                      (:jaksotunnus-table env))
+              oppilaitokset (seq (into #{}
+                                       (map
+                                         #(:nimi (org/get-organisaatio (:oppilaitos %1)))
+                                         jaksot)))
+              osoite (pilotti-lahetysosoite email jaksot)]
+          (if (some? osoite)
+            (if (c/has-time-to-answer? (:voimassaloppupvm email))
+              (try
+                (let [id (:id (vp/send-email {:subject "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
+                                              :body (vp/tyopaikkaohjaaja-html email oppilaitokset)
+                                              :address osoite
+                                              :sender "Opetushallitus – Utbildningsstyrelsen"}))
+                      lahetyspvm (str (t/today))]
+                  (ddb/update-item
+                    {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
+                     :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
+                    {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
+                                           "#vpid = :vpid, "
+                                           "#lahetyspvm = :lahetyspvm, "
+                                           "#muistutukset = :muistutukset")
+                     :expr-attr-names {"#kasittelytila" "kasittelytila"
+                                       "#vpid" "viestintapalvelu-id"
+                                       "#lahetyspvm" "lahetyspvm"
+                                       "#muistutukset" "muistutukset"}
+                     :expr-attr-vals  {":kasittelytila" [:s (:viestintapalvelussa c/kasittelytilat)]
+                                       ":vpid" [:n id]
+                                       ":lahetyspvm" [:s lahetyspvm]
+                                       ":muistutukset" [:n 0]}}
+                    (:nippu-table env)))
+                (catch AwsServiceException e
+                  (log/error "Viesti " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
+                  (log/error e))
+                (catch Exception e
+                  (log/error "Virhe viestin lähetyksessä!" email)
+                  (log/error e)))
+              (try
+                (ddb/update-item
+                  {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
+                   :niputuspvm    [:le [:s (.toString (t/today))]]}
+                  {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                                         "#lahetyspvm = :lahetyspvm")
+                   :expr-attr-names {"#lahetystila" "lahetystila"
+                                     "#lahetyspvm" "lahetyspvm"}
+                   :expr-attr-vals {":lahetystila" [:s (:vastausaika-loppunut c/kasittelytilat)]
+                                    ":lahetyspvm" [:s (str (t/today))]}}
+                  (:nippu-table env))
+                (catch Exception e
+                  (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" email)
+                  (log/error e))))
+            (log/warn "Ei ohjaajan sahköpostia " (:ohjaaja_ytunnus_kj_tutkinto email) (:niputuspvm email)))))
+      (when (< 60000 (.getRemainingTimeInMillis context))
+        (recur (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
+                                 :niputuspvm  [:le [:s (.toString (t/today))]]}
+                                {:index "niputusIndex"
+                                 :limit 10}
+                                (:nippu-table env)))))))
