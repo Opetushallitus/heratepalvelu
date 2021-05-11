@@ -46,7 +46,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       nonKeyAttributes: [
         "tunnus",
         "oppilaitos",
-        "tyopaikan_nimi"
+        "tyopaikan_nimi",
+        "ohjaaja_email"
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
