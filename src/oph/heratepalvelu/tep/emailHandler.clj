@@ -43,8 +43,8 @@
                     (:niputuspvm email) ","
                     (reduce #(conj %1 (:ohjaaja_email %2)) #{} jaksot))
           (ddb/update-item
-            {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
-             :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
+            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
+             :niputuspvm                  [:s (:niputuspvm email)]}
             {:update-expr      "SET #kasittelytila = :kasittelytila"
              :expr-attr-names {"#kasittelytila" "kasittelytila"}
              :expr-attr-vals  {":kasittelytila" [:s "email-mismatch"]}}
@@ -78,8 +78,8 @@
                                               :sender "Opetushallitus – Utbildningsstyrelsen"}))
                       lahetyspvm (str (t/today))]
                   (ddb/update-item
-                    {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
-                     :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
+                    {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
+                     :niputuspvm                  [:s (:niputuspvm email)]}
                     {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
                                            "#vpid = :vpid, "
                                            "#lahetyspvm = :lahetyspvm, "
@@ -101,8 +101,8 @@
                   (log/error e)))
               (try
                 (ddb/update-item
-                  {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-                   :niputuspvm    [:le [:s (str (t/today))]]}
+                  {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
+                   :niputuspvm                  [:s (:niputuspvm email)]}
                   {:update-expr     (str "SET #lahetystila = :lahetystila, "
                                          "#lahetyspvm = :lahetyspvm")
                    :expr-attr-names {"#lahetystila" "lahetystila"
