@@ -32,8 +32,8 @@
           pilottiosoite)
         (do (log/warn "Ei pilottiosoitetta organisaatiolle" (:koulutuksenjarjestaja email))
             (ddb/update-item
-              {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
-               :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
+              {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
+               :niputuspvm                  [:s (:niputuspvm email)]}
               {:update-expr      "SET #kasittelytila = :kasittelytila"
                :expr-attr-names {"#kasittelytila" "kasittelytila"}
                :expr-attr-vals  {":kasittelytila" [:s "ei-pilottiosoitetta"]}}
