@@ -221,7 +221,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     // emailHandler
 
-    const emailHandler = new lambda.Function(this, "emailHandler", {
+    const emailHandler = new lambda.Function(this, "TEPemailHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
       environment: {

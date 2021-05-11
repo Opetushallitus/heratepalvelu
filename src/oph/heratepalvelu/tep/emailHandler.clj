@@ -11,7 +11,7 @@
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
-  :name "oph.heratepalvelu.tep.EmailHandler"
+  :name "oph.heratepalvelu.tep.emailHandler"
   :methods [[^:static handleSendTEPEmails
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
