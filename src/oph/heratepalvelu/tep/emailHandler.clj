@@ -19,16 +19,34 @@
 (defn- pilotti-lahetysosoite [email jaksot]
   (let [item (ddb/get-item {:organisaatio-oid [:s (:koulutuksenjarjestaja email)]}
                            (:orgwhitelist-table env))
-        osoite (:pilottiosoite item)]
-    (when (some? osoite)
-      (if (= "ohjaaja" osoite)
-        (some :ohjaaja_email jaksot)
-        osoite))))
+        pilottiosoite (:pilottiosoite item)
+        ohjaaja-email (:ohjaaja_email (reduce #(if (and (some? (:ohjaaja_email %1))
+                                                        (= (:ohjaaja_email %1) (:ohjaaja_email %2)))
+                                                 %1
+                                                 (reduced nil))
+                                              jaksot))]
+    (if (some? ohjaaja-email)
+      (if (some? pilottiosoite)
+        (if (= "ohjaaja" pilottiosoite)
+          ohjaaja-email
+          pilottiosoite)
+        (log/warn "Ei pilottiosoitetta organisaatiolle" (:koulutuksenjarjestaja email)))
+      (do (log/warn "Ei yksiselitteistä ohjaajan sahköpostia "
+                    (:ohjaaja_ytunnus_kj_tutkinto email) ","
+                    (:niputuspvm email) ","
+                    (reduce #(conj %1 (:ohjaaja_email %2)) #{} jaksot))
+          (ddb/update-item
+            {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
+             :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
+            {:update-expr      "SET #kasittelytila = :kasittelytila"
+             :expr-attr-names {"#kasittelytila" "kasittelytila"}
+             :expr-attr-vals  {":kasittelytila" [:s "email-mismatch"]}}
+            (:nippu-table env))))))
 
 (defn -handleSendTEPEmails [this event context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
   (loop [lahetettavat (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-                                        :niputuspvm    [:le [:s (.toString (t/today))]]}
+                                        :niputuspvm    [:le [:s (str (t/today))]]}
                                        {:index "niputusIndex"
                                         :limit 20}
                                        (:nippu-table env))]
@@ -44,7 +62,7 @@
                                          #(:nimi (org/get-organisaatio (:oppilaitos %1)))
                                          jaksot)))
               osoite (pilotti-lahetysosoite email jaksot)]
-          (if (some? osoite)
+          (when (some? osoite)
             (if (c/has-time-to-answer? (:voimassaloppupvm email))
               (try
                 (let [id (:id (vp/send-email {:subject "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
@@ -77,7 +95,7 @@
               (try
                 (ddb/update-item
                   {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-                   :niputuspvm    [:le [:s (.toString (t/today))]]}
+                   :niputuspvm    [:le [:s (str (t/today))]]}
                   {:update-expr     (str "SET #lahetystila = :lahetystila, "
                                          "#lahetyspvm = :lahetyspvm")
                    :expr-attr-names {"#lahetystila" "lahetystila"
@@ -87,11 +105,10 @@
                   (:nippu-table env))
                 (catch Exception e
                   (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" email)
-                  (log/error e))))
-            (log/warn "Ei ohjaajan sahköpostia " (:ohjaaja_ytunnus_kj_tutkinto email) (:niputuspvm email)))))
+                  (log/error e)))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-                                 :niputuspvm  [:le [:s (.toString (t/today))]]}
+                                 :niputuspvm  [:le [:s (str (t/today))]]}
                                 {:index "niputusIndex"
                                  :limit 10}
                                 (:nippu-table env)))))))

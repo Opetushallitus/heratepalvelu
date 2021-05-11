@@ -37,11 +37,12 @@
                                       {:index "niputusIndex"}
                                       (:jaksotunnus-table env)))
                    niput))
-        tunnukset (map :tunnus jaksot)]
-    (let [tunniste (util/url-encode
-                     (str
-                       (str/join (str/split (:tyopaikan_nimi (first jaksot)) #"\s"))
-                       "_" (t/today) "_" (c/rand-str 6)))
+        tunnukset (reduce #(conj %1 (:tunnus %2))
+                          #{} jaksot)]
+    (let [tunniste (str
+                     (str/replace (:tyopaikan_nimi (first jaksot))
+                                  #"[\\|/|\?|#|\s]" "_")
+                     "_" (t/today) "_" (c/rand-str 6))
           arvo-resp (arvo/create-nippu-kyselylinkki
                       (arvo/build-niputus-request-body
                         tunniste
