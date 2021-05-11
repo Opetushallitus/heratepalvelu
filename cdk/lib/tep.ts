@@ -228,6 +228,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         ...this.envVars,
         jaksotunnus_table: jaksotunnusTable.tableName,
         nippu_table: nippuTable.tableName,
+        orgwhitelist_table: organisaatioWhitelistTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-emailHandler`,
       },
       memorySize: Token.asNumber(1024),
@@ -244,6 +245,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     });
 
     jaksotunnusTable.grantReadData(emailHandler);
+    organisaatioWhitelistTable.grantReadData(emailHandler);
     nippuTable.grantReadWriteData(emailHandler);
 
     // DLQ tyhjennys
