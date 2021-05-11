@@ -30,7 +30,14 @@
         (if (= "ohjaaja" pilottiosoite)
           ohjaaja-email
           pilottiosoite)
-        (log/warn "Ei pilottiosoitetta organisaatiolle" (:koulutuksenjarjestaja email)))
+        (do (log/warn "Ei pilottiosoitetta organisaatiolle" (:koulutuksenjarjestaja email))
+            (ddb/update-item
+              {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
+               :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
+              {:update-expr      "SET #kasittelytila = :kasittelytila"
+               :expr-attr-names {"#kasittelytila" "kasittelytila"}
+               :expr-attr-vals  {":kasittelytila" [:s "ei-pilottiosoitetta"]}}
+              (:nippu-table env))))
       (do (log/warn "Ei yksiselitteistä ohjaajan sahköpostia "
                     (:ohjaaja_ytunnus_kj_tutkinto email) ","
                     (:niputuspvm email) ","
