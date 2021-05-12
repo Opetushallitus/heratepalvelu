@@ -121,7 +121,7 @@
                 [:p "Thank you for responding."]
                 [:p (str/join ", " (map #(or (:en %1) (:fi %1)) oppilaitokset))]
                 [:p "Survey to workplace instructors: " [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
-                [:p "This is a national feedback survey conducted in collaboration with National Agency for Education and Training (EDUFI) and Vocational Education and Training Institutions for all workplaces that have had students in apprenticeship training or training agreement training. Address source: EDUFI´s eHOKS-register."]]]])))
+                [:p "This is a national feedback survey conducted in collaboration with National Agency for Education and Training (EDUFI) and Vocational Education and Training Institutions for all workplaces that have had students in apprenticeship training or training agreement training. Address source: EDUFI's eHOKS-register."]]]])))
 
 (defn send-email [email]
   "Send email to viestintäpalvelu, parameter 'email' is a map containing keys

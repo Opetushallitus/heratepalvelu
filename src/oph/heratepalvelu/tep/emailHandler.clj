@@ -83,15 +83,18 @@
                     {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
                                            "#vpid = :vpid, "
                                            "#lahetyspvm = :lahetyspvm, "
-                                           "#muistutukset = :muistutukset")
+                                           "#muistutukset = :muistutukset, "
+                                           "#lahetysosoite = :lahetysosoite")
                      :expr-attr-names {"#kasittelytila" "kasittelytila"
                                        "#vpid" "viestintapalvelu-id"
                                        "#lahetyspvm" "lahetyspvm"
-                                       "#muistutukset" "muistutukset"}
+                                       "#muistutukset" "muistutukset"
+                                       "#lahetysosoite" "lahetysosoite"}
                      :expr-attr-vals  {":kasittelytila" [:s (:viestintapalvelussa c/kasittelytilat)]
                                        ":vpid" [:n id]
                                        ":lahetyspvm" [:s lahetyspvm]
-                                       ":muistutukset" [:n 0]}}
+                                       ":muistutukset" [:n 0]
+                                       ":lahetysosoite" [:s osoite]}}
                     (:nippu-table env)))
                 (catch AwsServiceException e
                   (log/error "Viesti " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
