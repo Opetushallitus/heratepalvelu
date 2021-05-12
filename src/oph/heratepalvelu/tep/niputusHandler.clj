@@ -113,7 +113,7 @@
            :niputuspvm
            #(* -1 (compare %1 %2))
            (ddb/query-items {:kasittelytila [:eq [:s (:ei-niputettu c/kasittelytilat)]]
-                             :niputuspvm    [:le [:s (.toString (t/today))]]}
+                             :niputuspvm    [:le [:s (str (t/today))]]}
                             {:index "niputusIndex"
                              :limit 10}
                             (:nippu-table env)))]
@@ -123,7 +123,7 @@
         (niputa nippu))
       (when (< 120000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:kasittelytila [:eq [:s (:ei-niputettu c/kasittelytilat)]]
-                                 :niputuspvm    [:le [:s (.toString (t/today))]]}
+                                 :niputuspvm    [:le [:s (str (t/today))]]}
                                 {:index "niputusIndex"
                                  :limit 10}
                                 (:nippu-table env)))))))

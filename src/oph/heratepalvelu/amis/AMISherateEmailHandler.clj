@@ -18,7 +18,7 @@
 (defn -handleSendAMISEmails [this event context]
   (log-caller-details-scheduled "handleSendAMISEmails" event context)
   (loop [lahetettavat (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty kasittelytilat)]]
-                                        :alkupvm     [:le [:s (.toString (t/today))]]}
+                                        :alkupvm     [:le [:s (str (t/today))]]}
                                        {:index "lahetysIndex"
                                         :limit 50})]
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
@@ -74,6 +74,6 @@
                 (log/error e))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty kasittelytilat)]]
-                                 :alkupvm     [:le [:s (.toString (t/today))]]}
+                                 :alkupvm     [:le [:s (str (t/today))]]}
                                 {:index "lahetysIndex"
                                  :limit 10}))))))

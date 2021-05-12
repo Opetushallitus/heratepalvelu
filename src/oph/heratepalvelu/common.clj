@@ -39,7 +39,7 @@
   (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
 
 (defn generate-uuid []
-  (.toString (UUID/randomUUID)))
+  (str (UUID/randomUUID)))
 
 (defn has-time-to-answer? [loppupvm]
   (when loppupvm

@@ -64,11 +64,11 @@
 (defn- query-muistukset [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
                     :lahetyspvm  [:between
-                                  [[:s (.toString
+                                  [[:s (str
                                          (t/minus
                                            (t/today)
                                            (t/days (- (* 5 (+ n 1)) 1))))]
-                                   [:s (.toString
+                                   [:s (str
                                          (t/minus
                                            (t/today)
                                            (t/days (* 5 n))))]]]}
