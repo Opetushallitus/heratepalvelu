@@ -103,11 +103,11 @@
                 (ddb/update-item
                   {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
                    :niputuspvm                  [:s (:niputuspvm email)]}
-                  {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                  {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
                                          "#lahetyspvm = :lahetyspvm")
-                   :expr-attr-names {"#lahetystila" "lahetystila"
+                   :expr-attr-names {"#kasittelytila" "kasittelytila"
                                      "#lahetyspvm" "lahetyspvm"}
-                   :expr-attr-vals {":lahetystila" [:s (:vastausaika-loppunut c/kasittelytilat)]
+                   :expr-attr-vals {":kasittelytila" [:s (:vastausaika-loppunut c/kasittelytilat)]
                                     ":lahetyspvm" [:s (str (t/today))]}}
                   (:nippu-table env))
                 (catch Exception e
