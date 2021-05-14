@@ -283,25 +283,25 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       enabled: false
     });
 
-    // const dbUpdateHandler = new lambda.Function(this, "dbUpdateHandler", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambdaCode,
-    //   environment: {
-    //     nippu_table: nippuTable.tableName
-    //   },
-    //   memorySize: Token.asNumber(1024),
-    //   timeout: Duration.seconds(900),
-    //   handler: "oph.heratepalvelu.tep.dbChanger::handleDBUpdate",
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-    // nippuTable.grantReadWriteData(dbUpdateHandler);
-    //
-    // new events.Rule(this, "dbUpdateHandlerScheduleRule", {
-    //   schedule: events.Schedule.expression(
-    //     `rate(20 minutes)`
-    //   ),
-    //   targets: [new targets.LambdaFunction(dbUpdateHandler)]
-    // });
+    const dbUpdateHandler = new lambda.Function(this, "dbUpdateHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        nippu_table: nippuTable.tableName
+      },
+      memorySize: Token.asNumber(1024),
+      timeout: Duration.seconds(900),
+      handler: "oph.heratepalvelu.tep.dbChanger::handleDBUpdate",
+      tracing: lambda.Tracing.ACTIVE
+    });
+    nippuTable.grantReadWriteData(dbUpdateHandler);
+
+    new events.Rule(this, "dbUpdateHandlerScheduleRule", {
+      schedule: events.Schedule.expression(
+        `rate(20 minutes)`
+      ),
+      targets: [new targets.LambdaFunction(dbUpdateHandler)]
+    });
 
     // IAM
 
