@@ -10,7 +10,7 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleDBUpdate [this event context]
-  (let [items (ddb/query-items {:kasittelytila [:ne [:s "ei_niputettu"]]
+  (let [items (ddb/query-items {:kasittelytila [:eq [:s "ei_lahetetty"]]
                                 :niputuspvm    [:le [:s (str (t/today))]]}
                                {:index "niputusIndex"
                                 :limit 10}
