@@ -37,7 +37,8 @@
               {:update-expr      "SET #kasittelytila = :kasittelytila"
                :expr-attr-names {"#kasittelytila" "kasittelytila"}
                :expr-attr-vals  {":kasittelytila" [:s "ei-pilottiosoitetta"]}}
-              (:nippu-table env))))
+              (:nippu-table env))
+            nil))
       (do (log/warn "Ei yksiselitteistä ohjaajan sahköpostia "
                     (:ohjaaja_ytunnus_kj_tutkinto email) ","
                     (:niputuspvm email) ","
@@ -48,7 +49,8 @@
             {:update-expr      "SET #kasittelytila = :kasittelytila"
              :expr-attr-names {"#kasittelytila" "kasittelytila"}
              :expr-attr-vals  {":kasittelytila" [:s "email-mismatch"]}}
-            (:nippu-table env))))))
+            (:nippu-table env))
+          nil))))
 
 (defn -handleSendTEPEmails [this event context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
