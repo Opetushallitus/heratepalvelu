@@ -23,7 +23,7 @@ const app = new cdk.App();
 new HeratepalveluAMISStack(app, "sieni-services-heratepalvelu", 'sieni', version);
 new HeratepalveluTEPStack(app, "sieni-services-heratepalvelu-tep", 'sieni', version);
 
-if (canDeploy) {
+if (true) {
   new HeratepalveluAMISStack(app, "pallero-services-heratepalvelu", 'pallero', version);
   new HeratepalveluTEPStack(app, "pallero-services-heratepalvelu-tep", 'pallero', version);
 

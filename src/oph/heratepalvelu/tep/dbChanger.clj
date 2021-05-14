@@ -9,7 +9,7 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleDBUpdate [this event context]
-  (let [items (ddb/scan {} (:nippu-table env))]
+  (let [items (ddb/scan {:filter-expression "kasittelytila != ei_niputettu"} (:nippu-table env))]
     (doseq [item items]
       (ddb/update-item
         {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]
