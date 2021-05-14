@@ -37,11 +37,12 @@
                                       {:index "niputusIndex"}
                                       (:jaksotunnus-table env)))
                    niput))
-        tunnukset (map :tunnus jaksot)]
-    (let [tunniste (util/url-encode
-                     (str
-                       (str/join (str/split (:tyopaikan_nimi (first jaksot)) #"\s"))
-                       "_" (t/today) "_" (c/rand-str 6)))
+        tunnukset (reduce #(conj %1 (:tunnus %2))
+                          #{} jaksot)]
+    (let [tunniste (str
+                     (str/replace (:tyopaikan_nimi (first jaksot))
+                                  #"[\\|/|\?|#|\s]" "_")
+                     "_" (t/today) "_" (c/rand-str 6))
           arvo-resp (arvo/create-nippu-kyselylinkki
                       (arvo/build-niputus-request-body
                         tunniste
@@ -54,6 +55,7 @@
             {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
              :niputuspvm                  [:s (:niputuspvm nippu)]}
             {:update-expr     (str "SET #tila = :tila, "
+                                   "#pvm = :pvm, "
                                    "#linkki = :linkki, "
                                    "#voimassa = :voimassa, "
                                    "#req = :req")
@@ -61,11 +63,13 @@
              :expr-attr-names {"#tila" "kasittelytila"
                                "#linkki" "kyselylinkki"
                                "#voimassa" "voimassaloppupvm"
-                               "#req" "request_id"}
+                               "#req" "request_id"
+                               "#pvm" "kasittelypvm"}
              :expr-attr-vals {":tila"     [:s (:ei-lahetetty c/kasittelytilat)]
                               ":linkki"   [:s (:nippulinkki arvo-resp)]
                               ":voimassa" [:s (:voimassa_loppupvm arvo-resp)]
-                              ":req"      [:s request-id]}}
+                              ":req"      [:s request-id]
+                              ":pvm"      [:s (str (t/today))]}}
             (:nippu-table env))
           (catch ConditionalCheckFailedException e
             (log/warn "Nipulla " (:ohjaaja_ytunnus_kj_tutkinto nippu) " on jo kantaan tallennettu kyselylinkki.")
@@ -79,14 +83,17 @@
               {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
                :niputuspvm                  [:s (:niputuspvm nippu)]}
               {:update-expr     (str "SET #tila = :tila, "
+                                     "#pvm = :pvm, "
                                      "#reason = :reason, "
                                      "#req = :req")
                :expr-attr-names {"#tila" "kasittelytila"
                                  "#reason" "reason"
-                                 "#req" "request_id"}
+                                 "#req" "request_id"
+                                 "#pvm" "kasittelypvm"}
                :expr-attr-vals {":tila"     [:s "niputusvirhe"]
                                 ":reason"   [:s (or (str arvo-resp) "no reason in response")]
-                                ":req"      [:s request-id]}}
+                                ":req"      [:s request-id]
+                                ":pvm"      [:s (str (t/today))]}}
               (:nippu-table env))))
       (doseq [n prev]
         (try
@@ -94,12 +101,15 @@
             {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto n)]
              :niputuspvm                  [:s (:niputuspvm n)]}
             {:update-expr     (str "SET #tila = :tila, "
+                                   "#pvm = :pvm, "
                                    "#sisaltyy = :sisaltyy")
              :expr-attr-names {"#tila" "kasittelytila"
-                               "#sisaltyy" "sisaltyy"}
+                               "#sisaltyy" "sisaltyy"
+                               "#pvm" "kasittelypvm"}
              :expr-attr-vals {":tila"     [:s (:yhdistetty c/kasittelytilat)]
                               ":sisaltyy" [:s (str (:ohjaaja_ytunnus_kj_tutkinto nippu) "/"
-                                                   (:niputuspvm nippu))]}}
+                                                   (:niputuspvm nippu))]
+                              ":pvm"      [:s (str (t/today))]}}
             (:nippu-table env))
           (catch AwsServiceException e
             (log/error "Virhe yhdistettyjen nippujen merkitsemisessä ("
