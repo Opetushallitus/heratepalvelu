@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.tep.dbChanger
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
-            [environ.core :refer [env]]))
+            [environ.core :refer [env]]
+            [clj-time.core :as t]))
 
 (gen-class
   :name "oph.heratepalvelu.tep.dbChanger"
@@ -9,7 +10,11 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleDBUpdate [this event context]
-  (let [items (ddb/scan {:filter-expression "kasittelytila <> ei_niputettu"} (:nippu-table env))]
+  (let [items (ddb/query-items {:kasittelytila [:ne [:s "ei_niputettu"]]
+                                :niputuspvm    [:le [:s (str (t/today))]]}
+                               {:index "niputusIndex"
+                                :limit 10}
+                               (:nippu-table env))]
     (doseq [item items]
       (ddb/update-item
         {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]

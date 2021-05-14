@@ -59,7 +59,7 @@
                                    "#linkki = :linkki, "
                                    "#voimassa = :voimassa, "
                                    "#req = :req")
-             :cond-expr (str "attribute_not_exists(linkki)")
+             :cond-expr (str "attribute_not_exists(kyselylinkki)")
              :expr-attr-names {"#tila" "kasittelytila"
                                "#linkki" "kyselylinkki"
                                "#voimassa" "voimassaloppupvm"
