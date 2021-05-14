@@ -33,24 +33,24 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       serverSideEncryption: true
     });
 
-    // jaksotunnusTable.addGlobalSecondaryIndex({
-    //   indexName: "niputusIndex",
-    //   partitionKey: {
-    //     name: "ohjaaja_ytunnus_kj_tutkinto",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   sortKey: {
-    //     name: "niputuspvm",
-    //     type: dynamodb.AttributeType.STRING
-    //   },
-    //   nonKeyAttributes: [
-    //     "tunnus",
-    //     "oppilaitos",
-    //     "tyopaikan_nimi",
-    //     "ohjaaja_email",
-    //   ],
-    //   projectionType: dynamodb.ProjectionType.INCLUDE
-    // });
+    jaksotunnusTable.addGlobalSecondaryIndex({
+      indexName: "niputusIndex",
+      partitionKey: {
+        name: "ohjaaja_ytunnus_kj_tutkinto",
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: "niputuspvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      nonKeyAttributes: [
+        "tunnus",
+        "oppilaitos",
+        "tyopaikan_nimi",
+        "ohjaaja_email",
+      ],
+      projectionType: dynamodb.ProjectionType.INCLUDE
+    });
 
     jaksotunnusTable.addGlobalSecondaryIndex({
       indexName: "uniikkiusIndex",
