@@ -12,8 +12,7 @@
 (defn -handleDBUpdate [this event context]
   (let [items (ddb/query-items {:kasittelytila [:eq [:s "ei_lahetetty"]]
                                 :niputuspvm    [:le [:s (str (t/today))]]}
-                               {:index "niputusIndex"
-                                :limit 10}
+                               {:index "niputusIndex"}
                                (:nippu-table env))]
     (doseq [item items]
       (ddb/update-item
