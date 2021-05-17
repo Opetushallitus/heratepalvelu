@@ -102,7 +102,7 @@
                [:meta {:charset "UTF-8"}]]
               [:body
                [:div
-                [:p "Tässä lähettämämme viesti työpaikkaohjaajan kyselyyn vielä uudelleen, koska aiemmin lähettämästämme viestistä puuttui vastauslinkki. Pääset vastaamaan kyselyyn alla olevan linkin kautta. Pahoittelemme tuplalähetystä."]
+                ;[:p "Tässä lähettämämme viesti työpaikkaohjaajan kyselyyn vielä uudelleen, koska aiemmin lähettämästämme viestistä puuttui vastauslinkki. Pääset vastaamaan kyselyyn alla olevan linkin kautta. Pahoittelemme tuplalähetystä."]
                 [:p [:b "Hyvä työpaikkaohjaaja!"]]
                 [:p "Kiitos, että olet ohjannut oppisopimus- ja/tai koulutussopimusopiskelijoita. Kerro meille, miten yhteistyömme on toiminut, missä olemme onnistuneet ja mitä voisimme tehdä vielä paremmin. Toivomme, että käyttäisit noin 5 minuuttia aikaa tähän kyselyyn vastaamiseen. Vastauksesi on tärkeä ja sitä käytetään  ammatillisen koulutuksen kehittämiseen."]
                 [:p "Kiitos, että vastaat."]
@@ -110,7 +110,7 @@
                 [:p "Työpaikkaohjaajakysely: " [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
                 [:p "Tämä on valtakunnallinen palautekysely, jonka tekevät yhteistyössä Opetushallitus ja ammatilliset oppilaitokset kaikille työpaikoille, joissa on ollut oppisopimus- tai koulutussopimusopiskelijoita.  Osoitelähde: Opetushallituksen eHOKS-rekisteri."]
                 horizontal-line
-                [:p "Här kommer meddelandet om enkäten till arbetsplatshandledare en gång till eftersom svarslänken saknades i vårt förra meddelande. Du kan svara på enkäten genom länken nedan. Vi beklagar det dubbla meddelandet."]
+                ;[:p "Här kommer meddelandet om enkäten till arbetsplatshandledare en gång till eftersom svarslänken saknades i vårt förra meddelande. Du kan svara på enkäten genom länken nedan. Vi beklagar det dubbla meddelandet."]
                 [:p [:b "Bästa arbetsplatshandledaren!"]]
                 [:p "Tack för att du har handlett läroavtals- och/eller utbildningsavtalsstuderanden. Berätta för oss om hur vårt samarbete har fungerat, var vi har lyckats med och vad kan vi göra ännu bättre. Vi hoppas att du använder 5 minuter av din tid för att svara på den här enkäten. Ditt svar är viktigt och kommer att användas för att utveckla yrkesutbildningen."]
                 [:p "Tack för att du svarar."]
@@ -118,7 +118,7 @@
                 [:p "Enkät till arbetsplatshandledaren: " [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
                 [:p "Detta är en nationell enkät som genomförs i samarbete med Utbildningsstyrelsen och yrkesläroanstalternas till alla arbetsplatser som har haft läroavtals- eller utbildningsavtalsstuderande. Addresskälla: Utbildningsstyrelssens ePUK-register."]
                 horizontal-line
-                [:p "Here is the email regarding the survey for workplace instructors once more. The original message we sent did not include a reply link. You can answer the survey by clicking on the link below. We apologize for the multiple emails."]
+                ;[:p "Here is the email regarding the survey for workplace instructors once more. The original message we sent did not include a reply link. You can answer the survey by clicking on the link below. We apologize for the multiple emails."]
                 [:p [:b "Dear workplace instructor!"]]
                 [:p "Thank you for guiding the apprentices and/or training agreement student´s learning. Tell us how our collaboration has worked, where we have succeeded and what we could do even better. We would like you to spend some 5 minutes on responding to this survey. Your experiences matter and your responses will be used to develop vocational education and training."]
                 [:p "Thank you for responding."]
