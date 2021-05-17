@@ -62,7 +62,10 @@
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [email lahetettavat]
-        (let [jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
+        (let [nippu (ddb/get-item {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
+                                   :niputuspvm                  [:s (:niputuspvm email)]}
+                                  (:nippu-table env))
+              jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
                                        :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
                                       {:index "niputusIndex"}
                                       (:jaksotunnus-table env))
@@ -75,7 +78,9 @@
             (if (c/has-time-to-answer? (:voimassaloppupvm email))
               (try
                 (let [id (:id (vp/send-email {:subject "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
-                                              :body (vp/tyopaikkaohjaaja-html email oppilaitokset)
+                                              :body (vp/tyopaikkaohjaaja-html
+                                                      (assoc email :kyselylinkki (:kyselylinkki nippu))
+                                                      oppilaitokset)
                                               :address osoite
                                               :sender "Opetushallitus – Utbildningsstyrelsen"}))
                       lahetyspvm (str (t/today))]
