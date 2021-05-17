@@ -10,7 +10,7 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleDBUpdate [this event context]
-  (let [items (ddb/query-items {:kasittelytila [:eq [:s "ei_lahetetty"]]
+  (let [items (ddb/query-items {:kasittelytila [:eq [:s "viestintapalvelussa"]]
                                 :niputuspvm    [:le [:s (str (t/today))]]}
                                {:index "niputusIndex"}
                                (:nippu-table env))]
@@ -18,7 +18,7 @@
       (ddb/update-item
         {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]
          :niputuspvm                  [:s (:niputuspvm item)]}
-        {:update-expr     "REMOVE kyselylinkki  SET #value = :value"
+        {:update-expr     "SET #value = :value"
          :expr-attr-names {"#value" "kasittelytila"}
-         :expr-attr-vals {":value" [:s "ei_niputettu"]}}
+         :expr-attr-vals {":value" [:s "ei_lahetetty"]}}
         (:nippu-table env)))))
