@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.DLQresendHandler
+(ns oph.heratepalvelu.util.DLQresendHandler
   (:require [environ.core :refer [env]]
             [clojure.tools.logging :as log])
   (:import (software.amazon.awssdk.services.sqs SqsClient)
@@ -9,7 +9,7 @@
            (com.amazonaws.xray.interceptors TracingInterceptor)))
 
 (gen-class
-  :name "oph.heratepalvelu.DLQresendHandler"
+  :name "oph.heratepalvelu.util.DLQresendHandler"
   :methods [[^:static handleDLQresend
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])

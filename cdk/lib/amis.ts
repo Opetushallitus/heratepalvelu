@@ -295,7 +295,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       environment: {
         queue_name: ehoksHerateQueue.queueName
       },
-      handler: "oph.heratepalvelu.DLQresendHandler::handleDLQresend",
+      handler: "oph.heratepalvelu.util.DLQresendHandler::handleDLQresend",
       memorySize: 1024,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE

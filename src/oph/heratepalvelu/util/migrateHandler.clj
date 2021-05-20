@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.migrateHandler
+(ns oph.heratepalvelu.util.migrateHandler
   (:require [environ.core :refer [env]])
   (:import (software.amazon.awssdk.services.dynamodb DynamoDbClient)
            (software.amazon.awssdk.services.dynamodb.model PutItemRequest
@@ -16,7 +16,7 @@
                     (.build)))
 
 (gen-class
-  :name "oph.heratepalvelu.migrateHandler"
+  :name "oph.heratepalvelu.util.migrateHandler"
   :methods [[^:static handleMigration
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])

@@ -258,7 +258,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       environment: {
         queue_name: herateQueue.queueName
       },
-      handler: "oph.heratepalvelu.DLQresendHandler::handleDLQresend",
+      handler: "oph.heratepalvelu.util.DLQresendHandler::handleDLQresend",
       memorySize: 1024,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
@@ -282,26 +282,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       batchSize: 1,
       enabled: false
     });
-
-    // const dbUpdateHandler = new lambda.Function(this, "dbUpdateHandler", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambdaCode,
-    //   environment: {
-    //     nippu_table: nippuTable.tableName
-    //   },
-    //   memorySize: Token.asNumber(1024),
-    //   timeout: Duration.seconds(900),
-    //   handler: "oph.heratepalvelu.tep.dbChanger::handleDBUpdate",
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-    // nippuTable.grantReadWriteData(dbUpdateHandler);
-    //
-    // new events.Rule(this, "dbUpdateHandlerScheduleRule", {
-    //   schedule: events.Schedule.expression(
-    //     `rate(20 minutes)`
-    //   ),
-    //   targets: [new targets.LambdaFunction(dbUpdateHandler)]
-    // });
 
     // IAM
 

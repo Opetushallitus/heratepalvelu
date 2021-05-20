@@ -1,10 +1,10 @@
-(ns oph.heratepalvelu.tep.dbChanger
+(ns oph.heratepalvelu.util.dbChanger
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [environ.core :refer [env]]
             [clj-time.core :as t]))
 
 (gen-class
-  :name "oph.heratepalvelu.tep.dbChanger"
+  :name "oph.heratepalvelu.util.dbChanger"
   :methods [[^:static handleDBUpdate
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
