@@ -62,7 +62,8 @@
     (when (check-duplicate-hankkimistapa tapa-id)
       (try
         (let [request-id (c/generate-uuid)
-              niputuspvm (c/next-niputus-date (:loppupvm herate))
+              niputuspvm (c/next-niputus-date (str (t/today)))
+              alkupvm    (c/next-niputus-date (:loppupvm herate))
               suoritus   (c/get-suoritus opiskeluoikeus)
               tutkinto   (get-in
                            suoritus
@@ -78,7 +79,7 @@
                              suoritus
                              (f/unparse-local-date
                                (:year-month-day f/formatters)
-                               niputuspvm)))
+                               alkupvm)))
               tunnus (:tunnus (:body arvo-resp))
               db-data {:hankkimistapa_id     [:n tapa-id]
                        :hankkimistapa_tyyppi [:s (last
@@ -101,10 +102,11 @@
                        :niputuspvm           [:s (f/unparse-local-date
                                                    (:year-month-day f/formatters)
                                                    niputuspvm)]
+                       :alkupvm              [:s (str alkupvm)]
                        :viimeinen_vastauspvm [:s (f/unparse-local-date
                                                    (:year-month-day f/formatters)
                                                    (t/plus
-                                                     niputuspvm
+                                                     alkupvm
                                                      (t/days 60)))]
                        :rahoituskausi        [:s (c/kausi (:loppupvm herate))]
                        :tallennuspvm         [:s (str (t/today))]
