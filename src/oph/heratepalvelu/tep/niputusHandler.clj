@@ -82,7 +82,7 @@
                                    "#req" "request_id"
                                    "#pvm" "kasittelypvm"}
                  :expr-attr-vals {":tila"     [:s "niputusvirhe"]
-                                  ":reason"   [:s (or (str (:errors arvo-resp)) "no reason in response")]
+                                  ":reason"   [:s (str (or (:errors arvo-resp) "no reason in response"))]
                                   ":req"      [:s request-id]
                                   ":pvm"      [:s (str (t/today))]}}
                 (:nippu-table env)))))
