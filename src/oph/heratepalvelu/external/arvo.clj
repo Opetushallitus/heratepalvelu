@@ -8,8 +8,7 @@
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
             [oph.heratepalvelu.external.aws-ssm :as ssm]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c])
+            [clj-time.core :as t])
   (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private pwd (delay
@@ -25,25 +24,23 @@
       oid
       nil)))
 
-(defn get-osaamisala [suoritus opiskeluoikeus-oid]
+(defn get-osaamisalat [suoritus opiskeluoikeus-oid]
   (let [osaamisalat (filter
-                      #(or (nil? (:loppu %1))
-                           (> (compare (:loppu %1)
-                                       (str (t/today)))
-                              0))
+                      #(and
+                         (or (nil? (:loppu %1))
+                             (>= (compare (:loppu %1)
+                                          (str (t/today)))
+                                 0))
+                         (or (nil? (:alku %1))
+                             (<= (compare (:alku %1)
+                                          (str (t/today)))
+                                 0)))
                       (:osaamisala suoritus))]
     (if (not-empty osaamisalat)
-      (if (> (count osaamisalat) 1)
-        (log/warn "Enemmän kuin yksi voimassoleva osaamisala opiskeluoikeudessa" opiskeluoikeus-oid)
-        (let [osaamisala (first osaamisalat)]
-          (if (or (nil? (:alku osaamisala))
-                  (>= (compare (str (t/today))
-                               (:alku osaamisala))
-                      0))
-            (or (:koodiarvo (:osaamisala osaamisala))
-                (:koodiarvo osaamisala))
-            (log/warn "Osaamisala ei ole alkanut opiskeluoikeudessa" opiskeluoikeus-oid))))
-      (log/warn "Ei osaamisalaa opiskeluoikeudessa" opiskeluoikeus-oid))))
+      (map #(or (:koodiarvo (:osaamisala %1))
+                (:koodiarvo %1))
+           osaamisalat)
+      (log/warn "Ei osaamisaloja opiskeluoikeudessa" opiskeluoikeus-oid))))
 
 (defn get-hankintakoulutuksen-toteuttaja [ehoks-id]
   (let [oids (ehoks/get-hankintakoulutus-oids ehoks-id)]
@@ -63,7 +60,6 @@
                                request-id
                                koulutustoimija
                                suoritus]
-  (log/info "Osaamisala =" (get-osaamisala suoritus (:oid opiskeluoikeus)))
   {:vastaamisajan_alkupvm          (:alkupvm herate)
    :kyselyn_tyyppi                 (:kyselytyyppi herate)
    :tutkintotunnus                 (get-in suoritus [:koulutusmoduuli
@@ -71,6 +67,7 @@
                                                      :koodiarvo])
    :tutkinnon_suorituskieli        (str/lower-case
                                      (:koodiarvo (:suorituskieli suoritus)))
+   :osaamisala                     (get-osaamisalat suoritus (:oid opiskeluoikeus))
    :koulutustoimija_oid            koulutustoimija
    :oppilaitos_oid                 (:oid (:oppilaitos opiskeluoikeus))
    :request_id                     request-id
@@ -118,43 +115,34 @@
                                       koulutustoimija
                                       suoritus
                                       niputuspvm]
-  (let [osaamisalat (filter
-                      #(or (nil? (:loppu %1))
-                           (> (compare (:loppu %1)
-                                       (str (t/today)))
-                              0))
-                      (:osaamisala suoritus))]
-    {:koulutustoimija_oid       koulutustoimija
-     :tyonantaja                (:tyopaikan-ytunnus herate)
-     :tyopaikka                 (:tyopaikan-nimi herate)
-     :tutkintotunnus            (get-in
-                                  suoritus
-                                  [:koulutusmoduuli
-                                   :tunniste
-                                   :koodiarvo])
-     :tutkinnon_osa             (when (:tutkinnonosa-koodi herate)
-                                  (last
-                                    (str/split
-                                      (:tutkinnonosa-koodi herate)
-                                      #"_")))
-     :paikallinen_tutkinnon_osa (:tutkinnonosa-nimi herate)
-     :tutkintonimike            (map
-                                  :koodiarvo
-                                  (:tutkintonimike suoritus))
-     :osaamisala                (map
-                                  #(or (:koodiarvo (:osaamisala %1))
-                                       (:koodiarvo %1))
-                                  osaamisalat)
-     :tyopaikkajakson_alkupvm   (:alkupvm herate)
-     :tyopaikkajakson_loppupvm  (:loppupvm herate)
-     :sopimustyyppi             (last
+  {:koulutustoimija_oid       koulutustoimija
+   :tyonantaja                (:tyopaikan-ytunnus herate)
+   :tyopaikka                 (:tyopaikan-nimi herate)
+   :tutkintotunnus            (get-in
+                                suoritus
+                                [:koulutusmoduuli
+                                 :tunniste
+                                 :koodiarvo])
+   :tutkinnon_osa             (when (:tutkinnonosa-koodi herate)
+                                (last
                                   (str/split
-                                    (:hankkimistapa-tyyppi herate)
-                                    #"_"))
-     :vastaamisajan_alkupvm     niputuspvm
-     :oppilaitos_oid            (:oid (:oppilaitos opiskeluoikeus))
-     :toimipiste_oid            (get-toimipiste suoritus)
-     :request_id                request-id}))
+                                    (:tutkinnonosa-koodi herate)
+                                    #"_")))
+   :paikallinen_tutkinnon_osa (:tutkinnonosa-nimi herate)
+   :tutkintonimike            (map
+                                :koodiarvo
+                                (:tutkintonimike suoritus))
+   :osaamisala                (get-osaamisalat suoritus (:oid opiskeluoikeus))
+   :tyopaikkajakson_alkupvm   (:alkupvm herate)
+   :tyopaikkajakson_loppupvm  (:loppupvm herate)
+   :sopimustyyppi             (last
+                                (str/split
+                                  (:hankkimistapa-tyyppi herate)
+                                  #"_"))
+   :vastaamisajan_alkupvm     niputuspvm
+   :oppilaitos_oid            (:oid (:oppilaitos opiskeluoikeus))
+   :toimipiste_oid            (get-toimipiste suoritus)
+   :request_id                request-id})
 
 (defn create-jaksotunnus [data]
   (try
