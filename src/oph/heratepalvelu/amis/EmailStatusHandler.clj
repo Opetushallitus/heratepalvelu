@@ -3,8 +3,9 @@
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.external.arvo :as arvo]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.common :refer [kasittelytilat]]
-            [oph.heratepalvelu.log.caller-log :refer :all])
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.common :as c]
+            [clojure.string :as str])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -15,20 +16,28 @@
 
 (defn -handleEmailStatus [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (loop [emails (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa kasittelytilat)]]}
+  (loop [emails (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                                  {:index "lahetysIndex"
                                   :limit 100})]
     (doseq [email emails]
       (let [status (vp/get-email-status (:viestintapalvelu-id email))
             tila (if (= (:numberOfSuccessfulSendings status) 1)
-                   (:success kasittelytilat)
+                   (:success c/kasittelytilat)
                    (if (= (:numberOfBouncedSendings email) 1)
-                     (:bounced kasittelytilat)
+                     (:bounced c/kasittelytilat)
                      (when (= (:numberOfFailedSendings status) 1)
-                       (:failed kasittelytilat))))]
+                       (:failed c/kasittelytilat))))
+            lahetyspvm (first (str/split (:sendingEnded status) #"T"))]
         (if tila
           (try
             (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) {:tila tila})
+            (c/send-lahetys-data-to-ehoks
+              (:toimija_oppija email)
+              (:tyyppi_kausi email)
+              {:kyselylinkki (:kyselylinkki email)
+               :lahetyspvm lahetyspvm
+               :sahkoposti (:sahkoposti email)
+               :lahetystila tila})
             (ddb/update-item
               {:toimija_oppija [:s (:toimija_oppija email)]
                :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
@@ -47,6 +56,6 @@
             (log/info status)))))
     (when (and (seq emails)
                (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa kasittelytilat)]]}
+      (recur (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                               {:index "lahetysIndex"
                                :limit 10})))))
