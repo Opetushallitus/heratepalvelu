@@ -21,13 +21,19 @@
 (defn- niputa [nippu]
   (log/info "Niputetaan " nippu)
   (let [request-id (c/generate-uuid)
-        jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                                 :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                                {:index "niputusIndex"
-                                 :filter-expression (str "viimeinen_vastauspvm > " (t/today))}
-                                (:jaksotunnus-table env))
+        jaksot (filter
+                 #(>= (compare (:viimeinen_vastauspvm %1)
+                               (str (t/today)))
+                      0)
+                 (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
+                                   :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
+                                  {:index "niputusIndex"
+                                   :filter-expression "#pvm >= :pvm"
+                                   :expr-attr-names {"#pvm" "viimeinen_vastauspvm"}
+                                   :expr-attr-vals {":pvm" [:s (str (t/today))]}}
+                                  (:jaksotunnus-table env)))
         tunnukset (map :tunnus jaksot)]
-    (if (some? tunnukset)
+    (if (not-empty tunnukset)
       (let [tunniste (str
                        (str/replace (:tyopaikan_nimi (first jaksot))
                                     #"[\\|/|\?|#|\s]" "_")
@@ -86,7 +92,21 @@
                                   ":req"      [:s request-id]
                                   ":pvm"      [:s (str (t/today))]}}
                 (:nippu-table env)))))
-      (log/warn "Ei jaksoja nipussa, joissa vastausaikaa jäljellä " (:ohjaaja_ytunnus_kj_tutkinto nippu) (:niputuspvm nippu)))))
+      (do (log/warn "Ei jaksoja, joissa vastausaikaa jäljellä " (:ohjaaja_ytunnus_kj_tutkinto nippu) (:niputuspvm nippu))
+          (ddb/update-item
+            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+             :niputuspvm                  [:s (:niputuspvm nippu)]}
+            {:update-expr     (str "SET #tila = :tila, "
+                                   "#pvm = :pvm, "
+                                   "#reason = :reason, "
+                                   "#req = :req")
+             :expr-attr-names {"#tila" "kasittelytila"
+                               "#req" "request_id"
+                               "#pvm" "kasittelypvm"}
+             :expr-attr-vals {":tila"     [:s "ei-jaksoja"]
+                              ":req"      [:s request-id]
+                              ":pvm"      [:s (str (t/today))]}}
+            (:nippu-table env))))))
 
 (defn -handleNiputus [this event context]
   (log-caller-details-scheduled "handleNiputus" event context)

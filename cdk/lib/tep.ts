@@ -48,6 +48,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         "oppilaitos",
         "tyopaikan_nimi",
         "ohjaaja_email",
+        "viimeinen_vastauspvm"
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
