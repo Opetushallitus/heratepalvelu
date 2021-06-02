@@ -30,7 +30,7 @@
             lahetyspvm (first (str/split (:sendingEnded status) #"T"))]
         (if tila
           (try
-            (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) {:tila tila})
+            (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
             (c/send-lahetys-data-to-ehoks
               (:toimija_oppija email)
               (:tyyppi_kausi email)

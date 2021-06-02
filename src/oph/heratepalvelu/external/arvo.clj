@@ -100,13 +100,13 @@
                        {:basic-auth [(:arvo-user env) @pwd]
                         :as         :json}))))
 
-(defn patch-kyselylinkki-metadata [linkki data]
+(defn patch-kyselylinkki-metadata [linkki tila]
   (let [tunnus (last (str/split linkki #"/"))]
     (:body (client/patch
              (str (:arvo-url env) "vastauslinkki/v1/" tunnus "/metatiedot")
              {:basic-auth   [(:arvo-user env) @pwd]
               :content-type "application/json"
-              :body         (generate-string data)
+              :body         (generate-string {:tila tila})
               :as           :json}))))
 
 (defn build-jaksotunnus-request-body [herate
