@@ -56,7 +56,9 @@
                                    "#muistutukset = :muistutukset")
              :expr-attr-names {"#lahetystila" "lahetystila"
                                "#muistutukset" "muistutukset"}
-             :expr-attr-vals {":lahetystila" [:s (:vastattu kasittelytilat)]
+             :expr-attr-vals {":lahetystila" [:s (if (:vastattu status)
+                                                   (:vastattu kasittelytilat)
+                                                   (:vastausaika-loppunut-m kasittelytilat))]
                               ":muistutukset" [:n n]}})
           (catch Exception e
             (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
