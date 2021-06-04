@@ -30,29 +30,30 @@
                        (:failed c/kasittelytilat))))
             lahetyspvm (first (str/split (:sendingEnded status) #"T"))]
         (if tila
-          (when (not @new-changes?)
-            (reset! new-changes? true))
-          (try
-            (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
-            (c/send-lahetys-data-to-ehoks
-              (:toimija_oppija email)
-              (:tyyppi_kausi email)
-              {:kyselylinkki (:kyselylinkki email)
-               :lahetyspvm lahetyspvm
-               :sahkoposti (:sahkoposti email)
-               :lahetystila tila})
-            (ddb/update-item
-              {:toimija_oppija [:s (:toimija_oppija email)]
-               :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-              {:update-expr    "SET #lahetystila = :lahetystila"
-               :expr-attr-names {"#lahetystila" "lahetystila"}
-               :expr-attr-vals  {":lahetystila" [:s tila]}})
-            (catch AwsServiceException e
-              (log/error "Lähetystilan tallennus kantaan epäonnistui" email)
-              (log/error e))
-            (catch Exception e
-              (log/error "Lähetystilan tallennus Arvoon epäonnistui" email)
-              (log/error e)))
+          (do
+            (when (not @new-changes?)
+              (reset! new-changes? true))
+            (try
+              (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
+              (c/send-lahetys-data-to-ehoks
+                (:toimija_oppija email)
+                (:tyyppi_kausi email)
+                {:kyselylinkki (:kyselylinkki email)
+                 :lahetyspvm lahetyspvm
+                 :sahkoposti (:sahkoposti email)
+                 :lahetystila tila})
+              (ddb/update-item
+                {:toimija_oppija [:s (:toimija_oppija email)]
+                 :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+                {:update-expr    "SET #lahetystila = :lahetystila"
+                 :expr-attr-names {"#lahetystila" "lahetystila"}
+                 :expr-attr-vals  {":lahetystila" [:s tila]}})
+              (catch AwsServiceException e
+                (log/error "Lähetystilan tallennus kantaan epäonnistui" email)
+                (log/error e))
+              (catch Exception e
+                (log/error "Lähetystilan tallennus Arvoon epäonnistui" email)
+                (log/error e))))
           (do
             (log/info "Odottaa lähetystä viestintäpalvelussa")
             (log/info email)
