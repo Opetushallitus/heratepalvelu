@@ -206,7 +206,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
       timeout: Duration.seconds(
-          300
+          Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
       handler: "oph.heratepalvelu.amis.EmailStatusHandler::handleEmailStatus",
       tracing: lambda.Tracing.ACTIVE
@@ -214,7 +214,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     new events.Rule(this, "AMISEmailStatusScheduleRule", {
       schedule: events.Schedule.expression(
-          `rate(5 minutes)`
+          `cron(${this.getParameterFromSsm("emailhandler-cron")})`
       ),
       targets: [new targets.LambdaFunction(AMISEmailStatusHandler)]
     });

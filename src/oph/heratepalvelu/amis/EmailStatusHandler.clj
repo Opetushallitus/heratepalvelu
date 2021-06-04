@@ -13,6 +13,7 @@
   :methods [[^:static handleEmailStatus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
+(def ^:private new-changes? (atom false))
 
 (defn -handleEmailStatus [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
@@ -29,6 +30,8 @@
                        (:failed c/kasittelytilat))))
             lahetyspvm (first (str/split (:sendingEnded status) #"T"))]
         (if tila
+          (when (not @new-changes?)
+            (reset! new-changes? true))
           (try
             (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
             (c/send-lahetys-data-to-ehoks
@@ -54,8 +57,9 @@
             (log/info "Odottaa lähetystä viestintäpalvelussa")
             (log/info email)
             (log/info status)))))
-    (when (and (seq emails)
+    (when (and @new-changes?
                (< 60000 (.getRemainingTimeInMillis context)))
+      (reset! new-changes? false)
       (recur (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                               {:index "lahetysIndex"
                                :limit 10})))))
