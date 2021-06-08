@@ -56,11 +56,16 @@
       (if (= 404 (:status (ex-data e)))
         (let [item (ddb/get-item {:toimija_oppija [:s toimija-oppija]
                                   :tyyppi_kausi [:s tyyppi-kausi]})]
-          (add-kyselytunnus-to-hoks
-            (:ehoks-id item)
-            (assoc data
-              :alkupvm (:alkupvm item)
-              :tyyppi (:kyselytyyppi item))))
+          (try
+            (add-kyselytunnus-to-hoks
+              (:ehoks-id item)
+              (assoc data
+                :alkupvm (:alkupvm item)
+                :tyyppi (:kyselytyyppi item)))
+            (catch ExceptionInfo e
+              (if (= 404 (:status (ex-data e)))
+                (log/warn "Ei hoksia " (:ehoks-id item))
+                (throw e)))))
         (throw e)))))
 
 (defn date-string-to-timestamp
