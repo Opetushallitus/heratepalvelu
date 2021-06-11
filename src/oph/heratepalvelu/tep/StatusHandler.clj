@@ -45,7 +45,8 @@
                  :niputuspvm                  [:s (:niputuspvm nippu)]}
                 {:update-expr    "SET #kasittelytila = :kasittelytila"
                  :expr-attr-names {"#kasittelytila" "kasittelytila"}
-                 :expr-attr-vals  {":kasittelytila" [:s tila]}})
+                 :expr-attr-vals  {":kasittelytila" [:s tila]}}
+                (:nippu-table env))
               (catch AwsServiceException e
                 (log/error "Lähetystilan tallennus kantaan epäonnistui" nippu)
                 (log/error e))
