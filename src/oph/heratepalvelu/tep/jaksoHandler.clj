@@ -55,7 +55,7 @@
                                (:jaksotunnus-table env))]
     (if (empty? items)
       true
-      (log/error "Tunnus " tunnus " on jo käytössä. " items))))
+      (throw (ex-info (str "Tunnus " tunnus " on jo käytössä. ") {:items items})))))
 
 (defn save-jaksotunnus [herate opiskeluoikeus koulutustoimija]
   (let [tapa-id (:hankkimistapa-id herate)]
