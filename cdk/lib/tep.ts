@@ -251,6 +251,29 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     organisaatioWhitelistTable.grantReadData(emailHandler);
     nippuTable.grantReadWriteData(emailHandler);
 
+    const emailStatusHandler = new lambda.Function(this, "TEPEmailStatusHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        nippu_table: nippuTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-TEPEmailStatusHandler`
+      },
+      memorySize: Token.asNumber(1024),
+      timeout: Duration.seconds(300),
+      handler: "oph.heratepalvelu.tep.StatusHandler::handleEmailStatus",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "TEPEmailStatusScheduleRule", {
+      schedule: events.Schedule.expression(
+        `cron(${this.getParameterFromSsm("tep-email-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(emailStatusHandler)]
+    });
+
+    nippuTable.grantReadWriteData(emailStatusHandler);
+
     // DLQ tyhjennys
 
     const dlqResendHandler = new lambda.Function(this, "TEP-DLQresendHandler", {
@@ -286,7 +309,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     // IAM
 
-    [jaksoHandler, timedOperationsHandler, niputusHandler, emailHandler].forEach(
+    [jaksoHandler, timedOperationsHandler, niputusHandler, emailHandler, emailStatusHandler].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
