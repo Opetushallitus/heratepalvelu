@@ -10,7 +10,7 @@
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
-  :name "oph.heratepalvelu.amis.StatusHandler"
+  :name "oph.heratepalvelu.tep.StatusHandler"
   :methods [[^:static handleEmailStatus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
