@@ -24,7 +24,7 @@
       (let [status (vp/get-email-status (:viestintapalvelu-id email))
             tila (if (= (:numberOfSuccessfulSendings status) 1)
                    (:success c/kasittelytilat)
-                   (if (= (:numberOfBouncedSendings email) 1)
+                   (if (= (:numberOfBouncedSendings status) 1)
                      (:bounced c/kasittelytilat)
                      (when (= (:numberOfFailedSendings status) 1)
                        (:failed c/kasittelytilat))))
