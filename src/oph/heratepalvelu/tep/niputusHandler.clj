@@ -98,7 +98,6 @@
              :niputuspvm                  [:s (:niputuspvm nippu)]}
             {:update-expr     (str "SET #tila = :tila, "
                                    "#pvm = :pvm, "
-                                   "#reason = :reason, "
                                    "#req = :req")
              :expr-attr-names {"#tila" "kasittelytila"
                                "#req" "request_id"
