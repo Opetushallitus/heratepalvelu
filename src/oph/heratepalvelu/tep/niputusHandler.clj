@@ -76,6 +76,7 @@
               (arvo/delete-nippukyselylinkki tunniste)
               (throw e)))
           (do (log/error "Virhe niputuksessa " nippu request-id)
+              (log/error arvo-resp)
               (ddb/update-item
                 {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
                  :niputuspvm                  [:s (:niputuspvm nippu)]}
