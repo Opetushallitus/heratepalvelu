@@ -31,7 +31,7 @@
    :vastausaika-loppunut-m "vastausaika_loppunut_ennen_muistutusta"
    :vastattu "vastattu"
    :success "success"
-   :failed "failed"
+   :failed "failure"
    :bounced "bounced"
    :ei-niputettu "ei_niputettu"
    :yhdistetty "yhdistetty"})
