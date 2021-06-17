@@ -27,8 +27,7 @@
                    (if (= (:numberOfBouncedSendings status) 1)
                      (:bounced c/kasittelytilat)
                      (when (= (:numberOfFailedSendings status) 1)
-                       (:failed c/kasittelytilat))))
-            lahetyspvm (first (str/split (:sendingEnded status) #"T"))]
+                       (:failed c/kasittelytilat))))]
         (if tila
           (do
             (when (not @new-changes?)
@@ -39,7 +38,7 @@
                 (:toimija_oppija email)
                 (:tyyppi_kausi email)
                 {:kyselylinkki (:kyselylinkki email)
-                 :lahetyspvm lahetyspvm
+                 :lahetyspvm (first (str/split (:sendingEnded status) #"T"))
                  :sahkoposti (:sahkoposti email)
                  :lahetystila tila})
               (ddb/update-item
