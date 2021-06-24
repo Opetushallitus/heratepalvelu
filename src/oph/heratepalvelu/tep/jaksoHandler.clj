@@ -38,7 +38,9 @@
               :tyopaikan-nimi         (s/conditional not-empty s/Str)
               :tyopaikan-ytunnus      (s/conditional not-empty s/Str)
               :tyopaikkaohjaaja-email (s/maybe s/Str)
-              :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)})
+              :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)
+              :osa-aikaisuus          (s/maybe s/Num)
+              :oppisopimuksen-perusta (s/maybe s/Str)})
 
 (def tep-herate-checker
   (s/checker tep-herate-schema))
@@ -57,6 +59,37 @@
       true
       (throw (ex-info (str "Tunnus " tunnus " on jo käytössä. ") {:items items})))))
 
+(defn check-opiskeluoikeus-tila [opiskeluoikeus loppupvm]
+  (let [tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
+        voimassa (reduce
+                   (fn [res next]
+                     (if (>= (compare loppupvm (:alku next)) 0)
+                       next
+                       (reduced res)))
+                   (sort-by :alku tilat))
+        tila (:koodiarvo (:tila voimassa))]
+    (if (or (= tila "eronnut")
+            (= tila "katsotaaneronneeksi")
+            (= tila "mitatoity")
+            (= tila "peruutettu")
+            (= tila "valiaikaisestikeskeytynyt"))
+      (log/warn "Opiskeluoikeus " (:oid opiskeluoikeus) " terminaalitilassa " tila)
+      true)))
+
+(defn kesto [herate]
+  (let [alku-date (f/parse (:year-month-day f/formatters) (:alkupvm herate))
+        loppu-date (f/parse (:year-month-day f/formatters) (:loppupvm herate))] ; opiskeluoikeuden väliaikainen keskeytyminen
+    (loop [kesto 1
+           pvm alku-date]
+      (if (t/before? pvm loppu-date)
+        (recur (if (< (t/day-of-week pvm) 6)
+                 (+ 1 kesto)
+                 kesto)
+               (t/plus pvm (t/days 1)))
+        (if (some? (:osa-aikaisuus herate))
+          (int (Math/ceil (/ (* kesto (:osa-aikaisuus herate)) 100)))
+          kesto)))))
+
 (defn save-jaksotunnus [herate opiskeluoikeus koulutustoimija]
   (let [tapa-id (:hankkimistapa-id herate)]
     (when (check-duplicate-hankkimistapa tapa-id)
@@ -65,6 +98,7 @@
               niputuspvm (c/next-niputus-date (str (t/today)))
               alkupvm    (c/next-niputus-date (:loppupvm herate))
               suoritus   (c/get-suoritus opiskeluoikeus)
+              kesto      (kesto herate)
               tutkinto   (get-in
                            suoritus
                            [:koulutusmoduuli
@@ -73,6 +107,7 @@
               arvo-resp  (arvo/create-jaksotunnus
                            (arvo/build-jaksotunnus-request-body
                              herate
+                             kesto
                              opiskeluoikeus
                              request-id
                              koulutustoimija
@@ -92,6 +127,7 @@
                        :ohjaaja_nimi         [:s (:tyopaikkaohjaaja-nimi herate)]
                        :jakso_alkupvm        [:s (:alkupvm herate)]
                        :jakso_loppupvm       [:s (:loppupvm herate)]
+                       :kesto                [:n kesto]
                        :request_id           [:s request-id]
                        :tutkinto             [:s tutkinto]
                        :oppilaitos           [:s (:oid (:oppilaitos opiskeluoikeus))]
@@ -128,7 +164,9 @@
                         (not-empty (:tutkinnonosa-koodi herate))
                         (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
                         (not-empty (:tutkinnonosa-nimi herate))
-                        (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)]))
+                        (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
+                        (some? (:osa-aikaisuus herate))
+                        (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)]))
                 {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
                 (:jaksotunnus-table env))
               (ddb/put-item
@@ -168,6 +206,7 @@
             (log/error {:herate herate :msg (tep-herate-checker herate)})
             (when
               (and
+                (check-opiskeluoikeus-tila opiskeluoikeus (:loppupvm herate))
                 (c/check-organisaatio-whitelist? koulutustoimija)
                 (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
                 (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
