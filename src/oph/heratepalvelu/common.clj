@@ -48,12 +48,14 @@
 (defn generate-uuid []
   (str (UUID/randomUUID)))
 
+(defn to-date [str-date]
+  (let [[year month day] (map #(Integer. %1) (str/split str-date #"-"))]
+    (LocalDate/of year month day)))
+
 (defn has-time-to-answer? [loppupvm]
   (when loppupvm
-    (let [enddate (first (str/split loppupvm #"T"))
-          [years months days] (map #(Integer. %)
-                                   (str/split enddate #"-"))]
-      (not (.isBefore (LocalDate/of years months days) (LocalDate/now))))))
+    (let [enddate (first (str/split loppupvm #"T"))]
+      (not (.isBefore (to-date enddate) (LocalDate/now))))))
 
 (defn send-lahetys-data-to-ehoks [toimija-oppija tyyppi-kausi data]
   (try
@@ -177,16 +179,34 @@
 (def herate-checker
   (s/checker herate-schema))
 
+(defn alkupvm [heratepvm]
+  (let [herate-date (to-date heratepvm)]
+    (if (.isAfter herate-date (LocalDate/now))
+      herate-date
+      (LocalDate/now))))
+
+(defn loppupvm [herate alku]
+  (let [last (.plusDays herate 60)
+        normal (.plusDays alku 30)]
+    (if (.isBefore last normal)
+      last
+      normal)))
+
 (defn save-herate [herate opiskeluoikeus]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
   (if (some? (herate-checker herate))
     (log/error {:herate herate :msg (herate-checker herate)})
     (let [kyselytyyppi (:kyselytyyppi herate)
-          alkupvm (:alkupvm herate)
+          heratepvm (:alkupvm herate)
+          herate-date (to-date heratepvm)
+          alku-date (alkupvm herate-date)
+          alkupvm   (str alku-date)
+          loppu-date (loppupvm herate-date alku-date)
+          voimassa-loppupvm  (str loppu-date)
           koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
           suoritus (get-suoritus opiskeluoikeus)
           oppija (str (:oppija-oid herate))
-          laskentakausi (kausi alkupvm)
+          laskentakausi (kausi heratepvm)
           uuid (generate-uuid)
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
           suorituskieli (str/lower-case
@@ -199,13 +219,14 @@
                          opiskeluoikeus
                          uuid
                          koulutustoimija
-                         suoritus)
+                         suoritus
+                         alkupvm
+                         loppupvm)
               arvo-resp (if (= (:tyyppi herate) "aloittaneet")
                           (arvo/create-amis-kyselylinkki
                             req-body)
                           (arvo/create-amis-kyselylinkki-catch-404
-                            req-body))
-              voimassa-loppupvm (:voimassa_loppupvm arvo-resp)]
+                            req-body))]
           (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
             (try
               (log/info "Tallennetaan kantaan " (str koulutustoimija "/" oppija)
@@ -217,6 +238,7 @@
                              :suorituskieli       [:s suorituskieli]
                              :lahetystila         [:s (:ei-lahetetty kasittelytilat)]
                              :alkupvm             [:s alkupvm]
+                             :heratepvm           [:s heratepvm]
                              :request-id          [:s uuid]
                              :oppilaitos          [:s oppilaitos]
                              :ehoks-id            [:n (str (:ehoks-id herate))]
@@ -226,8 +248,8 @@
                              :kyselytyyppi        [:s kyselytyyppi]
                              :rahoituskausi       [:s laskentakausi]
                              :viestintapalvelu-id [:n "-1"]
-                             :voimassa-loppupvm   [:s (or voimassa-loppupvm "-")]
-                             :tallennuspvm        [:s (str (t/today))]}
+                             :voimassa-loppupvm   [:s voimassa-loppupvm]
+                             :tallennuspvm        [:s (str (LocalDate/now))]}
                             {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
                                              "attribute_not_exists(tyyppi_kausi)")})
               (try
@@ -251,7 +273,7 @@
               (catch ConditionalCheckFailedException _
                 (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                           oppija " koulutustoimijalla " koulutustoimija
-                          "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm) ")"
+                          "(tyyppi " kyselytyyppi " kausi " laskentakausi ")"
                           "Deaktivoidaan kyselylinkki, request-id " uuid)
                 (arvo/delete-amis-kyselylinkki kyselylinkki))
               (catch AwsServiceException e

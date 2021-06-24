@@ -59,8 +59,12 @@
                                opiskeluoikeus
                                request-id
                                koulutustoimija
-                               suoritus]
-  {:vastaamisajan_alkupvm          (:alkupvm herate)
+                               suoritus
+                               alkupvm
+                               loppupvm]
+  {:vastaamisajan_alkupvm          alkupvm
+   :heratepvm                      (:alkupvm herate)
+   :vastaamisajan_loppupvm         loppupvm
    :kyselyn_tyyppi                 (:kyselytyyppi herate)
    :tutkintotunnus                 (get-in suoritus [:koulutusmoduuli
                                                      :tunniste
