@@ -78,7 +78,7 @@
 
 (defn kesto [herate]
   (let [alku-date (f/parse (:year-month-day f/formatters) (:alkupvm herate))
-        loppu-date (f/parse (:year-month-day f/formatters) (:loppupvm herate))]
+        loppu-date (f/parse (:year-month-day f/formatters) (:loppupvm herate))] ; opiskeluoikeuden väliaikainen keskeytyminen
     (loop [kesto 1
            pvm alku-date]
       (if (t/before? pvm loppu-date)
@@ -107,6 +107,7 @@
               arvo-resp  (arvo/create-jaksotunnus
                            (arvo/build-jaksotunnus-request-body
                              herate
+                             kesto
                              opiskeluoikeus
                              request-id
                              koulutustoimija
@@ -163,7 +164,9 @@
                         (not-empty (:tutkinnonosa-koodi herate))
                         (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
                         (not-empty (:tutkinnonosa-nimi herate))
-                        (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)]))
+                        (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
+                        (some? (:osa-aikaisuus herate))
+                        (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)]))
                 {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
                 (:jaksotunnus-table env))
               (ddb/put-item

@@ -89,14 +89,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         name: "niputuspvm",
         type: dynamodb.AttributeType.STRING
       },
-      nonKeyAttributes: [
-        "koulutuksenjarjestaja",
-        "tutkinto",
-        "ytunnus",
-        "tyopaikka",
-        "voimassaloppupvm"
-      ],
-      projectionType: dynamodb.ProjectionType.INCLUDE
+      projectionType: dynamodb.ProjectionType.ALL
     });
 
     const organisaatioWhitelistTable = new dynamodb.Table(
