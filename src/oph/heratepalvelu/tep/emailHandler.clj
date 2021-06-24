@@ -20,10 +20,13 @@
   (let [item (ddb/get-item {:organisaatio-oid [:s (:koulutuksenjarjestaja email)]}
                            (:orgwhitelist-table env))
         pilottiosoite (:pilottiosoite item)
-        ohjaaja-email (:ohjaaja_email (reduce #(if (and (some? (:ohjaaja_email %1))
-                                                        (= (:ohjaaja_email %1) (:ohjaaja_email %2)))
-                                                 %1
-                                                 (reduced nil))
+        ohjaaja-email (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
+                                                 (if (some? (:ohjaaja_email %2))
+                                                   (if (= (:ohjaaja_email %1) (:ohjaaja_email %2))
+                                                     %1
+                                                     (reduced nil))
+                                                   %1)
+                                                 %2)
                                               jaksot))]
     (if (some? ohjaaja-email)
       (if (some? pilottiosoite)
@@ -62,10 +65,7 @@
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [email lahetettavat]
-        (let [nippu (ddb/get-item {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
-                                   :niputuspvm                  [:s (:niputuspvm email)]}
-                                  (:nippu-table env))
-              jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
+        (let [jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
                                        :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
                                       {:index "niputusIndex"}
                                       (:jaksotunnus-table env))
@@ -79,7 +79,7 @@
               (try
                 (let [id (:id (vp/send-email {:subject "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
                                               :body (vp/tyopaikkaohjaaja-html
-                                                      (assoc email :kyselylinkki (:kyselylinkki nippu))
+                                                      email
                                                       oppilaitokset)
                                               :address osoite
                                               :sender "Opetushallitus – Utbildningsstyrelsen"}))
