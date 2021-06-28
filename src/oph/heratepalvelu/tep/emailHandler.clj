@@ -55,6 +55,14 @@
             (:nippu-table env))
           nil))))
 
+(defn- sms-lahetysosoite [jaksot]
+  (:ohjaaja_puhelinnumero (reduce #(if (and (some? (:ohjaaja_puhelinnumero %1))
+                                            (= (:ohjaaja_puhelinnumero %1)
+                                               (:ohjaaja_puhelinnumero %2)))
+                                       %1
+                                       (reduced nil))
+                                  jaksot)))
+
 (defn -handleSendTEPEmails [this event context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
   (loop [lahetettavat (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
@@ -73,9 +81,11 @@
                                        (map
                                          #(:nimi (org/get-organisaatio (:oppilaitos %1)))
                                          jaksot)))
-              osoite (pilotti-lahetysosoite email jaksot)]
-          (when (some? osoite)
-            (if (c/has-time-to-answer? (:voimassaloppupvm email))
+              osoite (pilotti-lahetysosoite email jaksot)
+              puhelinnumero [sms-lahetysosoite jaksot]
+              sms-kasittelytila (:sms-lahetystila nippu)]
+          (if (c/has-time-to-answer? (:voimassaloppupvm email))
+            (when (some? osoite)
               (try
                 (let [id (:id (vp/send-email {:subject "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
                                               :body (vp/tyopaikkaohjaaja-html
@@ -122,7 +132,10 @@
                   (:nippu-table env))
                 (catch Exception e
                   (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" email)
-                  (log/error e)))))))
+                  (log/error e))))
+            (when (and (some? puhelinnumero) (or (nil? sms-kasittelytila)
+                                                 (= sms-kasittelytila (:failed c/kasittelytilat))))
+              (println "Sending sms to " puhelinnumero)))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                                  :niputuspvm    [:le [:s (str (t/today))]]}
