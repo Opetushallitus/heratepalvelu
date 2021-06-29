@@ -38,7 +38,6 @@
 
 (defn build-sms-sqs-message [sms-body phonenumber]
   {:body sms-body
-   :sender "Opetushallitus"
    :phonenumber phonenumber})
 
 (defn send-tep-sms-sqs-message [msg]
