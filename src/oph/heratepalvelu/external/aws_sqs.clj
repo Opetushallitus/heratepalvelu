@@ -33,8 +33,9 @@
       (log/error (str queue-name " does not exist")))))
 
 (def ^:private sms-queue-url
-  (get-queue-url-with-error-handling
-    "services-heratepalvelu-TepSmsQueue"))
+  (delay
+    (get-queue-url-with-error-handling
+      "services-heratepalvelu-TepSmsQueue")))
 
 (defn build-sms-sqs-message [sms-body phonenumber]
   {:body sms-body
