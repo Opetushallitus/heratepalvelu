@@ -4,6 +4,7 @@
             [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.external.aws-sqs :as sqs]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [clj-time.core :as t]
@@ -82,7 +83,7 @@
                                          #(:nimi (org/get-organisaatio (:oppilaitos %1)))
                                          jaksot)))
               osoite (pilotti-lahetysosoite email jaksot)
-              puhelinnumero [sms-lahetysosoite jaksot]
+              puhelinnumero (sms-lahetysosoite jaksot)
               sms-kasittelytila (:sms-lahetystila nippu)]
           (if (c/has-time-to-answer? (:voimassaloppupvm email))
             (when (some? osoite)
@@ -133,9 +134,15 @@
                 (catch Exception e
                   (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" email)
                   (log/error e))))
-            (when (and (some? puhelinnumero) (or (nil? sms-kasittelytila)
-                                                 (= sms-kasittelytila (:failed c/kasittelytilat))))
-              (println "Sending sms to " puhelinnumero)))))
+            (when (and (some? puhelinnumero)
+                       (or (nil? sms-kasittelytila)
+                           (= sms-kasittelytila (:failed c/kasittelytilat))))
+              (try
+                (sqs/send-tep-sms-sqs-message (sqs/build-sms-sqs-message
+                                    "Test Body"
+                                    puhelinnumero)))
+              (catch Exception e
+                (log/error e))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                                  :niputuspvm    [:le [:s (str (t/today))]]}
