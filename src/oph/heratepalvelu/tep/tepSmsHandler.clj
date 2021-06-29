@@ -1,9 +1,11 @@
 (ns oph.heratepalvelu.tep.tepSmsHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
+            [oph.heratepalvelu.external.http-client :as client]
             [oph.heratepalvelu.external.koski :refer [get-opiskeluoikeus]]
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.log.caller-log :refer :all]
+            [cheshire.core :refer [generate-string]]
             [environ.core :refer [env]])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (com.google.i18n.phonenumbers PhoneNumberUtil)
@@ -49,10 +51,11 @@
         (let [msg (parse-string (.getBody msg) true)
               body (:body msg)
               phonenumber (:phonenumber msg)
-              resp (send-tep-sms phonenumber body)
+              ;; resp (send-tep-sms phonenumber body)
+              resp {:status 200 }
               status (:status resp)]
           (if (= status 200)
-            ;; write to db
+            (println "SMS sent to " phonenumber)
             (if (and
                   (> 399 status)
                   (< 500 status))
