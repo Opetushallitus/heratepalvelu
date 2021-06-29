@@ -140,12 +140,12 @@
               (try
                 (sqs/send-tep-sms-sqs-message (sqs/build-sms-sqs-message
                                     "Test Body"
-                                    puhelinnumero)))
+                                    puhelinnumero))
               (catch Exception e
-                (log/error e))))))
+                (log/error e))))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                                  :niputuspvm    [:le [:s (str (t/today))]]}
                                 {:index "niputusIndex"
                                  :limit 10}
-                                (:nippu-table env)))))))
+                                (:nippu-table env))))))

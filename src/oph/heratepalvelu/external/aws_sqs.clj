@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.external.aws-sqs
   (:require [environ.core :refer [env]]
+            [clojure.data.json :as json]
             [clojure.tools.logging :as log])
   (:import (software.amazon.awssdk.services.sqs SqsClient)
            (software.amazon.awssdk.regions Region)
@@ -42,7 +43,7 @@
 
 (defn send-tep-sms-sqs-message [msg]
   (let [resp (.sendMessage sqs-client (-> (SendMessageRequest/builder)
-                                          (.queueUrl queue-url)
+                                          (.queueUrl "queue-url")
                                           (.messageBody (json/write-str msg))
                                           (.build)))]
     (when-not (some? (.messageId resp))
