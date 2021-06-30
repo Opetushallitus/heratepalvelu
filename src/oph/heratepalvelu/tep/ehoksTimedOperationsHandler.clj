@@ -11,5 +11,5 @@
 
 (defn -handleTimedOperations [this event context]
   (log/info "Käynnistetään jaksojen lähetys")
-  (let [resp (ehoks/get-paattyneet-tyoelamajaksot "2021-04-01" (str (t/today)) 100)]
+  (let [resp (ehoks/get-paattyneet-tyoelamajaksot "2021-07-01" (str (t/today)) 100)]
     (log/info "Lähetetty " (:data (:body resp)) " viestiä")))
