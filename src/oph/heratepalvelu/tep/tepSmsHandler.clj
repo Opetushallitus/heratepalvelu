@@ -12,8 +12,8 @@
            (com.google.i18n.phonenumbers NumberParseException)))
 
 (gen-class
-  :name "oph.heratepalvelu.amis.tepSmsHandler"
-  :methods [[^:static handleAMISherate
+  :name "oph.heratepalvelu.tep.tepSmsHandler"
+  :methods [[^:static tepSmsHandler
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 

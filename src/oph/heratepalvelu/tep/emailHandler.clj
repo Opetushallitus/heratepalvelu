@@ -84,7 +84,7 @@
                                          jaksot)))
               osoite (pilotti-lahetysosoite email jaksot)
               puhelinnumero (sms-lahetysosoite jaksot)
-              sms-kasittelytila (:sms-lahetystila nippu)]
+              sms-kasittelytila (:sms-lahetystila email)]
           (if (c/has-time-to-answer? (:voimassaloppupvm email))
             (when (some? osoite)
               (try

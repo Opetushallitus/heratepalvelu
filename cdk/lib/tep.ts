@@ -114,7 +114,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     const tepSmsDeadLetterQueue = new sqs.Queue(this, "TepSmsDLQ", {
       retentionPeriod: Duration.days(14),
-      visibilityTimeout: (Duration.seconds(60))
+      visibilityTimeout: (Duration.seconds(180))
     });
 
     const herateQueue = new sqs.Queue(this, "HerateQueue", {
@@ -133,7 +133,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         queue: tepSmsDeadLetterQueue,
         maxReceiveCount: 5
       },
-      visibilityTimeout: Duration.seconds(60),
+      visibilityTimeout: Duration.seconds(180),
       retentionPeriod: Duration.days(14)
     });
 
