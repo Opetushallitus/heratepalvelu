@@ -14,7 +14,8 @@
   (:import (java.util UUID)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)
-           (clojure.lang ExceptionInfo)))
+           (clojure.lang ExceptionInfo)
+           (java.time LocalDate)))
 
 (s/defschema herate-schema
              {:ehoks-id           s/Num
@@ -145,26 +146,30 @@
   ([koulutustoimija]
    (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                             (:orgwhitelist-table env))]
-     (if
-       (and
-         (:kayttoonottopvm item)
-         (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-             (c/to-long (t/today))))
+     (if (.isBefore (LocalDate/of 2021 6 30) (LocalDate/now))
        true
-       (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa"))))
+       (if
+         (and
+           (:kayttoonottopvm item)
+           (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
+               (c/to-long (t/today))))
+         true
+         (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa")))))
   ([koulutustoimija timestamp]
    (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                             (:orgwhitelist-table env))]
-     (if
-       (and
-         (:kayttoonottopvm item)
-         (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-             timestamp)
-         (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-             (c/to-long (t/today))))
+     (if (.isBefore (LocalDate/of 2021 6 30) (LocalDate/now))
        true
-       (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa,"
-                 " tai herätepvm on ennen käyttöönotto päivämäärää")))))
+       (if
+         (and
+           (:kayttoonottopvm item)
+           (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
+               timestamp)
+           (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
+               (c/to-long (t/today))))
+         true
+         (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa,"
+                   " tai herätepvm on ennen käyttöönotto päivämäärää"))))))
 
 (defn check-duplicate-herate? [oppija koulutustoimija laskentakausi kyselytyyppi]
   (if
