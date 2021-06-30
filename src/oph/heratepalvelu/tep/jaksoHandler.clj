@@ -39,8 +39,9 @@
               :tyopaikan-ytunnus      (s/conditional not-empty s/Str)
               :tyopaikkaohjaaja-email (s/maybe s/Str)
               :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)
-              :osa-aikaisuus          (s/maybe s/Num)
-              :oppisopimuksen-perusta (s/maybe s/Str)})
+              (s/optional-key :osa-aikaisuus)                  (s/maybe s/Num)
+              (s/optional-key :oppisopimuksen-perusta)         (s/maybe s/Str)
+              (s/optional-key :tyopaikkaohjaaja-puhelinnumero) (s/maybe s/Str)})
 
 (def tep-herate-checker
   (s/checker tep-herate-schema))
