@@ -43,28 +43,6 @@
                  {:suoritukset [{:tyyppi {:koodiarvo "valma"}}
                                 {:tyyppi {:koodiarvo "telma"}}]})))))
 
-(deftest test-check-organisaatio-whitelist
-  (testing "Check organisaatio whitelist"
-    (with-redefs
-      [oph.heratepalvelu.db.dynamodb/get-item mock-get-item-from-whitelist]
-      (do
-        (is (true?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761110")))
-        (is (nil?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761111")))
-        (is (nil?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761111"
-                                             (c/to-long (t/minus (t/today) (t/days 1))))))
-        (is (nil?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761111"
-                                             (c/to-long (t/plus (t/today) (t/days 1))))))
-        (is (nil?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761112"
-                                             (c/to-long (t/minus (t/today) (t/days 1))))))
-        (is (true?
-              (check-organisaatio-whitelist? "1.2.246.562.10.346830761112"
-                                             (c/to-long (t/plus (t/today) (t/days 1))))))))))
-
 (deftest test-date-string-to-timestamp
   (testing "Transforming date-string to timestamp"
     (is (= (date-string-to-timestamp "1970-01-01") 0))

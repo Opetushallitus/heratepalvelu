@@ -158,7 +158,7 @@
   ([koulutustoimija timestamp]
    (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                             (:orgwhitelist-table env))]
-     (if (.isBefore (LocalDate/of 2021 6 31) (LocalDate/ofEpochDay (/ timestamp 86400000)))
+     (if (.isBefore (LocalDate/of 2021 6 30) (LocalDate/ofEpochDay (/ timestamp 86400000)))
        true
        (if
          (and
