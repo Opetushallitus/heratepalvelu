@@ -38,6 +38,7 @@
               :tyopaikan-nimi         (s/conditional not-empty s/Str)
               :tyopaikan-ytunnus      (s/conditional not-empty s/Str)
               :tyopaikkaohjaaja-email (s/maybe s/Str)
+              :tyopaikkaohjaaja-puhelinnumero (s/maybe s/Str)
               :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)
               :osa-aikaisuus          (s/maybe s/Num)
               :oppisopimuksen-perusta (s/maybe s/Str)})
@@ -161,6 +162,8 @@
                 (cond-> db-data
                         (not-empty (:tyopaikkaohjaaja-email herate))
                         (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
+                        (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
+                        (assoc :ohjaaja_puhelinnumero [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
                         (not-empty (:tutkinnonosa-koodi herate))
                         (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
                         (not-empty (:tutkinnonosa-nimi herate))

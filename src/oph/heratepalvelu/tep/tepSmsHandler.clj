@@ -5,6 +5,7 @@
             [oph.heratepalvelu.external.koski :refer [get-opiskeluoikeus]]
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.external.aws-ssm :as ssm]
             [cheshire.core :refer [generate-string]]
             [environ.core :refer [env]])
   (:import (com.fasterxml.jackson.core JsonParseException)
@@ -16,6 +17,11 @@
   :methods [[^:static tepSmsHandler
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
+
+(def ^:private apikey (delay
+                     (ssm/get-secret
+                       (str "/" (:stage env)
+                            "/services/heratepalvelu/elisa-sms-dialogi-key"))))
 
 (defn- valid-number? [number]
   (let [utilobj (PhoneNumberUtil/getInstance)
@@ -32,10 +38,12 @@
                   :destination [number]
                   :text message}
             resp (client/post
-                   (str "elisa/url")
-                   {:content-type "application/json"
-                    :body         (generate-string body)
-                    :Authorization  "apikey xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"})]
+                   (str "https://viestipalvelu-api.elisa.fi/api/v1/")
+                   {:headers {
+                              :Authorization  (str "apikey " @apikey)
+                              :content-type "application/json"
+                              }
+                    :body         (generate-string body)})]
         resp))
     (catch NumberParseException e
       (log/error "PhoneNumberUtils failed to parse phonenumber " number)
@@ -51,8 +59,7 @@
         (let [msg (parse-string (.getBody msg) true)
               body (:body msg)
               phonenumber (:phonenumber msg)
-              ;; resp (send-tep-sms phonenumber body)
-              resp {:status 200 }
+              resp (send-tep-sms phonenumber body)
               status (:status resp)]
           (if (= status 200)
             (println "SMS sent to " phonenumber)
