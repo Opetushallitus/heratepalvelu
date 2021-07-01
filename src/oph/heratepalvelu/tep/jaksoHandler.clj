@@ -8,14 +8,13 @@
             [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [environ.core :refer [env]]
             [schema.core :as s]
-            [clj-time.core :as t]
-            [clj-time.format :as f]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [clojure.string :as str])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (clojure.lang ExceptionInfo)
            (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)
-           (software.amazon.awssdk.awscore.exception AwsServiceException)))
+           (software.amazon.awssdk.awscore.exception AwsServiceException)
+           (java.time LocalDate DayOfWeek)))
 
 (gen-class
   :name "oph.heratepalvelu.tep.jaksoHandler"
@@ -77,16 +76,41 @@
       (log/warn "Opiskeluoikeus " (:oid opiskeluoikeus) " terminaalitilassa " tila)
       true)))
 
-(defn kesto [herate]
-  (let [alku-date (f/parse (:year-month-day f/formatters) (:alkupvm herate))
-        loppu-date (f/parse (:year-month-day f/formatters) (:loppupvm herate))] ; opiskeluoikeuden väliaikainen keskeytyminen
+(defn kesto [herate oo-tilat]
+  (let [alku-date (LocalDate/parse (:alkupvm herate))
+        loppu-date (LocalDate/parse (:loppupvm herate))
+        sorted-tilat (map #(assoc %1
+                             :alku
+                             (LocalDate/parse (:alku %1))
+                             :tila
+                             (:koodiarvo (:tila %1)))
+                          (sort-by :alku oo-tilat))
+        voimassa (reduce
+                   (fn [res next]
+                     (if (and (.isBefore (:alku (first res)) alku-date)
+                              (not (.isAfter (:alku next) alku-date)))
+                       (rest res)
+                       (reduced res)))
+                   sorted-tilat
+                   (rest sorted-tilat))]
     (loop [kesto 1
-           pvm alku-date]
-      (if (t/before? pvm loppu-date)
-        (recur (if (< (t/day-of-week pvm) 6)
-                 (+ 1 kesto)
-                 kesto)
-               (t/plus pvm (t/days 1)))
+           pvm alku-date
+           tilat voimassa]
+      (if (.isBefore pvm loppu-date)
+        (let
+          [new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
+                             (= (.getDayOfWeek pvm) DayOfWeek/SUNDAY)
+                             (= "valiaikaisestikeskeytynyt" (:tila (first tilat)))
+                             (= "loma" (:tila (first tilat))))
+                       kesto
+                       (+ 1 kesto))
+           new-pvm (.plusDays pvm 1)]
+          (recur new-kesto
+                 new-pvm
+                 (if (and (some? (second tilat))
+                          (not (.isAfter (:alku (second tilat)) new-pvm)))
+                   (rest tilat)
+                   tilat)))
         (if (and (some? (:osa-aikaisuus herate))
                  (< 0   (:osa-aikaisuus herate))
                  (> 100 (:osa-aikaisuus herate)))
@@ -98,10 +122,10 @@
     (when (check-duplicate-hankkimistapa tapa-id)
       (try
         (let [request-id (c/generate-uuid)
-              niputuspvm (c/next-niputus-date (str (t/today)))
+              niputuspvm (c/next-niputus-date (str (LocalDate/now)))
               alkupvm    (c/next-niputus-date (:loppupvm herate))
               suoritus   (c/get-suoritus opiskeluoikeus)
-              kesto      (kesto herate)
+              kesto      (kesto herate (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))
               tutkinto   (get-in
                            suoritus
                            [:koulutusmoduuli
@@ -115,9 +139,7 @@
                              request-id
                              koulutustoimija
                              suoritus
-                             (f/unparse-local-date
-                               (:year-month-day f/formatters)
-                               alkupvm)))
+                             (str alkupvm)))
               tunnus (:tunnus (:body arvo-resp))
               db-data {:hankkimistapa_id     [:n tapa-id]
                        :hankkimistapa_tyyppi [:s (last
@@ -138,17 +160,11 @@
                        :opiskeluoikeus_oid   [:s (:oid opiskeluoikeus)]
                        :oppija_oid           [:s (:oppija-oid herate)]
                        :koulutustoimija      [:s koulutustoimija]
-                       :niputuspvm           [:s (f/unparse-local-date
-                                                   (:year-month-day f/formatters)
-                                                   niputuspvm)]
+                       :niputuspvm           [:s (str niputuspvm)]
                        :alkupvm              [:s (str alkupvm)]
-                       :viimeinen_vastauspvm [:s (f/unparse-local-date
-                                                   (:year-month-day f/formatters)
-                                                   (t/plus
-                                                     alkupvm
-                                                     (t/days 60)))]
+                       :viimeinen_vastauspvm [:s (str (.plusDays alkupvm 60))]
                        :rahoituskausi        [:s (c/kausi (:loppupvm herate))]
-                       :tallennuspvm         [:s (str (t/today))]
+                       :tallennuspvm         [:s (str (LocalDate/now))]
                        :tutkinnonosa_tyyppi  [:s (:tyyppi herate)]
                        :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]
                        :ohjaaja_ytunnus_kj_tutkinto
