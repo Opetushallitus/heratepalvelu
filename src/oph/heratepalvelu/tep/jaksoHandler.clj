@@ -239,11 +239,8 @@
         (catch ExceptionInfo e
           (if (and
                 (:status (ex-data e))
-                (< 399 (:status (ex-data e)))
-                (> 500 (:status (ex-data e))))
-            (if (= 404 (:status (ex-data e)))
-              (log/error "Ei opiskeluoikeutta " (:opiskeluoikeus-oid
-                                                  (parse-string (.getBody msg) true)))
-              (log/error "Unhandled client error: " e))
+                (= 404 (:status (ex-data e))))
+            (log/error "Ei opiskeluoikeutta " (:opiskeluoikeus-oid
+                                                (parse-string (.getBody msg) true)))
             (do (log/error e)
                 (throw e))))))))
