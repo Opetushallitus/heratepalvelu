@@ -34,8 +34,7 @@
    :success "success"
    :failed "failure"
    :bounced "bounced"
-   :ei-niputettu "ei_niputettu"
-   :yhdistetty "yhdistetty"})
+   :ei-niputettu "ei_niputettu"})
 
 (defn rand-str [len]
   (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))

@@ -87,7 +87,9 @@
                  (+ 1 kesto)
                  kesto)
                (t/plus pvm (t/days 1)))
-        (if (some? (:osa-aikaisuus herate))
+        (if (and (some? (:osa-aikaisuus herate))
+                 (< 0   (:osa-aikaisuus herate))
+                 (> 100 (:osa-aikaisuus herate)))
           (int (Math/ceil (/ (* kesto (:osa-aikaisuus herate)) 100)))
           kesto)))))
 
