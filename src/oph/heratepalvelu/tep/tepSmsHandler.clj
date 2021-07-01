@@ -17,7 +17,7 @@
 
 (gen-class
   :name "oph.heratepalvelu.tep.tepSmsHandler"
-  :methods [[^:static tepSmsHandler
+  :methods [[^:static handleTepSmsSending
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
@@ -70,7 +70,7 @@
     (catch Exception e
       (throw e))))
 
-(defn -tepSmsHandler [this event context]
+(defn -handleTepSmsSending [this event context]
   (log-caller-details-sqs "tepSmsHandler" event context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
@@ -83,7 +83,7 @@
               resp (send-tep-sms phonenumber body)
               status (:status resp)]
           (do
-            (update-status-to-db status ohjaaja_ytunnus_kj_tutkinto niputuspvm)
+            ;; (update-status-to-db status ohjaaja_ytunnus_kj_tutkinto niputuspvm)
             (if (= status 200)
               (do
                 (log/info resp)

@@ -285,8 +285,12 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     const tepSmsHandler = new lambda.Function(this, "tepSmsHandler", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
-      handler: "oph.heratepalvelu.tep.tepSmsHandler::tepSmsHandler",
-      memorySize: Token.asNumber(this.getParameterFromSsm("ehokshandler-memory")),
+      handler: "oph.heratepalvelu.tep.tepSmsHandler::handleTepSmsSending",
+      environment: {
+        ...this.envVars,
+        nippu_table: nippuTable.tableName
+      },
+      memorySize: Token.asNumber(this.getParameterFromSsm("smshandler-memory")),
       reservedConcurrentExecutions:
           Token.asNumber(this.getParameterFromSsm("smshandler-concurrency")),
       timeout: Duration.seconds(
@@ -296,6 +300,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     });
 
     tepSmsHandler.addEventSource(new SqsEventSource(tepSmsQueue, { batchSize: 1, }));
+    nippuTable.grantReadWriteData(tepSmsHandler);
 
     // DLQ tyhjennys
 
