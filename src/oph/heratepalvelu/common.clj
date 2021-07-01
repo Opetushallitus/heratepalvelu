@@ -119,27 +119,15 @@
           (= (:koodiarvo (:tyyppi suoritus)) "nayttotutkintoonvalmistavakoulutus"))
         (:suoritukset opiskeluoikeus)))
 
-(defn next-niputus-date [pvm]
+(defn next-niputus-date [pvm-str]
   (let [[year month day] (map
                            #(Integer. %)
-                           (str/split pvm #"-"))]
+                           (str/split pvm-str #"-"))]
     (if (< day 16)
-      (t/local-date year month 16)
+      (LocalDate/of year month 16)
       (if (= 12 month)
-        (t/local-date (+ year 1) 1 1)
-        (t/local-date year (+ month 1) 1)))))
-
-(defn previous-niputus-date [pvm]
-  (let [[year month day] (map
-                           #(Integer. %)
-                           (str/split pvm #"-"))]
-    (if (< day 16)
-      (t/nth-day-of-the-month year month 1)
-      (t/nth-day-of-the-month
-        (t/minus
-          (t/local-date year month day)
-          (t/months 1))
-        16))))
+        (LocalDate/of (+ year 1) 1 1)
+        (LocalDate/of year (+ month 1) 1)))))
 
 (defn check-organisaatio-whitelist?
   ([koulutustoimija]
