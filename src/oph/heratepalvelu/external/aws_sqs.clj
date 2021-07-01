@@ -37,9 +37,12 @@
     (get-queue-url-with-error-handling
       "services-heratepalvelu-TepSmsQueue")))
 
-(defn build-sms-sqs-message [sms-body phonenumber]
+(defn build-sms-sqs-message [sms-body phonenumber ohjaaja_ytunnus_kj_tutkinto niputuspvm]
   {:body sms-body
-   :phonenumber phonenumber})
+   :phonenumber phonenumber
+   :ohjaaja_ytunnus_kj_tutkinto ohjaaja_ytunnus_kj_tutkinto
+   :niputuspvm niputuspvm
+   })
 
 (defn send-tep-sms-sqs-message [msg]
   (let [resp (.sendMessage sqs-client (-> (SendMessageRequest/builder)
