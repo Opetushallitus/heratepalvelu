@@ -53,7 +53,7 @@
 (defn send-tep-sms [number message]
   (try
     (when (valid-number? number)
-      (let [body {:sender "Opetushallitus"
+      (let [body {:sender "OPH"
                   :destination [number]
                   :text message}
             resp (client/post

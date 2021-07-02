@@ -288,7 +288,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       handler: "oph.heratepalvelu.tep.tepSmsHandler::handleTepSmsSending",
       environment: {
         ...this.envVars,
-        nippu_table: nippuTable.tableName
+        nippu_table: nippuTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-tepSmsHandler`
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("smshandler-memory")),
       reservedConcurrentExecutions:
