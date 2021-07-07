@@ -3,10 +3,10 @@
             [clj-time.coerce :as c]
             [clj-time.core :as t]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.organisaatio :refer [get-organisaatio]]
-            [oph.heratepalvelu.external.arvo :refer :all]
+            [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.ehoks :refer :all]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
@@ -51,13 +51,13 @@
 
 (defn send-lahetys-data-to-ehoks [toimija-oppija tyyppi-kausi data]
   (try
-    (add-lahetys-info-to-kyselytunnus data)
+    (ehoks/add-lahetys-info-to-kyselytunnus data)
     (catch ExceptionInfo e
       (if (= 404 (:status (ex-data e)))
         (let [item (ddb/get-item {:toimija_oppija [:s toimija-oppija]
                                   :tyyppi_kausi [:s tyyppi-kausi]})]
           (try
-            (add-kyselytunnus-to-hoks
+            (ehoks/add-kyselytunnus-to-hoks
               (:ehoks-id item)
               (assoc data
                 :alkupvm (:alkupvm item)
@@ -82,7 +82,7 @@
       (log/info "Ei koulutustoimijaa opiskeluoikeudessa "
                 (:oid opiskeluoikeus) ", haetaan Organisaatiopalvelusta")
       (:parentOid
-        (get-organisaatio
+        (org/get-organisaatio
           (get-in opiskeluoikeus [:oppilaitos :oid]))))))
 
 (defn kausi [alkupvm]
@@ -187,13 +187,17 @@
       (when
         (check-duplicate-herate?
           oppija koulutustoimija laskentakausi kyselytyyppi)
-        (let [arvo-resp (create-amis-kyselylinkki
-                          (build-arvo-request-body
-                            herate
-                            opiskeluoikeus
-                            uuid
-                            koulutustoimija
-                            suoritus))
+        (let [req-body (arvo/build-arvo-request-body
+                         herate
+                         opiskeluoikeus
+                         uuid
+                         koulutustoimija
+                         suoritus)
+              arvo-resp (if (= (:tyyppi herate) "aloittaneet")
+                          (arvo/create-amis-kyselylinkki
+                            req-body)
+                          (arvo/create-amis-kyselylinkki-catch-404
+                            req-body))
               voimassa-loppupvm (:voimassa_loppupvm arvo-resp)]
           (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
             (try
@@ -220,7 +224,7 @@
                             {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
                                              "attribute_not_exists(tyyppi_kausi)")})
               (try
-                (add-kyselytunnus-to-hoks (:ehoks-id herate)
+                (ehoks/add-kyselytunnus-to-hoks (:ehoks-id herate)
                                           {:kyselylinkki kyselylinkki
                                            :tyyppi       kyselytyyppi
                                            :alkupvm      alkupvm
@@ -237,17 +241,17 @@
                                                                     :koodiarvo])
                            :kyselytunnus          (last (str/split kyselylinkki #"/"))
                            :voimassa-loppupvm     voimassa-loppupvm}))
-              (catch ConditionalCheckFailedException e
+              (catch ConditionalCheckFailedException _
                 (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                           oppija " koulutustoimijalla " koulutustoimija
                           "(tyyppi " kyselytyyppi " kausi " (kausi alkupvm) ")"
                           "Deaktivoidaan kyselylinkki, request-id " uuid)
-                (delete-amis-kyselylinkki kyselylinkki))
+                (arvo/delete-amis-kyselylinkki kyselylinkki))
               (catch AwsServiceException e
                 (log/error "Virhe tietokantaan tallennettaessa " kyselylinkki " " uuid)
-                (delete-amis-kyselylinkki kyselylinkki)
+                (arvo/delete-amis-kyselylinkki kyselylinkki)
                 (throw e))
               (catch Exception e
-                (delete-amis-kyselylinkki kyselylinkki)
+                (arvo/delete-amis-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
                 (throw e)))))))))
