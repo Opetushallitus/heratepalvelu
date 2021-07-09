@@ -34,7 +34,8 @@
    :success "success"
    :failed "failure"
    :bounced "bounced"
-   :ei-niputettu "ei_niputettu"})
+   :ei-niputettu "ei_niputettu"
+   :email-mismatch "email-mismatch"})
 
 (defn rand-str [len]
   (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
