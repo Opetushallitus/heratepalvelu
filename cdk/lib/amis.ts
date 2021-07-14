@@ -320,7 +320,20 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       enabled: false
     });
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler,
+    const resendBetweenHandler = new lambda.Function(this, "AMIS-resendBetweenHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        caller_id: `1.2.246.562.10.00000000001.${id}-resendBetweenHandler`,
+      },
+      handler: "oph.heratepalvelu.amis.resendBetweenHandler::handleResendBetween",
+      memorySize: 1024,
+      timeout: Duration.seconds(60),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, resendBetweenHandler,
       AMISEmailResendHandler, AMISMuistutusHandler, AMISEmailStatusHandler
     ].forEach(
       lambdaFunction => {

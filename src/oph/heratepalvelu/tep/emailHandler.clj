@@ -17,11 +17,8 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- pilotti-lahetysosoite [email jaksot]
-  (let [item (ddb/get-item {:organisaatio-oid [:s (:koulutuksenjarjestaja email)]}
-                           (:orgwhitelist-table env))
-        pilottiosoite (:pilottiosoite item)
-        ohjaaja-email (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
+(defn- lahetysosoite [email jaksot]
+  (let [ohjaaja-email (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
                                                  (if (some? (:ohjaaja_email %2))
                                                    (if (= (:ohjaaja_email %1) (:ohjaaja_email %2))
                                                      %1
@@ -30,19 +27,7 @@
                                                  %2)
                                               jaksot))]
     (if (some? ohjaaja-email)
-      (if (some? pilottiosoite)
-        (if (= "ohjaaja" pilottiosoite)
-          ohjaaja-email
-          pilottiosoite)
-        (do (log/warn "Ei pilottiosoitetta organisaatiolle" (:koulutuksenjarjestaja email))
-            (ddb/update-item
-              {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
-               :niputuspvm                  [:s (:niputuspvm email)]}
-              {:update-expr      "SET #kasittelytila = :kasittelytila"
-               :expr-attr-names {"#kasittelytila" "kasittelytila"}
-               :expr-attr-vals  {":kasittelytila" [:s "ei-pilottiosoitetta"]}}
-              (:nippu-table env))
-            nil))
+      ohjaaja-email
       (do (log/warn "Ei yksiselitteistä ohjaajan sahköpostia "
                     (:ohjaaja_ytunnus_kj_tutkinto email) ","
                     (:niputuspvm email) ","
@@ -52,7 +37,7 @@
              :niputuspvm                  [:s (:niputuspvm email)]}
             {:update-expr      "SET #kasittelytila = :kasittelytila"
              :expr-attr-names {"#kasittelytila" "kasittelytila"}
-             :expr-attr-vals  {":kasittelytila" [:s "email-mismatch"]}}
+             :expr-attr-vals  {":kasittelytila" [:s (:email-mismatch c/kasittelytilat)]}}
             (:nippu-table env))
           nil))))
 
@@ -82,7 +67,7 @@
                                        (map
                                          #(:nimi (org/get-organisaatio (:oppilaitos %1)))
                                          jaksot)))
-              osoite (pilotti-lahetysosoite email jaksot)
+              osoite (lahetysosoite email jaksot)
               puhelinnumero (sms-lahetysosoite jaksot)
               sms-kasittelytila (:sms-lahetystila email)]
           (if (c/has-time-to-answer? (:voimassaloppupvm email))
