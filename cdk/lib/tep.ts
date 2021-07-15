@@ -112,11 +112,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       visibilityTimeout: (Duration.seconds(60))
     });
 
-    const tepSmsDeadLetterQueue = new sqs.Queue(this, "TepSmsDLQ", {
-      retentionPeriod: Duration.days(14),
-      visibilityTimeout: (Duration.seconds(180))
-    });
-
     const herateQueue = new sqs.Queue(this, "HerateQueue", {
       queueName: `${id}-HerateQueue`,
       deadLetterQueue: {
@@ -125,6 +120,11 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       },
       visibilityTimeout: Duration.seconds(60),
       retentionPeriod: Duration.days(14)
+    });
+
+    const tepSmsDeadLetterQueue = new sqs.Queue(this, "TepSmsDLQ", {
+      retentionPeriod: Duration.days(14),
+      visibilityTimeout: (Duration.seconds(180))
     });
 
     const tepSmsQueue = new sqs.Queue(this, "TepSmsQueue", {
