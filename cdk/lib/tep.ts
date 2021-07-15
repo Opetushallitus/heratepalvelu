@@ -48,7 +48,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         "oppilaitos",
         "tyopaikan_nimi",
         "ohjaaja_email",
-        "viimeinen_vastauspvm"
+        "viimeinen_vastauspvm",
+        "ohjaaja_puhelinnumero"
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
@@ -241,7 +242,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         nippu_table: nippuTable.tableName,
         orgwhitelist_table: organisaatioWhitelistTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-emailHandler`,
-        sms_queue: tepSmsQueue.queueName
+        sms_queue: tepSmsQueue.queueUrl
       },
       memorySize: Token.asNumber(1024),
       timeout: Duration.seconds(300),
@@ -259,6 +260,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     jaksotunnusTable.grantReadData(emailHandler);
     organisaatioWhitelistTable.grantReadData(emailHandler);
     nippuTable.grantReadWriteData(emailHandler);
+
+    tepSmsQueue.grantSendMessages(emailHandler);
 
     const emailStatusHandler = new lambda.Function(this, "TEPEmailStatusHandler", {
       runtime: lambda.Runtime.JAVA_8,

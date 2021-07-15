@@ -156,10 +156,10 @@
                 (:nippu-table env))
               (catch Exception e
                 (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" email)
-                (log/error e)))))))
+                (log/error e))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                                  :niputuspvm    [:le [:s (str (t/today))]]}
                                 {:index "niputusIndex"
                                  :limit 10}
-                                (:nippu-table env))))))
+                                (:nippu-table env)))))))

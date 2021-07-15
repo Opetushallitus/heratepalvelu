@@ -50,7 +50,7 @@
     (let [enddate (first (str/split loppupvm #"T"))
           [years months days] (map #(Integer. %)
                                    (str/split enddate #"-"))]
-      (not (t/before? (t/local-date years months days) (t/today))))))
+      (not (.isBefore (LocalDate/of years months days) (LocalDate/now))))))
 
 (defn send-lahetys-data-to-ehoks [toimija-oppija tyyppi-kausi data]
   (try

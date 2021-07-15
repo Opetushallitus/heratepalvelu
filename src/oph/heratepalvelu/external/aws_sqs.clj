@@ -14,29 +14,6 @@
         (.region (Region/EU_WEST_1))
         (.build)))
 
-(defn- get-queue-url [queue-name]
-  (when (some? sqs-client)
-    (if (nil? (:stage env))
-      (log/warn "Stage missing from env variables")
-      (.queueUrl (.getQueueUrl
-                   sqs-client
-                   (-> (GetQueueUrlRequest/builder)
-                       (.queueName
-                         (str (:stage env) "-"
-                              queue-name))
-                       (.build)))))))
-
-(defn- get-queue-url-with-error-handling [queue-name]
-  (try
-    (get-queue-url queue-name)
-    (catch QueueDoesNotExistException e
-      (log/error (str queue-name " does not exist")))))
-
-(def ^:private sms-queue-url
-  (delay
-    (get-queue-url-with-error-handling
-      (:sms-queue env))))
-
 (defn build-sms-sqs-message [oppilaitokset phonenumber
                              ohjaaja_ytunnus_kj_tutkinto niputuspvm & muistutus]
   {:oppilaitokset oppilaitokset
@@ -47,7 +24,7 @@
 
 (defn send-tep-sms-sqs-message [msg]
   (let [resp (.sendMessage sqs-client (-> (SendMessageRequest/builder)
-                                          (.queueUrl "queue-url")
+                                          (.queueUrl (:sms-queue env))
                                           (.messageBody (json/write-str msg))
                                           (.build)))]
     (when-not (some? (.messageId resp))
