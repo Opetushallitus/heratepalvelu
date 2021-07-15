@@ -20,12 +20,13 @@
          (= (str (.getNumberType utilobj numberobj))
             "MOBILE"))))
 
-(defn msg-body [data muistutus]
+(defn msg-body [linkki oppilaitokset muistutus]
   )
 
 (defn send-tep-sms [number message]
   (try
-    (when (valid-number? number)
+    (when (and (valid-number? number)
+               (= "sade" (:stage env)))
       (let [body {:sender "OPH"
                   :destination [number]
                   :text message}

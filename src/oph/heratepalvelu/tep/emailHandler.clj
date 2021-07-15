@@ -59,7 +59,7 @@
              :niputuspvm                  [:s (:niputuspvm email)]}
             {:update-expr     (str "SET #sms-kasittelytila = :sms-kasittelytila")
              :expr-attr-names {"#sms-kasittelytila" "sms_kasittelytila"}
-             :expr-attr-vals {":sms-kasittelytila" (:phone-mismatch c/kasittelytilat)}}
+             :expr-attr-vals {":sms-kasittelytila" [:s (:phone-mismatch c/kasittelytilat)]}}
             (:nippu-table env))
           nil))))
 
