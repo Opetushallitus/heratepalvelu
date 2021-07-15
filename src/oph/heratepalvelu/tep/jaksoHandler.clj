@@ -180,6 +180,8 @@
                 (cond-> db-data
                         (not-empty (:tyopaikkaohjaaja-email herate))
                         (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
+                        (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
+                        (assoc :ohjaaja_puhelinnumero [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
                         (not-empty (:tutkinnonosa-koodi herate))
                         (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
                         (not-empty (:tutkinnonosa-nimi herate))
@@ -202,6 +204,7 @@
                  :koulutuksenjarjestaja       [:s koulutustoimija]
                  :tutkinto                    [:s tutkinto]
                  :kasittelytila               [:s (:ei-niputettu c/kasittelytilat)]
+                 :sms_kasittelytila           [:s (:ei-lahetetty c/kasittelytilat)]
                  :niputuspvm                  [:s (str niputuspvm)]}
                 {} (:nippu-table env))
               (catch ConditionalCheckFailedException e
