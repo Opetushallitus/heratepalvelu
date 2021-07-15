@@ -41,13 +41,27 @@
             (:nippu-table env))
           nil))))
 
-(defn- sms-lahetysosoite [jaksot]
-  (:ohjaaja_puhelinnumero (reduce #(if (and (some? (:ohjaaja_puhelinnumero %1))
-                                            (= (:ohjaaja_puhelinnumero %1)
-                                               (:ohjaaja_puhelinnumero %2)))
-                                       %1
-                                       (reduced nil))
-                                  jaksot)))
+(defn- sms-lahetysosoite [email jaksot]
+  (let [phone (:ohjaaja_puhelinnumero (reduce #(if (and (some? (:ohjaaja_puhelinnumero %1))
+                                                         (= (:ohjaaja_puhelinnumero %1)
+                                                            (:ohjaaja_puhelinnumero %2)))
+                                                  %1
+                                                  (reduced nil))
+                                               jaksot))]
+    (if (some? phone)
+      phone
+      (do (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa "
+                    (:ohjaaja_ytunnus_kj_tutkinto email) ","
+                    (:niputuspvm email) ","
+                    (reduce #(conj %1 (:ohjaaja_puhelinnumero %2)) #{} jaksot))
+          (ddb/update-item
+            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
+             :niputuspvm                  [:s (:niputuspvm email)]}
+            {:update-expr     (str "SET #sms-kasittelytila = :sms-kasittelytila")
+             :expr-attr-names {"#sms-kasittelytila" "sms_kasittelytila"}
+             :expr-attr-vals {":sms-kasittelytila" status}}
+            (:nippu-table env))
+          nil))))
 
 (defn -handleSendTEPEmails [this event context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
@@ -68,8 +82,8 @@
                                          #(:nimi (org/get-organisaatio (:oppilaitos %1)))
                                          jaksot)))
               osoite (lahetysosoite email jaksot)
-              puhelinnumero (sms-lahetysosoite jaksot)
-              sms-kasittelytila (:sms-lahetystila email)]
+              puhelinnumero (sms-lahetysosoite email jaksot)
+              sms-kasittelytila (:sms_kasittelytila email)]
           (if (c/has-time-to-answer? (:voimassaloppupvm email))
             (when (some? osoite)
               (try
@@ -124,18 +138,19 @@
                            (= sms-kasittelytila (:failed c/kasittelytilat))
                            (= sms-kasittelytila (:ei-lahetetty c/kasittelytilat))))
               (try
-                  (ddb/update-item
-                    {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
-                     :niputuspvm                  [:s (:niputuspvm email)]}
-                    {:update-expr     (str "SET #sms-kasittelytila = :sms-kasittelytila")
-                     :expr-attr-names {"#sms-kasittelytila" "sms-kasittelytila"}
-                     :expr-attr-vals {":sms-kasittelytila" [:s (:ei-lahetetty c/kasittelytilat)]}}
-                    (:nippu-table env))
                 (sqs/send-tep-sms-sqs-message (sqs/build-sms-sqs-message
-                                    "Test Body"
-                                    puhelinnumero
-                                    (:ohjaaja_ytunnus_kj_tutkinto email)
-                                    (:niputuspvm email)))
+                                                (:kyselylinkki email)
+                                                oppilaitokset
+                                                puhelinnumero
+                                                (:ohjaaja_ytunnus_kj_tutkinto email)
+                                                (:niputuspvm email)))
+                (ddb/update-item
+                  {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
+                   :niputuspvm                  [:s (:niputuspvm email)]}
+                  {:update-expr     (str "SET #sms-kasittelytila = :sms-kasittelytila")
+                   :expr-attr-names {"#sms-kasittelytila" "sms_kasittelytila"}
+                   :expr-attr-vals {":sms-kasittelytila" [:s (:ei-lahetetty c/kasittelytilat)]}}
+                  (:nippu-table env))
               (catch AwsServiceException e
                 (log/error (str "SMS-viestin tilan päivityksessä tapahtunut virhe! Numero: " puhelinnumero))
                 (log/error e))

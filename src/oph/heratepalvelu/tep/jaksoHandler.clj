@@ -37,7 +37,6 @@
               :tyopaikan-nimi         (s/conditional not-empty s/Str)
               :tyopaikan-ytunnus      (s/conditional not-empty s/Str)
               :tyopaikkaohjaaja-email (s/maybe s/Str)
-              :tyopaikkaohjaaja-puhelinnumero (s/maybe s/Str)
               :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)
               (s/optional-key :osa-aikaisuus)                  (s/maybe s/Num)
               (s/optional-key :oppisopimuksen-perusta)         (s/maybe s/Str)
@@ -205,6 +204,7 @@
                  :koulutuksenjarjestaja       [:s koulutustoimija]
                  :tutkinto                    [:s tutkinto]
                  :kasittelytila               [:s (:ei-niputettu c/kasittelytilat)]
+                 :sms_kasittelytila           [:s (:ei-lahetetty c/kasittelytilat)]
                  :niputuspvm                  [:s (str niputuspvm)]}
                 {} (:nippu-table env))
               (catch ConditionalCheckFailedException e
