@@ -122,6 +122,21 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       retentionPeriod: Duration.days(14)
     });
 
+    const tepSmsDeadLetterQueue = new sqs.Queue(this, "TepSmsDLQ", {
+      retentionPeriod: Duration.days(14),
+      visibilityTimeout: (Duration.seconds(180))
+    });
+
+    const tepSmsQueue = new sqs.Queue(this, "TepSmsQueue", {
+      queueName: `${id}-TepSmsQueue`,
+      deadLetterQueue: {
+        queue: tepSmsDeadLetterQueue,
+        maxReceiveCount: 5
+      },
+      visibilityTimeout: Duration.seconds(180),
+      retentionPeriod: Duration.days(14)
+    });
+
     // S3
 
     const ehoksHerateTEPAsset = new s3assets.Asset(

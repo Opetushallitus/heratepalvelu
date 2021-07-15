@@ -102,29 +102,32 @@
                [:meta {:charset "UTF-8"}]]
               [:body
                [:div
-                ;[:p "Tässä lähettämämme viesti työpaikkaohjaajan kyselyyn vielä uudelleen, koska aiemmin lähettämästämme viestistä puuttui vastauslinkki. Pääset vastaamaan kyselyyn alla olevan linkin kautta. Pahoittelemme tuplalähetystä."]
                 [:p [:b "Hyvä työpaikkaohjaaja!"]]
-                [:p "Kiitos, että olet ohjannut oppisopimus- ja/tai koulutussopimusopiskelijoita. Kerro meille, miten yhteistyömme on toiminut, missä olemme onnistuneet ja mitä voisimme tehdä vielä paremmin. Toivomme, että käyttäisit noin 5 minuuttia aikaa tähän kyselyyn vastaamiseen. Vastauksesi on tärkeä ja sitä käytetään  ammatillisen koulutuksen kehittämiseen."]
-                [:p "Kiitos, että vastaat."]
+                [:p "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! Tehdään yhdessä osaajia työelämään."]
+                [:p "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme kehittämiseksi. Haluamme kuulla kokemuksianne ohjaustyöstä ja yhteistyöstä oppilaitoksen kanssa. Kyselyssä ei arvioida opiskelijaa. Kyselyn voi siirtää työpaikallanne toiselle henkilölle, jos hän on käytännössä enemmän ohjannut opiskelijaa. Vastaajan henkilötietoja ei kysytä."]
+                [:p "Palautteenne on tärkeä, kiitos, että vastaat!"]
+                [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+                [:p "Ystävällisin terveisin,"]
                 [:p (str/join ", " (map :fi oppilaitokset))]
-                [:p "Työpaikkaohjaajakysely: " [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
-                [:p "Tämä on valtakunnallinen palautekysely, jonka tekevät yhteistyössä Opetushallitus ja ammatilliset oppilaitokset kaikille työpaikoille, joissa on ollut oppisopimus- tai koulutussopimusopiskelijoita.  Osoitelähde: Opetushallituksen eHOKS-rekisteri."]
+                [:p "Osoitelähde: Opetushallituksen (OPH) eHOKS-rekisteri"]
                 horizontal-line
-                ;[:p "Här kommer meddelandet om enkäten till arbetsplatshandledare en gång till eftersom svarslänken saknades i vårt förra meddelande. Du kan svara på enkäten genom länken nedan. Vi beklagar det dubbla meddelandet."]
-                [:p [:b "Bästa arbetsplatshandledaren!"]]
-                [:p "Tack för att du har handlett läroavtals- och/eller utbildningsavtalsstuderanden. Berätta för oss om hur vårt samarbete har fungerat, var vi har lyckats med och vad kan vi göra ännu bättre. Vi hoppas att du använder 5 minuter av din tid för att svara på den här enkäten. Ditt svar är viktigt och kommer att användas för att utveckla yrkesutbildningen."]
-                [:p "Tack för att du svarar."]
+                [:p [:b "Bästa arbetsplatshandledare!"]]
+                [:p "Tack för att Ni handleder studerande på utbildnings-/läroavtal! Tillsammans skapar vi experter för arbetslivet. "]
+                [:p "Vi ber er svara på den här enkäten (5 min) för att utveckla vårt samarbete. Vi vill lyssna in er erfarenheter av det dagliga handledningsarbetet och samarbetet med utbildningsanordnaren. Studerande utvärderas inte i enkäten. Enkäten kan vidarebefordras till den person som i praktiken har deltagit mer i handledningen av den studerande. Respondentens personliga information efterfrågas inte."]
+                [:p "Din respons är viktig, tack för att du svarar!"]
+                [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+                [:p "Med vänliga hälsningar,"]
                 [:p (str/join ", " (map #(or (:sv %1) (:fi %1)) oppilaitokset))]
-                [:p "Enkät till arbetsplatshandledaren: " [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
-                [:p "Detta är en nationell enkät som genomförs i samarbete med Utbildningsstyrelsen och yrkesläroanstalternas till alla arbetsplatser som har haft läroavtals- eller utbildningsavtalsstuderande. Addresskälla: Utbildningsstyrelssens ePUK-register."]
+                [:p "Adresskälla: Utbildningsstyrelsens (UBS) ePUK-registret"]
                 horizontal-line
-                ;[:p "Here is the email regarding the survey for workplace instructors once more. The original message we sent did not include a reply link. You can answer the survey by clicking on the link below. We apologize for the multiple emails."]
                 [:p [:b "Dear workplace instructor!"]]
-                [:p "Thank you for guiding the apprentices and/or training agreement student´s learning. Tell us how our collaboration has worked, where we have succeeded and what we could do even better. We would like you to spend some 5 minutes on responding to this survey. Your experiences matter and your responses will be used to develop vocational education and training."]
-                [:p "Thank you for responding."]
+                [:p "Thank you for guiding students with training agreement/apprenticeship! Let’s make experts for the world of work together."]
+                [:p "Please answer this survey (5 min) to develop our cooperation. We would like to hear about your experiences of the guidance work and cooperation with the educational institution. The survey does not assess the student. The survey can be forwarded to another person at your workplace if he or she has guided the student more. Respondent´s personal information is not asked."]
+                [:p "Your feedback is important, thank you for responding!"]
+                [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+                [:p "With best regards,"]
                 [:p (str/join ", " (map #(or (:en %1) (:fi %1)) oppilaitokset))]
-                [:p "Survey to workplace instructors: " [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
-                [:p "This is a national feedback survey conducted in collaboration with National Agency for Education and Training (EDUFI) and Vocational Education and Training Institutions for all workplaces that have had students in apprenticeship training or training agreement training. Address source: EDUFI's eHOKS-register."]]]])))
+                [:p "Address source: Opetushallituksen (OPH) eHOKS-register"]]]])))
 
 (defn send-email [email]
   "Send email to viestintäpalvelu, parameter 'email' is a map containing keys
