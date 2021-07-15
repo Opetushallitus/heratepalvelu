@@ -20,7 +20,7 @@
          (= (str (.getNumberType utilobj numberobj))
             "MOBILE"))))
 
-(defn msg-body [data]
+(defn msg-body [data muistutus]
   )
 
 (defn send-tep-sms [number message]

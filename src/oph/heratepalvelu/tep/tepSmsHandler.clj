@@ -2,18 +2,12 @@
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.http-client :as client]
             [oph.heratepalvelu.external.koski :refer [get-opiskeluoikeus]]
             [oph.heratepalvelu.external.elisa :as elisa]
-            [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.external.aws-ssm :as ssm]
-            [oph.heratepalvelu.common :as c]
             [cheshire.core :refer [generate-string]]
             [environ.core :refer [env]])
   (:import (com.fasterxml.jackson.core JsonParseException)
-           (com.google.i18n.phonenumbers PhoneNumberUtil)
-           (com.google.i18n.phonenumbers NumberParseException)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (clojure.lang ExceptionInfo)))
 
@@ -43,13 +37,13 @@
     (doseq [msg messages]
       (try
         (let [msg (parse-string (.getBody msg) true)
-              body (elisa/msg-body msg)
+              nippu (ddb/get-item {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto msg)]
+                                   :niputuspvm                  [:s (:niputuspvm msg)]})
+              body (elisa/msg-body (:kyselylinkki nippu) (:oppilaitokset msg) (:muistutus msg))
               phonenumber (:phonenumber msg)
-              ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto msg)
-              niputuspvm (:niputuspvm msg)
               resp (elisa/send-tep-sms phonenumber body)
               status (get-in resp [:body :messages (keyword phonenumber) :status])]
-          (update-status-to-db status ohjaaja_ytunnus_kj_tutkinto niputuspvm)
+          ;(update-status-to-db status ohjaaja_ytunnus_kj_tutkinto niputuspvm)
           (log/info resp)
           (log/info resp "SMS sent to " phonenumber))
         (catch JsonParseException e

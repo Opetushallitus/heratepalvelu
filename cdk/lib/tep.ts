@@ -241,6 +241,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         nippu_table: nippuTable.tableName,
         orgwhitelist_table: organisaatioWhitelistTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-emailHandler`,
+        sms_queue: tepSmsQueue.queueName
       },
       memorySize: Token.asNumber(1024),
       timeout: Duration.seconds(300),

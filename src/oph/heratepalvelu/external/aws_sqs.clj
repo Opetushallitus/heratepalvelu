@@ -35,12 +35,11 @@
 (def ^:private sms-queue-url
   (delay
     (get-queue-url-with-error-handling
-      "services-heratepalvelu-TepSmsQueue")))
+      (:sms-queue env))))
 
-(defn build-sms-sqs-message [kyselylinkki oppilaitokset phonenumber
+(defn build-sms-sqs-message [oppilaitokset phonenumber
                              ohjaaja_ytunnus_kj_tutkinto niputuspvm & muistutus]
-  {:linkki kyselylinkki
-   :oppilaitokset oppilaitokset
+  {:oppilaitokset oppilaitokset
    :phonenumber phonenumber
    :ohjaaja_ytunnus_kj_tutkinto ohjaaja_ytunnus_kj_tutkinto
    :niputuspvm niputuspvm

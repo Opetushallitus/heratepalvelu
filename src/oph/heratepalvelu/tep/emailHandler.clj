@@ -59,7 +59,7 @@
              :niputuspvm                  [:s (:niputuspvm email)]}
             {:update-expr     (str "SET #sms-kasittelytila = :sms-kasittelytila")
              :expr-attr-names {"#sms-kasittelytila" "sms_kasittelytila"}
-             :expr-attr-vals {":sms-kasittelytila" status}}
+             :expr-attr-vals {":sms-kasittelytila" (:phone-mismatch c/kasittelytilat)}}
             (:nippu-table env))
           nil))))
 
@@ -135,11 +135,9 @@
                   (log/error e))))
             (when (and (some? puhelinnumero)
                        (or (nil? sms-kasittelytila)
-                           (= sms-kasittelytila (:failed c/kasittelytilat))
                            (= sms-kasittelytila (:ei-lahetetty c/kasittelytilat))))
               (try
                 (sqs/send-tep-sms-sqs-message (sqs/build-sms-sqs-message
-                                                (:kyselylinkki email)
                                                 oppilaitokset
                                                 puhelinnumero
                                                 (:ohjaaja_ytunnus_kj_tutkinto email)
@@ -149,7 +147,7 @@
                    :niputuspvm                  [:s (:niputuspvm email)]}
                   {:update-expr     (str "SET #sms-kasittelytila = :sms-kasittelytila")
                    :expr-attr-names {"#sms-kasittelytila" "sms_kasittelytila"}
-                   :expr-attr-vals {":sms-kasittelytila" [:s (:ei-lahetetty c/kasittelytilat)]}}
+                   :expr-attr-vals {":sms-kasittelytila" [:s (:queued c/kasittelytilat)]}}
                   (:nippu-table env))
               (catch AwsServiceException e
                 (log/error (str "SMS-viestin tilan päivityksessä tapahtunut virhe! Numero: " puhelinnumero))
