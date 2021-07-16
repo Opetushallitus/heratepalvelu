@@ -10,15 +10,16 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleDBUpdate [this event context]
-  (let [items (ddb/query-items {:kasittelytila [:eq [:s "viestintapalvelussa"]]
-                                :niputuspvm    [:le [:s (str (t/today))]]}
-                               {:index "niputusIndex"}
-                               (:nippu-table env))]
+  (let [items (ddb/scan
+                {:filter-expression "attribute_exists(tyopaikkaohjaaja_puhelinnumero)"}
+                (:nippu-table env))]
     (doseq [item items]
       (ddb/update-item
         {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]
          :niputuspvm                  [:s (:niputuspvm item)]}
-        {:update-expr     "SET #value = :value"
-         :expr-attr-names {"#value" "kasittelytila"}
-         :expr-attr-vals {":value" [:s "ei_lahetetty"]}}
+        {:update-expr     "SET #value1 = :value1, #value2 = :value2 REMOVE tyopaikkaohjaaja_puhelinnumero"
+         :expr-attr-names {"#value1" "sms_kasittelytila"
+                           "#value2" "ohjaaja_puhelinnumero"}
+         :expr-attr-vals {":value1" [:s "ei_lahetetty"]
+                          ":value2" [:s (:tyopaikkaohjaaja_puhelinnumero item)]}}
         (:nippu-table env)))))
