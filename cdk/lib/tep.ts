@@ -347,7 +347,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       environment: {
         table: nippuTable.tableName
       },
-      handler: "oph.heratepalvelu.util.DLQresendHandler::handleDLQresend",
+      handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
       memorySize: 1024,
       timeout: Duration.seconds(180),
       tracing: lambda.Tracing.ACTIVE
