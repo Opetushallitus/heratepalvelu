@@ -344,7 +344,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     // IAM
 
-    [jaksoHandler, timedOperationsHandler, niputusHandler, emailHandler, emailStatusHandler].forEach(
+    [jaksoHandler, timedOperationsHandler, niputusHandler, emailHandler, emailStatusHandler, tepSmsHandler].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
