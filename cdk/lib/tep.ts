@@ -11,7 +11,6 @@ import { Duration, Token } from "@aws-cdk/core";
 import { HeratepalveluStack } from "./heratepalvelu";
 import {CfnEventSourceMapping} from "@aws-cdk/aws-lambda";
 
-
 export class HeratepalveluTEPStack extends HeratepalveluStack {
   constructor(
     scope: cdk.App,
@@ -341,6 +340,20 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       batchSize: 1,
       enabled: false
     });
+
+    const dbChanger = new lambda.Function(this, "", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      environment: {
+        table: nippuTable.tableName
+      },
+      handler: "oph.heratepalvelu.util.DLQresendHandler::handleDLQresend",
+      memorySize: 1024,
+      timeout: Duration.seconds(180),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    nippuTable.grantReadWriteData(dbChanger);
 
     // IAM
 

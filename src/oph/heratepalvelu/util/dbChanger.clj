@@ -12,7 +12,7 @@
 (defn -handleDBUpdate [this event context]
   (let [items (ddb/scan
                 {:filter-expression "attribute_exists(tyopaikkaohjaaja_puhelinnumero)"}
-                (:nippu-table env))]
+                (:table env))]
     (doseq [item items]
       (ddb/update-item
         {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]
@@ -22,4 +22,4 @@
                            "#value2" "ohjaaja_puhelinnumero"}
          :expr-attr-vals {":value1" [:s "ei_lahetetty"]
                           ":value2" [:s (:tyopaikkaohjaaja_puhelinnumero item)]}}
-        (:nippu-table env)))))
+        (:table env)))))
