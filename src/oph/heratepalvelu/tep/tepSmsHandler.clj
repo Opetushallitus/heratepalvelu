@@ -1,16 +1,12 @@
 (ns oph.heratepalvelu.tep.tepSmsHandler
-  (:require [cheshire.core :refer [parse-string]]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.koski :refer [get-opiskeluoikeus]]
             [oph.heratepalvelu.external.elisa :as elisa]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [cheshire.core :refer [generate-string]]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.organisaatio :as org])
-  (:import (com.fasterxml.jackson.core JsonParseException)
-           (software.amazon.awssdk.awscore.exception AwsServiceException)
+  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
            (clojure.lang ExceptionInfo)
            (java.time LocalDate)))
 
@@ -20,18 +16,25 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- update-status-to-db [status ohjaaja_ytunnus_kj_tutkinto niputuspvm]
-  (let []
+(defn- update-status-to-db [status puhelinnumero nippu]
+  (let [ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
+        niputuspvm                  (:niputuspvm nippu)]
     (try
       (ddb/update-item
         {:ohjaaja_ytunnus_kj_tutkinto [:s ohjaaja_ytunnus_kj_tutkinto]
          :niputuspvm                  [:s niputuspvm]}
-        {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila,"
-                               "#sms_lahetyspvm = :sms_lahetyspvm")
+        {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila, "
+                               "#sms_lahetyspvm = :sms_lahetyspvm, "
+                               "#sms_muistutukset = :sms_muistutukset, "
+                               "#lahetettynumeroon = :lahetettynumeroon")
          :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"
-                           "#sms_lahetyspvm" "sms_lahetyspvm"}
+                           "#sms_lahetyspvm" "sms_lahetyspvm"
+                           "#sms_muistutukset" "sms_muistutukset"
+                           "#lahetettynumeroon" "lahetettynumeroon"}
          :expr-attr-vals  {":sms_kasittelytila" [:s status]
-                           ":sms_lahetyspvm"    [:s (str (LocalDate/now))]}}
+                           ":sms_lahetyspvm"    [:s (str (LocalDate/now))]
+                           ":sms_muistutukset"  [:n 0]
+                           ":lahetettynumeroon" [:s puhelinnumero]}}
         (:nippu-table env))
       (catch Exception e
         (log/error (str "Error in update-status-to-db for " ohjaaja_ytunnus_kj_tutkinto " , " niputuspvm " , " status))
@@ -90,9 +93,8 @@
                       resp (elisa/send-tep-sms puhelinnumero body)
                       ;status (get-in resp [:body :messages (keyword puhelinnumero) :status])
                       ]
-                  ;(update-status-to-db status ohjaaja_ytunnus_kj_tutkinto niputuspvm)
-                  (log/info resp)
-                  (log/info resp "SMS sent to " puhelinnumero))
+                  ;(update-status-to-db status puhelinnumero nippu)
+                  (log/info resp))
                 (catch AwsServiceException e
                   (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
                   (log/error e))
@@ -114,11 +116,11 @@
               {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
                :niputuspvm                  [:s (:niputuspvm nippu)]}
               {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                                     "#lahetyspvm = :lahetyspvm")
+                                     "#sms_lahetyspvm = :sms_lahetyspvm")
                :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"
-                                 "#lahetyspvm" "lahetyspvm"}
+                                 "#sms_lahetyspvm" "sms_lahetyspvm"}
                :expr-attr-vals {":sms_kasittelytila" [:s (:vastausaika-loppunut c/kasittelytilat)]
-                                ":lahetyspvm" [:s (str (LocalDate/now))]}}
+                                ":sms_lahetyspvm" [:s (str (LocalDate/now))]}}
               (:nippu-table env))
             (catch Exception e
               (log/error "Virhe sms-lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" nippu)

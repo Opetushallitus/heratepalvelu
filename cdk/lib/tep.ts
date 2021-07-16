@@ -93,6 +93,19 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       projectionType: dynamodb.ProjectionType.ALL
     });
 
+    nippuTable.addGlobalSecondaryIndex({
+      indexName: "smsIndex",
+      partitionKey: {
+        name: "sms_kasittelytila",
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: "niputuspvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      projectionType: dynamodb.ProjectionType.ALL
+    })
+
     const organisaatioWhitelistTable = new dynamodb.Table(
         this,
         "OrganisaatioWhitelistTable",
@@ -120,21 +133,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
-      retentionPeriod: Duration.days(14)
-    });
-
-    const tepSmsDeadLetterQueue = new sqs.Queue(this, "TepSmsDLQ", {
-      retentionPeriod: Duration.days(14),
-      visibilityTimeout: (Duration.seconds(180))
-    });
-
-    const tepSmsQueue = new sqs.Queue(this, "TepSmsQueue", {
-      queueName: `${id}-TepSmsQueue`,
-      deadLetterQueue: {
-        queue: tepSmsDeadLetterQueue,
-        maxReceiveCount: 5
-      },
-      visibilityTimeout: Duration.seconds(180),
       retentionPeriod: Duration.days(14)
     });
 
@@ -242,7 +240,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         nippu_table: nippuTable.tableName,
         orgwhitelist_table: organisaatioWhitelistTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-emailHandler`,
-        sms_queue: tepSmsQueue.queueUrl
       },
       memorySize: Token.asNumber(1024),
       timeout: Duration.seconds(300),
@@ -260,8 +257,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     jaksotunnusTable.grantReadData(emailHandler);
     organisaatioWhitelistTable.grantReadData(emailHandler);
     nippuTable.grantReadWriteData(emailHandler);
-
-    tepSmsQueue.grantSendMessages(emailHandler);
 
     const emailStatusHandler = new lambda.Function(this, "TEPEmailStatusHandler", {
       runtime: lambda.Runtime.JAVA_8,
@@ -286,26 +281,33 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     nippuTable.grantReadWriteData(emailStatusHandler);
 
-    // const tepSmsHandler = new lambda.Function(this, "tepSmsHandler", {
-    //   runtime: lambda.Runtime.JAVA_8,
-    //   code: lambdaCode,
-    //   handler: "oph.heratepalvelu.tep.tepSmsHandler::handleTepSmsSending",
-    //   environment: {
-    //     ...this.envVars,
-    //     nippu_table: nippuTable.tableName,
-    //     caller_id: `1.2.246.562.10.00000000001.${id}-tepSmsHandler`
-    //   },
-    //   memorySize: Token.asNumber(this.getParameterFromSsm("smshandler-memory")),
-    //   reservedConcurrentExecutions:
-    //       Token.asNumber(this.getParameterFromSsm("smshandler-concurrency")),
-    //   timeout: Duration.seconds(
-    //       Token.asNumber(this.getParameterFromSsm("smshandler-timeout"))
-    //   ),
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-    //
-    // tepSmsHandler.addEventSource(new SqsEventSource(tepSmsQueue, { batchSize: 1, }));
-    // nippuTable.grantReadWriteData(tepSmsHandler);
+    const tepSmsHandler = new lambda.Function(this, "tepSmsHandler", {
+      runtime: lambda.Runtime.JAVA_8,
+      code: lambdaCode,
+      handler: "oph.heratepalvelu.tep.tepSmsHandler::handleTepSmsSending",
+      environment: {
+        ...this.envVars,
+        nippu_table: nippuTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-tepSmsHandler`,
+        send_messages: (this.envVars.stage === 'sade').toString()
+      },
+      memorySize: Token.asNumber(this.getParameterFromSsm("smshandler-memory")),
+      reservedConcurrentExecutions:
+          Token.asNumber(this.getParameterFromSsm("smshandler-concurrency")),
+      timeout: Duration.seconds(
+          Token.asNumber(this.getParameterFromSsm("smshandler-timeout"))
+      ),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "SMSscheduleRule", {
+      schedule: events.Schedule.expression(
+        `cron(${this.getParameterFromSsm("tep-email-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(tepSmsHandler)]
+    });
+
+    nippuTable.grantReadWriteData(tepSmsHandler);
 
     // DLQ tyhjennys
 
