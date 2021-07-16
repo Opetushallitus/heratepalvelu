@@ -341,7 +341,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       enabled: false
     });
 
-    const dbChanger = new lambda.Function(this, "", {
+    const dbChanger = new lambda.Function(this, "tepDBChanger", {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
       environment: {
