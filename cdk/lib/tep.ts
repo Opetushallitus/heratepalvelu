@@ -48,7 +48,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         "oppilaitos",
         "tyopaikan_nimi",
         "ohjaaja_email",
-        "viimeinen_vastauspvm"
+        "viimeinen_vastauspvm",
+        "ohjaaja_puhelinnumero"
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
@@ -241,7 +242,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         nippu_table: nippuTable.tableName,
         orgwhitelist_table: organisaatioWhitelistTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-emailHandler`,
-        sms_queue: tepSmsQueue.queueName
+        sms_queue: tepSmsQueue.queueUrl
       },
       memorySize: Token.asNumber(1024),
       timeout: Duration.seconds(300),
@@ -259,6 +260,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     jaksotunnusTable.grantReadData(emailHandler);
     organisaatioWhitelistTable.grantReadData(emailHandler);
     nippuTable.grantReadWriteData(emailHandler);
+
+    tepSmsQueue.grantSendMessages(emailHandler);
 
     const emailStatusHandler = new lambda.Function(this, "TEPEmailStatusHandler", {
       runtime: lambda.Runtime.JAVA_8,
@@ -283,26 +286,26 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     nippuTable.grantReadWriteData(emailStatusHandler);
 
-    const tepSmsHandler = new lambda.Function(this, "tepSmsHandler", {
-      runtime: lambda.Runtime.JAVA_8,
-      code: lambdaCode,
-      handler: "oph.heratepalvelu.tep.tepSmsHandler::handleTepSmsSending",
-      environment: {
-        ...this.envVars,
-        nippu_table: nippuTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-tepSmsHandler`
-      },
-      memorySize: Token.asNumber(this.getParameterFromSsm("smshandler-memory")),
-      reservedConcurrentExecutions:
-          Token.asNumber(this.getParameterFromSsm("smshandler-concurrency")),
-      timeout: Duration.seconds(
-          Token.asNumber(this.getParameterFromSsm("smshandler-timeout"))
-      ),
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    tepSmsHandler.addEventSource(new SqsEventSource(tepSmsQueue, { batchSize: 1, }));
-    nippuTable.grantReadWriteData(tepSmsHandler);
+    // const tepSmsHandler = new lambda.Function(this, "tepSmsHandler", {
+    //   runtime: lambda.Runtime.JAVA_8,
+    //   code: lambdaCode,
+    //   handler: "oph.heratepalvelu.tep.tepSmsHandler::handleTepSmsSending",
+    //   environment: {
+    //     ...this.envVars,
+    //     nippu_table: nippuTable.tableName,
+    //     caller_id: `1.2.246.562.10.00000000001.${id}-tepSmsHandler`
+    //   },
+    //   memorySize: Token.asNumber(this.getParameterFromSsm("smshandler-memory")),
+    //   reservedConcurrentExecutions:
+    //       Token.asNumber(this.getParameterFromSsm("smshandler-concurrency")),
+    //   timeout: Duration.seconds(
+    //       Token.asNumber(this.getParameterFromSsm("smshandler-timeout"))
+    //   ),
+    //   tracing: lambda.Tracing.ACTIVE
+    // });
+    //
+    // tepSmsHandler.addEventSource(new SqsEventSource(tepSmsQueue, { batchSize: 1, }));
+    // nippuTable.grantReadWriteData(tepSmsHandler);
 
     // DLQ tyhjennys
 
@@ -339,7 +342,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     // IAM
 
-    [jaksoHandler, timedOperationsHandler, niputusHandler, emailHandler, emailStatusHandler, tepSmsHandler].forEach(
+    [jaksoHandler, timedOperationsHandler, niputusHandler, emailHandler, emailStatusHandler].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,

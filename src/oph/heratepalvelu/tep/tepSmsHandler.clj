@@ -23,9 +23,9 @@
       (ddb/update-item
         {:ohjaaja_ytunnus_kj_tutkinto [:s ohjaaja_ytunnus_kj_tutkinto]
          :niputuspvm                  [:s niputuspvm]}
-        {:update-expr     (str "SET #sms-kasittelytila = :sms-kasittelytila")
-         :expr-attr-names {"#sms-kasittelytila" "sms_kasittelytila"}
-         :expr-attr-vals {":sms-kasittelytila" status}}
+        {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila")
+         :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"}
+         :expr-attr-vals {":sms_kasittelytila" [:s status]}}
         (:nippu-table env))
       (catch Exception e
         (log/error (str "Error in update-status-to-db for " ohjaaja_ytunnus_kj_tutkinto " " niputuspvm))
