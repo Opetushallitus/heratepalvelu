@@ -23,7 +23,7 @@
                        "pageSize" 100
                        "pageNumber" page}
                           :basic-auth [(:koski-user env) @pwd]
-                          :as :json-strict})]
+                          :as :json})]
     (sort-by :aikaleima
              (reduce
                #(into %1 (:opiskeluoikeudet %2))

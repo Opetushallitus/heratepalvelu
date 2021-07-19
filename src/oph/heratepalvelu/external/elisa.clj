@@ -43,7 +43,8 @@
                      (str "https://viestipalvelu-api.elisa.fi/api/v1/")
                      {:headers {:Authorization  (str "apikey " @apikey)
                                 :content-type "application/json"}
-                      :body        (generate-string body)})]
+                      :body        (generate-string body)
+                      :as :json})]
           resp))
       (log/info message))
     (catch NumberParseException e
