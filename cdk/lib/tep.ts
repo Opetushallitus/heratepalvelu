@@ -287,6 +287,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       environment: {
         ...this.envVars,
         nippu_table: nippuTable.tableName,
+        jaksotunnus_table: jaksotunnusTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-tepSmsHandler`,
         send_messages: (this.envVars.stage === 'sade').toString()
       },
@@ -307,6 +308,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     });
 
     nippuTable.grantReadWriteData(tepSmsHandler);
+    jaksotunnusTable.grantReadData(tepSmsHandler);
 
     // DLQ tyhjennys
 
@@ -345,15 +347,15 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
       environment: {
-        table: nippuTable.tableName
+        table: jaksotunnusTable.tableName
       },
       handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
       memorySize: 1024,
-      timeout: Duration.seconds(180),
+      timeout: Duration.seconds(30),
       tracing: lambda.Tracing.ACTIVE
     });
 
-    nippuTable.grantReadWriteData(dbChanger);
+    jaksotunnusTable.grantReadWriteData(dbChanger);
 
     // IAM
 

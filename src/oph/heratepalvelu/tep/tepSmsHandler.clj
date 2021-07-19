@@ -91,9 +91,8 @@
               (try
                 (let [body (elisa/msg-body (:kyselylinkki nippu) oppilaitokset)
                       resp (elisa/send-tep-sms puhelinnumero body)
-                      ;status (get-in resp [:body :messages (keyword puhelinnumero) :status])
-                      ]
-                  ;(update-status-to-db status puhelinnumero nippu)
+                      status (get-in resp [:body :messages (keyword puhelinnumero)])]
+                  (update-status-to-db (:status status) (:converted status) nippu)
                   (log/info resp))
                 (catch AwsServiceException e
                   (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))

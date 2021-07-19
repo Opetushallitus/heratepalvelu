@@ -81,7 +81,7 @@
                            :else v)))))
           nil (vals attribute-types)))
 
-(defn- map-attribute-values-to-vals [item]
+(defn map-attribute-values-to-vals [item]
   (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
              {} (into {} item)))
 

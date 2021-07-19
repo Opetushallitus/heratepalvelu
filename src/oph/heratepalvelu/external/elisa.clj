@@ -34,17 +34,18 @@
 
 (defn send-tep-sms [number message]
   (try
-    (when (and (valid-number? number)
-               (= "true" (:send-messages env)))
-      (let [body {:sender "OPH - UBS"
-                  :destination [number]
-                  :text message}
-            resp (client/post
-                   (str "https://viestipalvelu-api.elisa.fi/api/v1/")
-                   {:headers {:Authorization  (str "apikey " @apikey)
-                              :content-type "application/json"}
-                    :body        (generate-string body)})]
-        resp))
+    (if (= "true" (:send-messages env))
+      (when (valid-number? number)
+        (let [body {:sender "OPH - UBS"
+                    :destination [number]
+                    :text message}
+              resp (client/post
+                     (str "https://viestipalvelu-api.elisa.fi/api/v1/")
+                     {:headers {:Authorization  (str "apikey " @apikey)
+                                :content-type "application/json"}
+                      :body        (generate-string body)})]
+          resp))
+      (log/info message))
     (catch NumberParseException e
       (log/error "PhoneNumberUtils failed to parse phonenumber " number)
       (throw e))))
