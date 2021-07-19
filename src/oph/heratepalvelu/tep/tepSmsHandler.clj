@@ -96,7 +96,8 @@
                   (log/info resp))
                 (catch AwsServiceException e
                   (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
-                  (log/error e))
+                  (log/error e)
+                  (throw e))
                 (catch ExceptionInfo e
                   (if (and
                         (> 399 (:status (ex-data e)))
