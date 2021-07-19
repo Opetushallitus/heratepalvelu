@@ -46,7 +46,11 @@
                       :body        (generate-string body)
                       :as :json})]
           resp))
-      (log/info message))
+      (do
+        (log/info message)
+        {:body
+         {:messages {(keyword number) {:converted number
+                                       :status "mock-lahetys"}}}}))
     (catch NumberParseException e
       (log/error "PhoneNumberUtils failed to parse phonenumber " number)
       (throw e))))

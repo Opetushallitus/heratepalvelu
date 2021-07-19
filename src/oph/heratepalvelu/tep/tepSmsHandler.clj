@@ -92,8 +92,7 @@
                 (let [body (elisa/msg-body (:kyselylinkki nippu) oppilaitokset)
                       resp (elisa/send-tep-sms puhelinnumero body)
                       status (get-in resp [:body :messages (keyword puhelinnumero)])]
-                  (update-status-to-db (:status status) (:converted status) nippu)
-                  (log/info resp))
+                  (update-status-to-db (:status status) (:converted status) nippu))
                 (catch AwsServiceException e
                   (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
                   (log/error e)
@@ -104,9 +103,11 @@
                         (< 500 (:status (ex-data e))))
                     (do
                       (log/error "Client error while sending sms to number " puhelinnumero)
+                      (log/error e)
                       (throw e))
                     (do
                       (log/error "Server error while sending sms to number " puhelinnumero)
+                      (log/error e)
                       (throw e))))
                 (catch Exception e
                   (log/error "Unhandled exception " e)
