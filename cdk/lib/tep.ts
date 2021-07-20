@@ -341,19 +341,19 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       enabled: false
     });
 
-    const dbChanger = new lambda.Function(this, "tepDBChanger", {
-      runtime: lambda.Runtime.JAVA_8,
-      code: lambdaCode,
-      environment: {
-        table: nippuTable.tableName
-      },
-      handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
-      memorySize: 1024,
-      timeout: Duration.seconds(900),
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    nippuTable.grantReadWriteData(dbChanger);
+    // const dbChanger = new lambda.Function(this, "tepDBChanger", {
+    //   runtime: lambda.Runtime.JAVA_8,
+    //   code: lambdaCode,
+    //   environment: {
+    //     table: nippuTable.tableName
+    //   },
+    //   handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
+    //   memorySize: 1024,
+    //   timeout: Duration.seconds(900),
+    //   tracing: lambda.Tracing.ACTIVE
+    // });
+    //
+    // nippuTable.grantReadWriteData(dbChanger);
 
     // IAM
 
