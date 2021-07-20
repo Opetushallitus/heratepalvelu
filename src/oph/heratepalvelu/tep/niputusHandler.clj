@@ -36,7 +36,7 @@
     (if (not-empty tunnukset)
       (let [tunniste (str
                        (str/replace (:tyopaikan_nimi (first jaksot))
-                                    #"[\\|/|\?|#|\s]" "_")
+                                    #"[\\|/|\?|#|&|\s]+" "_")
                        "_" (t/today) "_" (c/rand-str 6))
             arvo-resp (arvo/create-nippu-kyselylinkki
                         (arvo/build-niputus-request-body
