@@ -292,8 +292,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         send_messages: (this.envVars.stage === 'sade').toString()
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("smshandler-memory")),
-      reservedConcurrentExecutions:
-          Token.asNumber(this.getParameterFromSsm("smshandler-concurrency")),
       timeout: Duration.seconds(
           Token.asNumber(this.getParameterFromSsm("smshandler-timeout"))
       ),
