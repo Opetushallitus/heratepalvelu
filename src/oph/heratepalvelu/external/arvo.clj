@@ -220,5 +220,4 @@
                 :as           :json})))
     (catch ExceptionInfo e
       (log/error e)
-      (when-not (= 404 (:status (ex-data e)))
-        (throw e)))))
+      (throw e))))
