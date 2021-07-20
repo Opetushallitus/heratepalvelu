@@ -5,9 +5,7 @@
   (:import (software.amazon.awssdk.services.sqs SqsClient)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.services.sqs.model
-             SendMessageRequest
-             GetQueueUrlRequest
-             QueueDoesNotExistException)))
+             SendMessageRequest)))
 
 (def ^:private sqs-client
     (-> (SqsClient/builder)
