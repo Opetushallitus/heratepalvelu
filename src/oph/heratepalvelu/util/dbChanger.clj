@@ -29,7 +29,7 @@
 (defn -handleDBUpdate [this event context]
   (loop [resp (scan
                 {:filter-expression "sms_kasittelytila = :value1"
-                 :expr-attr-vals    {":value1" (.build (.s (AttributeValue/builder) "queued"))}})]
+                 :expr-attr-vals    {":value1" (.build (.s (AttributeValue/builder) "phone-mismatch"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (ddb/update-item
         {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]
@@ -41,5 +41,5 @@
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
                {:filter-expression "sms_kasittelytila = :value1"
-                :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "queued"))}
+                :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "phone-mismatch"))}
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
