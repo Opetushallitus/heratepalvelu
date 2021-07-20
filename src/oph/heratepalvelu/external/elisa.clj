@@ -23,20 +23,20 @@
 
 (defn msg-body [linkki oppilaitokset]
   (str "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
-       "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme kehittämiseksi. "
-       "– Tack för att Ni handleder studerande på utbildnings-/läroavtal! "
-       "Vi ber er svara på den här enkäten (5 min) för att utveckla vårt samarbete. "
-       "– Thank you for guiding students with training agreement/apprenticeship! "
-       "Please answer this survey (5 min) to develop our cooperation.\n"
-       linkki "\n"
-       (str/join ", " (map :fi oppilaitokset)) "\n"
+       "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme kehittämiseksi.\n\n"
+       "Tack för att Ni handleder studerande på utbildnings-/läroavtal! "
+       "Vi ber er svara på den här enkäten (5 min) för att utveckla vårt samarbete.\n\n"
+       "Thank you for guiding students with training agreement/apprenticeship! "
+       "Please answer this survey (5 min) to develop our cooperation.\n\n"
+       linkki "\n\n"
+       (str/join ", " (map :fi oppilaitokset)) "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
 (defn send-tep-sms [number message]
   (try
     (if (= "true" (:send-messages env))
       (when (valid-number? number)
-        (let [body {:sender "OPH - UBS"
+        (let [body {:sender "OPH"
                     :destination [number]
                     :text message}
               resp (client/post
