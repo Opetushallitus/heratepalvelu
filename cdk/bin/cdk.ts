@@ -30,6 +30,8 @@ if (canDeploy) {
   if (upstreamBranch === "refs/remotes/origin/master") {
     new HeratepalveluAMISStack(app, "sade-services-heratepalvelu", 'sade', version);
     new HeratepalveluTEPStack(app, "sade-services-heratepalvelu-tep", 'sade', version);
+  } else {
+    console.log("\nNOT IN MASTER BRANCH!!!\n")
   }
 } else {
   console.log("\nUncommited changes or local is ahead/behind of remote:\n");
