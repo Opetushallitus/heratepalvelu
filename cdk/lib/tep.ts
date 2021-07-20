@@ -351,7 +351,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       },
       handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
       memorySize: 1024,
-      timeout: Duration.seconds(30),
+      timeout: Duration.seconds(900),
       tracing: lambda.Tracing.ACTIVE
     });
 
