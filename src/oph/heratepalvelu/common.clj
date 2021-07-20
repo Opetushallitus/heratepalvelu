@@ -39,6 +39,7 @@
    :ei_laheteta "ei_laheteta"
    :email-mismatch "email-mismatch"
    :phone-mismatch "phone-mismatch"
+   :phone-invalid "phone-invalid"
    :queued "queued"})
 
 (defn rand-str [len]

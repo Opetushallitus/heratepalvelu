@@ -92,7 +92,15 @@
                 (let [body (elisa/msg-body (:kyselylinkki nippu) oppilaitokset)
                       resp (elisa/send-tep-sms puhelinnumero body)
                       status (get-in resp [:body :messages (keyword puhelinnumero)])]
-                  (update-status-to-db (:status status) (or (:converted status) puhelinnumero) nippu))
+                  (if (some? resp)
+                    (update-status-to-db (:status status) (or (:converted status) puhelinnumero) nippu)
+                    (ddb/update-item
+                      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+                       :niputuspvm                  [:s (:niputuspvm nippu)]}
+                      {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila")
+                       :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"}
+                       :expr-attr-vals {":sms_kasittelytila" [:s (:phone-invalid c/kasittelytilat)]}}
+                      (:nippu-table env))))
                 (catch AwsServiceException e
                   (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
                   (log/error e)
