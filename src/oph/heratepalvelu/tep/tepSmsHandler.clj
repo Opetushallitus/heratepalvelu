@@ -8,13 +8,22 @@
             [oph.heratepalvelu.external.organisaatio :as org])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
            (clojure.lang ExceptionInfo)
-           (java.time LocalDate)))
+           (java.time LocalDate)
+           (com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException)))
 
 (gen-class
   :name "oph.heratepalvelu.tep.tepSmsHandler"
   :methods [[^:static handleTepSmsSending
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
+
+(defn- valid-number? [number]
+  (let [utilobj (PhoneNumberUtil/getInstance)
+        numberobj (.parse utilobj number "FI")]
+    (and (empty? (filter (fn [x] (Character/isLetter x)) number))
+         (.isValidNumber utilobj numberobj)
+         (= (str (.getNumberType utilobj numberobj))
+            "MOBILE"))))
 
 (defn- update-status-to-db [status puhelinnumero nippu]
   (let [ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
@@ -41,7 +50,7 @@
         (throw e)))))
 
 (defn- ohjaaja-puhnro [nippu jaksot]
-  (let [phone (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
+  (let [number (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
                                                  (if (some? (:ohjaaja_puhelinnumero %2))
                                                    (if (= (:ohjaaja_puhelinnumero %1) (:ohjaaja_puhelinnumero %2))
                                                      %1
@@ -49,8 +58,20 @@
                                                    %1)
                                                  %2)
                                               jaksot))]
-    (if (some? phone)
-      phone
+    (if (some? number)
+      (try
+        (when (valid-number? number)
+          number)
+        (catch NumberParseException e
+          (log/error "PhoneNumberUtils failed to parse phonenumber " number)
+          (log/error e)
+          (ddb/update-item
+            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+             :niputuspvm                  [:s (:niputuspvm nippu)]}
+            {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila")
+             :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"}
+             :expr-attr-vals {":sms_kasittelytila" [:s (:phone-invalid c/kasittelytilat)]}}
+            (:nippu-table env))))
       (do (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa "
                     (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
                     (:niputuspvm nippu) ","
@@ -92,15 +113,7 @@
                 (let [body (elisa/msg-body (:kyselylinkki nippu) oppilaitokset)
                       resp (elisa/send-tep-sms puhelinnumero body)
                       status (get-in resp [:body :messages (keyword puhelinnumero)])]
-                  (if (some? resp)
-                    (update-status-to-db (:status status) (or (:converted status) puhelinnumero) nippu)
-                    (ddb/update-item
-                      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-                       :niputuspvm                  [:s (:niputuspvm nippu)]}
-                      {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila")
-                       :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"}
-                       :expr-attr-vals {":sms_kasittelytila" [:s (:phone-invalid c/kasittelytilat)]}}
-                      (:nippu-table env))))
+                  (update-status-to-db (:status status) (or (:converted status) puhelinnumero) nippu))
                 (catch AwsServiceException e
                   (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
                   (log/error e)
