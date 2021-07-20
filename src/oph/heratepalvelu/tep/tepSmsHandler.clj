@@ -64,9 +64,15 @@
                                                  %2)
                                               jaksot))]
     (if (some? number)
-      (when (valid-number? number)
-        number)
-
+      (if (valid-number? number)
+        number
+        (ddb/update-item
+          {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+           :niputuspvm                  [:s (:niputuspvm nippu)]}
+          {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila")
+           :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"}
+           :expr-attr-vals {":sms_kasittelytila" [:s (:phone-invalid c/kasittelytilat)]}}
+          (:nippu-table env)))
       (do (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa "
                     (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
                     (:niputuspvm nippu) ","
