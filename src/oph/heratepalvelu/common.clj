@@ -31,10 +31,12 @@
    :vastausaika-loppunut "vastausaika_loppunut_ennen_lahetysta"
    :vastausaika-loppunut-m "vastausaika_loppunut_ennen_muistutusta"
    :vastattu "vastattu"
-   :success "success"
-   :failed "failure"
+   :success "lahetetty"
+   :failed "lahetys_epaonnistunut"
    :bounced "bounced"
    :ei-niputettu "ei_niputettu"
+   :ei_niputeta "ei_niputeta"
+   :ei_laheteta "ei_laheteta"
    :email-mismatch "email-mismatch"
    :phone-mismatch "phone-mismatch"
    :queued "queued"})
@@ -159,7 +161,8 @@
                (c/to-long (t/today))))
          true
          (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa,"
-                   " tai herätepvm on ennen käyttöönotto päivämäärää"))))))
+                   " tai herätepvm " (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
+                   " on ennen käyttöönotto päivämäärää"))))))
 
 (defn check-duplicate-herate? [oppija koulutustoimija laskentakausi kyselytyyppi]
   (if
