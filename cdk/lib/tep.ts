@@ -345,7 +345,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       runtime: lambda.Runtime.JAVA_8,
       code: lambdaCode,
       environment: {
-        table: jaksotunnusTable.tableName
+        table: nippuTable.tableName
       },
       handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
       memorySize: 1024,
@@ -353,7 +353,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE
     });
 
-    jaksotunnusTable.grantReadWriteData(dbChanger);
+    nippuTable.grantReadWriteData(dbChanger);
 
     // IAM
 

@@ -3,7 +3,7 @@
             [environ.core :refer [env]]
             [clj-time.core :as t]
             [clojure.tools.logging :as log])
-  (:import (software.amazon.awssdk.services.dynamodb.model ScanRequest)))
+  (:import (software.amazon.awssdk.services.dynamodb.model ScanRequest AttributeValue)))
 
 (gen-class
   :name "oph.heratepalvelu.util.dbChanger"
@@ -17,25 +17,29 @@
                   (:filter-expression options)
                   (.filterExpression (:filter-expression options))
                   (:exclusive-start-key options)
-                  (.exclusiveStartKey (:exclusive-start-key options)))
+                  (.exclusiveStartKey (:exclusive-start-key options))
+                  (:expr-attr-vals options)
+                  (.expressionAttributeValues (:expr-attr-vals options)))
                 (.tableName (:table env))
-                (.limit (int 1))
                 (.build))
         response (.scan ddb/ddb-client req)]
+    (log/info (count (.items response)))
     response))
 
 (defn -handleDBUpdate [this event context]
   (loop [resp (scan
-                {:filter-expression "attribute_exists(tyopaikkaohjaaja_puhelinnumero)"})]
+                {:filter-expression "sms_kasittelytila = :value1"
+                 :expr-attr-vals    {":value1" (.build (.s (AttributeValue/builder) "queued"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (ddb/update-item
-        {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
-        {:update-expr     "SET #value1 = :value1 REMOVE #value2"
-         :expr-attr-names {"#value1" "ohjaaja_puhelinnumero"
-                           "#value2" "tyopaikkaohjaaja_puhelinnumero"}
-         :expr-attr-vals {":value1" [:s (:tyopaikkaohjaaja_puhelinnumero item)]}}
+        {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]
+         :niputuspvm                  [:s (:niputuspvm item)]}
+        {:update-expr     "SET #value1 = :value1"
+         :expr-attr-names {"#value1" "sms_kasittelytila"}
+         :expr-attr-vals {":value1" [:s "ei_lahetetty"]}}
         (:table env)))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
-               {:filter-expression "attribute_exists(tyopaikkaohjaaja_puhelinnumero)"
+               {:filter-expression "sms_kasittelytila = :value1"
+                :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "queued"))}
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
