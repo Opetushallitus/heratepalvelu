@@ -18,12 +18,17 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn- valid-number? [number]
-  (let [utilobj (PhoneNumberUtil/getInstance)
-        numberobj (.parse utilobj number "FI")]
-    (and (empty? (filter (fn [x] (Character/isLetter x)) number))
-         (.isValidNumber utilobj numberobj)
-         (= (str (.getNumberType utilobj numberobj))
-            "MOBILE"))))
+  (try
+    (let [utilobj (PhoneNumberUtil/getInstance)
+          numberobj (.parse utilobj number "FI")]
+      (and (empty? (filter (fn [x] (Character/isLetter x)) number))
+           (.isValidNumber utilobj numberobj)
+           (= (str (.getNumberType utilobj numberobj))
+              "MOBILE")))
+    (catch NumberParseException e
+      (log/error "PhoneNumberUtils failed to parse phonenumber " number)
+      (log/error e)
+      false)))
 
 (defn- update-status-to-db [status puhelinnumero nippu]
   (let [ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
@@ -59,19 +64,9 @@
                                                  %2)
                                               jaksot))]
     (if (some? number)
-      (try
-        (when (valid-number? number)
-          number)
-        (catch NumberParseException e
-          (log/error "PhoneNumberUtils failed to parse phonenumber " number)
-          (log/error e)
-          (ddb/update-item
-            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-             :niputuspvm                  [:s (:niputuspvm nippu)]}
-            {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila")
-             :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"}
-             :expr-attr-vals {":sms_kasittelytila" [:s (:phone-invalid c/kasittelytilat)]}}
-            (:nippu-table env))))
+      (when (valid-number? number)
+        number)
+
       (do (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa "
                     (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
                     (:niputuspvm nippu) ","
