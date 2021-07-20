@@ -24,10 +24,10 @@
 (defn msg-body [linkki oppilaitokset]
   (str "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
        "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme kehittämiseksi. "
-       "Jos vastasit kyselyyn sähköpostilla saamasi linkin kautta, palautteesi on jo otettu vastaan, kiitos.\n\n"
+       "Jos olet vastannut kyselyyn sähköpostilla saamasi linkin kautta, palautteesi on jo otettu vastaan, kiitos.\n\n"
        "Tack för att du handleder studerande på utbildnings-/läroavtal! "
-       "Vi ber er svara på den här enkäten (5 min) för att utveckla vårt samarbete. "
-       "Om du svarade på enkäten via länken du fick i e-postmeddelandet, har din respons redan tagits emot, tack.\n\n"
+       "Vi ber dig svara på den här enkäten (5 min) för att utveckla vårt samarbete. "
+       "Om du har svarat på enkäten via länken du fick i e-postmeddelandet, har din respons redan tagits emot, tack.\n\n"
        "Thank you for guiding students with training agreement/apprenticeship! "
        "Please answer this survey (5 min) to develop our cooperation. "
        "If you have responded to the survey via the link you received in the email, your feedback has already been received, thank you.\n\n"
