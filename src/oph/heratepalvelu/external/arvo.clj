@@ -80,19 +80,23 @@
                                      (:ehoks-id herate))})
 
 (defn create-amis-kyselylinkki [data]
-  (let [resp (client/post
-               (str (:arvo-url env) "vastauslinkki/v1")
-               {:content-type "application/json"
-                :body         (generate-string data)
-                :basic-auth   [(:arvo-user env) @pwd]
-                :as           :json})]
-    (:body resp)))
+  (try
+    (let [resp (client/post
+                 (str (:arvo-url env) "vastauslinkki/v1")
+                 {:content-type "application/json"
+                  :body         (generate-string data)
+                  :basic-auth   [(:arvo-user env) @pwd]
+                  :as           :json})]
+      (:body resp))
+    (catch ExceptionInfo e
+      (log/error "request-id: " (:request_id data))
+      (log/error e)
+      (throw e))))
 
 (defn create-amis-kyselylinkki-catch-404 [data]
   (try
     (create-amis-kyselylinkki data)
     (catch ExceptionInfo e
-      (log/error e)
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
 

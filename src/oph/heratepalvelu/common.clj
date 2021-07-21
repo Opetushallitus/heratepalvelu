@@ -229,7 +229,7 @@
           (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
             (try
               (log/info "Tallennetaan kantaan " (str koulutustoimija "/" oppija)
-                        " " (str kyselytyyppi "/" laskentakausi))
+                        " " (str kyselytyyppi "/" laskentakausi) ", request-id: " uuid)
               (ddb/put-item {:toimija_oppija      [:s (str koulutustoimija "/" oppija)]
                              :tyyppi_kausi        [:s (str kyselytyyppi "/" laskentakausi)]
                              :kyselylinkki        [:s kyselylinkki]
