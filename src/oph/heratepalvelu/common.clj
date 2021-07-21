@@ -179,13 +179,12 @@
 (def herate-checker
   (s/checker herate-schema))
 
-(defn alkupvm [heratepvm]
-  (let [herate-date (to-date heratepvm)]
-    (if (.isAfter herate-date (LocalDate/now))
-      herate-date
-      (LocalDate/now))))
+(defn alku [herate-date]
+  (if (.isAfter herate-date (LocalDate/now))
+    herate-date
+    (LocalDate/now)))
 
-(defn loppupvm [herate alku]
+(defn loppu [herate alku]
   (let [last (.plusDays herate 60)
         normal (.plusDays alku 30)]
     (if (.isBefore last normal)
@@ -199,10 +198,10 @@
     (let [kyselytyyppi (:kyselytyyppi herate)
           heratepvm (:alkupvm herate)
           herate-date (to-date heratepvm)
-          alku-date (alkupvm herate-date)
+          alku-date (alku herate-date)
           alkupvm   (str alku-date)
-          loppu-date (loppupvm herate-date alku-date)
-          voimassa-loppupvm  (str loppu-date)
+          loppu-date (loppu herate-date alku-date)
+          loppupvm  (str loppu-date)
           koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
           suoritus (get-suoritus opiskeluoikeus)
           oppija (str (:oppija-oid herate))
@@ -248,7 +247,7 @@
                              :kyselytyyppi        [:s kyselytyyppi]
                              :rahoituskausi       [:s laskentakausi]
                              :viestintapalvelu-id [:n "-1"]
-                             :voimassa-loppupvm   [:s voimassa-loppupvm]
+                             :voimassa-loppupvm   [:s loppupvm]
                              :tallennuspvm        [:s (str (LocalDate/now))]}
                             {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
                                              "attribute_not_exists(tyyppi_kausi)")})
@@ -269,7 +268,7 @@
                                                                     :tunniste
                                                                     :koodiarvo])
                            :kyselytunnus          (last (str/split kyselylinkki #"/"))
-                           :voimassa-loppupvm     voimassa-loppupvm}))
+                           :voimassa-loppupvm     loppupvm}))
               (catch ConditionalCheckFailedException _
                 (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
                           oppija " koulutustoimijalla " koulutustoimija
