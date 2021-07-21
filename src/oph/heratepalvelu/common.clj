@@ -221,7 +221,7 @@
                          suoritus
                          alkupvm
                          loppupvm)
-              arvo-resp (if (= (:tyyppi herate) "aloittaneet")
+              arvo-resp (if (= kyselytyyppi "aloittaneet")
                           (arvo/create-amis-kyselylinkki
                             req-body)
                           (arvo/create-amis-kyselylinkki-catch-404
