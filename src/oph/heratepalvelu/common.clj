@@ -185,7 +185,7 @@
     (LocalDate/now)))
 
 (defn loppu [herate alku]
-  (let [last (.plusDays herate 60)
+  (let [last (.plusDays herate 59)
         normal (.plusDays alku 29)]
     (if (.isBefore last normal)
       last
