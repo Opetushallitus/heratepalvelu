@@ -7,7 +7,8 @@
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [clj-time.core :as t]
-            [cheshire.core :refer [parse-string]])
+            [cheshire.core :refer [parse-string]]
+            [oph.heratepalvelu.external.arvo :as arvo])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -27,18 +28,27 @@
                                               jaksot))]
     (if (some? ohjaaja-email)
       ohjaaja-email
-      (do (log/warn "Ei yksiselitteistä ohjaajan sahköpostia "
+      (let [osoitteet (reduce
+                        (if (some? (:ohjaaja_email %2))
+                          (conj %1 (:ohjaaja_email %2))
+                          %1)
+                        #{} jaksot)]
+        (log/warn "Ei yksiselitteistä ohjaajan sahköpostia "
                     (:ohjaaja_ytunnus_kj_tutkinto email) ","
-                    (:niputuspvm email) ","
-                    (reduce #(conj %1 (:ohjaaja_email %2)) #{} jaksot))
-          (ddb/update-item
-            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
-             :niputuspvm                  [:s (:niputuspvm email)]}
-            {:update-expr      "SET #kasittelytila = :kasittelytila"
-             :expr-attr-names {"#kasittelytila" "kasittelytila"}
-             :expr-attr-vals  {":kasittelytila" [:s (:email-mismatch c/kasittelytilat)]}}
-            (:nippu-table env))
-          nil))))
+                    (:niputuspvm email) "," osoitteet)
+        (ddb/update-item
+          {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
+           :niputuspvm                  [:s (:niputuspvm email)]}
+          {:update-expr      "SET #kasittelytila = :kasittelytila"
+           :expr-attr-names {"#kasittelytila" "kasittelytila"}
+           :expr-attr-vals  {":kasittelytila" [:s (if (empty? osoitteet)
+                                                    (:no-email c/kasittelytilat)
+                                                    (:email-mismatch c/kasittelytilat))]}}
+          (:nippu-table env))
+        (when (or (= (:phone-mismatch c/kasittelytilat) (:sms_kasittelytila email))
+                  (= (:no-phone c/kasittelytilat) (:sms_kasittelytila email)))
+          (arvo/patch-nippulinkki-metadata (:kyselylinkki email) (:ei-yhteystietoja c/kasittelytilat)))
+        nil))))
 
 (defn -handleSendTEPEmails [this event context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
