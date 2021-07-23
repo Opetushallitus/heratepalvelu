@@ -29,7 +29,7 @@
     (if (some? ohjaaja-email)
       ohjaaja-email
       (let [osoitteet (reduce
-                        (if (some? (:ohjaaja_email %2))
+                        #(if (some? (:ohjaaja_email %2))
                           (conj %1 (:ohjaaja_email %2))
                           %1)
                         #{} jaksot)]
