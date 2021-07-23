@@ -105,6 +105,32 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       projectionType: dynamodb.ProjectionType.ALL
     })
 
+    nippuTable.addGlobalSecondaryIndex({
+      indexName: "emailMuistutusIndex",
+      partitionKey: {
+        name: "muistutukset",
+        type: dynamodb.AttributeType.NUMBER
+      },
+      sortKey: {
+        name: "lahetyspvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      projectionType: dynamodb.ProjectionType.ALL
+    });
+
+    nippuTable.addGlobalSecondaryIndex({
+      indexName: "smsMuistutusIndex",
+      partitionKey: {
+        name: "sms_muistutukset",
+        type: dynamodb.AttributeType.NUMBER
+      },
+      sortKey: {
+        name: "sms_lahetyspvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      projectionType: dynamodb.ProjectionType.ALL
+    });
+
     const organisaatioWhitelistTable = new dynamodb.Table(
         this,
         "OrganisaatioWhitelistTable",
