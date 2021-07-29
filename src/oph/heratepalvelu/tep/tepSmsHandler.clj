@@ -130,8 +130,9 @@
                 (try
                   (let [body (elisa/msg-body (:kyselylinkki nippu) oppilaitokset)
                         resp (elisa/send-tep-sms puhelinnumero body)
-                        status (get-in resp [:body :messages (keyword puhelinnumero) :status])]
-                    (update-status-to-db (:status status) (or (:converted status) puhelinnumero) nippu)
+                        status (get-in resp [:body :messages (keyword puhelinnumero) :status])
+                        converted (get-in resp [:body :messages (keyword puhelinnumero) :converted])]
+                    (update-status-to-db status (or converted puhelinnumero) nippu)
                     (when (or (= status "CREATED") (= status "mock-lahetys"))
                       (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) (:success c/kasittelytilat))))
                   (catch AwsServiceException e
