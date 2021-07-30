@@ -17,7 +17,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- lahetysosoite [email jaksot]
+(defn- lahetysosoite [nippu jaksot]
   (let [ohjaaja-email (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
                                                  (if (some? (:ohjaaja_email %2))
                                                    (if (= (:ohjaaja_email %1) (:ohjaaja_email %2))
@@ -34,20 +34,21 @@
                           %1)
                         #{} jaksot)]
         (log/warn "Ei yksiselitteistä ohjaajan sahköpostia "
-                    (:ohjaaja_ytunnus_kj_tutkinto email) ","
-                    (:niputuspvm email) "," osoitteet)
+                    (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
+                    (:niputuspvm nippu) "," osoitteet)
         (ddb/update-item
-          {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
-           :niputuspvm                  [:s (:niputuspvm email)]}
+          {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+           :niputuspvm                  [:s (:niputuspvm nippu)]}
           {:update-expr      "SET #kasittelytila = :kasittelytila"
            :expr-attr-names {"#kasittelytila" "kasittelytila"}
            :expr-attr-vals  {":kasittelytila" [:s (if (empty? osoitteet)
                                                     (:no-email c/kasittelytilat)
                                                     (:email-mismatch c/kasittelytilat))]}}
           (:nippu-table env))
-        (when (or (= (:phone-mismatch c/kasittelytilat) (:sms_kasittelytila email))
-                  (= (:no-phone c/kasittelytilat) (:sms_kasittelytila email)))
-          (arvo/patch-nippulinkki-metadata (:kyselylinkki email) (:ei-yhteystietoja c/kasittelytilat)))
+        (when (or (= (:phone-mismatch c/kasittelytilat) (:sms_kasittelytila nippu))
+                  (= (:no-phone c/kasittelytilat) (:sms_kasittelytila nippu))
+                  (= (:phone-invalid c/kasittelytilat) (:sms_kasittelytila nippu)))
+          (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) (:ei-yhteystietoja c/kasittelytilat)))
         nil))))
 
 (defn -handleSendTEPEmails [this event context]
