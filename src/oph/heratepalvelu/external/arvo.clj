@@ -8,7 +8,8 @@
             [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
             [oph.heratepalvelu.external.aws-ssm :as ssm]
-            [clj-time.core :as t])
+            [clj-time.core :as t]
+            [ring.util.codec :as codec])
   (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private pwd (delay
@@ -214,14 +215,14 @@
 
 (defn delete-nippukyselylinkki [tunniste]
   (client/delete
-    (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" tunniste)
+    (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (codec/url-encode tunniste))
     {:basic-auth   [(:arvo-user env) @pwd]}))
 
 (defn patch-nippulinkki-metadata [linkki tila]
   (try
     (let [tunniste (last (str/split linkki #"/"))]
       (:body (client/patch
-               (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" tunniste "/metatiedot")
+               (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (codec/url-encode tunniste) "/metatiedot")
                {:basic-auth   [(:arvo-user env) @pwd]
                 :content-type "application/json"
                 :body         (generate-string {:tila tila})
