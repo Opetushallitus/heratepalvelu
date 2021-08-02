@@ -221,6 +221,7 @@
 (defn patch-nippulinkki-metadata [linkki tila]
   (try
     (let [tunniste (last (str/split linkki #"/"))]
+      (println (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (codec/url-encode tunniste) "/metatiedot"))
       (:body (client/patch
                (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (codec/url-encode tunniste) "/metatiedot")
                {:basic-auth   [(:arvo-user env) @pwd]
