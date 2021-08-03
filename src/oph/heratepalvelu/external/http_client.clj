@@ -29,5 +29,4 @@
                  #(client/delete url (merge-options options))))
 
 (defn patch [url & [options]]
-  (wrap-aws-xray url :patch
-                 #(client/patch url (merge-options options))))
+  (client/patch url (merge-options options)))
