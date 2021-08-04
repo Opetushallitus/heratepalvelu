@@ -39,7 +39,8 @@
             (when (not @new-changes?)
               (reset! new-changes? true))
             (try
-              (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) tila)
+              (when-not (str/includes? (:kyselylinkki nippu) ",")
+                (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) tila))
               (ddb/update-item
                 {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
                  :niputuspvm                  [:s (:niputuspvm nippu)]}
