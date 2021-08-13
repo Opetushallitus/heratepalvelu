@@ -155,7 +155,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     // herateHandler
 
     const timedOperationsHandler = new lambda.Function(this, "timedOperationsHandler", {
-      runtime: lambda.Runtime.JAVA_8,
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -177,7 +177,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     // jaksoHandler
 
     const jaksoHandler = new lambda.Function(this, "TEPJaksoHandler", {
-      runtime: lambda.Runtime.JAVA_8,
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -204,7 +204,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     // niputusHandler
 
     const niputusHandler = new lambda.Function(this, "niputusHandler", {
-      runtime: lambda.Runtime.JAVA_8,
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -231,7 +231,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     // emailHandler
 
     const emailHandler = new lambda.Function(this, "TEPemailHandler", {
-      runtime: lambda.Runtime.JAVA_8,
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -258,7 +258,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     nippuTable.grantReadWriteData(emailHandler);
 
     const emailStatusHandler = new lambda.Function(this, "TEPEmailStatusHandler", {
-      runtime: lambda.Runtime.JAVA_8,
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -281,7 +281,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     nippuTable.grantReadWriteData(emailStatusHandler);
 
     const tepSmsHandler = new lambda.Function(this, "tepSmsHandler", {
-      runtime: lambda.Runtime.JAVA_8,
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       handler: "oph.heratepalvelu.tep.tepSmsHandler::handleTepSmsSending",
       environment: {
@@ -311,7 +311,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     // DLQ tyhjennys
 
     const dlqResendHandler = new lambda.Function(this, "TEP-DLQresendHandler", {
-      runtime: lambda.Runtime.JAVA_8,
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       environment: {
         queue_name: herateQueue.queueName
@@ -342,7 +342,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     });
 
     // const dbChanger = new lambda.Function(this, "tepDBChanger", {
-    //   runtime: lambda.Runtime.JAVA_8,
+    //   runtime: lambda.Runtime.JAVA_8_CORRETTO,
     //   code: lambdaCode,
     //   environment: {
     //     table: nippuTable.tableName
