@@ -342,7 +342,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
           environment: {
             ...this.envVars,
             nippu_table: nippuTable.tableName,
-            jaksotunnus_table: jaksotunnusTable.tableName
+            jaksotunnus_table: jaksotunnusTable.tableName,
+            caller_id: `1.2.246.562.10.00000000001.${id}-EmailMuistutusHandler`
           },
           memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
           timeout: Duration.seconds(
@@ -372,7 +373,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
             ...this.envVars,
             nippu_table: nippuTable.tableName,
             jaksotunnus_table: jaksotunnusTable.tableName,
-            send_messages: (this.envVars.stage === 'sade').toString()
+            send_messages: (this.envVars.stage === 'sade').toString(),
+            caller_id: `1.2.246.562.10.00000000001.${id}-SmsMuistutusHandler`
           },
           memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
           timeout: Duration.seconds(
