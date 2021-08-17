@@ -334,6 +334,58 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     nippuTable.grantReadWriteData(tepSmsHandler);
     jaksotunnusTable.grantReadData(tepSmsHandler);
 
+    // Email muistutushandler
+    /*
+        const EmailMuistutusHandler = new lambda.Function(this, "EmailMuistutusHandler", {
+          runtime: lambda.Runtime.JAVA_8,
+          code: lambdaCode,
+          environment: {
+            ...this.envVars
+          },
+          memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+          timeout: Duration.seconds(
+              Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
+          ),
+          handler: "oph.heratepalvelu.tep.EmailMuistutusHandler::handleSendEmailMuistutus",
+          tracing: lambda.Tracing.ACTIVE
+        });
+
+        nippuTable.grantReadWriteData(EmailMuistutusHandler);
+
+        new events.Rule(this, "EmailMuistutusScheduleRule", {
+          schedule: events.Schedule.expression(
+              `cron(${this.getParameterFromSsm("emailhandler-cron")})`
+          ),
+          targets: [new targets.LambdaFunction(EmailMuistutusHandler)]
+        });
+        */
+/*
+    // Sms muistutushandler
+
+        const SmsMuistutusHandler = new lambda.Function(this, "SmsMuistutusHandler", {
+          runtime: lambda.Runtime.JAVA_8,
+          code: lambdaCode,
+          environment: {
+            ...this.envVars
+          },
+          memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+          timeout: Duration.seconds(
+              Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
+          ),
+          handler: "oph.heratepalvelu.tep.SMSMuistutusHandler::handleSendSmsMuistutus",
+          tracing: lambda.Tracing.ACTIVE
+        });
+
+        nippuTable.grantReadWriteData(SmsMuistutusHandler);
+
+        new events.Rule(this, "EmailMuistutusScheduleRule", {
+          schedule: events.Schedule.expression(
+              `cron(${this.getParameterFromSsm("emailhandler-cron")})`
+          ),
+          targets: [new targets.LambdaFunction(SmsMuistutusHandler)]
+        });
+*/
+
     // DLQ tyhjennys
 
     const dlqResendHandler = new lambda.Function(this, "TEP-DLQresendHandler", {

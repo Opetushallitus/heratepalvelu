@@ -26,6 +26,19 @@
        (str/join ", " (map :fi oppilaitokset)) "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
+(defn muistutus-msg-body [linkki oppilaitokset]
+  (str "Hyvä työpaikkaohjaaja, olethan muistanut antaa palautetta oppilaitokselle"
+       "\n\n"
+       "Bästa arbetsplatshandledare, kom ihåg att ge respons till läroanstalten"
+       "\n\n"
+       "Dear workplace instructor, please remember to give feedback to educational institution!"
+       "\n\n"
+       linkki "\n\n"
+       "Kiitos, että vastaat - Tack för att du svarar – Thank you for responding!"
+       "\n\n"
+       (str/join ", " (map :fi oppilaitokset)) "\n\n"
+       "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
+
 (defn send-tep-sms [number message]
   (if (= "true" (:send-messages env))
     (let [body {:sender "OPH"

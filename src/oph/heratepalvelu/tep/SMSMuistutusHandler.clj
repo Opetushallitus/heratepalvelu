@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.tep.SMSMuistutusHandler
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
+            [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.common :as c]
             [clojure.tools.logging :as log]
@@ -15,7 +16,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- sendAMISMuistutus [muistutettavat]
+(defn- sendSmsMuistutus [muistutettavat]
   (log/info (str "Käsitellään " (count muistutettavat) " muistutusta."))
   (doseq [nippu muistutettavat]
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))
@@ -25,6 +26,17 @@
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (try
           (let
+            [jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
+                                                :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
+                                               {:index "niputusIndex"}
+                                               (:jaksotunnus-table env))
+             oppilaitokset (seq (into #{}
+                                      (map
+                                        #(:nimi (org/get-organisaatio (:oppilaitos %1)))
+                                        jaksot)))
+             body (elisa/muistutus-msg-body (:kyselylinkki nippu) oppilaitokset)
+             resp (elisa/send-tep-sms (:lahetettynumeroon nippu) body)
+             status (get-in resp [:body :messages (keyword (:lahetettynumeroon nippu))])]
             (ddb/update-item
               {:ohjaaja_ytunnus_kj_tutkinto [:s ohjaaja_ytunnus_kj_tutkinto]
                :niputuspvm                  [:s niputuspvm]}
@@ -70,8 +82,8 @@
                    {:index "smsMuistutusIndex"
                     :limit 50}))
 
-(defn -handleSendAMISMuistutus [this event context]
-  (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
+(defn -handleSendSMSMuistutus [this event context]
+  (log-caller-details-scheduled "handleSendSmsMuistutus" event context)
   (loop [muistutettavat (query-muistukset)]
     (sendAMISMuistutus muistutettavat)
     (when (and
