@@ -334,7 +334,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     nippuTable.grantReadWriteData(tepSmsHandler);
     jaksotunnusTable.grantReadData(tepSmsHandler);
 
-    // Email muistutushandler
+    // tep Email muistutushandler
 
         const EmailMuistutusHandler = new lambda.Function(this, "EmailMuistutusHandler", {
           runtime: lambda.Runtime.JAVA_8_CORRETTO,
@@ -355,7 +355,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         nippuTable.grantReadWriteData(EmailMuistutusHandler);
         jaksotunnusTable.grantReadData(EmailMuistutusHandler);
 
-        new events.Rule(this, "EmailMuistutusScheduleRule", {
+        new events.Rule(this, "tep-EmailMuistutusScheduleRule", {
           schedule: events.Schedule.expression(
               `cron(${this.getParameterFromSsm("tep-email-cron")})`
           ),
@@ -363,7 +363,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         });
 
 
-    // Sms muistutushandler
+    // tep Sms muistutushandler
 
         const SmsMuistutusHandler = new lambda.Function(this, "SmsMuistutusHandler", {
           runtime: lambda.Runtime.JAVA_8_CORRETTO,
@@ -385,7 +385,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         nippuTable.grantReadWriteData(SmsMuistutusHandler);
         jaksotunnusTable.grantReadData(SmsMuistutusHandler);
 
-        new events.Rule(this, "EmailMuistutusScheduleRule", {
+        new events.Rule(this, "tep-SmsMuistutusScheduleRule", {
           schedule: events.Schedule.expression(
               `cron(${this.getParameterFromSsm("tep-email-cron")})`
           ),
