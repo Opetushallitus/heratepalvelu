@@ -117,7 +117,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       },
       projectionType: dynamodb.ProjectionType.ALL
     });
-
+    /*
     nippuTable.addGlobalSecondaryIndex({
       indexName: "smsMuistutusIndex",
       partitionKey: {
@@ -130,7 +130,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       },
       projectionType: dynamodb.ProjectionType.ALL
     });
-
+    */
     const organisaatioWhitelistTable = new dynamodb.Table(
         this,
         "OrganisaatioWhitelistTable",
