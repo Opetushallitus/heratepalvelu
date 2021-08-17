@@ -74,18 +74,14 @@
 
 (defn- query-muistukset []
   (ddb/query-items {:sms_muistutukset [:eq [:n 0]]
-                    :sms_lahetyspvm  [:between
-                                  [[:s (str
-                                         (.minusDays (LocalDate/now) 5))]
-                                   [:s (str
-                                         (.minusDays (LocalDate/now) 10))]]]}
+                    :sms_lahetyspvm  [:eq [:s (str (.minusDays (LocalDate/now) 5))]]}
                    {:index "smsMuistutusIndex"
                     :limit 50}))
 
 (defn -handleSendSMSMuistutus [this event context]
   (log-caller-details-scheduled "handleSendSmsMuistutus" event context)
   (loop [muistutettavat (query-muistukset)]
-    (sendAMISMuistutus muistutettavat)
+    (sendSmsMuistutus muistutettavat)
     (when (and
             (seq muistutettavat)
             (< 60000 (.getRemainingTimeInMillis context)))

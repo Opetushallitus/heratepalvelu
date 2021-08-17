@@ -335,12 +335,14 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     jaksotunnusTable.grantReadData(tepSmsHandler);
 
     // Email muistutushandler
-    /*
+
         const EmailMuistutusHandler = new lambda.Function(this, "EmailMuistutusHandler", {
-          runtime: lambda.Runtime.JAVA_8,
+          runtime: lambda.Runtime.JAVA_8_CORRETTO,
           code: lambdaCode,
           environment: {
-            ...this.envVars
+            ...this.envVars,
+            nippu_table: nippuTable.tableName,
+            jaksotunnus_table: jaksotunnusTable.tableName
           },
           memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
           timeout: Duration.seconds(
@@ -351,22 +353,26 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         });
 
         nippuTable.grantReadWriteData(EmailMuistutusHandler);
+        jaksotunnusTable.grantReadData(EmailMuistutusHandler);
 
         new events.Rule(this, "EmailMuistutusScheduleRule", {
           schedule: events.Schedule.expression(
-              `cron(${this.getParameterFromSsm("emailhandler-cron")})`
+              `cron(${this.getParameterFromSsm("tep-email-cron")})`
           ),
           targets: [new targets.LambdaFunction(EmailMuistutusHandler)]
         });
-        */
-/*
+
+
     // Sms muistutushandler
 
         const SmsMuistutusHandler = new lambda.Function(this, "SmsMuistutusHandler", {
-          runtime: lambda.Runtime.JAVA_8,
+          runtime: lambda.Runtime.JAVA_8_CORRETTO,
           code: lambdaCode,
           environment: {
-            ...this.envVars
+            ...this.envVars,
+            nippu_table: nippuTable.tableName,
+            jaksotunnus_table: jaksotunnusTable.tableName,
+            send_messages: (this.envVars.stage === 'sade').toString()
           },
           memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
           timeout: Duration.seconds(
@@ -377,14 +383,15 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         });
 
         nippuTable.grantReadWriteData(SmsMuistutusHandler);
+        jaksotunnusTable.grantReadData(SmsMuistutusHandler);
 
         new events.Rule(this, "EmailMuistutusScheduleRule", {
           schedule: events.Schedule.expression(
-              `cron(${this.getParameterFromSsm("emailhandler-cron")})`
+              `cron(${this.getParameterFromSsm("tep-email-cron")})`
           ),
           targets: [new targets.LambdaFunction(SmsMuistutusHandler)]
         });
-*/
+
 
     // DLQ tyhjennys
 

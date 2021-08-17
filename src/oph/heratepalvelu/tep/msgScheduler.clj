@@ -1,3 +1,4 @@
+(comment "
 (ns oph.heratepalvelu.tep.msgScheduler
   (:require [clojure.tools.logging :as log])
   (:import (java.util.concurrent Executors)))
@@ -21,4 +22,4 @@
         tasks [process-email process-sms process-email-reminders process-sms-reminders]]
     (doseq [f (.invokeAll pool tasks)]
       (log/info (.get f)))
-    (.shutdown pool)))
+    (.shutdown pool)))")

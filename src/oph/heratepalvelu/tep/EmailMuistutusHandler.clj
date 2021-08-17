@@ -77,11 +77,7 @@
 
 (defn- query-muistukset []
   (ddb/query-items {:muistutukset [:eq [:n 0]]
-                    :lahetyspvm   [:between
-                                   [[:s (str
-                                          (.minusDays (LocalDate/now) 5))]
-                                    [:s (str
-                                          (.minusDays (LocalDate/now) 10))]]]}
+                    :lahetyspvm   [:eq [:s (str (.minusDays (LocalDate/now) 5))]]}
                    {:index "emailMuistutusIndex"
                     :limit 50}))
 
