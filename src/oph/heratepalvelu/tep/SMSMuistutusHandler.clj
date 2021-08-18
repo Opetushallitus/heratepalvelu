@@ -67,7 +67,8 @@
              :expr-attr-vals {":sms_lahetystila" [:s (if (:vastattu status)
                                                    (:vastattu c/kasittelytilat)
                                                    (:vastausaika-loppunut-m c/kasittelytilat))]
-                              ":sms_muistutukset" [:n 1]}})
+                              ":sms_muistutukset" [:n 1]}
+             (:nippu-table env)})
           (catch Exception e
             (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" nippu)
             (log/error e)))))))

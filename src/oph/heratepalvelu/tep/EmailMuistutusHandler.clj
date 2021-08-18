@@ -70,7 +70,8 @@
              :expr-attr-vals {":lahetystila" [:s (if (:vastattu status)
                                                    (:vastattu c/kasittelytilat)
                                                    (:vastausaika-loppunut-m c/kasittelytilat))]
-                              ":muistutukset" [:n 1]}})
+                              ":muistutukset" [:n 1]}}
+            (:nippu-table env))
           (catch Exception e
             (log/error "Virhe lähetystilan päivityksessä nippulinkille, johon on vastattu tai jonka vastausaika umpeutunut" nippu)
             (log/error e)))))))
