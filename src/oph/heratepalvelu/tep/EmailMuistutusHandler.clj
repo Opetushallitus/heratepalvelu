@@ -67,9 +67,7 @@
                                    "#muistutukset = :muistutukset")
              :expr-attr-names {"#lahetystila" "lahetystila"
                                "#muistutukset" "muistutukset"}
-             :expr-attr-vals {":lahetystila" [:s (if (:vastattu status)
-                                                   (:vastattu c/kasittelytilat)
-                                                   (:vastausaika-loppunut-m c/kasittelytilat))]
+             :expr-attr-vals {":lahetystila" [:s (:vastattu c/kasittelytilat)]
                               ":muistutukset" [:n 1]}}
             (:nippu-table env))
           (catch Exception e
