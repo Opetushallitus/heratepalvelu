@@ -58,8 +58,8 @@
             (log/error e)))
         (try
           (ddb/update-item
-            {:ohjaaja_ytunnus_kj_tutkinto [:s ohjaaja_ytunnus_kj_tutkinto]
-             :niputuspvm                  [:s niputuspvm]}
+            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+             :niputuspvm   [:s (:niputuspvm nippu)]}
             {:update-expr     (str "SET #sms_lahetystila = :sms_lahetystila, "
                                    "#sms_muistutukset = :sms_muistutukset")
              :expr-attr-names {"#sms_lahetystila" "sms_lahetystila"

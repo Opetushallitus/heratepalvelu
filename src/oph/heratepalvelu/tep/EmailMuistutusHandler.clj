@@ -61,13 +61,15 @@
             (log/error e)))
         (try
           (ddb/update-item
-            {:toimija_oppija [:s (:toimija_oppija nippu)]
-             :tyyppi_kausi   [:s (:tyyppi_kausi nippu)]}
+            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+             :niputuspvm   [:s (:niputuspvm nippu)]}
             {:update-expr     (str "SET #lahetystila = :lahetystila, "
                                    "#muistutukset = :muistutukset")
              :expr-attr-names {"#lahetystila" "lahetystila"
                                "#muistutukset" "muistutukset"}
-             :expr-attr-vals {":lahetystila" [:s (:vastattu c/kasittelytilat)]
+             :expr-attr-vals {":lahetystila" [:s (if (:vastattu status)
+                                                   (:vastattu c/kasittelytilat)
+                                                   (:vastausaika-loppunut-m c/kasittelytilat))]
                               ":muistutukset" [:n 1]}}
             (:nippu-table env))
           (catch Exception e
