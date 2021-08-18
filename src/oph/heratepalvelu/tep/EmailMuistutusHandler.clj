@@ -79,7 +79,8 @@
   (ddb/query-items {:muistutukset [:eq [:n 0]]
                     :lahetyspvm   [:eq [:s (str (.minusDays (LocalDate/now) 5))]]}
                    {:index "emailMuistutusIndex"
-                    :limit 50}))
+                    :limit 50}
+                   (:nippu-table env)))
 
 (defn -handleSendEmailMuistutus [this event context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
