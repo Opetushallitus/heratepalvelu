@@ -74,6 +74,7 @@
             (:nippu-table env))
           (catch Exception e
             (log/error "Virhe lähetystilan päivityksessä nippulinkille, johon on vastattu tai jonka vastausaika umpeutunut" nippu)
+            (log/error status)
             (log/error e)))))))
 
 (defn- query-muistukset []
