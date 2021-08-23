@@ -79,7 +79,7 @@
 
 (defn- query-muistukset []
   (ddb/query-items {:muistutukset [:eq [:n 0]]
-                    :lahetyspvm   [:eq [:s (str (.minusDays (LocalDate/now) 5))]]}
+                    :lahetyspvm   [:le [:s (str (.minusDays (LocalDate/now) 5))]]}
                    {:index "emailMuistutusIndex"
                     :limit 50}
                    (:nippu-table env)))
