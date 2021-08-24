@@ -83,7 +83,7 @@
                    {:index "emailMuistutusIndex"
                     :filter-expression "#niputuspvm >= :niputuspvm"
                     :expr-attr-names {"#niputuspvm" "niputuspvm"}
-                    :expr-attr-vals {":niputuspvm" [:s "2021-08-2016"]}
+                    :expr-attr-vals {":niputuspvm" [:s "2021-08-16"]}
                     :limit 50}
                    (:nippu-table env)))
 
