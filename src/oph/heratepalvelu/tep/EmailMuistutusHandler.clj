@@ -81,6 +81,9 @@
   (ddb/query-items {:muistutukset [:eq [:n 0]]
                     :lahetyspvm   [:le [:s (str (.minusDays (LocalDate/now) 5))]]}
                    {:index "emailMuistutusIndex"
+                    :filter-expression "#niputuspvm >= :niputuspvm"
+                    :expr-attr-names {"#niputuspvm" "niputuspvm"}
+                    :expr-attr-vals {":niputuspvm" [:s "2021-08-2016"]}
                     :limit 50}
                    (:nippu-table env)))
 
