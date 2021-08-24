@@ -36,7 +36,7 @@
                                         jaksot)))
              body (elisa/muistutus-msg-body (:kyselylinkki nippu) oppilaitokset)
              resp (elisa/send-tep-sms (:lahetettynumeroon nippu) body)
-             status (get-in resp [:body :messages (keyword (:lahetettynumeroon nippu))])]
+             status (get-in resp [:body :messages (keyword (:lahetettynumeroon nippu)) :status])]
             (ddb/update-item
               {:ohjaaja_ytunnus_kj_tutkinto [:s ohjaaja_ytunnus_kj_tutkinto]
                :niputuspvm                  [:s niputuspvm]}
