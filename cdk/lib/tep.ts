@@ -380,7 +380,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       timeout: Duration.seconds(
           Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
-      handler: "oph.heratepalvelu.tep.SMSMuistutusHandler::handleSendSmsMuistutus",
+      handler: "oph.heratepalvelu.tep.SMSMuistutusHandler::handleSendSMSMuistutus",
       tracing: lambda.Tracing.ACTIVE
     });
 

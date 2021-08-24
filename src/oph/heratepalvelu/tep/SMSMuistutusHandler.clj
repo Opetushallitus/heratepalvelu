@@ -76,13 +76,16 @@
 
 (defn- query-muistukset []
   (ddb/query-items {:sms_muistutukset [:eq [:n 0]]
-                    :sms_lahetyspvm  [:eq [:s (str (.minusDays (LocalDate/now) 5))]]}
+                    :sms_lahetyspvm  [:le [:s (str (.minusDays (LocalDate/now) 5))]]}
                    {:index "smsMuistutusIndex"
+                    :filter-expression "#niputuspvm >= :niputuspvm"
+                    :expr-attr-names {"#niputuspvm" "niputuspvm"}
+                    :expr-attr-vals {":niputuspvm" [:s "2021-08-16"]}
                     :limit 50}
                    (:nippu-table env)))
 
 (defn -handleSendSMSMuistutus [this event context]
-  (log-caller-details-scheduled "handleSendSmsMuistutus" event context)
+  (log-caller-details-scheduled "handleSendSMSMuistutus" event context)
   (loop [muistutettavat (query-muistukset)]
     (sendSmsMuistutus muistutettavat)
     (when (and
