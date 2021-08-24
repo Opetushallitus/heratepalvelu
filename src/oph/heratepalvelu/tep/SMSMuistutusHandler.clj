@@ -60,11 +60,11 @@
           (ddb/update-item
             {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
              :niputuspvm   [:s (:niputuspvm nippu)]}
-            {:update-expr     (str "SET #sms_lahetystila = :sms_lahetystila, "
+            {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila, "
                                    "#sms_muistutukset = :sms_muistutukset")
-             :expr-attr-names {"#sms_lahetystila" "sms_lahetystila"
+             :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"
                                "#sms_muistutukset" "sms_muistutukset"}
-             :expr-attr-vals {":sms_lahetystila" [:s (if (:vastattu status)
+             :expr-attr-vals {":sms_kasittelytila" [:s (if (:vastattu status)
                                                    (:vastattu c/kasittelytilat)
                                                    (:vastausaika-loppunut-m c/kasittelytilat))]
                               ":sms_muistutukset" [:n 1]}}
