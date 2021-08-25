@@ -105,6 +105,32 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       projectionType: dynamodb.ProjectionType.ALL
     })
 
+    nippuTable.addGlobalSecondaryIndex({
+      indexName: "emailMuistutusIndex",
+      partitionKey: {
+        name: "muistutukset",
+        type: dynamodb.AttributeType.NUMBER
+      },
+      sortKey: {
+        name: "lahetyspvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      projectionType: dynamodb.ProjectionType.ALL
+    });
+
+    nippuTable.addGlobalSecondaryIndex({
+      indexName: "smsMuistutusIndex",
+      partitionKey: {
+        name: "sms_muistutukset",
+        type: dynamodb.AttributeType.NUMBER
+      },
+      sortKey: {
+        name: "sms_lahetyspvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      projectionType: dynamodb.ProjectionType.ALL
+    });
+
     const organisaatioWhitelistTable = new dynamodb.Table(
         this,
         "OrganisaatioWhitelistTable",
@@ -308,6 +334,66 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     nippuTable.grantReadWriteData(tepSmsHandler);
     jaksotunnusTable.grantReadData(tepSmsHandler);
 
+    // tep Email muistutushandler
+
+    const EmailMuistutusHandler = new lambda.Function(this, "EmailMuistutusHandler", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        nippu_table: nippuTable.tableName,
+        jaksotunnus_table: jaksotunnusTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-EmailMuistutusHandler`
+      },
+      memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      timeout: Duration.seconds(
+          Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
+      ),
+      handler: "oph.heratepalvelu.tep.EmailMuistutusHandler::handleSendEmailMuistutus",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    nippuTable.grantReadWriteData(EmailMuistutusHandler);
+    jaksotunnusTable.grantReadData(EmailMuistutusHandler);
+
+    new events.Rule(this, "tep-EmailMuistutusScheduleRule", {
+      schedule: events.Schedule.expression(
+          `cron(${this.getParameterFromSsm("tep-email-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(EmailMuistutusHandler)]
+    });
+
+
+    // tep Sms muistutushandler
+
+    const SmsMuistutusHandler = new lambda.Function(this, "SmsMuistutusHandler", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        nippu_table: nippuTable.tableName,
+        jaksotunnus_table: jaksotunnusTable.tableName,
+        send_messages: (this.envVars.stage === 'sade').toString(),
+        caller_id: `1.2.246.562.10.00000000001.${id}-SmsMuistutusHandler`
+      },
+      memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      timeout: Duration.seconds(
+          Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
+      ),
+      handler: "oph.heratepalvelu.tep.SMSMuistutusHandler::handleSendSMSMuistutus",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    nippuTable.grantReadWriteData(SmsMuistutusHandler);
+    jaksotunnusTable.grantReadData(SmsMuistutusHandler);
+
+    new events.Rule(this, "tep-SmsMuistutusScheduleRule", {
+      schedule: events.Schedule.expression(
+          `cron(${this.getParameterFromSsm("tep-email-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(SmsMuistutusHandler)]
+    });
+
     // DLQ tyhjennys
 
     const dlqResendHandler = new lambda.Function(this, "TEP-DLQresendHandler", {
@@ -357,7 +443,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     // IAM
 
-    [jaksoHandler, timedOperationsHandler, niputusHandler, emailHandler, emailStatusHandler, tepSmsHandler].forEach(
+    [jaksoHandler, timedOperationsHandler, niputusHandler, emailHandler, emailStatusHandler, tepSmsHandler,
+      SmsMuistutusHandler, EmailMuistutusHandler].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,

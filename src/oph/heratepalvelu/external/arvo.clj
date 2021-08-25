@@ -112,6 +112,12 @@
                        {:basic-auth [(:arvo-user env) @pwd]
                         :as         :json}))))
 
+(defn get-nippulinkki-status [linkki]
+  (let [tunniste (last (str/split linkki #"/"))]
+    (:body (client/get (str (:arvo-url env) "tyoelamapalaute/v1/status/" tunniste)
+                       {:basic-auth [(:arvo-user env) @pwd]
+                        :as         :json}))))
+
 (defn patch-kyselylinkki-metadata [linkki tila]
   (try
     (let [tunnus (last (str/split linkki #"/"))]
