@@ -81,9 +81,11 @@
   (ddb/query-items {:muistutukset [:eq [:n 0]]
                     :lahetyspvm   [:le [:s (str (.minusDays (LocalDate/now) 5))]]}
                    {:index "emailMuistutusIndex"
-                    :filter-expression "#niputuspvm >= :niputuspvm"
-                    :expr-attr-names {"#niputuspvm" "niputuspvm"}
-                    :expr-attr-vals {":niputuspvm" [:s "2021-08-16"]}
+                    :filter-expression "#niputuspvm >= :niputuspvm AND #kasittelytila = :kasittelytila"
+                    :expr-attr-names {"#niputuspvm" "niputuspvm"
+                                      "#kasittelytila" "kasittelytila"}
+                    :expr-attr-vals {":niputuspvm" [:s "2021-08-16"]
+                                     ":kasittelytila" [:s "lahetetty"]}
                     :limit 50}
                    (:nippu-table env)))
 
