@@ -76,13 +76,10 @@
 
 (defn- query-muistukset []
   (ddb/query-items {:sms_muistutukset [:eq [:n 0]]
-                    :sms_lahetyspvm  [:le [:s (str (.minusDays (LocalDate/now) 5))]]}
+                    :sms_lahetyspvm  [:between
+                                      [[:s (str (.minusDays (LocalDate/now) 10))]
+                                       [:s (str (.minusDays (LocalDate/now) 5))]]]}
                    {:index "smsMuistutusIndex"
-                    :filter-expression "#niputuspvm >= :niputuspvm AND #sms_kasittelytila = :sms_kasittelytila"
-                    :expr-attr-names {"#niputuspvm" "niputuspvm"
-                                      "#sms_kasittelytila" "sms_kasittelytila"}
-                    :expr-attr-vals {":niputuspvm" [:s "2021-08-16"]
-                                     ":sms_kasittelytila" [:s "CREATED"]}
                     :limit 50}
                    (:nippu-table env)))
 
