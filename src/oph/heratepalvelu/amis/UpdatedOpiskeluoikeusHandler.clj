@@ -105,7 +105,9 @@
                                (if (= 404 (:status (ex-data e)))
                                  (log/warn "Opiskeluoikeudella"
                                            (:oid opiskeluoikeus)
-                                           "ei HOKSia")
+                                           "ei HOKSia. "
+                                           "Koulutustoimija: "
+                                           koulustoimija)
                                  (throw e))))]
                     (if (:osaamisen-hankkimisen-tarve hoks)
                       (save-herate

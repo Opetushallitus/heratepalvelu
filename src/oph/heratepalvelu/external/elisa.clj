@@ -13,7 +13,9 @@
 
 
 (defn msg-body [linkki oppilaitokset]
-  (str "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
+  (str "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors."
+       "\n\n"
+       "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
        "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme kehittämiseksi."
        "\n\n"
        "Tack för att du handleder studerande på utbildnings-/läroavtal! "
