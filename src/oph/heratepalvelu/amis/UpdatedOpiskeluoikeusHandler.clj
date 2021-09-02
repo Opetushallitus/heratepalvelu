@@ -91,13 +91,23 @@
       (if (seq opiskeluoikeudet)
         (do (doseq [opiskeluoikeus opiskeluoikeudet]
               (let [koulustoimija (get-koulutustoimija-oid opiskeluoikeus)
-                    vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
+                    vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)
+                    tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
+                    voimassa (reduce
+                               (fn [res next]
+                                 (if (>= (compare vahvistus-pvm (:alku next)) 0)
+                                   next
+                                   (reduced res)))
+                               (sort-by :alku tilat))
+                    tila (:koodiarvo (:tila voimassa))]
                 (when (and (some? vahvistus-pvm)
                            (check-organisaatio-whitelist?
                              koulustoimija
                              (date-string-to-timestamp
                                vahvistus-pvm))
-                           (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus)))
+                           (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus))
+                           (or (= tila "valmistunut")
+                               (= tila "lasna")))
                   (if-let [hoks
                            (try
                              (get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))
