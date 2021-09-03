@@ -34,7 +34,7 @@
                                            #(:nimi (org/get-organisaatio (:oppilaitos %1)))
                                            jaksot)))
                 id (:id (vp/send-email {:subject "Muistutus-påminnelse-reminder: Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
-                                     :body (vp/tyopaikkaohjaaja-html nippu oppilaitokset)
+                                     :body (vp/tyopaikkaohjaaja-muistutus-html nippu oppilaitokset)
                                      :address (:lahetysosoite nippu)
                                      :sender "OPH – UBS"}))]
             (ddb/update-item

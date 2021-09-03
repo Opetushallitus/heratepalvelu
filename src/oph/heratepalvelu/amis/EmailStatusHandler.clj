@@ -58,7 +58,7 @@
             (log/info email)
             (log/info status)))))
     (when (and @new-changes?
-               (< 60000 (.getRemainingTimeInMillis context)))
+               (< 120000 (.getRemainingTimeInMillis context)))
       (reset! new-changes? false)
       (recur (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                               {:index "lahetysIndex"

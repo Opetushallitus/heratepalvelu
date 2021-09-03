@@ -95,39 +95,89 @@
                (amismuistutus-body (:kyselylinkki data))
                (amispalaute-body data)]])))
 
+(defn- tyopaikkaohjaaja-body [data oppilaitokset]
+  [:div
+   [:p [:b "Hyvä työpaikkaohjaaja!"]]
+   [:p "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! Tehdään yhdessä osaajia työelämään."]
+   [:p "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme kehittämiseksi. Haluamme kuulla kokemuksianne ohjaustyöstä ja yhteistyöstä oppilaitoksen kanssa. Kyselyssä ei arvioida opiskelijaa. Kyselyn voi siirtää työpaikallanne toiselle henkilölle, jos hän on käytännössä enemmän ohjannut opiskelijaa. Vastaajan henkilötietoja ei kysytä."]
+   [:p "Palautteenne on tärkeä, kiitos, että vastaat!"]
+   [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p "Ystävällisin terveisin,"]
+   [:p (str/join ", " (map :fi oppilaitokset))]
+   [:p "Osoitelähde: Opetushallituksen (OPH) eHOKS-rekisteri"]
+   horizontal-line
+   [:p [:b "Bästa arbetsplatshandledare!"]]
+   [:p "Tack för att Ni handleder studerande på utbildnings-/läroavtal! Tillsammans skapar vi experter för arbetslivet. "]
+   [:p "Vi ber er svara på den här enkäten (5 min) för att utveckla vårt samarbete. Vi vill lyssna in er erfarenheter av det dagliga handledningsarbetet och samarbetet med utbildningsanordnaren. Studerande utvärderas inte i enkäten. Enkäten kan vidarebefordras till den person som i praktiken har deltagit mer i handledningen av den studerande. Respondentens personliga information efterfrågas inte."]
+   [:p "Din respons är viktig, tack för att du svarar!"]
+   [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p "Med vänliga hälsningar,"]
+   [:p (str/join ", " (map #(or (:sv %1) (:fi %1)) oppilaitokset))]
+   [:p "Adresskälla: Utbildningsstyrelsens (UBS) ePUK-registret"]
+   horizontal-line
+   [:p [:b "Dear workplace instructor!"]]
+   [:p "Thank you for guiding students with training agreement/apprenticeship! Let’s make experts for the world of work together."]
+   [:p "Please answer this survey (5 min) to develop our cooperation. We would like to hear about your experiences of the guidance work and cooperation with the educational institution. The survey does not assess the student. The survey can be forwarded to another person at your workplace if he or she has guided the student more. Respondent´s personal information is not asked."]
+   [:p "Your feedback is important, thank you for responding!"]
+   [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p "With best regards,"]
+   [:p (str/join ", " (map #(or (:en %1) (:fi %1)) oppilaitokset))]
+   [:p "Address source: Opetushallituksen (OPH) eHOKS-register"]])
+
+(defn- tyopaikkaohjaaja-muistutus-body [data oppilaitokset]
+  [:div
+   [:p (str "Olethan muistanut antaa palautetta oppilaitokselle!<br/>"
+            "Kom ihåg att ge respons till läroanstalten!<br/>"
+            "Please remember to give feedback to educational institution!")]
+   [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p (str "Jos linkki ei avaudu, kopioi linkki selaimesi osoiteriville.<br/>"
+            "Om du kan inte öppna länken, kopiera (och klistra in) länken i webbläsarens adressfält.<br/>"
+            "If you cannot open the link, copy (and paste) the link onto the address bar of your browser.<br/>")]
+   [:p "Kiitos, että vastaat - Tack för att du svarar – Thank you for responding!"]
+   [:p (str/join ", " (map :fi oppilaitokset))]
+   [:p [:b "Hyvä työpaikkaohjaaja!"]]
+   [:p "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! Tehdään yhdessä osaajia työelämään."]
+   [:p "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme kehittämiseksi. Haluamme kuulla kokemuksianne ohjaustyöstä ja yhteistyöstä oppilaitoksen kanssa. Kyselyssä ei arvioida opiskelijaa. Kyselyn voi siirtää työpaikallanne toiselle henkilölle, jos hän on käytännössä enemmän ohjannut opiskelijaa. Vastaajan henkilötietoja ei kysytä."]
+   [:p "Palautteenne on tärkeä, kiitos, että vastaat!"]
+   [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p "Jos linkki ei avaudu, kopioi linkki selaimesi osoiteriville."]
+   [:p "Ystävällisin terveisin,"]
+   [:p (str/join ", " (map :fi oppilaitokset))]
+   [:p "Osoitelähde: Opetushallituksen (OPH) eHOKS-rekisteri"]
+   horizontal-line
+   [:p [:b "Bästa arbetsplatshandledare!"]]
+   [:p "Tack för att Ni handleder studerande på utbildnings-/läroavtal! Tillsammans skapar vi experter för arbetslivet. "]
+   [:p "Vi ber er svara på den här enkäten (5 min) för att utveckla vårt samarbete. Vi vill lyssna in er erfarenheter av det dagliga handledningsarbetet och samarbetet med utbildningsanordnaren. Studerande utvärderas inte i enkäten. Enkäten kan vidarebefordras till den person som i praktiken har deltagit mer i handledningen av den studerande. Respondentens personliga information efterfrågas inte."]
+   [:p "Din respons är viktig, tack för att du svarar!"]
+   [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p "Om du kan inte öppna länken, kopiera (och klistra in) länken i webbläsarens adressfält."]
+   [:p "Med vänliga hälsningar,"]
+   [:p (str/join ", " (map #(or (:sv %1) (:fi %1)) oppilaitokset))]
+   [:p "Adresskälla: Utbildningsstyrelsens (UBS) ePUK-registret"]
+   horizontal-line
+   [:p [:b "Dear workplace instructor!"]]
+   [:p "Thank you for guiding students with training agreement/apprenticeship! Let’s make experts for the world of work together."]
+   [:p "Please answer this survey (5 min) to develop our cooperation. We would like to hear about your experiences of the guidance work and cooperation with the educational institution. The survey does not assess the student. The survey can be forwarded to another person at your workplace if he or she has guided the student more. Respondent´s personal information is not asked."]
+   [:p "Your feedback is important, thank you for responding!"]
+   [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p "If you cannot open the link, copy (and paste) the link onto the address bar of your browser."]
+   [:p "With best regards,"]
+   [:p (str/join ", " (map #(or (:en %1) (:fi %1)) oppilaitokset))]
+   [:p "Address source: Opetushallituksen (OPH) eHOKS-register"]])
+
 (defn tyopaikkaohjaaja-html [data oppilaitokset]
   (str "<!DOCTYPE html>"
        (html [:html {:lang "FI"}
               [:head
                [:meta {:charset "UTF-8"}]]
-              [:body
-               [:div
-                [:p [:b "Hyvä työpaikkaohjaaja!"]]
-                [:p "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! Tehdään yhdessä osaajia työelämään."]
-                [:p "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme kehittämiseksi. Haluamme kuulla kokemuksianne ohjaustyöstä ja yhteistyöstä oppilaitoksen kanssa. Kyselyssä ei arvioida opiskelijaa. Kyselyn voi siirtää työpaikallanne toiselle henkilölle, jos hän on käytännössä enemmän ohjannut opiskelijaa. Vastaajan henkilötietoja ei kysytä."]
-                [:p "Palautteenne on tärkeä, kiitos, että vastaat!"]
-                [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
-                [:p "Ystävällisin terveisin,"]
-                [:p (str/join ", " (map :fi oppilaitokset))]
-                [:p "Osoitelähde: Opetushallituksen (OPH) eHOKS-rekisteri"]
-                horizontal-line
-                [:p [:b "Bästa arbetsplatshandledare!"]]
-                [:p "Tack för att Ni handleder studerande på utbildnings-/läroavtal! Tillsammans skapar vi experter för arbetslivet. "]
-                [:p "Vi ber er svara på den här enkäten (5 min) för att utveckla vårt samarbete. Vi vill lyssna in er erfarenheter av det dagliga handledningsarbetet och samarbetet med utbildningsanordnaren. Studerande utvärderas inte i enkäten. Enkäten kan vidarebefordras till den person som i praktiken har deltagit mer i handledningen av den studerande. Respondentens personliga information efterfrågas inte."]
-                [:p "Din respons är viktig, tack för att du svarar!"]
-                [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
-                [:p "Med vänliga hälsningar,"]
-                [:p (str/join ", " (map #(or (:sv %1) (:fi %1)) oppilaitokset))]
-                [:p "Adresskälla: Utbildningsstyrelsens (UBS) ePUK-registret"]
-                horizontal-line
-                [:p [:b "Dear workplace instructor!"]]
-                [:p "Thank you for guiding students with training agreement/apprenticeship! Let’s make experts for the world of work together."]
-                [:p "Please answer this survey (5 min) to develop our cooperation. We would like to hear about your experiences of the guidance work and cooperation with the educational institution. The survey does not assess the student. The survey can be forwarded to another person at your workplace if he or she has guided the student more. Respondent´s personal information is not asked."]
-                [:p "Your feedback is important, thank you for responding!"]
-                [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
-                [:p "With best regards,"]
-                [:p (str/join ", " (map #(or (:en %1) (:fi %1)) oppilaitokset))]
-                [:p "Address source: Opetushallituksen (OPH) eHOKS-register"]]]])))
+              [:body (tyopaikkaohjaaja-body data oppilaitokset)]])))
+
+(defn tyopaikkaohjaaja-muistutus-html [data oppilaitokset]
+  (str "<!DOCTYPE html>"
+       (html [:html {:lang "FI"}
+              [:head
+               [:meta {:charset "UTF-8"}]]
+              [:body (tyopaikkaohjaaja-muistutus-body data oppilaitokset)]])))
 
 (defn send-email [email]
   "Send email to viestintäpalvelu, parameter 'email' is a map containing keys
