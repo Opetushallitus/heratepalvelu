@@ -27,8 +27,8 @@
    horizontal-line
    [:p "Dear student!"]
    [:p "Your personal competence development plan has now been approved and you are about to begin your studies. A successful beginning and a sound plan lay a good foundation for achieving your goals. This is why your experiences matter. Tell us what we did well and what we could do even better."]
-   [:p "We would like you to spend some 10 to 15 minutes on responding to this survey. The questions concern the starting phase of vocational education and training, the preparation of your personal competence plan, and the study atmosphere."]
-   [:p "You can give your feedback anonymously. Your responses will be used to develop vocational education and training."]
+   [:p "We ask you to take 10 to 15 minutes to respond to this survey. The questions concern the starting phase of vocational education and training, the preparation of your personal competence plan, and the educational atmosphere."]
+   [:p "Your feedback will be collected anonymously. Your responses will be used to improve vocational education and training."]
    [:p [:a {:href link} link]]
    [:p "With best regards, your educational institution"]])
 
@@ -54,9 +54,9 @@
    horizontal-line
    [:p "Dear graduate!"]
    [:p "Congratulations! You have now finished the vocational studies you set as your goal."]
-   [:p "Your experiences of education and training matter. Tell us what we did well and what we could do even better."]
-   [:p "We would like you to spend some 10 to 15 minutes on responding to this survey."]
-   [:p "You can give your feedback anonymously. Your responses will be used to develop vocational education and training."]
+   [:p "Your experiences in education and training matter. Tell us what we did well and what we could do even better."]
+   [:p "We ask you to take 10 to 15 minutes to respond to this survey."]
+   [:p "Your feedback will be collected anonymously. Your responses will be used to improve vocational education and training."]
    [:p "Thank you for responding!"]
    [:p [:a {:href link} link]]
    [:p "With best regards, your educational institution"]])
@@ -74,7 +74,7 @@
   [:div
    [:p (str "Olethan muistanut antaa palautetta oppilaitokselle!<br/>"
             "Kom ihåg att ge respons till läroanstalten!<br/>"
-            "Please remember to give feedback to educational institution!")]
+            "Please remember to give feedback to the educational institution!")]
    [:p [:a {:href link} link]]
    horizontal-line])
 
@@ -116,8 +116,8 @@
    [:p "Adresskälla: Utbildningsstyrelsens (UBS) ePUK-registret"]
    horizontal-line
    [:p [:b "Dear workplace instructor!"]]
-   [:p "Thank you for guiding students with training agreement/apprenticeship! Let’s make experts for the world of work together."]
-   [:p "Please answer this survey (5 min) to develop our cooperation. We would like to hear about your experiences of the guidance work and cooperation with the educational institution. The survey does not assess the student. The survey can be forwarded to another person at your workplace if he or she has guided the student more. Respondent´s personal information is not asked."]
+   [:p "Thank you for guiding students with a training agreement/apprenticeship! Let’s make experts for the workforce together."]
+   [:p "Please respond to this survey (5 min) to help us work together more effectively. We would like to hear about your experiences guiding students and working with the educational institution. The survey does not assess the student. The survey can be forwarded to another person at your workplace if he or she has guided the student more. Respondent´s personal information is not requested."]
    [:p "Your feedback is important, thank you for responding!"]
    [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
    [:p "With best regards,"]
@@ -128,7 +128,7 @@
   [:div
    [:p (str "Olethan muistanut antaa palautetta oppilaitokselle!<br/>"
             "Kom ihåg att ge respons till läroanstalten!<br/>"
-            "Please remember to give feedback to educational institution!")]
+            "Please remember to give feedback to the educational institution!")]
    [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
    [:p (str "Jos linkki ei avaudu, kopioi linkki selaimesi osoiteriville.<br/>"
             "Om du kan inte öppna länken, kopiera (och klistra in) länken i webbläsarens adressfält.<br/>"
@@ -156,8 +156,8 @@
    [:p "Adresskälla: Utbildningsstyrelsens (UBS) ePUK-registret"]
    horizontal-line
    [:p [:b "Dear workplace instructor!"]]
-   [:p "Thank you for guiding students with training agreement/apprenticeship! Let’s make experts for the world of work together."]
-   [:p "Please answer this survey (5 min) to develop our cooperation. We would like to hear about your experiences of the guidance work and cooperation with the educational institution. The survey does not assess the student. The survey can be forwarded to another person at your workplace if he or she has guided the student more. Respondent´s personal information is not asked."]
+   [:p "Thank you for guiding students with a training agreement/apprenticeship! Let’s make experts for the workforce together."]
+   [:p "Please answer this survey (5 min) to help us work together more effectively. We would like to hear about your experiences guiding students and working with the educational institution. The survey does not assess the student. The survey can be forwarded to another person at your workplace if he or she has guided the student more. Respondent´s personal information is not requested."]
    [:p "Your feedback is important, thank you for responding!"]
    [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
    [:p "If you cannot open the link, copy (and paste) the link onto the address bar of your browser."]
