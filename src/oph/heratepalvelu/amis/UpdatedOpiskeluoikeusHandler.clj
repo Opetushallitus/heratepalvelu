@@ -83,6 +83,19 @@
                    (sort-by :alku tilat))]
     (:koodiarvo (:tila voimassa))))
 
+(defn check-tila [opiskeluoikeus vahvistus-pvm]
+  (let [tila (get-tila opiskeluoikeus vahvistus-pvm)]
+    (if (or (= tila "valmistunut") (= tila "lasna"))
+      true
+      (do (log/info "Opiskeluoikeuden "
+                    (:oid opiskeluoikeus)
+                    " (vahvistuspäivämäärä: "
+                    vahvistus-pvm
+                    ") tila on "
+                    tila
+                    ". Odotettu arvo on 'valmistunut' tai 'läsnä'.")
+          false))))
+
 (defn -handleUpdatedOpiskeluoikeus [this event context]
   (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus" event context)
   (let [start-time (System/currentTimeMillis)
@@ -101,16 +114,14 @@
       (if (seq opiskeluoikeudet)
         (do (doseq [opiskeluoikeus opiskeluoikeudet]
               (let [koulustoimija (get-koulutustoimija-oid opiskeluoikeus)
-                    vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)
-                    tila (get-tila opiskeluoikeus vahvistus-pvm)]
+                    vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
                 (when (and (some? vahvistus-pvm)
                            (check-organisaatio-whitelist?
                              koulustoimija
                              (date-string-to-timestamp
                                vahvistus-pvm))
                            (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus))
-                           (or (= tila "valmistunut")
-                               (= tila "lasna")))
+                           (check-tila opiskeluoikeus vahvistus-pvm))
                   (if-let [hoks
                            (try
                              (get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))
