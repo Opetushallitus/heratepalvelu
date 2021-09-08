@@ -87,11 +87,11 @@
   (let [tila (get-tila opiskeluoikeus vahvistus-pvm)]
     (if (or (= tila "valmistunut") (= tila "lasna"))
       true
-      (do (log/info "Opiskeluoikeuden "
+      (do (log/info "Opiskeluoikeuden"
                     (:oid opiskeluoikeus)
-                    " (vahvistuspäivämäärä: "
+                    "(vahvistuspäivämäärä: "
                     vahvistus-pvm
-                    ") tila on "
+                    ") tila on"
                     tila
                     ". Odotettu arvo on 'valmistunut' tai 'läsnä'.")
           false))))
