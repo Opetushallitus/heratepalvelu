@@ -339,7 +339,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       environment: {
         table: AMISherateTable.tableName
       },
-      handler: "oph.heratepalvelu.util.dbChanger:handleDBMarkIncorrectSuoritustyypit",
+      handler: "oph.heratepalvelu.util.dbChanger::handleDBMarkIncorrectSuoritustyypit",
       memorySize: 1024,
       timeout: Duration.seconds(900),
       tracing: lambda.Tracing.ACTIVE
