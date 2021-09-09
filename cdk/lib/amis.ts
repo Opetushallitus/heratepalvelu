@@ -337,15 +337,15 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       environment: {
-        table: AMISherateTable.tableName
+        ...this.envVars,
+        table: AMISherateTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateHandler`,
       },
       handler: "oph.heratepalvelu.util.dbChanger::handleDBMarkIncorrectSuoritustyypit",
       memorySize: 1024,
       timeout: Duration.seconds(900),
       tracing: lambda.Tracing.ACTIVE
     });
-
-    AMISherateTable.grantReadWriteData(dbChanger);
 
     [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, resendBetweenHandler,
       AMISEmailResendHandler, AMISMuistutusHandler, AMISEmailStatusHandler, dbChanger

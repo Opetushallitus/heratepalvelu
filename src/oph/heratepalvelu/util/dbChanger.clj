@@ -56,9 +56,9 @@
             suoritus-koodi (:koodiarvo (:tyyppi (c/get-suoritus opiskeluoikeus)))
             db-suoritus-koodi (:kyselytyyppi item)
             mismatch (or (and (= suoritus-koodi "ammatillinentutkintoosittainen")
-                              (not= db-suoritus-koodi "tutkinnon_osia_suorittaneet"))
+                              (= db-suoritus-koodi "tutkinnon_suorittaneet"))
                          (and (= suoritus-koodi "ammatillinentutkinto")
-                              (not= db-suoritus-koodi "tutkinnon_suorittaneet")))]
+                              (= db-suoritus-koodi "tutkinnon_osia_suorittaneet")))]
         (ddb/update-item
           {:toimija_oppija [:s (:toimija_oppija item)]
            :tyyppi_kausi [:s (:tyyppi_kausi item)]}
