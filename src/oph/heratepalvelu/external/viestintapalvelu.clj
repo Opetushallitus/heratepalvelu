@@ -16,6 +16,7 @@
    [:p "Toivomme, että käyttäisit noin 10-15 minuuttia aikaa tähän kyselyyn vastaamiseen. Kysymykset koskevat ammatillisen koulutuksen aloitusvaihetta, HOKSin laadintaa ja opiskeluilmapiiriä."]
    [:p "Palaute annetaan nimettömänä. Vastauksiasi käytetään ammatillisen koulutuksen kehittämiseen."]
    [:p [:a {:href link} link]]
+   [:p "Jos linkki ei avaudu, kopioi linkki selaimesi osoiteriville."]
    [:p "Terveisin oppilaitoksesi"]
    horizontal-line
    [:p "Bästa studerande!"]
@@ -23,6 +24,7 @@
    [:p "Vi hoppas att du tar dig tid att svara på den här enkäten. Det tar ungefär 10–15 minuter att svara. Frågorna berör de inledande studierna, uppgörandet av PUK och studieklimatet."]
    [:p "Responsen ges anonymt. Dina svar används för att utveckla yrkesutbildningen."]
    [:p [:a {:href link} link]]
+   [:p "Om du kan inte öppna länken, kopiera (och klistra in) länken i webbläsarens adressfält."]
    [:p "Hälsningar, din läroanstalt"]
    horizontal-line
    [:p "Dear student!"]
@@ -30,6 +32,7 @@
    [:p "We ask you to take 10 to 15 minutes to respond to this survey. The questions concern the starting phase of vocational education and training, the preparation of your personal competence plan, and the educational atmosphere."]
    [:p "Your feedback will be collected anonymously. Your responses will be used to improve vocational education and training."]
    [:p [:a {:href link} link]]
+   [:p "If you cannot open the link, copy (and paste) the link onto the address bar of your browser."]
    [:p "With best regards, your educational institution"]])
 
 (defn- amispalaute-body-loppukysely [link]
@@ -41,6 +44,7 @@
    [:p "Palaute annetaan nimettömänä. Vastauksiasi käytetään ammatillisen koulutuksen kehittämiseen."]
    [:p "Kiitos, että vastaat!"]
    [:p [:a {:href link} link]]
+   [:p "Jos linkki ei avaudu, kopioi linkki selaimesi osoiteriville."]
    [:p "Terveisin oppilaitoksesi"]
    horizontal-line
    [:p "Hej!"]
@@ -50,6 +54,7 @@
    [:p "Responsen ges anonymt. Dina svar används för att utveckla yrkesutbildningen."]
    [:p "Tack för att du svarar!"]
    [:p [:a {:href link} link]]
+   [:p "Om du kan inte öppna länken, kopiera (och klistra in) länken i webbläsarens adressfält."]
    [:p "Hälsningar, din läroanstalt"]
    horizontal-line
    [:p "Dear graduate!"]
@@ -59,6 +64,7 @@
    [:p "Your feedback will be collected anonymously. Your responses will be used to improve vocational education and training."]
    [:p "Thank you for responding!"]
    [:p [:a {:href link} link]]
+   [:p "If you cannot open the link, copy (and paste) the link onto the address bar of your browser."]
    [:p "With best regards, your educational institution"]])
 
 (defn- amispalaute-body [data]
@@ -76,6 +82,9 @@
             "Kom ihåg att ge respons till läroanstalten!<br/>"
             "Please remember to give feedback to the educational institution!")]
    [:p [:a {:href link} link]]
+   [:p (str "Jos linkki ei avaudu, kopioi linkki selaimesi osoiteriville.<br/>"
+            "Om du kan inte öppna länken, kopiera (och klistra in) länken i webbläsarens adressfält.<br/>"
+            "If you cannot open the link, copy (and paste) the link onto the address bar of your browser.<br/>")]
    horizontal-line])
 
 (defn amispalaute-html [data]
@@ -102,6 +111,7 @@
    [:p "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme kehittämiseksi. Haluamme kuulla kokemuksianne ohjaustyöstä ja yhteistyöstä oppilaitoksen kanssa. Kyselyssä ei arvioida opiskelijaa. Kyselyn voi siirtää työpaikallanne toiselle henkilölle, jos hän on käytännössä enemmän ohjannut opiskelijaa. Vastaajan henkilötietoja ei kysytä."]
    [:p "Palautteenne on tärkeä, kiitos, että vastaat!"]
    [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p "Jos linkki ei avaudu, kopioi linkki selaimesi osoiteriville."]
    [:p "Ystävällisin terveisin,"]
    [:p (str/join ", " (map :fi oppilaitokset))]
    [:p "Osoitelähde: Opetushallituksen (OPH) eHOKS-rekisteri"]
@@ -111,6 +121,7 @@
    [:p "Vi ber er svara på den här enkäten (5 min) för att utveckla vårt samarbete. Vi vill lyssna in er erfarenheter av det dagliga handledningsarbetet och samarbetet med utbildningsanordnaren. Studerande utvärderas inte i enkäten. Enkäten kan vidarebefordras till den person som i praktiken har deltagit mer i handledningen av den studerande. Respondentens personliga information efterfrågas inte."]
    [:p "Din respons är viktig, tack för att du svarar!"]
    [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p "Om du kan inte öppna länken, kopiera (och klistra in) länken i webbläsarens adressfält."]
    [:p "Med vänliga hälsningar,"]
    [:p (str/join ", " (map #(or (:sv %1) (:fi %1)) oppilaitokset))]
    [:p "Adresskälla: Utbildningsstyrelsens (UBS) ePUK-registret"]
@@ -120,6 +131,7 @@
    [:p "Please respond to this survey (5 min) to help us work together more effectively. We would like to hear about your experiences guiding students and working with the educational institution. The survey does not assess the student. The survey can be forwarded to another person at your workplace if he or she has guided the student more. Respondent´s personal information is not requested."]
    [:p "Your feedback is important, thank you for responding!"]
    [:p [:a {:href (:kyselylinkki data)} (:kyselylinkki data)]]
+   [:p "If you cannot open the link, copy (and paste) the link onto the address bar of your browser."]
    [:p "With best regards,"]
    [:p (str/join ", " (map #(or (:en %1) (:fi %1)) oppilaitokset))]
    [:p "Address source: Opetushallituksen (OPH) eHOKS-register"]])
