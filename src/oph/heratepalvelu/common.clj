@@ -140,6 +140,17 @@
         (LocalDate/of (+ year 1) 1 1)
         (LocalDate/of year (+ month 1) 1)))))
 
+(defn- deaccent-string [str]
+  (let [normalized (java.text.Normalizer/normalize str java.text.Normalizer$Form/NFD)]
+    (str/replace normalized #"\p{InCombiningDiacriticalMarks}+" "")))
+
+(defn create-nipputunniste [tyopaikan-nimi]
+  "Luo nipulle tunnisteen ilman erikoismerkkejä"
+    (str
+      (str/replace (deaccent-string tyopaikan-nimi)
+                   #"[\\|/|\?|#|&|\s|,|;|.]+" "_")
+      "_" (t/today) "_" (rand-str 6)))
+
 (defn check-organisaatio-whitelist?
   ([koulutustoimija]
    (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
