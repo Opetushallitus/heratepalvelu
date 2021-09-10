@@ -50,7 +50,9 @@
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
 
 (defn -handleDBMarkIncorrectSuoritustyypit [this event context]
-  (loop [resp (scan {})]
+  (loop [resp (scan {:filter-expression "#value1 = :value1"
+                     :expr-attr-names {"#value1" "check-suoritus"}
+                     :expr-attr-vals {":value1" [:nul]}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (if (not= (:check-suoritus item) nil)
@@ -69,4 +71,7 @@
               (:table env))))
         (catch Exception e (do))))
     (when (.hasLastEvaluatedKey resp)
-      (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)})))))
+      (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
+                    :filter-expression "#value1 = :value1"
+                    :expr-attr-names {"#value1" "check-suoritus"}
+                    :expr-attr-vals {":value1" [:nul]}})))))
