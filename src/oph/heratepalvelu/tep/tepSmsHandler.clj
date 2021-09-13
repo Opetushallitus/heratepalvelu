@@ -31,7 +31,7 @@
            (let [numtype (str (.getNumberType utilobj numberobj))]
              (or (= numtype "FIXED_LINE_OR_MOBILE") (= numtype "MOBILE")))))
     (catch NumberParseException e
-      (log/error "PhoneNumberUtils failed to parse phonenumber " number)
+      (log/error "PhoneNumberUtils failed to parse phonenumber")
       (log/error e)
       false)))
 
@@ -56,7 +56,7 @@
                            ":lahetettynumeroon" [:s puhelinnumero]}}
         (:nippu-table env))
       (catch Exception e
-        (log/error (str "Error in update-status-to-db for " ohjaaja_ytunnus_kj_tutkinto " , " niputuspvm " , " status))
+        (log/error (str "Error in update-status-to-db. Status:" status))
         (throw e)))))
 
 (defn- ohjaaja-puhnro [nippu jaksot]
@@ -89,9 +89,7 @@
       (let [numerot (reduce #(if (some? (:ohjaaja_puhelinnumero %2))
                                (conj %1 (:ohjaaja_puhelinnumero %2))
                                %1) #{} jaksot)]
-        (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa "
-                  (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
-                  (:niputuspvm nippu) "," numerot)
+        (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa, " (count numerot) " numeroa löydetty")
           (ddb/update-item
             {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
              :niputuspvm                  [:s (:niputuspvm nippu)]}
@@ -151,11 +149,11 @@
                           (> 399 (:status (ex-data e)))
                           (< 500 (:status (ex-data e))))
                       (do
-                        (log/error "Client error while sending sms to number " puhelinnumero)
+                        (log/error "Client error while sending sms")
                         (log/error e)
                         (:failed c/kasittelytilat))
                       (do
-                        (log/error "Server error while sending sms to number " puhelinnumero)
+                        (log/error "Server error while sending sms")
                         (log/error e)
                         (:failed c/kasittelytilat))))
                   (catch Exception e
@@ -173,7 +171,7 @@
                                   ":sms_lahetyspvm" [:s (str (LocalDate/now))]}}
                 (:nippu-table env))
               (catch Exception e
-                (log/error "Virhe sms-lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" nippu)
+                (log/error "Virhe sms-lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut")
                 (log/error e))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
