@@ -14,3 +14,10 @@
       (is (sh/valid-number? intl-phone-number))
       (is (not (sh/valid-number? junk-invalid)))
       (is (not (sh/valid-number? unicode-invalid))))))
+
+(deftest client-error-test
+  (testing "Funktio client-error? erottaa client erroreja muista HTTP-statuksista"
+    (let [client-error (ex-info "File not found" {:status 404})
+          server-error (ex-info "Internal server error" {:status 503})]
+      (is (sh/client-error? client-error))
+      (is (not (sh/client-error? server-error))))))

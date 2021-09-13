@@ -104,6 +104,10 @@
             (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) (:ei-yhteystietoja c/kasittelytilat)))
           nil))))
 
+(defn client-error? [e]
+  (and (> (:status (ex-data e)) 399)
+       (< (:status (ex-data e)) 500)))
+
 (defn -handleTepSmsSending [this event context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
   (loop [lahetettavat (ddb/query-items {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
@@ -145,9 +149,7 @@
                     (log/error e)
                     (:failed c/kasittelytilat))
                   (catch ExceptionInfo e
-                    (if (and
-                          (> 399 (:status (ex-data e)))
-                          (< 500 (:status (ex-data e))))
+                    (if (client-error? e)
                       (do
                         (log/error "Client error while sending sms")
                         (log/error e)

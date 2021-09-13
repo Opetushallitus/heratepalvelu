@@ -234,5 +234,6 @@
                 :body         (generate-string {:tila tila})
                 :as           :json})))
     (catch ExceptionInfo e
+      (log/error "Virhe patch-nippulinkki-metadata -funktiossa")
       (log/error e)
       (throw e))))
