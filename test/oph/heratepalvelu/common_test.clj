@@ -3,7 +3,8 @@
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.util :refer :all]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]))
+            [clj-time.coerce :as c]
+            [clojure.string :as str]))
 
 (deftest test-get-koulutustoimija-oid
   (testing "Get koulutustoimija oid"
@@ -58,3 +59,10 @@
                  (str date2))))
     (is (false? (has-time-to-answer?
                   (str date3))))))
+
+(deftest test-create-nipputunniste
+  (testing "Create normalized nipputunniste"
+    (is (str/starts-with?
+          (create-nipputunniste "Ääkköspaikka, Crème brûlée") "Aakkospaikka_Creme_brulee"))
+    (is (str/starts-with?
+          (create-nipputunniste "árvíztűrő tükörfúrógép") "arvizturo_tukorfurogep"))))
