@@ -34,10 +34,7 @@
                                   (:jaksotunnus-table env)))
         tunnukset (map :tunnus jaksot)]
     (if (not-empty tunnukset)
-      (let [tunniste (str
-                       (str/replace (:tyopaikan_nimi (first jaksot))
-                                    #"[\\|/|\?|#|&|\s|,|;|.]+" "_")
-                       "_" (t/today) "_" (c/rand-str 6))
+      (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))
             arvo-resp (arvo/create-nippu-kyselylinkki
                         (arvo/build-niputus-request-body
                           tunniste
