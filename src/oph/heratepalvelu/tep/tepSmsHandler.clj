@@ -141,7 +141,7 @@
                   (catch AwsServiceException e
                     (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
                     (log/error e)
-                    (throw e))
+                    (:failed c/kasittelytilat))
                   (catch ExceptionInfo e
                     (if (and
                           (> 399 (:status (ex-data e)))
@@ -149,14 +149,14 @@
                       (do
                         (log/error "Client error while sending sms to number " puhelinnumero)
                         (log/error e)
-                        (throw e))
+                        (:failed c/kasittelytilat))
                       (do
                         (log/error "Server error while sending sms to number " puhelinnumero)
                         (log/error e)
-                        (throw e))))
+                        (:failed c/kasittelytilat))))
                   (catch Exception e
                     (log/error "Unhandled exception " e)
-                    (throw e)))))
+                    (:failed c/kasittelytilat)))))
             (try
               (ddb/update-item
                 {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
