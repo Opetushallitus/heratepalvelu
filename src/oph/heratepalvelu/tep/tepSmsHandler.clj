@@ -18,14 +18,18 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- valid-number? [number]
+;; Sallii vain numeroita, jotka kirjasto voi luokitella mobiilin tai
+;; mahdollisesti mobiilin (FIXED_LINE_OR_MOBILE) numeroiksi. Jos tämä Lambda
+;; ei tulevaisuudessa hyväksy numeroa, jonka tiedät olevan validi, tarkista,
+;; miten tämä kirjasto luokittelee sen: https://libphonenumber.appspot.com/.
+(defn valid-number? [number]
   (try
     (let [utilobj (PhoneNumberUtil/getInstance)
           numberobj (.parse utilobj number "FI")]
       (and (empty? (filter (fn [x] (Character/isLetter x)) number))
            (.isValidNumber utilobj numberobj)
-           (= (str (.getNumberType utilobj numberobj))
-              "MOBILE")))
+           (let [numtype (str (.getNumberType utilobj numberobj))]
+             (or (= numtype "FIXED_LINE_OR_MOBILE") (= numtype "MOBILE")))))
     (catch NumberParseException e
       (log/error "PhoneNumberUtils failed to parse phonenumber " number)
       (log/error e)
