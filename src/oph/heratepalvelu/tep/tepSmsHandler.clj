@@ -6,7 +6,8 @@
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.organisaatio :as org]
-            [oph.heratepalvelu.external.arvo :as arvo])
+            [oph.heratepalvelu.external.arvo :as arvo]
+            [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
            (clojure.lang ExceptionInfo)
            (java.time LocalDate)
@@ -35,7 +36,7 @@
       (log/error e)
       false)))
 
-(defn- update-status-to-db [status puhelinnumero nippu]
+(defn- update-status-to-db [status puhelinnumero nippu new-loppupvm]
   (let [ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
         niputuspvm                  (:niputuspvm nippu)]
     (try
@@ -45,19 +46,32 @@
         {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila, "
                                "#sms_lahetyspvm = :sms_lahetyspvm, "
                                "#sms_muistutukset = :sms_muistutukset, "
-                               "#lahetettynumeroon = :lahetettynumeroon")
+                               "#lahetettynumeroon = :lahetettynumeroon, "
+                               "#loppupvm = :loppupvm")
          :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"
                            "#sms_lahetyspvm" "sms_lahetyspvm"
                            "#sms_muistutukset" "sms_muistutukset"
-                           "#lahetettynumeroon" "lahetettynumeroon"}
+                           "#lahetettynumeroon" "lahetettynumeroon"
+                           "#loppupvm" "voimassaloppupvm"}
          :expr-attr-vals  {":sms_kasittelytila" [:s status]
                            ":sms_lahetyspvm"    [:s (str (LocalDate/now))]
                            ":sms_muistutukset"  [:n 0]
-                           ":lahetettynumeroon" [:s puhelinnumero]}}
+                           ":lahetettynumeroon" [:s puhelinnumero]
+                           ":loppupvm"          [:s (if new-loppupvm
+                                                      new-loppupvm
+                                                      (:voimassaloppupvm nippu))]}}
         (:nippu-table env))
       (catch Exception e
         (log/error (str "Error in update-status-to-db. Status:" status))
         (throw e)))))
+
+(defn update-arvo-obj [status new-loppupvm]
+  (if (or (= status "CREATED") (= status "mock-lahetys"))
+    (if new-loppupvm
+      {:metatiedot {:tila (:success c/kasittelytilat)}
+       :vastaamisajan_loppuvpm new-loppupvm} ;; TODO convert format?
+      {:metatiedot {:tila (:success c/kasittelytilat)}})
+    {:metatiedot {:tila (:failure c/kasittelytilat)}}))
 
 (defn- ohjaaja-puhnro [nippu jaksot]
   (let [number (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
@@ -137,13 +151,11 @@
                   (let [body (elisa/msg-body (:kyselylinkki nippu) oppilaitokset)
                         resp (elisa/send-tep-sms puhelinnumero body)
                         status (get-in resp [:body :messages (keyword puhelinnumero) :status])
-                        converted (get-in resp [:body :messages (keyword puhelinnumero) :converted])]
-                    (update-status-to-db status (or converted puhelinnumero) nippu)
-                    (arvo/patch-nippulinkki-metadata
-                      (:kyselylinkki nippu)
-                      (if (or (= status "CREATED") (= status "mock-lahetys"))
-                        (:success c/kasittelytilat)
-                        (:failed c/kasittelytilat))))
+                        converted (get-in resp [:body :messages (keyword puhelinnumero) :converted])
+                        new-loppupvm (tc/get-new-loppupvm nippu)]
+                    (update-status-to-db status (or converted puhelinnumero) nippu new-loppupvm)
+                    (arvo/patch-nippulinkki (:kyselylinkki nippu)
+                                            (update-arvo-obj status new-loppupvm)))
                   (catch AwsServiceException e
                     (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
                     (log/error e))
