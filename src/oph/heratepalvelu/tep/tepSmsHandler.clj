@@ -1,17 +1,17 @@
 (ns oph.heratepalvelu.tep.tepSmsHandler
   (:require [clojure.tools.logging :as log]
-            [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.elisa :as elisa]
-            [oph.heratepalvelu.log.caller-log :refer :all]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
+            [oph.heratepalvelu.external.elisa :as elisa]
+            [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
-  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (clojure.lang ExceptionInfo)
+  (:import (clojure.lang ExceptionInfo)
+           (com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException)
            (java.time LocalDate)
-           (com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException)))
+           (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
   :name "oph.heratepalvelu.tep.tepSmsHandler"
