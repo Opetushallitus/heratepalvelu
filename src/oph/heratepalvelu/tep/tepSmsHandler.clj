@@ -18,16 +18,20 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- valid-number? [number]
+;; Sallii vain numeroita, jotka kirjasto voi luokitella mobiilin tai
+;; mahdollisesti mobiilin (FIXED_LINE_OR_MOBILE) numeroiksi. Jos tämä Lambda
+;; ei tulevaisuudessa hyväksy numeroa, jonka tiedät olevan validi, tarkista,
+;; miten tämä kirjasto luokittelee sen: https://libphonenumber.appspot.com/.
+(defn valid-number? [number]
   (try
     (let [utilobj (PhoneNumberUtil/getInstance)
           numberobj (.parse utilobj number "FI")]
       (and (empty? (filter (fn [x] (Character/isLetter x)) number))
            (.isValidNumber utilobj numberobj)
-           (= (str (.getNumberType utilobj numberobj))
-              "MOBILE")))
+           (let [numtype (str (.getNumberType utilobj numberobj))]
+             (or (= numtype "FIXED_LINE_OR_MOBILE") (= numtype "MOBILE")))))
     (catch NumberParseException e
-      (log/error "PhoneNumberUtils failed to parse phonenumber " number)
+      (log/error "PhoneNumberUtils failed to parse phonenumber")
       (log/error e)
       false)))
 
@@ -52,7 +56,7 @@
                            ":lahetettynumeroon" [:s puhelinnumero]}}
         (:nippu-table env))
       (catch Exception e
-        (log/error (str "Error in update-status-to-db for " ohjaaja_ytunnus_kj_tutkinto " , " niputuspvm " , " status))
+        (log/error (str "Error in update-status-to-db. Status:" status))
         (throw e)))))
 
 (defn- ohjaaja-puhnro [nippu jaksot]
@@ -85,9 +89,7 @@
       (let [numerot (reduce #(if (some? (:ohjaaja_puhelinnumero %2))
                                (conj %1 (:ohjaaja_puhelinnumero %2))
                                %1) #{} jaksot)]
-        (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa "
-                  (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
-                  (:niputuspvm nippu) "," numerot)
+        (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa, " (count numerot) " numeroa löydetty")
           (ddb/update-item
             {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
              :niputuspvm                  [:s (:niputuspvm nippu)]}
@@ -101,6 +103,10 @@
                     (= (:no-email c/kasittelytilat) (:kasittelytila nippu)))
             (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) (:ei-yhteystietoja c/kasittelytilat)))
           nil))))
+
+(defn client-error? [e]
+  (and (> (:status (ex-data e)) 399)
+       (< (:status (ex-data e)) 500)))
 
 (defn -handleTepSmsSending [this event context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
@@ -140,23 +146,17 @@
                         (:failed c/kasittelytilat))))
                   (catch AwsServiceException e
                     (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
-                    (log/error e)
-                    (throw e))
+                    (log/error e))
                   (catch ExceptionInfo e
-                    (if (and
-                          (> 399 (:status (ex-data e)))
-                          (< 500 (:status (ex-data e))))
+                    (if (client-error? e)
                       (do
-                        (log/error "Client error while sending sms to number " puhelinnumero)
-                        (log/error e)
-                        (throw e))
+                        (log/error "Client error while sending sms")
+                        (log/error e))
                       (do
-                        (log/error "Server error while sending sms to number " puhelinnumero)
-                        (log/error e)
-                        (throw e))))
+                        (log/error "Server error while sending sms")
+                        (log/error e))))
                   (catch Exception e
-                    (log/error "Unhandled exception " e)
-                    (throw e)))))
+                    (log/error "Unhandled exception " e)))))
             (try
               (ddb/update-item
                 {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
@@ -169,7 +169,7 @@
                                   ":sms_lahetyspvm" [:s (str (LocalDate/now))]}}
                 (:nippu-table env))
               (catch Exception e
-                (log/error "Virhe sms-lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" nippu)
+                (log/error "Virhe sms-lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut")
                 (log/error e))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]

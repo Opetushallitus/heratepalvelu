@@ -4,7 +4,8 @@
             [cheshire.core :refer [generate-string]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private apikey (delay
                         (ssm/get-secret
@@ -47,16 +48,18 @@
 
 (defn send-tep-sms [number message]
   (if (= "true" (:send-messages env))
-    (let [body {:sender "OPH"
-                :destination [number]
-                :text message}
-          resp (client/post
-                 (str "https://viestipalvelu-api.elisa.fi/api/v1/")
-                 {:headers {:Authorization  (str "apikey " @apikey)
-                            :content-type "application/json"}
-                  :body        (generate-string body)
-                  :as :json})]
-      resp)
+    (try
+      (client/post (str "https://viestipalvelu-api.elisa.fi/api/v1/")
+                   {:headers {:Authorization  (str "apikey " @apikey)
+                              :content-type "application/json"}
+                    :body    (generate-string {:sender "OPH"
+                                               :destination [number]
+                                               :text message})
+                    :as      :json})
+      (catch ExceptionInfo e
+        (log/error "Virhe send-tep-sms -funktiossa")
+        (log/error e)
+        (throw e)))
     (do
       (log/info message)
       {:body
