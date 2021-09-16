@@ -224,20 +224,6 @@
     (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (util/url-encode tunniste))
     {:basic-auth   [(:arvo-user env) @pwd]}))
 
-(defn patch-nippulinkki-metadata [linkki tila]
-  (try
-    (let [tunniste (last (str/split linkki #"/"))]
-      (:body (client/patch
-               (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (util/url-encode tunniste) "/metatiedot")
-               {:basic-auth   [(:arvo-user env) @pwd]
-                :content-type "application/json"
-                :body         (generate-string {:tila tila})
-                :as           :json})))
-    (catch ExceptionInfo e
-      (log/error "Virhe patch-nippulinkki-metadata -funktiossa")
-      (log/error e)
-      (throw e))))
-
 (defn patch-nippulinkki [linkki data]
   (try
     (let [tunniste (last (str/split linkki #"/"))]
@@ -248,6 +234,9 @@
                 :body         (generate-string data)
                 :as           :json})))
     (catch ExceptionInfo e
-      (log/error "Virhe patch-nippulinkki-metadata -funktiossa")
+      (log/error "Virhe patch-nippulinkki -funktiossa")
       (log/error e)
       (throw e))))
+
+(defn patch-nippulinkki-metadata [linkki tila]
+  (patch-nippulinkki linkki {:metatiedot {:tila tila}}))
