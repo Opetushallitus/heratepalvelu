@@ -69,7 +69,7 @@
   (if (or (= status "CREATED") (= status "mock-lahetys"))
     (if new-loppupvm
       {:metatiedot {:tila (:success c/kasittelytilat)}
-       :vastaamisajan_loppuvpm new-loppupvm} ;; TODO convert format?
+       :vastaamisajan_loppupvm new-loppupvm}
       {:metatiedot {:tila (:success c/kasittelytilat)}})
     {:metatiedot {:tila (:failure c/kasittelytilat)}}))
 
