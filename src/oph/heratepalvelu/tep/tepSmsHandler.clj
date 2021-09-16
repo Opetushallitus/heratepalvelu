@@ -65,7 +65,7 @@
         (log/error (str "Error in update-status-to-db. Status:" status))
         (throw e)))))
 
-(defn update-arvo-obj [status new-loppupvm]
+(defn update-arvo-obj-sms [status new-loppupvm]
   (if (or (= status "CREATED") (= status "mock-lahetys"))
     (if new-loppupvm
       {:metatiedot {:tila (:success c/kasittelytilat)}
@@ -155,7 +155,7 @@
                         new-loppupvm (tc/get-new-loppupvm nippu)]
                     (update-status-to-db status (or converted puhelinnumero) nippu new-loppupvm)
                     (arvo/patch-nippulinkki (:kyselylinkki nippu)
-                                            (update-arvo-obj status new-loppupvm)))
+                                            (update-arvo-obj-sms status new-loppupvm)))
                   (catch AwsServiceException e
                     (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
                     (log/error e))
