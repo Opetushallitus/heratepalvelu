@@ -320,19 +320,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       enabled: false
     });
 
-    const resendBetweenHandler = new lambda.Function(this, "AMIS-resendBetweenHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        caller_id: `1.2.246.562.10.00000000001.${id}-resendBetweenHandler`,
-      },
-      handler: "oph.heratepalvelu.amis.resendBetweenHandler::handleResendBetween",
-      memorySize: 1024,
-      timeout: Duration.seconds(60),
-      tracing: lambda.Tracing.ACTIVE
-    });
-
    /* const dbChanger = new lambda.Function(this, "AMIS-DBChanger", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
@@ -347,7 +334,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE
     });*/
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler, resendBetweenHandler,
+    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler,
       AMISEmailResendHandler, AMISMuistutusHandler, AMISEmailStatusHandler,// dbChanger
     ].forEach(
       lambdaFunction => {
