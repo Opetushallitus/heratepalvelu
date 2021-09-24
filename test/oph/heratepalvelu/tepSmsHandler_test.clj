@@ -25,10 +25,10 @@
 
 (deftest update-arvo-obj-sms-test
   (testing "Funktio update-arvo-obj-sms luo oikean objektin patch-nippulinkkiin"
-    (let [success-new-loppupvm {:metatiedot {:tila (:success c/kasittelytilat)}
-                                :vastaamisajan_loppupvm "2021-09-09"}
-          success              {:metatiedot {:tila (:success c/kasittelytilat)}}
-          failure              {:metatiedot {:tila (:failure c/kasittelytilat)}}]
+    (let [success-new-loppupvm {:tila (:success c/kasittelytilat)
+                                :voimassa_loppupvm "2021-09-09"}
+          success              {:tila (:success c/kasittelytilat)}
+          failure              {:tila (:failure c/kasittelytilat)}]
       (is (= (sh/update-arvo-obj-sms "CREATED" "2021-09-09") success-new-loppupvm))
       (is (= (sh/update-arvo-obj-sms "CREATED" nil) success))
       (is (= (sh/update-arvo-obj-sms "asdfads" nil) failure)))))

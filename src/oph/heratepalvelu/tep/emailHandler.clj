@@ -49,7 +49,7 @@
         (when (or (= (:phone-mismatch c/kasittelytilat) (:sms_kasittelytila nippu))
                   (= (:no-phone c/kasittelytilat) (:sms_kasittelytila nippu))
                   (= (:phone-invalid c/kasittelytilat) (:sms_kasittelytila nippu)))
-          (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) (:ei-yhteystietoja c/kasittelytilat)))
+          (arvo/patch-nippulinkki (:kyselylinkki nippu) {:tila (:ei-yhteystietoja c/kasittelytilat)}))
         nil))))
 
 (defn -handleSendTEPEmails [this event context]

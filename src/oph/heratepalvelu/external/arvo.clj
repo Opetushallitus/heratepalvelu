@@ -228,7 +228,7 @@
   (try
     (let [tunniste (last (str/split linkki #"/"))]
       (:body (client/patch
-               (str (:arvo-url env) "tyoelamapalaute/v1/nippu" (util/url-encode tunniste))
+               (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (util/url-encode tunniste))
                {:basic-auth   [(:arvo-user env) @pwd]
                 :content-type "application/json"
                 :body         (generate-string data)
@@ -237,6 +237,3 @@
       (log/error "Virhe patch-nippulinkki -funktiossa")
       (log/error e)
       (throw e))))
-
-(defn patch-nippulinkki-metadata [linkki tila]
-  (patch-nippulinkki linkki {:metatiedot {:tila tila}}))

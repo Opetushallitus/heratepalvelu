@@ -48,9 +48,9 @@
                 (arvo/patch-nippulinkki (:kyselylinkki nippu)
                                         (if (and new-loppupvm
                                                  (= tila (:success c/kasittelytilat)))
-                                          {:metatiedot {:tila tila}
-                                           :vastaamisajan_loppupvm new-loppupvm}
-                                          {:metatiedot {:tila tila}})))
+                                          {:tila tila
+                                           :voimassa_loppupvm new-loppupvm}
+                                          {:tila tila})))
               (ddb/update-item
                 {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
                  :niputuspvm                  [:s (:niputuspvm nippu)]}

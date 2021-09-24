@@ -68,10 +68,10 @@
 (defn update-arvo-obj-sms [status new-loppupvm]
   (if (or (= status "CREATED") (= status "mock-lahetys"))
     (if new-loppupvm
-      {:metatiedot {:tila (:success c/kasittelytilat)}
-       :vastaamisajan_loppupvm new-loppupvm}
-      {:metatiedot {:tila (:success c/kasittelytilat)}})
-    {:metatiedot {:tila (:failure c/kasittelytilat)}}))
+      {:tila (:success c/kasittelytilat)
+       :voimassa_loppupvm new-loppupvm}
+      {:tila (:success c/kasittelytilat)})
+    {:tila (:failure c/kasittelytilat)}))
 
 (defn- ohjaaja-puhnro [nippu jaksot]
   (let [number (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
@@ -98,7 +98,7 @@
             (:nippu-table env))
           (when (or (= (:email-mismatch c/kasittelytilat) (:kasittelytila nippu))
                     (= (:no-email c/kasittelytilat) (:kasittelytila nippu)))
-            (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) (:ei-yhteystietoja c/kasittelytilat)))
+            (arvo/patch-nippulinkki (:kyselylinkki nippu) {:tila (:ei-yhteystietoja c/kasittelytilat)}))
           nil))
       (let [numerot (reduce #(if (some? (:ohjaaja_puhelinnumero %2))
                                (conj %1 (:ohjaaja_puhelinnumero %2))
@@ -115,7 +115,7 @@
             (:nippu-table env))
           (when (or (= (:email-mismatch c/kasittelytilat) (:kasittelytila nippu))
                     (= (:no-email c/kasittelytilat) (:kasittelytila nippu)))
-            (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) (:ei-yhteystietoja c/kasittelytilat)))
+            (arvo/patch-nippulinkki (:kyselylinkki nippu) {:tila (:ei-yhteystietoja c/kasittelytilat)}))
           nil))))
 
 (defn client-error? [e]
