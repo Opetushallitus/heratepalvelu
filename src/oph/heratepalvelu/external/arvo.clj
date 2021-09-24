@@ -252,3 +252,18 @@
      :content-type "application/json"
      :body         (generate-string data)
      :as           :json}))
+
+(defn create-tpk-kyselylinkki [data]
+  (try
+    (let [resp (client/post
+                 (str (:arvo-url env) "????")
+                 {:content-type "application/json"
+                  :body         (generate-string data)
+                  :basic-auth   [(:arvo-user env) @pwd]
+                  :as           :json})]
+      (log/info resp)
+      (:body resp))
+    (catch ExceptionInfo e
+      (log/error e)
+      (when-not (= 404 (:status (ex-data e)))
+        (throw e)))))
