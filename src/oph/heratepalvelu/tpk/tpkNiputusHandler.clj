@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.tpk.niputusHandler
+(ns oph.heratepalvelu.tpk.tpkNiputusHandler
   (:require [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.common :as c]
@@ -15,8 +15,10 @@
            :methods [[^:static handleTpkNiputus [ScheduledEvent Context] void]])
 
 (defn check-jakso? [jakso]
-    ;; TODO palauttaa true, jos jaksossa on tarvittavia tietoja
-  )
+  (and (:koulutustoimija jakso)
+       ;; TODO make sure that tep kysely on lähetetty???
+       (:tyopaikan_nimi jakso)
+       (:tyopaikan_ytunnus jakso)))
 
 (defn get-kausi [jakso]
   (let [loppupvm (c/to-date (:jakso_loppupvm jakso))]
