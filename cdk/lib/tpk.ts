@@ -5,7 +5,7 @@ import iam from "@aws-cdk/aws-iam";
 import lambda from "@aws-cdk/aws-lambda";
 import s3assets from "@aws-cdk/aws-s3-assets";
 import { Duration, Token } from "@aws-cdk/core";
-import { HeratepalveluStack } from "./neratepalvelu";
+import { HeratepalveluStack } from "./heratepalvelu";
 
 export class HeratepalveluTPKStack extends HeratepalveluStack {
   constructor(
@@ -26,13 +26,12 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       sortKey: {
-        // TODO pick one — päivämääräkö?
+        name: "kausi",
+        type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       serverSideEncryption: true,
     });
-
-    // TODO add secondary indexes when/if we need them
 
     // S3
 
@@ -69,7 +68,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
     });
 
     new events.Rule(this, "tpkNiputusHandlerScheduleRule", {
-      schedule: events.Schedule.expression(`rate(20 minutes)`),
+      schedule: events.Schedule.expression(`rate(20 minutes)`), // Ei kai pitäisi tapahtua niin usein... TODO
       targets: [new targets.LambdaFunction(tpkNiputusHandler)]
     });
 
