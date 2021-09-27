@@ -1,14 +1,15 @@
 (ns oph.heratepalvelu.tep.emailHandler
-  (:require [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.viestintapalvelu :as vp]
-            [oph.heratepalvelu.external.organisaatio :as org]
-            [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :as c]
+  (:require [cheshire.core :refer [parse-string]]
+            [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
-            [clj-time.core :as t]
-            [cheshire.core :refer [parse-string]]
-            [oph.heratepalvelu.external.arvo :as arvo])
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.arvo :as arvo]
+            [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.external.viestintapalvelu :as vp]
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -48,7 +49,7 @@
         (when (or (= (:phone-mismatch c/kasittelytilat) (:sms_kasittelytila nippu))
                   (= (:no-phone c/kasittelytilat) (:sms_kasittelytila nippu))
                   (= (:phone-invalid c/kasittelytilat) (:sms_kasittelytila nippu)))
-          (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) (:ei-yhteystietoja c/kasittelytilat)))
+          (arvo/patch-nippulinkki (:kyselylinkki nippu) {:tila (:ei-yhteystietoja c/kasittelytilat)}))
         nil))))
 
 (defn -handleSendTEPEmails [this event context]

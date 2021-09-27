@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.tepSmsHandler-test
   (:require [clojure.test :refer :all]
+            [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.tep.tepSmsHandler :as sh]))
 
 (deftest valid-number-test
@@ -21,3 +22,13 @@
           server-error (ex-info "Internal server error" {:status 503})]
       (is (sh/client-error? client-error))
       (is (not (sh/client-error? server-error))))))
+
+(deftest update-arvo-obj-sms-test
+  (testing "Funktio update-arvo-obj-sms luo oikean objektin patch-nippulinkkiin"
+    (let [success-new-loppupvm {:tila (:success c/kasittelytilat)
+                                :voimassa_loppupvm "2021-09-09"}
+          success              {:tila (:success c/kasittelytilat)}
+          failure              {:tila (:failure c/kasittelytilat)}]
+      (is (= (sh/update-arvo-obj-sms "CREATED" "2021-09-09") success-new-loppupvm))
+      (is (= (sh/update-arvo-obj-sms "CREATED" nil) success))
+      (is (= (sh/update-arvo-obj-sms "asdfads" nil) failure)))))

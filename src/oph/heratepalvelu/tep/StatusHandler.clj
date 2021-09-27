@@ -1,12 +1,13 @@
 (ns oph.heratepalvelu.tep.StatusHandler
-  (:require [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.viestintapalvelu :as vp]
-            [oph.heratepalvelu.external.arvo :as arvo]
+  (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.log.caller-log :refer :all]
+            [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
-            [clojure.string :as str]
-            [environ.core :refer [env]])
+            [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.arvo :as arvo]
+            [oph.heratepalvelu.external.viestintapalvelu :as vp]
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -33,7 +34,8 @@
                    (if (= (:numberOfBouncedSendings status) 1)
                      (:bounced c/kasittelytilat)
                      (when (= (:numberOfFailedSendings status) 1)
-                       (:failed c/kasittelytilat))))]
+                       (:failed c/kasittelytilat))))
+            new-loppupvm (tc/get-new-loppupvm nippu)]
         (if tila
           (do
             (when (not @new-changes?)
@@ -43,13 +45,23 @@
                 (or
                   (str/includes? (:kyselylinkki nippu) ",")
                   (str/includes? (:kyselylinkki nippu) ";"))
-                (arvo/patch-nippulinkki-metadata (:kyselylinkki nippu) tila))
+                (arvo/patch-nippulinkki (:kyselylinkki nippu)
+                                        (if (and new-loppupvm
+                                                 (= tila (:success c/kasittelytilat)))
+                                          {:tila tila
+                                           :voimassa_loppupvm new-loppupvm}
+                                          {:tila tila})))
               (ddb/update-item
                 {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
                  :niputuspvm                  [:s (:niputuspvm nippu)]}
-                {:update-expr    "SET #kasittelytila = :kasittelytila"
-                 :expr-attr-names {"#kasittelytila" "kasittelytila"}
-                 :expr-attr-vals  {":kasittelytila" [:s tila]}}
+                {:update-expr    (str "SET #kasittelytila = :kasittelytila, "
+                                      "#loppupvm = :loppupvm")
+                 :expr-attr-names {"#kasittelytila" "kasittelytila"
+                                   "#loppupvm" "voimassaloppupvm"}
+                 :expr-attr-vals  {":kasittelytila" [:s tila]
+                                   ":loppupvm" [:s (if new-loppupvm
+                                                     new-loppupvm
+                                                     (:voimassaloppupvm nippu))]}}
                 (:nippu-table env))
               (catch AwsServiceException e
                 (log/error "Lähetystilan tallennus kantaan epäonnistui" nippu)
