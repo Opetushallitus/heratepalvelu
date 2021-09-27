@@ -32,6 +32,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       serverSideEncryption: true
     });
 
+    this.jaksotunnusTable = jaksotunnusTable;
+
     jaksotunnusTable.addGlobalSecondaryIndex({
       indexName: "niputusIndex",
       partitionKey: {
@@ -528,4 +530,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         }
     );
   }
+
+  jaksotunnusTable: dynamodb.Table = null;
 }

@@ -2,6 +2,7 @@
 import cdk = require("@aws-cdk/core");
 import { HeratepalveluAMISStack } from "../lib/amis";
 import { HeratepalveluTEPStack } from "../lib/tep";
+import { HeratepalveluTPKStack } from "../lib/tpk";
 
 const git = require("git-utils");
 const repo = git.open(".");
@@ -21,15 +22,18 @@ const version = canDeploy ? repo.getReferenceTarget(repo.getHead()) : "uncommitt
 const app = new cdk.App();
 
 new HeratepalveluAMISStack(app, "sieni-services-heratepalvelu", 'sieni', version);
-new HeratepalveluTEPStack(app, "sieni-services-heratepalvelu-tep", 'sieni', version);
+const tepSieni = new HeratepalveluTEPStack(app, "sieni-services-heratepalvelu-tep", 'sieni', version);
+new HeratepalveluTPKStack(app, "sieni-services-heratepalvelu-tpk", 'sieni', version, tepSieni.jaksotunnusTable);
 
 if (canDeploy) {
   new HeratepalveluAMISStack(app, "pallero-services-heratepalvelu", 'pallero', version);
-  new HeratepalveluTEPStack(app, "pallero-services-heratepalvelu-tep", 'pallero', version);
+  const tepPallero = new HeratepalveluTEPStack(app, "pallero-services-heratepalvelu-tep", 'pallero', version);
+  new HeratepalveluTPKStack(app, "pallero-services-heratepalvelu-tpk", 'pallero', version, tepPallero.jaksotunnusTable);
 
   if (upstreamBranch === "refs/remotes/origin/master") {
     new HeratepalveluAMISStack(app, "sade-services-heratepalvelu", 'sade', version);
-    new HeratepalveluTEPStack(app, "sade-services-heratepalvelu-tep", 'sade', version);
+    const tepSade = new HeratepalveluTEPStack(app, "sade-services-heratepalvelu-tep", 'sade', version);
+    new HeratepalveluTPKStack(app, "sade-services-heratepalvelu-tpk", 'sade', version, tepSade.jaksotunnusTable);
   } else {
     console.log("\nNOT IN MASTER BRANCH!!!\n")
   }
