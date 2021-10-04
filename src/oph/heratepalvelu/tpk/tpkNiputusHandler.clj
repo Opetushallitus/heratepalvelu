@@ -19,8 +19,8 @@
        ;; TODO make sure that tep kysely on lähetetty???
        (:tyopaikan_nimi jakso)
        (:tyopaikan_ytunnus jakso)
-       (or (not= (:hankkimistapa-tyyppi jakso) "oppisopimus")
-           (not= (:oppisopimuksen-perusta jakso) "02"))))
+       (or (not= (:hankkimistapa_tyyppi jakso) "oppisopimus")
+           (not= (:oppisopimuksen_perusta jakso) "02"))))
 
 (defn get-kausi [jakso]
   (let [loppupvm (c/to-date (:jakso_loppupvm jakso))]
