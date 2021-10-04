@@ -187,7 +187,13 @@
                         (not-empty (:tutkinnonosa-nimi herate))
                         (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
                         (some? (:osa-aikaisuus herate))
-                        (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)]))
+                        (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)])
+                        (some? (:oppisopimuksen-perusta herate))
+                        (assoc :oppisopimuksen_perusta
+                               [:s (last
+                                     (str/split
+                                       (:oppisopimuksen-perusta herate)
+                                       #"_"))]))
                 {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
                 (:jaksotunnus-table env))
               (ddb/put-item
