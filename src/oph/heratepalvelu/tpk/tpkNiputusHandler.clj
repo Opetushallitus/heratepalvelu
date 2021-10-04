@@ -18,7 +18,9 @@
   (and (:koulutustoimija jakso)
        ;; TODO make sure that tep kysely on lähetetty???
        (:tyopaikan_nimi jakso)
-       (:tyopaikan_ytunnus jakso)))
+       (:tyopaikan_ytunnus jakso)
+       (or (not= (:hankkimistapa-tyyppi jakso) "oppisopimus")
+           (not= (:oppisopimuksen-perusta jakso) "02"))))
 
 (defn get-kausi [jakso]
   (let [loppupvm (c/to-date (:jakso_loppupvm jakso))]
@@ -78,7 +80,6 @@
                     :limit 10}
                    (:jaksotunnus-table env)))
 
-;; TODO suodata pois yrittäjien oppisopimukset
 (defn -handleTpkNiputus [this event context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
   (loop [niputettavat (query-niputtamattomat)]
