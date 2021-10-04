@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.util.dbChanger
   (:require [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as k]
             [environ.core :refer [env]]
             [clj-time.core :as t]
@@ -13,6 +14,9 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleDBMarkIncorrectSuoritustyypit
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]
+            [^:static handleDBGetPuuttuvatOppisopimuksenPerustat
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
@@ -73,3 +77,9 @@
       (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
                     :filter-expression "kyselytyyppi = :value1"
                     :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "tutkinnon_suorittaneet"))}})))))
+
+(defn -handleDBGetPuuttuvatOppisopimuksenPerustat [this event context]
+  (loop [resp (scan {:filter-expression "oppisopimuksen_perusta = :value1"
+                     :expr-attr-vals {"value1" (.build (.nul (AttributeValue/builder)))}})]
+    ;; TODO
+    ))
