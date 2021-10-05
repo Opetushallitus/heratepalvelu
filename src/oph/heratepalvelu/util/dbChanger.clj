@@ -5,6 +5,7 @@
             [oph.heratepalvelu.external.koski :as k]
             [environ.core :refer [env]]
             [clj-time.core :as t]
+            [clojure.string :as s]
             [clojure.tools.logging :as log])
   (:import (software.amazon.awssdk.services.dynamodb.model ScanRequest AttributeValue)))
 
@@ -87,7 +88,11 @@
             {:hankkimistapa_id [:s (:hankkimistapa_id item)]}
             {:update-expr "SET #value1 = :value1"
              :expr-attr-names {"#value1" "oppisopimuksen_perusta"}
-             :expr-attr-vals {":value1" [:s (:oppisopimuksen-perusta oht)]}}
+             :expr-attr-vals {":value1"
+                              [:s (last
+                                    (s/split
+                                      (:oppisopimuksen-perusta-koodi-uri oht)
+                                      #"_"))]}}
             (:table env)))
         (catch Exception e (do))))
     (when (.hasLastEvaluatedKey resp)
