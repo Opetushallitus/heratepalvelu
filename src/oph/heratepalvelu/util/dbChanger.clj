@@ -96,7 +96,8 @@
                                       (:oppisopimuksen-perusta-koodi-uri oht)
                                       #"_"))]}}
             (:table env)))
-        (catch Exception e (do))))
+        (catch Exception e
+          (log/error (ex-info e)))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
                     :filter-expression "attribute_not_exists(oppisopimuksen_perusta)"})))))
