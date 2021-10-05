@@ -20,7 +20,8 @@
        (:tyopaikan_nimi jakso)
        (:tyopaikan_ytunnus jakso)
        (or (not= (:hankkimistapa_tyyppi jakso) "oppisopimus")
-           (not= (:oppisopimuksen_perusta jakso) "02"))))
+           (= (:oppisopimuksen_perusta jakso) "01"))))
+           ;;(not= (:oppisopimuksen_perusta jakso) "02")))) ;; TODO
 
 (defn get-kausi [jakso]
   (let [loppupvm (c/to-date (:jakso_loppupvm jakso))]
