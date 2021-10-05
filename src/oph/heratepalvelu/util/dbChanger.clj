@@ -79,8 +79,7 @@
                     :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "tutkinnon_suorittaneet"))}})))))
 
 (defn -handleDBGetPuuttuvatOppisopimuksenPerustat [this event context]
-  (loop [resp (scan {:filter-expression "oppisopimuksen_perusta = :value1"
-                     :expr-attr-vals {"value1" (.build (.nul (AttributeValue/builder)))}})]
+  (loop [resp (scan {:filter-expression "oppisopimuksen_perusta = NULL"})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id item))]
@@ -93,5 +92,4 @@
         (catch Exception e (do))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
-                    :filter-expression "oppisopimuksen_perusta = :value1"
-                    :expr-attr-vals {"value1" (.build (.s (AttributeValue/builder)))}})))))
+                    :filter-expression "oppisopimuksen_perusta = NULL"})))))
