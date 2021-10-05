@@ -97,7 +97,7 @@
                                       #"_"))]}}
             (:table env)))
         (catch Exception e
-          (log/error (ex-info e)))))
+          (log/error e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
                     :filter-expression "attribute_not_exists(oppisopimuksen_perusta)"})))))
