@@ -449,7 +449,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         code: lambdaCode,
         environment: {
           ...this.envVars,
-          table: jaksotunnusTable.tableName
+          table: jaksotunnusTable.tableName,
+          caller_id: `1.2.246.562.10.00000000001.${id}-OppisopimuksenPerustatDBChanger`
         },
         handler: "oph.heratepalvelu.util.dbChanger::handleDBGetPuuttuvatOppisopimuksenPerustat",
         memorySize: 1024,
