@@ -457,7 +457,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       }
     );
 
-    jaksotunnusTable.grantReadWriteDate(oppisopimuksenPerustatDBChanger);
+    jaksotunnusTable.grantReadWriteData(oppisopimuksenPerustatDBChanger);
 
     // IAM
 
