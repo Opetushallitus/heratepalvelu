@@ -448,6 +448,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         runtime: lambda.Runtime.JAVA_8_CORRETTO,
         code: lambdaCode,
         environment: {
+          ...this.envVars,
           table: jaksotunnusTable.tableName
         },
         handler: "oph.heratepalvelu.util.dbChanger::handleDBGetPuuttuvatOppisopimuksenPerustat",
