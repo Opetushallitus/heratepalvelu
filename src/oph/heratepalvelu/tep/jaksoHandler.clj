@@ -233,17 +233,13 @@
               koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
           (if (some? (tep-herate-checker herate))
             (log/error {:herate herate :msg (tep-herate-checker herate)})
-            (do
-              (println opiskeluoikeus)
-              (println (:loppupvm herate))
-              (check-opiskeluoikeus-tila opiskeluoikeus (:loppupvm herate))
-              (when
-                (and
-                  (check-opiskeluoikeus-tila opiskeluoikeus (:loppupvm herate))
-                  (c/check-organisaatio-whitelist? koulutustoimija)
-                  (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
-                  (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
-                (save-jaksotunnus herate opiskeluoikeus koulutustoimija))))
+            (when
+              (and
+                (check-opiskeluoikeus-tila opiskeluoikeus (:loppupvm herate))
+                (c/check-organisaatio-whitelist? koulutustoimija)
+                (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
+                (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
+              (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))
           (ehoks/patch-osaamisenhankkimistapa-tep-kasitelty
             (:hankkimistapa-id herate)))
         (catch JsonParseException e
