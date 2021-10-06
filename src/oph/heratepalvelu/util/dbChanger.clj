@@ -87,7 +87,7 @@
         (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id item))]
           (log/info "Got this OHT: " oht)
           (ddb/update-item
-            {:hankkimistapa_id [:s (:hankkimistapa_id item)]}
+            {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
             {:update-expr "SET #value1 = :value1"
              :expr-attr-names {"#value1" "oppisopimuksen_perusta"}
              :expr-attr-vals {":value1"
