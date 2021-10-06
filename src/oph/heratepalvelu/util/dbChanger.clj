@@ -82,10 +82,8 @@
 (defn -handleDBGetPuuttuvatOppisopimuksenPerustat [this event context]
   (loop [resp (scan {:filter-expression "attribute_not_exists(oppisopimuksen_perusta)"})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
-      (log/info "Processing entry: " (:hankkimistapa_id item))
       (try
         (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id item))]
-          (log/info "Got this OHT: " oht)
           (ddb/update-item
             {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
             {:update-expr "SET #value1 = :value1"
