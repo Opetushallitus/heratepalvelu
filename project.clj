@@ -25,6 +25,7 @@
                  [org.clojure/data.json "2.3.1"]]
   :managed-dependencies [[software.amazon.awssdk/aws-core "2.10.56"]
                          [io.netty/netty-buffer "4.1.43.Final"]
+                         [fi.vm.sade/scala-cas_2.12 "2.2.2-SNAPSHOT"]
                          [org.slf4j/slf4j-api "1.7.28"]
                          [com.fasterxml.jackson.core/jackson-core "2.10.0"]]
   :aot :all

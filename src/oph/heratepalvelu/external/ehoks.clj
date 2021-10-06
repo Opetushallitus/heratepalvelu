@@ -24,6 +24,16 @@
      :body (generate-string data)
      :as :json}))
 
+(defn get-osaamisen-hankkimistapa-by-id [oht-id]
+  (:data
+    (:body
+      (client/get
+        (str (:ehoks-url env) "hoks/osaamisen-hankkimistapa/" oht-id)
+        {:headers {:ticket (cas/get-service-ticket
+                             "/ehoks-virkailija-backend"
+                             "cas-security-check")}
+         :as :json}))))
+
 (defn get-hankintakoulutus-oids [hoks-id]
   (:body
     (client/get

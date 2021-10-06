@@ -1,9 +1,11 @@
 (ns oph.heratepalvelu.util.dbChanger
   (:require [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as k]
             [environ.core :refer [env]]
             [clj-time.core :as t]
+            [clojure.string :as s]
             [clojure.tools.logging :as log])
   (:import (software.amazon.awssdk.services.dynamodb.model ScanRequest AttributeValue)))
 
@@ -13,6 +15,9 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleDBMarkIncorrectSuoritustyypit
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]
+            [^:static handleDBGetPuuttuvatOppisopimuksenPerustat
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
@@ -73,3 +78,24 @@
       (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
                     :filter-expression "kyselytyyppi = :value1"
                     :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "tutkinnon_suorittaneet"))}})))))
+
+(defn -handleDBGetPuuttuvatOppisopimuksenPerustat [this event context]
+  (loop [resp (scan {:filter-expression "attribute_not_exists(oppisopimuksen_perusta)"})]
+    (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+      (try
+        (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id item))]
+          (ddb/update-item
+            {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
+            {:update-expr "SET #value1 = :value1"
+             :expr-attr-names {"#value1" "oppisopimuksen_perusta"}
+             :expr-attr-vals {":value1"
+                              [:s (last
+                                    (s/split
+                                      (:oppisopimuksen-perusta-koodi-uri oht)
+                                      #"_"))]}}
+            (:table env)))
+        (catch Exception e
+          (log/error e))))
+    (when (.hasLastEvaluatedKey resp)
+      (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
+                    :filter-expression "attribute_not_exists(oppisopimuksen_perusta)"})))))

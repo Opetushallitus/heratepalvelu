@@ -441,10 +441,30 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     //
     // nippuTable.grantReadWriteData(dbChanger);
 
+    const oppisopimuksenPerustatDBChanger = new lambda.Function(
+      this,
+      "oppisopimuksenPerustatDBChanger",
+      {
+        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        code: lambdaCode,
+        environment: {
+          ...this.envVars,
+          table: jaksotunnusTable.tableName,
+          caller_id: `1.2.246.562.10.00000000001.${id}-OppisopimuksenPerustatDBChanger`
+        },
+        handler: "oph.heratepalvelu.util.dbChanger::handleDBGetPuuttuvatOppisopimuksenPerustat",
+        memorySize: 1024,
+        timeout: Duration.seconds(900),
+        tracing: lambda.Tracing.ACTIVE
+      }
+    );
+
+    jaksotunnusTable.grantReadWriteData(oppisopimuksenPerustatDBChanger);
+
     // IAM
 
     [jaksoHandler, timedOperationsHandler, niputusHandler, emailHandler, emailStatusHandler, tepSmsHandler,
-      SmsMuistutusHandler, EmailMuistutusHandler].forEach(
+      SmsMuistutusHandler, EmailMuistutusHandler, oppisopimuksenPerustatDBChanger].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
             effect: iam.Effect.ALLOW,
