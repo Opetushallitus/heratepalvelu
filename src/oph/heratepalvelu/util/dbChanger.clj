@@ -80,10 +80,9 @@
                     :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "tutkinnon_suorittaneet"))}})))))
 
 (defn -handleDBGetPuuttuvatOppisopimuksenPerustat [this event context]
-  (loop [resp (scan {:filter-expression (str "attribute_not_exists(oppisopimuksen_perusta)"
-                                             "AND #pvm >= :pvm")
-                     :expr-attr-names {"#pvm" "jakso_loppupvm"}
-                     :expr-attr-vals {":pvm" "2021-07-01"}})]
+  (loop [resp (scan {:filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
+                                             "AND jakso_loppupvm >= :pvm")
+                     :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id item))]
