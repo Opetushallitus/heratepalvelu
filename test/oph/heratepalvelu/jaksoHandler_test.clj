@@ -38,15 +38,15 @@
                                                 {:opiskeluoikeusjaksot [{:alku "2021-06-20" :tila {:koodiarvo "loma"}}
                                                                         {:alku "2021-05-01" :tila {:koodiarvo "lasna"}}
                                                                         {:alku "2021-09-07" :tila {:koodiarvo "eronnut"}}]}}
-          opiskeluoikeus-kesk-eronnut-tulevaisuudessa {:tila
+          opiskeluoikeus-eronnut-tulevaisuudessa {:tila
                                                        {:opiskeluoikeusjaksot [{:alku "2021-06-20" :tila {:koodiarvo "loma"}}
                                                                                {:alku "2021-05-01" :tila {:koodiarvo "lasna"}}
                                                                                {:alku "2021-09-08" :tila {:koodiarvo "eronnut"}}]}}
-          opiskeluoikeus-kesk-eronnut-paivaa-aiemmin {:tila
+          opiskeluoikeus-eronnut-paivaa-aiemmin {:tila
                                                       {:opiskeluoikeusjaksot [{:alku "2021-06-20" :tila {:koodiarvo "loma"}}
                                                                               {:alku "2021-05-01" :tila {:koodiarvo "lasna"}}
                                                                               {:alku "2021-09-06" :tila {:koodiarvo "eronnut"}}]}}]
       (is (= true (jh/check-opiskeluoikeus-tila opiskeluoikeus-lasna loppupvm)))
       (is (= true (jh/check-opiskeluoikeus-tila opiskeluoikeus-eronnut-samana-paivana loppupvm)))
-      (is (= true (jh/check-opiskeluoikeus-tila opiskeluoikeus-kesk-eronnut-tulevaisuudessa loppupvm)))
-      (is (nil? (jh/check-opiskeluoikeus-tila opiskeluoikeus-kesk-eronnut-paivaa-aiemmin loppupvm))))))
+      (is (= true (jh/check-opiskeluoikeus-tila opiskeluoikeus-eronnut-tulevaisuudessa loppupvm)))
+      (is (nil? (jh/check-opiskeluoikeus-tila opiskeluoikeus-eronnut-paivaa-aiemmin loppupvm))))))
