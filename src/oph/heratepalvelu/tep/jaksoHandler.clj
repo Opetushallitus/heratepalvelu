@@ -63,7 +63,7 @@
   (let [tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
         voimassa (reduce
                    (fn [res next]
-                     (if (>= (compare loppupvm (:alku next)) 0)
+                     (if (.isBefore (LocalDate/parse (:alku next)) (LocalDate/parse loppupvm))
                        next
                        (reduced res)))
                    (sort-by :alku tilat))
