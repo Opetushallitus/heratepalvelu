@@ -81,8 +81,10 @@
 
 (defn -handleDBGetPuuttuvatOppisopimuksenPerustat [this event context]
   (loop [resp (scan {:filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
+                                             "AND hankkimistapa_tyyppi = :htp "
                                              "AND jakso_loppupvm >= :pvm")
-                     :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))}})]
+                     :expr-attr-vals {":htp" (.build (.s (AttributeValue/builder) "oppisopimus"))
+                                      ":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id item))
@@ -99,5 +101,7 @@
     (when (.hasLastEvaluatedKey resp)
       (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
                     :filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
+                                            "AND hankkimistapa_tyyppi = :htp "
                                             "AND jakso_loppupvm >= :pvm")
-                    :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))}})))))
+                    :expr-attr-vals {":htp" (.build (.s (AttributeValue/builder) "oppisopimus"))
+                                     ":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))}})))))
