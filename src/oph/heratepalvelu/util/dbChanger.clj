@@ -80,28 +80,33 @@
                     :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "tutkinnon_suorittaneet"))}})))))
 
 (defn -handleDBGetPuuttuvatOppisopimuksenPerustat [this event context]
-  (loop [resp (scan {:filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
-                                             "AND hankkimistapa_tyyppi = :htp "
-                                             "AND jakso_loppupvm >= :pvm")
-                     :expr-attr-vals {":htp" (.build (.s (AttributeValue/builder) "oppisopimus"))
-                                      ":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))}})]
-    (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
-      (try
-        (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id item))
-              perusta (:oppisopimuksen-perusta-koodi-uri oht)]
-          (when perusta
-            (ddb/update-item
-              {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
-              {:update-expr "SET #value1 = :value1"
-               :expr-attr-names {"#value1" "oppisopimuksen_perusta"}
-               :expr-attr-vals {":value1" [:s (last (s/split perusta #"_"))]}}
-              (:table env))))
-        (catch Exception e
-          (log/error e))))
-    (when (.hasLastEvaluatedKey resp)
-      (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
-                    :filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
-                                            "AND hankkimistapa_tyyppi = :htp "
-                                            "AND jakso_loppupvm >= :pvm")
-                    :expr-attr-vals {":htp" (.build (.s (AttributeValue/builder) "oppisopimus"))
-                                     ":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))}})))))
+  (let [tag (.getResources event)]
+    (loop [resp (scan {:filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
+                                               "AND hankkimistapa_tyyppi = :htp "
+                                               "AND jakso_loppupvm >= :pvm "
+                                               "AND dbchangerin_kasittelema <> :dbc")
+                       :expr-attr-vals {":htp" (.build (.s (AttributeValue/builder) "oppisopimus"))
+                                        ":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))
+                                        ":dbc" (.build (.s (AttributeValue/builder) tag))}})]
+      (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+        (try
+          (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id item))
+                perusta (:oppisopimuksen-perusta-koodi-uri oht)]
+            (when perusta
+              (ddb/update-item
+                {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
+                {:update-expr "SET #value1 = :value1"
+                 :expr-attr-names {"#value1" "oppisopimuksen_perusta"}
+                 :expr-attr-vals {":value1" [:s (last (s/split perusta #"_"))]}}
+                (:table env))))
+          (catch Exception e
+            (log/error e))))
+      (when (.hasLastEvaluatedKey resp)
+        (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
+                      :filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
+                                              "AND hankkimistapa_tyyppi = :htp "
+                                              "AND jakso_loppupvm >= :pvm "
+                                              "AND dbchangerin_kasittelema <> :dbc")
+                      :expr-attr-vals {":htp" (.build (.s (AttributeValue/builder) "oppisopimus"))
+                                       ":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))
+                                       ":dbc" (.build (.s (AttributeValue/builder) tag))}}))))))
