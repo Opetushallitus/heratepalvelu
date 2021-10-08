@@ -34,13 +34,14 @@
               (reset! new-changes? true))
             (try
               (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
-              (c/send-lahetys-data-to-ehoks
-                (:toimija_oppija email)
-                (:tyyppi_kausi email)
-                {:kyselylinkki (:kyselylinkki email)
-                 :lahetyspvm (first (str/split (:sendingEnded status) #"T"))
-                 :sahkoposti (:sahkoposti email)
-                 :lahetystila tila})
+              (when-not (.contains [1 2] (:muistutukset email))
+                (c/send-lahetys-data-to-ehoks
+                  (:toimija_oppija email)
+                  (:tyyppi_kausi email)
+                  {:kyselylinkki (:kyselylinkki email)
+                   :lahetyspvm (first (str/split (:sendingEnded status) #"T"))
+                   :sahkoposti (:sahkoposti email)
+                   :lahetystila tila}))
               (ddb/update-item
                 {:toimija_oppija [:s (:toimija_oppija email)]
                  :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
