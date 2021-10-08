@@ -18,7 +18,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleDBGetPuuttuvatOppisopimuksenPerustat
-             [java.lang.String
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn scan [options]
@@ -80,7 +80,7 @@
                     :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "tutkinnon_suorittaneet"))}})))))
 
 (defn -handleDBGetPuuttuvatOppisopimuksenPerustat [this event context]
-  (let [tag (.getResources event)]
+  (let [tag (first (.getResources event))]
     (loop [resp (scan {:filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
                                                "AND hankkimistapa_tyyppi = :htp "
                                                "AND jakso_loppupvm >= :pvm "
