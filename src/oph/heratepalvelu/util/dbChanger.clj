@@ -99,13 +99,13 @@
                  :expr-attr-names {"#value1" "oppisopimuksen_perusta"
                                    "#dbc" "dbchangerin_kasittelema"}
                  :expr-attr-vals {":value1" [:s (last (s/split perusta #"_"))]
-                                  ":dbc" tag}}
+                                  ":dbc" [:s tag]}}
                 (:table env))
               (ddb/update-item
                 {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
                 {:update-expr "SET #dbc = :dbc"
                  :expr-attr-names {"#dbc" "dbchangerin_kasittelema"}
-                 :expr-attr-vals {":dbc" tag}}
+                 :expr-attr-vals {":dbc" [:s tag]}}
                 (:table env))))
           (catch Exception e
             (log/error e))))
