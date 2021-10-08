@@ -18,7 +18,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleDBGetPuuttuvatOppisopimuksenPerustat
-             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+             [java.lang.String
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn scan [options]
