@@ -95,9 +95,11 @@
             (when perusta
               (ddb/update-item
                 {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
-                {:update-expr "SET #value1 = :value1"
-                 :expr-attr-names {"#value1" "oppisopimuksen_perusta"}
-                 :expr-attr-vals {":value1" [:s (last (s/split perusta #"_"))]}}
+                {:update-expr "SET #value1 = :value1, #dbc = :dbc"
+                 :expr-attr-names {"#value1" "oppisopimuksen_perusta"
+                                   "#dbc" "dbchangerin_kasittelema"}
+                 :expr-attr-vals {":value1" [:s (last (s/split perusta #"_"))]
+                                  ":dbc" tag}}
                 (:table env))))
           (catch Exception e
             (log/error e))))
