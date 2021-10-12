@@ -183,8 +183,16 @@
 
 (defn check-duplicate-herate? [oppija koulutustoimija laskentakausi kyselytyyppi]
   (if
-    (empty? (ddb/get-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
-                           :tyyppi_kausi [:s (str kyselytyyppi "/" laskentakausi)]}))
+    (let [check-db?
+          (fn [tyyppi]
+            (empty? (ddb/get-item
+                      {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                       :tyyppi_kausi [:s (str tyyppi "/" laskentakausi)]})))]
+      (if (or (= kyselytyyppi "tutkinnon_suorittaneet")
+              (= kyselytyyppi "tutkinnon_osia_suorittaneet"))
+        (and (check-db? "tutkinnon_suorittaneet")
+             (check-db? "tutkinnon_osia_suorittaneet"))
+        (check-db? kyselytyyppi)))
     true
     (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
               oppija " koulutustoimijalla " koulutustoimija
