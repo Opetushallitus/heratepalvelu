@@ -223,7 +223,7 @@
           (throw e))))))
 
 (defn -handleJaksoHerate [this event context]
-  (log-caller-details-sqs "handleTPOherate" event context)
+  (log-caller-details-sqs "handleTPOherate" context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try

@@ -7,24 +7,15 @@
   [headers]
   (get headers "Caller-Id" "no-caller-id-found"))
 
-(defn- get-sqs-event-messages
-  "Parsii SQS-eventistä viestien bodyt listaksi"
-  [event]
-  (let [messages (seq (.getRecords event))]
-    (list
-      (map #(.getBody %) messages))))
-
 (defn- parse-schedule-rules
   "Parsii scheduled-eventistä kutsuvan säännön"
   [event]
   (.getResources event))
 
-(defn log-caller-details-sqs [name event context]
-  (let [request-id (.getAwsRequestId context)
-        body (get-sqs-event-messages event)]
+(defn log-caller-details-sqs [name context]
+  (let [request-id (.getAwsRequestId context)]
     (log/info (str "Lambdaa " name
-                   " kutsuttiin syötteellä " body
-                   " (RequestId: " request-id " )"))))
+                   " kutsuttiin SQS:n toimesta (RequestId: " request-id " )"))))
 
 (defn log-caller-details-scheduled [name event context]
   (let [request-id (.getAwsRequestId context)
