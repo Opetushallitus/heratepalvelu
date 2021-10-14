@@ -98,16 +98,29 @@
                        (rest res)
                        (reduced res)))
                    sorted-tilat
-                   (rest sorted-tilat))]
+                   (rest sorted-tilat))
+        sorted-keskeytymisajanjaksot (map
+                                       #({:alku (LocalDate/parse (:alku %))
+                                          :loppu (LocalDate/parse (:loppu %))})
+                                       (sort-by
+                                         :alku
+                                         (:keskeytymisajanjaksot herate [])))]
     (loop [kesto 1
            pvm alku-date
-           tilat voimassa]
+           tilat voimassa
+           keskeytymisajanjaksot sorted-keskeytymisajanjaksot]
       (if (.isBefore pvm loppu-date)
         (let
-          [new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
+          [first-kjakso (first keskeytymisajanjaksot)
+           new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
                              (= (.getDayOfWeek pvm) DayOfWeek/SUNDAY)
                              (= "valiaikaisestikeskeytynyt" (:tila (first tilat)))
-                             (= "loma" (:tila (first tilat))))
+                             (= "loma" (:tila (first tilat)))
+                             (and
+                               (some? first-kjakso)
+                               (not (.isBefore pvm (:alku first-kjakso)))
+                               (or (nil? (:loppu first-kjakso))
+                                  (not (.isAfter pvm (:loppu first-kjakso))))))
                        kesto
                        (+ 1 kesto))
            new-pvm (.plusDays pvm 1)]
@@ -116,7 +129,12 @@
                  (if (and (some? (second tilat))
                           (not (.isAfter (:alku (second tilat)) new-pvm)))
                    (rest tilat)
-                   tilat)))
+                   tilat)
+                 (if (and (some? (second keskeytymisajanjaksot))
+                          (not (.isAfter (:alku (second keskeytymisajanjaksot))
+                                         new-pvm)))
+                   (rest keskeytymisajanjaksot)
+                   keskeytymisajanjaksot)))
         (if (and (some? (:osa-aikaisuus herate))
                  (< 0   (:osa-aikaisuus herate))
                  (> 100 (:osa-aikaisuus herate)))
