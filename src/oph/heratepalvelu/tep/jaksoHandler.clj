@@ -22,6 +22,10 @@
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
+(s/defschema tep-herate-keskeytymisajanjakso-schema
+             {:alku                   (s/conditional not-empty s/Str)
+              (s/optional-key :loppu) (s/maybe s/Str)})
+
 (s/defschema tep-herate-schema
              {:tyyppi                 (s/conditional not-empty s/Str)
               :alkupvm                (s/conditional not-empty s/Str)
@@ -40,7 +44,9 @@
               :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)
               (s/optional-key :osa-aikaisuus)                  (s/maybe s/Num)
               (s/optional-key :oppisopimuksen-perusta)         (s/maybe s/Str)
-              (s/optional-key :tyopaikkaohjaaja-puhelinnumero) (s/maybe s/Str)})
+              (s/optional-key :tyopaikkaohjaaja-puhelinnumero) (s/maybe s/Str)
+              (s/optional-key :keskeytymisajanjaksot)
+              (s/maybe [tep-herate-keskeytymisajanjakso-schema])})
 
 (def tep-herate-checker
   (s/checker tep-herate-schema))
