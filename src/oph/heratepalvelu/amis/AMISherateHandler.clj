@@ -34,7 +34,9 @@
           (if (and
                 (:status (ex-data e))
                 (= 404 (:status (ex-data e))))
-            (log/error "Ei opiskeluoikeutta " (:opiskeluoikeus-oid
-                                                (parse-string (.getBody msg) true)))
+            (log/error "404-virhe. Opiskeluoikeus: "
+                       (:opiskeluoikeus-oid (parse-string (.getBody msg) true))
+                       " error: "
+                       e)
             (do (log/error e)
                 (throw e))))))))
