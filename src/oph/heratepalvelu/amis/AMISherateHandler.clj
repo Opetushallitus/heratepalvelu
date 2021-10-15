@@ -1,7 +1,9 @@
 (ns oph.heratepalvelu.amis.AMISherateHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.external.koski :refer [get-opiskeluoikeus]]
+            [oph.heratepalvelu.external.koski
+             :refer
+             [get-opiskeluoikeus-catch-404]]
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [environ.core :refer [env]])
@@ -20,14 +22,16 @@
     (doseq [msg messages]
       (try
         (let [herate (parse-string (.getBody msg) true)
-              opiskeluoikeus (get-opiskeluoikeus (:opiskeluoikeus-oid herate))
-              koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
-          (when (and (check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
-                     (check-organisaatio-whitelist?
-                       koulutustoimija (date-string-to-timestamp
-                                         (:alkupvm herate)))
-                     (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
-            (save-herate herate opiskeluoikeus)))
+              opiskeluoikeus (get-opiskeluoikeus-catch-404
+                               (:opiskeluoikeus-oid herate))]
+          (when (some? opiskeluoikeus)
+            (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
+              (when (and (check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
+                         (check-organisaatio-whitelist?
+                           koulutustoimija
+                           (date-string-to-timestamp (:alkupvm herate)))
+                         (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
+                (save-herate herate opiskeluoikeus)))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " msg "\n" e))
         (catch ExceptionInfo e
