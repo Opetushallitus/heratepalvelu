@@ -82,6 +82,23 @@
       (log/warn "Opiskeluoikeus " (:oid opiskeluoikeus) " terminaalitilassa " tila)
       true)))
 
+(defn- sort-process-keskeytymisajanjaksot [herate]
+  (map #({:alku (LocalDate/parse (:alku %))
+          :loppu (if (:loppu %) (LocalDate/parse (:loppu %)) nil)})
+       (sort-by :alku (:keskeytymisajanjaksot herate []))))
+
+(defn- check-not-fully-keskeytynyt [herate]
+  (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
+    (or (empty? kjaksot)
+        (not (:loppu (last kjaksot)))
+        (not (.isAfter (:loppu (last kjaksot))
+                       (LocalDate/parse (:loppupvm herate)))))))
+
+(defn- check-open-keskeytymisajanjakso [herate]
+  (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
+    (and (some? kjaksot)
+         (not (:loppu (last kjaksot))))))
+
 (defn kesto [herate oo-tilat]
   (let [alku-date (LocalDate/parse (:alkupvm herate))
         loppu-date (LocalDate/parse (:loppupvm herate))
@@ -99,12 +116,7 @@
                        (reduced res)))
                    sorted-tilat
                    (rest sorted-tilat))
-        sorted-keskeytymisajanjaksot (map
-                                       #({:alku (LocalDate/parse (:alku %))
-                                          :loppu (LocalDate/parse (:loppu %))})
-                                       (sort-by
-                                         :alku
-                                         (:keskeytymisajanjaksot herate [])))]
+        sorted-keskeytymisajanjaksot (sort-process-keskeytymisajanjaksot herate)]
     (loop [kesto 1
            pvm alku-date
            tilat voimassa
@@ -261,6 +273,7 @@
                 (when
                   (and
                     (check-opiskeluoikeus-tila opiskeluoikeus (:loppupvm herate))
+                    (check-not-fully-keskeytynyt herate)
                     (c/check-organisaatio-whitelist? koulutustoimija)
                     (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
                     (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
