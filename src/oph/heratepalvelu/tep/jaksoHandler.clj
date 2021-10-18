@@ -247,7 +247,7 @@
               (catch ConditionalCheckFailedException e
                 (log/warn "Osaamisenhankkimistapa id:llä " tapa-id "on jo käsitelty."))
               (catch AwsServiceException e
-                (log/error "Virhe tietokantaan tallennettaessa  reqquest-id " request-id)
+                (log/error "Virhe tietokantaan tallennettaessa, request-id " request-id)
                 (throw e)))
             (let [arvo-resp (arvo/create-jaksotunnus
                               (arvo/build-jaksotunnus-request-body
