@@ -63,6 +63,6 @@
 (deftest test-create-nipputunniste
   (testing "Create normalized nipputunniste"
     (is (str/starts-with?
-          (create-nipputunniste "Ääkköspaikka, Crème brûlée") "Aakkospaikka_Creme_brulee"))
+          (create-nipputunniste "Ääkköspaikka, Crème brûlée") "aakkospaikka_creme_brulee"))
     (is (str/starts-with?
           (create-nipputunniste "árvíztűrő tükörfúrógép") "arvizturo_tukorfurogep"))))
