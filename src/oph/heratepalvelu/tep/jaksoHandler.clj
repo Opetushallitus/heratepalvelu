@@ -204,7 +204,10 @@
                                                    (:tyopaikkaohjaaja-nimi herate) "/"
                                                    (:tyopaikan-ytunnus herate) "/"
                                                    koulutustoimija "/"
-                                                   tutkinto)]}
+                                                   tutkinto)]
+                       :tyopaikan_normalisoitu_nimi
+                                             [:s (c/normalize-string
+                                                   (:tyopaikan-nimi herate))]}
                 jaksotunnus-table-data
                 (cond-> db-data
                   (not-empty (:tyopaikkaohjaaja-email herate))

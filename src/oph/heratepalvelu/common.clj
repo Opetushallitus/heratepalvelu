@@ -144,12 +144,12 @@
   (let [normalized (java.text.Normalizer/normalize str java.text.Normalizer$Form/NFD)]
     (str/replace normalized #"\p{InCombiningDiacriticalMarks}+" "")))
 
+(defn normalize-string [string]
+  (str/lower-case (str/replace (deaccent-string string) #"\W+" "_")))
+
 (defn create-nipputunniste [tyopaikan-nimi]
   "Luo nipulle tunnisteen ilman erikoismerkkejä"
-    (str
-      (str/replace (deaccent-string tyopaikan-nimi)
-                   #"[\\|/|\?|#|&|\s|,|;|.]+" "_")
-      "_" (t/today) "_" (rand-str 6)))
+  (str (normalize-string tyopaikan-nimi) "_" (t/today) "_" (rand-str 6)))
 
 (defn check-organisaatio-whitelist?
   ([koulutustoimija]
