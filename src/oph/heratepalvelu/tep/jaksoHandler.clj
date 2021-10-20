@@ -96,7 +96,7 @@
 
 (defn- check-open-keskeytymisajanjakso [herate]
   (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
-    (and (some? kjaksot)
+    (and (seq kjaksot)
          (not (:loppu (last kjaksot))))))
 
 (defn kesto [herate oo-tilat]
