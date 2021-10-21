@@ -82,9 +82,9 @@
       (log/warn "Opiskeluoikeus " (:oid opiskeluoikeus) " terminaalitilassa " tila)
       true)))
 
-(defn- sort-process-keskeytymisajanjaksot [herate]
-  (map #({:alku (LocalDate/parse (:alku %))
-          :loppu (if (:loppu %) (LocalDate/parse (:loppu %)) nil)})
+(defn sort-process-keskeytymisajanjaksot [herate]
+  (map (fn [x] {:alku (LocalDate/parse (:alku x))
+                :loppu (if (:loppu x) (LocalDate/parse (:loppu x)) nil)})
        (sort-by :alku (:keskeytymisajanjaksot herate []))))
 
 (defn- check-not-fully-keskeytynyt [herate]

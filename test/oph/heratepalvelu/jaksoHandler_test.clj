@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.jaksoHandler-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.tep.jaksoHandler :as jh]))
+            [oph.heratepalvelu.tep.jaksoHandler :as jh])
+  (:import (java.time LocalDate)))
 
 (deftest kesto-test
   (testing "Keston laskenta ottaa huomioon osa-aikaisuuden, opiskeluoikeuden väliaikaisen keskeytymisen ja lomat"
@@ -50,3 +51,17 @@
       (is (= true (jh/check-opiskeluoikeus-tila opiskeluoikeus-eronnut-samana-paivana loppupvm)))
       (is (= true (jh/check-opiskeluoikeus-tila opiskeluoikeus-eronnut-tulevaisuudessa loppupvm)))
       (is (nil? (jh/check-opiskeluoikeus-tila opiskeluoikeus-eronnut-paivaa-aiemmin loppupvm))))))
+
+(deftest check-sort-process-keskeytymisajanjaksot-test
+  (testing "sort-process-keskeytymisajanjaksot test"
+    (let [herate1 {:keskeytymisajanjaksot [{:alku "2021-08-08" :loppu "2021-08-10"}
+                                          {:alku "2021-08-01" :loppu "2021-08-04"}]}
+          herate2 {:keskeytymisajanjaksot [{:alku "2021-08-08"}
+                                          {:alku "2021-08-01" :loppu "2021-08-04"}]}
+          expected1 [{:alku (LocalDate/parse "2021-08-01") :loppu (LocalDate/parse "2021-08-04")}
+                    {:alku (LocalDate/parse "2021-08-08") :loppu (LocalDate/parse "2021-08-10")}] 
+          expected2 [{:alku (LocalDate/parse "2021-08-01") :loppu (LocalDate/parse "2021-08-04")}
+                    {:alku (LocalDate/parse "2021-08-08") :loppu nil}]]
+      (is (= expected1 (jh/sort-process-keskeytymisajanjaksot herate1)))
+      (is (= expected2 (jh/sort-process-keskeytymisajanjaksot herate2))))))
+
