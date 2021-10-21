@@ -117,11 +117,11 @@
                    sorted-tilat
                    (rest sorted-tilat))
         sorted-keskeytymisajanjaksot (sort-process-keskeytymisajanjaksot herate)]
-    (loop [kesto 1
+    (loop [kesto 0
            pvm alku-date
            tilat voimassa
            keskeytymisajanjaksot sorted-keskeytymisajanjaksot]
-      (if (.isBefore pvm loppu-date)
+      (if (not (.isAfter pvm loppu-date))
         (let
           [first-kjakso (first keskeytymisajanjaksot)
            new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
