@@ -4,6 +4,7 @@
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as k]
+            [oph.heratepalvelu.tep.jaksoHandler :as tjh]
             [environ.core :refer [env]]
             [clj-time.core :as t]
             [clojure.string :as s]
@@ -153,12 +154,13 @@
                               suoritus
                               (:alkupvm jakso)))
                 tunnus (:tunnus (:body arvo-resp))]
-            (ddb/update-item
-              {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
-              {:update-expr "SET #tunnus = :tunnus"
-               :expr-attr-names {"#tunnus" "tunnus"}
-               :expr-attr-vals {":tunnus" [:s tunnus]}}
-              (:jaksotunnus-table env)))
+            (when (tjh/check-duplicate-tunnus tunnus)
+              (ddb/update-item
+                {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+                {:update-expr "SET #tunnus = :tunnus"
+                 :expr-attr-names {"#tunnus" "tunnus"}
+                 :expr-attr-vals {":tunnus" [:s tunnus]}}
+                (:jaksotunnus-table env))))
           (ddb/update-item
             {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]
              :niputuspvm                  [:s (:niputuspvm item)]}
