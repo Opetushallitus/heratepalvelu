@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.util.dbChanger
   (:require [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as k]
             [environ.core :refer [env]]
@@ -18,6 +19,9 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleDBGetPuuttuvatOppisopimuksenPerustat
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]
+            [^:static handleDBFixErroneousEiNiputetaJaksot
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
@@ -118,3 +122,56 @@
                       :expr-attr-vals {":htp" (.build (.s (AttributeValue/builder) "oppisopimus"))
                                        ":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))
                                        ":dbc" (.build (.s (AttributeValue/builder) tag))}}))))))
+
+(defn -handleDBFixErroneousEiNiputetaJaksot [this event context]
+  (loop [resp (scan {:filter-expression "kasittelytila = :tila"
+                     :expr-attr-vals {":tila" (.build (.s (AttributeValue/builder) "ei_niputeta"))}})]
+    (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+      (try
+        (let [jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto item)]]
+                                       :niputuspvm                  [:eq [:s (:niputuspvm item)]]}
+                                      {:index "niputusIndex"
+                                       :filter-expression "attribute_not_exists(tunnus)"}
+                                      (:jaksotunnus-table env))
+              jakso (first jaksot)
+              opiskeluoikeus (k/get-opiskeluoikeus
+                               (:opiskeluoikeus_oid jakso))
+              suoritus (c/get-suoritus opiskeluoikeus)
+              arvo-resp (arvo-create-jaksotunnus
+                          (arvo/build-jaksotunnus-request-body
+                            {:tyopaikan-nimi (:tyopaikan_nimi jakso)
+                             :tyopaikan-ytunnus (:tyopaikan_ytunnus jakso)
+                             :tutkinnonosa-nimi (:tutkinnonosa_nimi jakso)
+                             :tutkinnonosa-koodi (:tutkinnonosa_koodi jakso)
+                             :alkupvm (:jakso_alkupvm jakso)
+                             :loppupvm (:jakso_loppupvm jakso)
+                             :osa-aikaisuus (:osa_aikaisuus jakso)
+                             :hankkimistapa-tyyppi (:hankkimistapa_tyyppi jakso)}
+                            (:kesto jakso)
+                            opiskeluoikeus
+                            (:request_id jakso)
+                            (:koulutustoimia jakso)
+                            suoritus
+                            (:alkupvm jakso)))
+              tunnus (:tunnus (:body arvo-resp))]
+          (ddb/update-item
+            {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+            {:update-expr "SET #tunnus = :tunnus"
+             :expr-attr-names {"#tunnus" "tunnus"}
+             :expr-attr-vals {":tunnus" [:s tunnus]}}
+            (:jaksotunnus-table env))
+          (ddb/update-item
+            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto item)]
+             :niputuspvm                  [:s (:niputuspvm item)]}
+            {:update-expr "SET #tila = :tila, #smstila = :smstila"
+             :expr-attr-names {"#tila" "kasittelytila"
+                               "#smstila" "sms_kasittelytila"}
+             :expr-attr-vals {":tila" [:s (:ei-niputettu c/kasittelytilat)]
+                              ":smstila" [:s (:ei-lahetetty c/kasittelytilat)]}}
+            (:table env)))
+        (catch Exception e
+          (log/error e))))
+    (when (.hasLastEvaluatedKey resp)
+      (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
+                    :filter-expression "kasittelytila = :tila"
+                    :expr-attr-vals {":tila" (.build (.s (AttributeValue/builder) "ei_niputeta"))}})))))
