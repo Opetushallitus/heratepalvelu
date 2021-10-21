@@ -137,7 +137,7 @@
               opiskeluoikeus (k/get-opiskeluoikeus
                                (:opiskeluoikeus_oid jakso))
               suoritus (c/get-suoritus opiskeluoikeus)
-              arvo-resp (arvo-create-jaksotunnus
+              arvo-resp (arvo/create-jaksotunnus
                           (arvo/build-jaksotunnus-request-body
                             {:tyopaikan-nimi (:tyopaikan_nimi jakso)
                              :tyopaikan-ytunnus (:tyopaikan_ytunnus jakso)
