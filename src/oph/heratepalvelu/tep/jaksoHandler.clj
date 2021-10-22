@@ -94,7 +94,7 @@
         (not (.isAfter (:loppu (last kjaksot))
                        (LocalDate/parse (:loppupvm herate)))))))
 
-(defn- check-open-keskeytymisajanjakso [herate]
+(defn check-open-keskeytymisajanjakso [herate]
   (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
     (and (seq kjaksot)
          (not (:loppu (last kjaksot))))))
