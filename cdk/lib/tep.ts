@@ -461,28 +461,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     jaksotunnusTable.grantReadWriteData(oppisopimuksenPerustatDBChanger);
 
-    const eiNiputetaDBChanger = new lambda.Function(
-      this,
-      "eiNiputetaDBChanger",
-      {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
-        code: lambdaCode,
-        environment: {
-          ...this.envVars,
-          table: nippuTable.tableName,
-          jaksotunnus_table: jaksotunnusTable.tableName,
-          caller_id: `1.2.246.562.10.00000000001.${id}-EiNiputetaDBChanger`
-        },
-        handler: "oph.heratepalvelu.util.dbChanger::handleDBFixErroneousEiNiputetaJaksot",
-        memorySize: 1024,
-        timeout: Duration.seconds(900),
-        tracing: lambda.Tracing.ACTIVE
-      }
-    );
-
-    jaksotunnusTable.grantReadWriteData(eiNiputetaDBChanger);
-    nippuTable.grantReadWriteData(eiNiputetaDBChanger);
-
     // IAM
 
     [
@@ -495,7 +473,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       SmsMuistutusHandler,
       EmailMuistutusHandler,
       oppisopimuksenPerustatDBChanger,
-      eiNiputetaDBChanger
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
