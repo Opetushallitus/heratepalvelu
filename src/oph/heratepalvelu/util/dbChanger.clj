@@ -136,10 +136,10 @@
                                        (:jaksotunnus-table env))]
           (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id jakso))]
             (when-not (tjh/check-open-keskeytymisajanjakso oht)
-              (let [opiskeluoikeus (k/get-opiskeluoikeus (:opiskeluoikeus_oid jakso))
-                    j (first (ddb/query-items {:hankkimistapa_id [:eq [:n (:hankkimistapa_id jakso)]]}
+              (let [j (first (ddb/query-items {:hankkimistapa_id [:eq [:n (:hankkimistapa_id jakso)]]}
                                               {}
                                               (:jaksotunnus-table env)))
+                    opiskeluoikeus (k/get-opiskeluoikeus (:opiskeluoikeus_oid j))
                     suoritus (c/get-suoritus opiskeluoikeus)
                     arvo-resp (arvo/create-jaksotunnus
                                 (arvo/build-jaksotunnus-request-body
