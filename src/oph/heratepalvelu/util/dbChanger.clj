@@ -154,7 +154,7 @@
                                   (:kesto j)
                                   opiskeluoikeus
                                   (:request_id j)
-                                  (:koulutustoimia j)
+                                  (:koulutustoimija j)
                                   suoritus
                                   (:alkupvm j)))
                     tunnus (:tunnus (:body arvo-resp))]
