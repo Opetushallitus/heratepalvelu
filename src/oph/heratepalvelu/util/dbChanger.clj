@@ -136,24 +136,27 @@
                                        (:jaksotunnus-table env))]
           (let [oht (ehoks/get-osaamisen-hankkimistapa-by-id (:hankkimistapa_id jakso))]
             (when-not (tjh/check-open-keskeytymisajanjakso oht)
-              (let [opiskeluoikeus (k/get-opiskeluoikeus (:opiskeluoikeus_oid jakso))
+              (let [j (first (ddb/query-items {:hankkimistapa_id [:eq [:n (:hankkimistapa_id jakso)]]}
+                                              {}
+                                              (:jaksotunnus-table env)))
+                    opiskeluoikeus (k/get-opiskeluoikeus (:opiskeluoikeus_oid j))
                     suoritus (c/get-suoritus opiskeluoikeus)
                     arvo-resp (arvo/create-jaksotunnus
                                 (arvo/build-jaksotunnus-request-body
-                                  {:tyopaikan-nimi (:tyopaikan_nimi jakso)
-                                   :tyopaikan-ytunnus (:tyopaikan_ytunnus jakso)
-                                   :tutkinnonosa-nimi (:tutkinnonosa_nimi jakso)
-                                   :tutkinnonosa-koodi (:tutkinnonosa_koodi jakso)
-                                   :alkupvm (:jakso_alkupvm jakso)
-                                   :loppupvm (:jakso_loppupvm jakso)
-                                   :osa-aikaisuus (:osa_aikaisuus jakso)
-                                   :hankkimistapa-tyyppi (:hankkimistapa_tyyppi jakso)}
-                                  (:kesto jakso)
+                                  {:tyopaikan-nimi (:tyopaikan_nimi j)
+                                   :tyopaikan-ytunnus (:tyopaikan_ytunnus j)
+                                   :tutkinnonosa-nimi (:tutkinnonosa_nimi j)
+                                   :tutkinnonosa-koodi (:tutkinnonosa_koodi j)
+                                   :alkupvm (:jakso_alkupvm j)
+                                   :loppupvm (:jakso_loppupvm j)
+                                   :osa-aikaisuus (:osa_aikaisuus j)
+                                   :hankkimistapa-tyyppi (:hankkimistapa_tyyppi j)}
+                                  (:kesto j)
                                   opiskeluoikeus
-                                  (:request_id jakso)
-                                  (:koulutustoimia jakso)
+                                  (:request_id j)
+                                  (:koulutustoimija j)
                                   suoritus
-                                  (:alkupvm jakso)))
+                                  (:alkupvm j)))
                     tunnus (:tunnus (:body arvo-resp))]
                 (when (tjh/check-duplicate-tunnus tunnus)
                   (ddb/update-item
