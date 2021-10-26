@@ -166,6 +166,10 @@
                                 (str/split
                                   (:hankkimistapa-tyyppi herate)
                                   #"_"))
+   :oppisopimuksen_perusta    (last
+                                (str/split
+                                  (:oppisopimuksen-perusta herate)
+                                  #"_"))
    :vastaamisajan_alkupvm     niputuspvm
    ;:vastaamisajan_loppupvm
    :oppilaitos_oid            (:oid (:oppilaitos opiskeluoikeus))
