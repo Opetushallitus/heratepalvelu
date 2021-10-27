@@ -139,10 +139,10 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     const deleteTunnusDLQueue = new sqs.Queue(this, "AmisDeleteTunnusDLQueue", {
-      retentionPeriod: Duration.days(14);
+      retentionPeriod: Duration.days(14)
     });
 
-    const deleteTunnusQueue = new sqs.Queue(this, "AmisDeleteTunnusQueue", {
+    const amisDeleteTunnusQueue = new sqs.Queue(this, "AmisDeleteTunnusQueue", {
       queueName: `${id}-amisDeleteTunnusQueue`,
       deadLetterQueue: {
         queue: deleteTunnusDLQueue,
