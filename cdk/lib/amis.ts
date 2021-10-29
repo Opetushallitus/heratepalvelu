@@ -342,7 +342,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         // TODO what does it need access to?
         caller_id: `1.2.24.562.10.00000000001.${id}-AMISDeleteTunnusHandler`,
       },
-      handler: "oph.heratepalvelu.amis.AMISDeleteTunnusHandler:handleDeleteTunnus",
+      handler: "oph.heratepalvelu.amis.AMISDeleteTunnusHandler::handleDeleteTunnus",
       memorySize: 1024,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
