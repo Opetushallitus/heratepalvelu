@@ -339,7 +339,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       code: lambdaCode,
       environment: {
         ...this.envVars,
-        // TODO what does it need access to?
+        herate_table: AMISherateTable.tableName,
         caller_id: `1.2.24.562.10.00000000001.${id}-AMISDeleteTunnusHandler`,
       },
       handler: "oph.heratepalvelu.amis.AMISDeleteTunnusHandler::handleDeleteTunnus",
@@ -351,7 +351,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     AMISDeleteTunnusHandler.addEventSource(
       new SqsEventSource(amisDeleteTunnusQueue, { batchSize: 1, })
     );
-    // TODO will need access to at least one table
 
    /* const dbChanger = new lambda.Function(this, "AMIS-DBChanger", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
