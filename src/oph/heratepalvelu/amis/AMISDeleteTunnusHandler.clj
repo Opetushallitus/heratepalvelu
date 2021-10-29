@@ -23,7 +23,7 @@
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
       (try
-        (let [herate (parse-string (.getBody msg))
+        (let [herate (parse-string (.getBody msg) true)
               kyselylinkki (:kyselylinkki herate)]
           (if (some? (delete-tunnus-checker herate))
             (log/error {:herate herate :msg (delete-tunnus-checker herate)})
