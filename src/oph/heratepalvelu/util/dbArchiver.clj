@@ -42,7 +42,7 @@
         (catch Exception e
           (log/error "Linkin arkistointi epäonnistui:"
                      (:kyselylinkki item)
-                     (ex-data e)))))
+                     e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan {:filter-expression   "rahoituskausi = :kausi"
                     :expr-attr-vals      {":kausi" (.build
