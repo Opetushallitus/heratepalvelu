@@ -27,20 +27,21 @@
     (log/info (count (.items response)))
     response))
 
+(def kausi "2019-2020")
+
 (defn -handleDBArchiving [this event context]
-  (let [kausi "2019-2020"]
-    (loop [resp (scan {:filter-expression "rahoituskausi = :kausi"
-                       :expr-attr-vals    {":kausi" kausi}})]
-      (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
-        (try
-          (ddb/put-item item {} (:to-table env))
-          (ddb/delete-item {:toimija_oppija [:s (:toimija_oppija item)]
-                            :tyyppi_kausi   [:s (:tyyppi_kausi item)]})
-          (catch Exception e
-            (log/error "Linkin arkistointi epäonnistui:"
-                       (:kyselylinkki item)
-                       (ex-info e))))
-      (when (.hasLastEvaluatedKey resp)
-        (recur (scan {:filter-expression   "rahoituskausi = :kausi"
-                      :expr-attr-vals      {":kausi" kausi}
-                      :exclusive-start-key (.lastEvaluatedKey resp)}))))))
+  (loop [resp (scan {:filter-expression "rahoituskausi = :kausi"
+                     :expr-attr-vals    {":kausi" kausi}})]
+    (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+      (try
+        (ddb/put-item item {} (:to-table env))
+        (ddb/delete-item {:toimija_oppija [:s (:toimija_oppija item)]
+                          :tyyppi_kausi   [:s (:tyyppi_kausi item)]})
+        (catch Exception e
+          (log/error "Linkin arkistointi epäonnistui:"
+                     (:kyselylinkki item)
+                     (ex-info e)))))
+    (when (.hasLastEvaluatedKey resp)
+      (recur (scan {:filter-expression   "rahoituskausi = :kausi"
+                    :expr-attr-vals      {":kausi" kausi}
+                    :exclusive-start-key (.lastEvaluatedKey resp)})))))
