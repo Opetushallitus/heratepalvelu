@@ -36,7 +36,9 @@
                                                       kausi))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
-        (ddb/put-item item {} (:to-table env))
+        (ddb/put-item (ddb/map-vals-to-attribute-values item)
+                      {}
+                      (:to-table env))
         (ddb/delete-item {:toimija_oppija [:s (:toimija_oppija item)]
                           :tyyppi_kausi   [:s (:tyyppi_kausi item)]})
         (catch Exception e
