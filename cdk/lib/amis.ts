@@ -354,7 +354,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     const AMISherateArchive2019_2020Table = new dynamodb.Table(
       this,
-      "AMISHerateArchive2019-2020Table",
+      "AMISHerateArchive2019to2020Table",
       {
         partitionKey: {
           name: "toimija_oppija",
