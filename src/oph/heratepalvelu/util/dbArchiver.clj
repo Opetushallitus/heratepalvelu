@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.util.dbArchiver
-  (:require 
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.db.dynamodb :as ddb])
   (:import (software.amazon.awssdk.services.dynamodb.model AttributeValue
@@ -31,7 +30,10 @@
 
 (defn -handleDBArchiving [this event context]
   (loop [resp (scan {:filter-expression "rahoituskausi = :kausi"
-                     :expr-attr-vals    {":kausi" kausi}})]
+                     :expr-attr-vals    {":kausi" (.build
+                                                    (.s
+                                                      (AttributeValue/builder)
+                                                      kausi))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (ddb/put-item item {} (:to-table env))
@@ -43,5 +45,8 @@
                      (ex-info e)))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan {:filter-expression   "rahoituskausi = :kausi"
-                    :expr-attr-vals      {":kausi" kausi}
+                    :expr-attr-vals      {":kausi" (.build
+                                                     (.s
+                                                       (AttributeValue/builder)
+                                                       kausi))}
                     :exclusive-start-key (.lastEvaluatedKey resp)})))))
