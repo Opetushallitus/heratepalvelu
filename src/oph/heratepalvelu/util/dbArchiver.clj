@@ -45,6 +45,7 @@
                                       [:bool (second %2)]
                                       :else
                                       [:s (second %2)]))
+                        {}
                         (seq item))
                       {}
                       (:to-table env))
