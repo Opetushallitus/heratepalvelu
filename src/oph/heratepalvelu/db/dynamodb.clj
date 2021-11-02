@@ -2,13 +2,14 @@
   (:require [environ.core :refer [env]])
   (:import (clojure.lang Reflector)
            (software.amazon.awssdk.services.dynamodb DynamoDbClient)
-           (software.amazon.awssdk.services.dynamodb.model PutItemRequest
-                                                           QueryRequest
-                                                           UpdateItemRequest
+           (software.amazon.awssdk.services.dynamodb.model AttributeValue
                                                            Condition
-                                                           AttributeValue
+                                                           DeleteItemRequest
                                                            GetItemRequest
-                                                           ScanRequest)
+                                                           PutItemRequest
+                                                           QueryRequest
+                                                           ScanRequest
+                                                           UpdateItemRequest)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap DefaultSdkAutoConstructList)
            (software.amazon.awssdk.core.client.config ClientOverrideConfiguration)
@@ -156,6 +157,17 @@
           response (.getItem ddb-client req)
           item (.item response)]
       (map-attribute-values-to-vals item))))
+
+(defn delete-item
+  ([key-conds]
+    (delete-item key-conds (:herate-table env)))
+  ([key-conds table]
+    (let [req (-> (DeleteItemRequest/builder)
+                  (.tableName table)
+                  (.key (map-vals-to-attribute-values key-conds))
+                  (.build))]
+      (.deleteItem ddb-client req))))
+
 
 (defn scan [options table]
   (let [req (-> (ScanRequest/builder)

@@ -138,6 +138,20 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       retentionPeriod: Duration.days(14)
     });
 
+    const deleteTunnusDLQueue = new sqs.Queue(this, "AmisDeleteTunnusDLQueue", {
+      retentionPeriod: Duration.days(14)
+    });
+
+    const amisDeleteTunnusQueue = new sqs.Queue(this, "AmisDeleteTunnusQueue", {
+      queueName: `${id}-amisDeleteTunnusQueue`,
+      deadLetterQueue: {
+        queue: deleteTunnusDLQueue,
+        maxReceiveCount: 5
+      },
+      visibilityTimeout: Duration.seconds(60),
+      retentionPeriod: Duration.days(14)
+    });
+
     const ehoksHerateAsset = new s3assets.Asset(
       this,
       "EhoksHerateLambdaAsset",
@@ -320,6 +334,24 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       enabled: false
     });
 
+    const AMISDeleteTunnusHandler = new lambda.Function(this, "AMISDeleteTunnusHandler", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `1.2.24.562.10.00000000001.${id}-AMISDeleteTunnusHandler`,
+      },
+      handler: "oph.heratepalvelu.amis.AMISDeleteTunnusHandler::handleDeleteTunnus",
+      memorySize: 1024,
+      timeout: Duration.seconds(60),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    AMISDeleteTunnusHandler.addEventSource(
+      new SqsEventSource(amisDeleteTunnusQueue, { batchSize: 1, })
+    );
+
    /* const dbChanger = new lambda.Function(this, "AMIS-DBChanger", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
@@ -334,8 +366,15 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE
     });*/
 
-    [AMISHerateHandler, AMISherateEmailHandler, updatedOoHandler,
-      AMISEmailResendHandler, AMISMuistutusHandler, AMISEmailStatusHandler,// dbChanger
+    [
+      AMISHerateHandler,
+      AMISherateEmailHandler,
+      updatedOoHandler,
+      AMISEmailResendHandler,
+      AMISMuistutusHandler,
+      AMISEmailStatusHandler,
+      AMISDeleteTunnusHandler,
+      // dbChanger
     ].forEach(
       lambdaFunction => {
         AMISherateTable.grantReadWriteData(lambdaFunction);
