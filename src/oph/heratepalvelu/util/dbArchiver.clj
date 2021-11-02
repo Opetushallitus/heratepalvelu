@@ -40,7 +40,7 @@
                         #(assoc %1
                                 (first %2)
                                 (cond (= (type (second %2)) java.lang.Long)
-                                      [:n (second %2)]
+                                      [:n (str (second %2))]
                                       (= (type (second %2)) java.lang.Boolean)
                                       [:bool (second %2)]
                                       :else
