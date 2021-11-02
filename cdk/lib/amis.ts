@@ -404,7 +404,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     AMISherateTable.grantReadWriteData(dbArchiver);
     AMISherateArchive2019_2020Table.grantReadWriteData(dbArchiver);
-    AMISherateArchive2020_2021Table.grantReadWriteDate(dbArchiver);
+    AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);
 
    /* const dbChanger = new lambda.Function(this, "AMIS-DBChanger", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
