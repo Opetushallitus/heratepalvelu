@@ -369,6 +369,23 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       }
     );
 
+    const AMISherateArchive2020_2021Table = new dynamodb.Table(
+      this,
+      "AMISHerateArchive2020to2021Table",
+      {
+        partitionKey: {
+          name: "toimija_oppija",
+          type: dynamodb.AttributeType.STRING
+        },
+        sortKey: {
+          name: "tyyppi_kausi",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        serverSideEncryption: true
+      }
+    );
+
     const dbArchiver = new lambda.Function(this, "AMIS-DBArchiver", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code:lambdaCode,
