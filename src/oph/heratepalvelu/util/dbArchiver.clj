@@ -36,33 +36,16 @@
                                                       kausi))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
-        (ddb/put-item {:toimija_oppija         [:s (:toimija_oppija item)]
-                       :tyyppi_kausi           [:s (:tyyppi_kausi item)]
-                       :kyselylinkki           [:s (:kyselylinkki item)]
-                       :sahkoposti             [:s (:sahkoposti item)]
-                       :suorituskieli          [:s (:suorituskieli item)]
-                       :lahetystila            [:s (:lahetystila item)]
-                       :lahetyspvm             [:s (:lahetyspvm item)]
-                       :alkupvm                [:s (:alkupvm item)]
-                       :heratepvm              [:s (:heratepvm item)]
-                       :request-id             [:s (:request-id item)]
-                       :oppilaitos             [:s (:oppilaitos item)]
-                       :ehoks-id               [:n (:ehoks-id item)]
-                       :opiskeluoikeus-id      [:s (:opiskeluoikeus-id item)]
-                       :oppija-oid             [:s (:oppija-id item)]
-                       :koulutustoimija        [:s (:koulutustoimija item)]
-                       :kyselytyyppi           [:s (:kyselytyyppi item)]
-                       :rahoituskausi          [:s (:rahoituskausi item)]
-                       :viestintapalvelu-id    [:n (:viestintapalvelu-id item)]
-                       :voimassa-loppupvm      [:s (:voimassa-loppupvm item)]
-                       :tallennuspvm           [:s (:tallennuspvm item)]
-                       :1.-muistutus-lahetetty [:s (:1.-muistutus-lahetetty
-                                                     item)]
-
-                       :2.-muistutus-lahetetty [:s (:2.-muistutus-lahetetty
-                                                     item)]
-                       :muistutukset           [:n (:muistutukset item)]
-                       :check-suoritus         [:bool (:check-suoritus item)]}
+        (ddb/put-item (reduce
+                        #(assoc %1
+                                (first %2)
+                                (cond (= (type (second %2)) java.lang.Long)
+                                      [:n (second %2)]
+                                      (= (type (second %2)) java.lang.Boolean)
+                                      [:bool (second %2)]
+                                      :else
+                                      [:s (second %2)]))
+                        (seq item))
                       {}
                       (:to-table env))
         (ddb/delete-item {:toimija_oppija [:s (:toimija_oppija item)]
