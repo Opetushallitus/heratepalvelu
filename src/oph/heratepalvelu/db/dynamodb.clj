@@ -59,7 +59,7 @@
         (.comparisonOperator (get comparison-operators op "EQ"))
         (.build))))
 
-(defn map-vals-to-attribute-values [map]
+(defn- map-vals-to-attribute-values [map]
   (into {} (for [[k [t v]] map] [(name k) (to-attribute-value t v)])))
 
 (defn- map-vals-to-conditions [map]
