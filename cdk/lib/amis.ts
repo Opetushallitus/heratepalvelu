@@ -386,7 +386,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       }
     );
 
-    const dbArchiver = new lambda.Function(this, "AMIS-DBArchiver", {
+    /*const dbArchiver = new lambda.Function(this, "AMIS-DBArchiver", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code:lambdaCode,
       environment: {
@@ -404,7 +404,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     AMISherateTable.grantReadWriteData(dbArchiver);
     AMISherateArchive2019_2020Table.grantReadWriteData(dbArchiver);
-    AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);
+    AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);*/
 
    /* const dbChanger = new lambda.Function(this, "AMIS-DBChanger", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
@@ -428,7 +428,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISMuistutusHandler,
       AMISEmailStatusHandler,
       AMISDeleteTunnusHandler,
-      dbArchiver,
+      //dbArchiver,
       // dbChanger
     ].forEach(
       lambdaFunction => {
