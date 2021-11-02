@@ -53,7 +53,8 @@
                       {}
                       (:to-table env))
         (ddb/delete-item {:toimija_oppija [:s (:toimija_oppija item)]
-                          :tyyppi_kausi   [:s (:tyyppi_kausi item)]})
+                          :tyyppi_kausi   [:s (:tyyppi_kausi item)]}
+                         (:from-table env))
         (catch Exception e
           (log/error "Linkin arkistointi epäonnistui:"
                      (:kyselylinkki item)
