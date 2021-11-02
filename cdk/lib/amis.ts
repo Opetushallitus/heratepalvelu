@@ -393,6 +393,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         ...this.envVars,
         from_table: AMISherateTable.tableName,
         to_table: AMISherateArchive2019_2020Table.tableName,
+        to_table_2020_2021: AMISherateArchive2020_2021Table.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISDBArchiver`,
       },
       handler: "oph.heratepalvelu.util.dbArchiver::handleDBArchiving",
@@ -403,6 +404,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     AMISherateTable.grantReadWriteData(dbArchiver);
     AMISherateArchive2019_2020Table.grantReadWriteData(dbArchiver);
+    AMISherateArchive2020_2021Table.grantReadWriteDate(dbArchiver);
 
    /* const dbChanger = new lambda.Function(this, "AMIS-DBChanger", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,

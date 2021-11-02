@@ -26,9 +26,7 @@
     (log/info (count (.items response)))
     response))
 
-(def kausi "2019-2020")
-
-(defn -handleDBArchiving [this event context]
+(defn doArchiving [kausi to-table]
   (loop [resp (scan {:filter-expression "rahoituskausi = :kausi"
                      :expr-attr-vals    {":kausi" (.build
                                                     (.s
@@ -51,7 +49,7 @@
                         {}
                         (seq item))
                       {}
-                      (:to-table env))
+                      to-table)
         (ddb/delete-item {:toimija_oppija [:s (:toimija_oppija item)]
                           :tyyppi_kausi   [:s (:tyyppi_kausi item)]}
                          (:from-table env))
@@ -66,3 +64,7 @@
                                                        (AttributeValue/builder)
                                                        kausi))}
                     :exclusive-start-key (.lastEvaluatedKey resp)})))))
+
+(defn -handleDBArchiving [this event context]
+  (doArchiving "2019-2020" (:to-table env))
+  (doArchiving "2020-2021" (:to-table-2020-2021 env)))
