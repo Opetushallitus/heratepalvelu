@@ -352,6 +352,60 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       new SqsEventSource(amisDeleteTunnusQueue, { batchSize: 1, })
     );
 
+    const AMISherateArchive2019_2020Table = new dynamodb.Table(
+      this,
+      "AMISHerateArchive2019to2020Table",
+      {
+        partitionKey: {
+          name: "toimija_oppija",
+          type: dynamodb.AttributeType.STRING
+        },
+        sortKey: {
+          name: "tyyppi_kausi",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        serverSideEncryption: true
+      }
+    );
+
+    const AMISherateArchive2020_2021Table = new dynamodb.Table(
+      this,
+      "AMISHerateArchive2020to2021Table",
+      {
+        partitionKey: {
+          name: "toimija_oppija",
+          type: dynamodb.AttributeType.STRING
+        },
+        sortKey: {
+          name: "tyyppi_kausi",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        serverSideEncryption: true
+      }
+    );
+
+    const dbArchiver = new lambda.Function(this, "AMIS-DBArchiver", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code:lambdaCode,
+      environment: {
+        ...this.envVars,
+        from_table: AMISherateTable.tableName,
+        to_table: AMISherateArchive2019_2020Table.tableName,
+        to_table_2020_2021: AMISherateArchive2020_2021Table.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISDBArchiver`,
+      },
+      handler: "oph.heratepalvelu.util.dbArchiver::handleDBArchiving",
+      memorySize: 1024,
+      timeout: Duration.seconds(900),
+      tracing: lambda.Tracing.ACTIVE,
+    });
+
+    AMISherateTable.grantReadWriteData(dbArchiver);
+    AMISherateArchive2019_2020Table.grantReadWriteData(dbArchiver);
+    AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);
+
    /* const dbChanger = new lambda.Function(this, "AMIS-DBChanger", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
@@ -374,6 +428,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISMuistutusHandler,
       AMISEmailStatusHandler,
       AMISDeleteTunnusHandler,
+      dbArchiver,
       // dbChanger
     ].forEach(
       lambdaFunction => {
