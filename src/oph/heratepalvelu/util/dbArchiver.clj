@@ -39,8 +39,11 @@
         (ddb/put-item (reduce
                         #(assoc %1
                                 (first %2)
-                                (cond (= (type (second %2)) java.lang.Long)
-                                      [:n (str (second %2))]
+                                (cond (or (= (type (second %2))
+                                             java.lang.Long)
+                                          (= (type (second %2))
+                                             java.lang.Integer))
+                                      [:n (second %2)]
                                       (= (type (second %2)) java.lang.Boolean)
                                       [:bool (second %2)]
                                       :else
