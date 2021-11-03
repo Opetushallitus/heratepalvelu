@@ -34,9 +34,9 @@
                 (save-herate herate opiskeluoikeus koulutustoimija)
                 (log/info "Ei tallenneta kantaan"
                           (str koulutustoimija "/" (:oppija-oid herate))
-                          (str (:kyselytyyppi herate))))
+                          (str (:kyselytyyppi herate)))))
             (log/error "Ei opiskeluoikeutta ID:llä"
-                       (:opiskeluoikeus-oid herate)))))
+                       (:opiskeluoikeus-oid herate))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " msg "\n" e))
         (catch ExceptionInfo e

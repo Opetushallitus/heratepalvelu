@@ -279,7 +279,7 @@
                                            :alkupvm      alkupvm
                                            :lahetystila  (:ei-lahetetty kasittelytilat)})
                 (catch Exception e
-                  (log/error "Virhe linkin lähetyksessä eHOKSiin " e))) ;; TODO delete DB entry on our side?
+                  (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
               (when (has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
                 (log/info {:nayttotutkinto        true
                            :hoks-id               (:ehoks-id herate)
