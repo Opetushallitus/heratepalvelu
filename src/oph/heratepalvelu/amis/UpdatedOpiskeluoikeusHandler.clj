@@ -113,11 +113,11 @@
            next-page (+ last-page 1)]
       (if (seq opiskeluoikeudet)
         (do (doseq [opiskeluoikeus opiskeluoikeudet]
-              (let [koulustoimija (get-koulutustoimija-oid opiskeluoikeus)
+              (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
                     vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
                 (when (and (some? vahvistus-pvm)
                            (check-organisaatio-whitelist?
-                             koulustoimija
+                             koulutustoimija
                              (date-string-to-timestamp
                                vahvistus-pvm))
                            (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus))
@@ -131,7 +131,7 @@
                                            (:oid opiskeluoikeus)
                                            "ei HOKSia. "
                                            "Koulutustoimija: "
-                                           koulustoimija)
+                                           koulutustoimija)
                                  (throw e))))]
                     (if (:osaamisen-hankkimisen-tarve hoks)
                       (save-herate
@@ -139,7 +139,8 @@
                           hoks
                           (get-kysely-type opiskeluoikeus)
                           vahvistus-pvm)
-                        opiskeluoikeus)
+                        opiskeluoikeus
+                        koulutustoimija)
                       (log/info
                         "Ei osaamisen hankkimisen tarvetta hoksissa " (:id hoks)))))))
             (log/info (str "Käsitelty " (count opiskeluoikeudet)

@@ -213,7 +213,7 @@
       last
       normal)))
 
-(defn save-herate [herate opiskeluoikeus]
+(defn save-herate [herate opiskeluoikeus koulutustoimija]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
   (if (some? (herate-checker herate))
     (log/error {:herate herate :msg (herate-checker herate)})
@@ -224,7 +224,6 @@
           alkupvm   (str alku-date)
           loppu-date (loppu herate-date alku-date)
           loppupvm  (str loppu-date)
-          koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
           suoritus (get-suoritus opiskeluoikeus)
           oppija (str (:oppija-oid herate))
           laskentakausi (kausi heratepvm)
@@ -304,4 +303,5 @@
               (catch Exception e
                 (arvo/delete-amis-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
-                (throw e)))))))))
+                (throw e)))
+            (log/error "Ei kyselylinkkiä arvon palautteessa" arvo-resp)))))))

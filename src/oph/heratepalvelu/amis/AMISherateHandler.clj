@@ -24,14 +24,19 @@
         (let [herate (parse-string (.getBody msg) true)
               opiskeluoikeus (get-opiskeluoikeus-catch-404
                                (:opiskeluoikeus-oid herate))]
-          (when (some? opiskeluoikeus)
+          (if (some? opiskeluoikeus)
             (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
-              (when (and (check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
+              (if (and (check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
                          (check-organisaatio-whitelist?
                            koulutustoimija
                            (date-string-to-timestamp (:alkupvm herate)))
                          (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
-                (save-herate herate opiskeluoikeus)))))
+                (save-herate herate opiskeluoikeus koulutustoimija)
+                (log/info "Ei tallenneta kantaan"
+                          (str koulutustoimija "/" (:oppija-oid herate))
+                          (str (:kyselytyyppi herate))))
+            (log/error "Ei opiskeluoikeutta ID:llä"
+                       (:opiskeluoikeus-oid herate)))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " msg "\n" e))
         (catch ExceptionInfo e
@@ -42,5 +47,4 @@
                        (:opiskeluoikeus-oid (parse-string (.getBody msg) true))
                        " error: "
                        e)
-            (do (log/error e)
-                (throw e))))))))
+            (do (log/error e))))))))
