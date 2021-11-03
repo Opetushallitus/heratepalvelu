@@ -27,10 +27,10 @@
           (if (some? opiskeluoikeus)
             (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
               (if (and (check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
-                         (check-organisaatio-whitelist?
-                           koulutustoimija
-                           (date-string-to-timestamp (:alkupvm herate)))
-                         (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
+                       (check-organisaatio-whitelist?
+                         koulutustoimija
+                         (date-string-to-timestamp (:alkupvm herate)))
+                       (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
                 (save-herate herate opiskeluoikeus koulutustoimija)
                 (log/info "Ei tallenneta kantaan"
                           (str koulutustoimija "/" (:oppija-oid herate))
