@@ -21,6 +21,7 @@
                                  {:index "lahetysIndex"
                                   :limit 100})]
     (doseq [email emails]
+      (log/info email)
       (let [status (vp/get-email-status (:viestintapalvelu-id email))
             tila (if (= (:numberOfSuccessfulSendings status) 1)
                    (:success c/kasittelytilat)
