@@ -37,7 +37,7 @@
               (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
               (let [full-email (ddb/get-item {:toimija_oppija [:s (:toimija_oppija email)]
                                               :tyyppi_kausi [:s (:tyyppi_kausi email)]})]
-                (log/info email)
+                (log/info full-email)
                 (when-not (.contains [1 2] (:muistutukset full-email))
                   (c/send-lahetys-data-to-ehoks
                     (:toimija_oppija email)
