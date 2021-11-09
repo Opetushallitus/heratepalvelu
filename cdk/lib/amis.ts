@@ -50,7 +50,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         "kyselylinkki",
         "suorituskieli",
         "viestintapalvelu-id",
-        "kyselytyyppi"
+        "kyselytyyppi",
+        "muistutukset"
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
