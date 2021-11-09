@@ -22,7 +22,6 @@
                                   :limit 100})]
     (log/warn emails)
     (doseq [email emails]
-      (log/info email)
       (let [status (vp/get-email-status (:viestintapalvelu-id email))
             tila (if (= (:numberOfSuccessfulSendings status) 1)
                    (:success c/kasittelytilat)
@@ -36,14 +35,17 @@
               (reset! new-changes? true))
             (try
               (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
-              (when-not (.contains [1 2] (:muistutukset email))
-                (c/send-lahetys-data-to-ehoks
-                  (:toimija_oppija email)
-                  (:tyyppi_kausi email)
-                  {:kyselylinkki (:kyselylinkki email)
-                   :lahetyspvm (first (str/split (:sendingEnded status) #"T"))
-                   :sahkoposti (:sahkoposti email)
-                   :lahetystila tila}))
+              (let [full-email (ddb/get-item {:toimija_oppija [:eq [:s (:toimija_oppija email)]]
+                                              :tyyppi_kausi [:eq [:s (:tyyppi_kausi email)]]})]
+                (log/info email)
+                (when-not (.contains [1 2] (:muistutukset full-email))
+                  (c/send-lahetys-data-to-ehoks
+                    (:toimija_oppija email)
+                    (:tyyppi_kausi email)
+                    {:kyselylinkki (:kyselylinkki email)
+                     :lahetyspvm (first (str/split (:sendingEnded status) #"T"))
+                     :sahkoposti (:sahkoposti email)
+                     :lahetystila tila})))
               (ddb/update-item
                 {:toimija_oppija [:s (:toimija_oppija email)]
                  :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
