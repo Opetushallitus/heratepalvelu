@@ -16,12 +16,10 @@
 
 (defn check-jakso? [jakso]
   (and (:koulutustoimija jakso)
-       ;; TODO make sure that tep kysely on lähetetty???
        (:tyopaikan_nimi jakso)
        (:tyopaikan_ytunnus jakso)
        (or (not= (:hankkimistapa_tyyppi jakso) "oppisopimus")
-           (= (:oppisopimuksen_perusta jakso) "01"))))
-           ;;(not= (:oppisopimuksen_perusta jakso) "02")))) ;; TODO
+           (not= (:oppisopimuksen_perusta jakso) "02"))))
 
 (defn get-kausi [jakso]
   (let [loppupvm (c/to-date (:jakso_loppupvm jakso))]
@@ -77,7 +75,7 @@
 (defn- query-niputtamattomat []
   (ddb/query-items {:tpk-niputuspvm [:null]
                     :jakso_loppupvm [:le [:s (str (t/today))]]}
-                   {:index "niputusIndex"
+                   {:index "tpkNiputusIndex"
                     :limit 10}
                    (:jaksotunnus-table env)))
 
