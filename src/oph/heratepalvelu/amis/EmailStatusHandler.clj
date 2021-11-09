@@ -20,6 +20,7 @@
   (loop [emails (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                                  {:index "lahetysIndex"
                                   :limit 100})]
+    (log/warn emails)
     (doseq [email emails]
       (log/info email)
       (let [status (vp/get-email-status (:viestintapalvelu-id email))
