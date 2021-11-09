@@ -20,7 +20,6 @@
   (loop [emails (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                                  {:index "lahetysIndex"
                                   :limit 100})]
-    (log/warn emails)
     (doseq [email emails]
       (let [status (vp/get-email-status (:viestintapalvelu-id email))
             tila (if (= (:numberOfSuccessfulSendings status) 1)
@@ -37,9 +36,7 @@
               (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
               (let [full-email (ddb/get-item {:toimija_oppija [:s (:toimija_oppija email)]
                                               :tyyppi_kausi [:s (:tyyppi_kausi email)]})]
-                (log/info full-email)
                 (when-not (.contains [1 2] (:muistutukset full-email))
-                  (log/info "ASDFAFDAFASFDSFA")
                   (c/send-lahetys-data-to-ehoks
                     (:toimija_oppija email)
                     (:tyyppi_kausi email)
