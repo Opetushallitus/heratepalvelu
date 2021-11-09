@@ -39,6 +39,7 @@
                                               :tyyppi_kausi [:s (:tyyppi_kausi email)]})]
                 (log/info full-email)
                 (when-not (.contains [1 2] (:muistutukset full-email))
+                  (log/info "ASDFAFDAFASFDSFA")
                   (c/send-lahetys-data-to-ehoks
                     (:toimija_oppija email)
                     (:tyyppi_kausi email)
