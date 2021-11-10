@@ -134,4 +134,6 @@
              :expr-attr-vals {":value" [:s normalisoitu-nimi]}}
             (:table env)))
         (catch Exception e
-          (log/error e))))))
+          (log/error e))))
+    (when (.hasLastEvaluatedKey resp)
+      (recur (scan {:filter-expression "attribute_not_exists(tyopaikan_normalisoitu_nimi)"})))))
