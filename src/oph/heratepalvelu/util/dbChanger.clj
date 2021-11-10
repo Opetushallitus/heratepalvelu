@@ -136,4 +136,5 @@
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
-      (recur (scan {:filter-expression "attribute_not_exists(tyopaikan_normalisoitu_nimi)"})))))
+      (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
+                    :filter-expression "attribute_not_exists(tyopaikan_normalisoitu_nimi)"})))))
