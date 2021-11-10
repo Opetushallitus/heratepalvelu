@@ -19,6 +19,9 @@
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleDBGetPuuttuvatOppisopimuksenPerustat
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]
+            [^:static handleAddTyopaikanNormalisoidutNimet
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn scan [options]
@@ -118,3 +121,17 @@
                       :expr-attr-vals {":htp" (.build (.s (AttributeValue/builder) "oppisopimus"))
                                        ":pvm" (.build (.s (AttributeValue/builder) "2021-07-01"))
                                        ":dbc" (.build (.s (AttributeValue/builder) tag))}}))))))
+
+(defn -handleAddTyopaikanNormalisoidutNimet [this event context]
+  (loop [resp (scan {:filter-expression "attribute_not_exists(tyopaikan_normalisoitu_nimi)"})]
+    (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+      (try
+        (let [normalisoitu-nimi (c/normalize-string (:tyopaikan_nimi item))]
+          (ddb/update-item
+            {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
+            {:update-expr "SET #value = :value"
+             :expr-attr-names {"#value" "tyopaikan_normalisoitu_nimi"}
+             :expr-attr-vals {":value" [:s normalisoitu-nimi]}}
+            (:table env)))
+        (catch Exception e
+          (log/error e))))))

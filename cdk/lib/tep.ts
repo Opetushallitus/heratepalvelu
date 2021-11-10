@@ -461,6 +461,26 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     jaksotunnusTable.grantReadWriteData(oppisopimuksenPerustatDBChanger);
 
+    const addTyopaikanNormalisoidutNimetDBChanger = new lambda.Function(
+      this,
+      "addTyopaikanNormalisoidutNimetDBChanger",
+      {
+        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        code: lambdaCode,
+        environment: {
+          ...this.envVars,
+          table: jaksotunnusTable.tableName,
+          caller_id: `1.2.246.562.10.00000000001.${id}-addTyopaikanNormalisoidutNimetDBChanger`
+        },
+        handler: "oph.heratepalvelu.util.dbChanger::handleAddTyopaikanNormalisoidutNimet",
+        memorySize: 1024,
+        timeout: Duration.seconds(900),
+        tracing: lambda.Tracing.ACTIVE
+      }
+    );
+
+    jaksotunnusTable.grantReadWriteData(addTyopaikanNormalisoidutNimetDBChanger);
+
     // IAM
 
     [
@@ -473,6 +493,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       SmsMuistutusHandler,
       EmailMuistutusHandler,
       oppisopimuksenPerustatDBChanger,
+      addTyopaikanNormalisoidutNimetDBChanger,
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
