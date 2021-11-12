@@ -87,7 +87,7 @@
                 :loppu (if (:loppu x) (LocalDate/parse (:loppu x)) nil)})
        (sort-by :alku (:keskeytymisajanjaksot herate []))))
 
-(defn- check-not-fully-keskeytynyt [herate]
+(defn check-not-fully-keskeytynyt [herate]
   (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
     (or (empty? kjaksot)
         (not (:loppu (last kjaksot)))
