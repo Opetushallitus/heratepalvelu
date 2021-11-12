@@ -21,16 +21,22 @@
        (or (not= (:hankkimistapa_tyyppi jakso) "oppisopimus")
            (not= (:oppisopimuksen_perusta jakso) "02"))))
 
-(defn get-kausi [jakso]
-  (let [loppupvm (c/to-date (:jakso_loppupvm jakso))]
-    (str (.getYear loppupvm) ;; kl/sl = kevät-/syyslukukausi
-         (if (<= (.getMonthValue loppupvm) 6) "kl" "sl"))))
+(defn get-kausi-alkupvm [jakso]
+  (let [jakso-loppupvm (c/to-date (:jakso_loppupvm jakso))]
+    (str (.getYear jakso-loppupvm)
+         (if (<= (.getMonthValue jakso-loppupvm) 6) "-01-01" "-07-01"))))
+
+(defn get-kausi-loppupvm [jakso]
+  (let [jakso-loppupvm (c/to-date (:jakso_loppupvm jakso))]
+    (str (.getYear jakso-loppupvm)
+         (if (<= (.getMonthValue jakso-loppupvm) 6) "-06-30" "-12-31"))))
 
 (defn create-nippu-id [jakso]
   (str (c/normalize-string (:tyopaikan_nimi jakso)) "/"
        (:tyopaikan_ytunnus jakso) "/"
        (:koulutustoimija jakso) "/"
-       (get-kausi jakso)))
+       (get-kausi-alkupvm jakso) "_"
+       (get-kausi-loppupvm)))
 
 (defn- get-existing-nippu [jakso]
   (try
@@ -55,7 +61,8 @@
      :tyopaikka              (:tyopaikan_ytunnus jakso)
      :vastaamisajan_alkupvm  (str alkupvm)
      :vastaamisajan_loppupvm (str loppupvm)
-     :kausi                  (get-kausi jakso)}))
+     :tiedonkeruu_alkupvm    (get-kausi-alkupvm jakso)
+     :tiedonkeruu_loppupvm   (get-kausi-loppupvm jakso)}))
 
 
 (defn- save-nippu [nippu]
@@ -89,8 +96,15 @@
           (let [existing-nippu (get-existing-nippu jakso)]
             (when-not existing-nippu
               (let [nippu (create-nippu jakso)
-                    kyselylinkki (get-kyselylinkki nippu)]
+                    kyselylinkki (get-kyselylinkki nippu)] ;; TODO error handling here
                 (when kyselylinkki ;; TODO if save-nippu returns nil, delete kyselylinkki (or reverse?)
-                  (save-nippu (assoc nippu :kyselylinkki kyselylinkki))))))))
+                  (save-nippu (assoc nippu :kyselylinkki kyselylinkki))
+                  (ddb/update-item
+                    {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+                    {:update-expr "SET #value = :value"
+                     :expr-attr-names {"#value" "tpk-nipututspvm"}
+                     :expr-attr-vals {":value" [:s (str (t/today))]}}
+                    (:jaksotunnus-table env))
+                  ))))))
       (when (< 120000 (.getRemainingTimeInMillis context))
         (recur (query-niputtamattomat))))))
