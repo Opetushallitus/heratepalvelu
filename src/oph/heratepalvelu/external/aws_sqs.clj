@@ -12,14 +12,6 @@
         (.region (Region/EU_WEST_1))
         (.build)))
 
-(defn build-sms-sqs-message [oppilaitokset phonenumber
-                             ohjaaja_ytunnus_kj_tutkinto niputuspvm & muistutus]
-  {:oppilaitokset oppilaitokset
-   :phonenumber phonenumber
-   :ohjaaja_ytunnus_kj_tutkinto ohjaaja_ytunnus_kj_tutkinto
-   :niputuspvm niputuspvm
-   :muistutus muistutus})
-
 (defn send-tep-sms-sqs-message [msg]
   (let [resp (.sendMessage sqs-client (-> (SendMessageRequest/builder)
                                           (.queueUrl (:sms-queue env))
