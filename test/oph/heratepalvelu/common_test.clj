@@ -4,7 +4,8 @@
             [oph.heratepalvelu.util :refer :all]
             [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [clojure.string :as str]))
+            [clojure.string :as str])
+  (:import (java.time LocalDate)))
 
 (deftest test-get-koulutustoimija-oid
   (testing "Get koulutustoimija oid"
@@ -66,3 +67,22 @@
           (create-nipputunniste "Ääkköspaikka, Crème brûlée") "aakkospaikka_creme_brulee"))
     (is (str/starts-with?
           (create-nipputunniste "árvíztűrő tükörfúrógép") "arvizturo_tukorfurogep"))))
+
+(deftest test-check-sisaltyy-opiskeluoikeuteen
+  (testing "Check sisältyy opiskeluoikeuteen"
+    (let [oo {:oid "1.2.246.562.15.43634207518"
+              :sisältyyOpiskeluoikeuteen {:oid "1.2.246.562.15.12345678901"}}]
+      (is (= nil (check-sisaltyy-opiskeluoikeuteen? oo))))))
+
+(deftest test-has-nayttotutkintoonvalmistavakoulutus
+  (testing "Check has-nayttotutkintoonvalmistavakoulutus"
+    (let [oo1 {:suoritukset [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}]}
+          oo2 {:suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]}]
+      (is (true? (has-nayttotutkintoonvalmistavakoulutus? oo1)))
+      (is (= nil (has-nayttotutkintoonvalmistavakoulutus? oo2))))))
+
+(deftest test-next-niputus-date
+  (testing "Get next niputus date"
+    (is (= (LocalDate/of 2021 12 16) (next-niputus-date "2021-12-03")))
+    (is (= (LocalDate/of 2022 1 1) (next-niputus-date "2021-12-27")))
+    (is (= (LocalDate/of 2021 5 1) (next-niputus-date "2021-04-25")))))
