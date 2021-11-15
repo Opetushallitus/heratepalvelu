@@ -68,3 +68,27 @@
       (is (= expected1 (jh/sort-process-keskeytymisajanjaksot herate1)))
       (is (= expected2 (jh/sort-process-keskeytymisajanjaksot herate2))))))
 
+(deftest check-not-fully-keskeytynyt-test
+  (testing "check-not-fully-keskeytynyt test"
+    (let [herate1 {:keskeytymisajanjaksot [{:alku "2021-08-08" :loppu "2021-08-10"}
+                                           {:alku "2021-08-01" :loppu "2021-08-04"}]
+                   :loppupvm "2021-08-09"}
+          herate2 {:keskeytymisajanjaksot [{:alku "2021-08-08" :loppu "2021-08-10"}
+                                           {:alku "2021-08-01" :loppu "2021-08-04"}]
+                   :loppupvm "2021-08-11"}
+          herate3 {}
+          herate4 {:keskeytymisajanjaksot [{:alku "2021-08-08"}]}]
+      (is (not (jh/check-not-fully-keskeytynyt herate1)))
+      (is (true? (jh/check-not-fully-keskeytynyt herate2)))
+      (is (true? (jh/check-not-fully-keskeytynyt herate3)))
+      (is (true? (jh/check-not-fully-keskeytynyt herate4))))))
+
+(deftest check-open-keskeytymisajanjakso-test
+  (testing "check-open-keskeytymisajanjakso test"
+    (let [herate1 {:keskeytymisajanjaksot [{:alku "2021-08-08" :loppu "2021-08-10"}
+                                           {:alku "2021-08-01" :loppu "2021-08-04"}]}
+          herate2 {}
+          herate3 {:keskeytymisajanjaksot [{:alku "2021-08-08"}]}]
+      (is (not (jh/check-open-keskeytymisajanjakso herate1)))
+      (is (not (jh/check-open-keskeytymisajanjakso herate2)))
+      (is (true? (jh/check-open-keskeytymisajanjakso herate3))))))

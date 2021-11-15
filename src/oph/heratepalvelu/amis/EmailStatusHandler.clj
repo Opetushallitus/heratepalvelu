@@ -15,6 +15,14 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 (def ^:private new-changes? (atom false))
 
+(defn convert-vp-email-status [status]
+  (if (= (:numberOfSuccessfulSendings status) 1)
+    (:success c/kasittelytilat)
+    (if (= (:numberOfBouncedSendings status) 1)
+      (:bounced c/kasittelytilat)
+      (when (= (:numberOfFailedSendings status) 1)
+        (:failed c/kasittelytilat)))))
+
 (defn -handleEmailStatus [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
   (loop [emails (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
@@ -22,12 +30,7 @@
                                   :limit 100})]
     (doseq [email emails]
       (let [status (vp/get-email-status (:viestintapalvelu-id email))
-            tila (if (= (:numberOfSuccessfulSendings status) 1)
-                   (:success c/kasittelytilat)
-                   (if (= (:numberOfBouncedSendings status) 1)
-                     (:bounced c/kasittelytilat)
-                     (when (= (:numberOfFailedSendings status) 1)
-                       (:failed c/kasittelytilat))))]
+            tila (convert-vp-email-status status)]
         (if tila
           (do
             (when (not @new-changes?)

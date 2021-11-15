@@ -84,3 +84,45 @@
                                                      :tila {:koodiarvo "valmistunut"}}]}}
                      "2019-07-24")
            "lasna"))))
+
+(deftest test-check-tila
+  (testing "Check for acceptable tila given opiskeluoikeus and vahvistus-pvm"
+    (is (check-tila {:oid "1.2.246.562.15.82039738925"
+                     :koulutustoimija {:oid "1.2.246.562.10.35751498086"}
+                     :suoritukset [{:suorituskieli {:koodiarvo "FI"}
+                                    :tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}
+                                    :vahvistus {:päivä "2019-07-24"}}
+                                   {:suorituskieli {:koodiarvo "FI"}
+                                    :tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}
+                                    :vahvistus {:päivä "2019-07-23"}}]
+                     :tila {:opiskeluoikeusjaksot [{:alku "2019-07-24"
+                                                    :tila {:koodiarvo "lasna"}}
+                                                   {:alku "2019-07-23"
+                                                    :tila {:koodiarvo "valmistunut"}}]}}
+                     "2019-07-23"))
+    (is (check-tila {:oid "1.2.246.562.15.82039738925"
+                     :koulutustoimija {:oid "1.2.246.562.10.35751498086"}
+                     :suoritukset [{:suorituskieli {:koodiarvo "FI"}
+                                    :tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}
+                                    :vahvistus {:päivä "2019-07-24"}}
+                                   {:suorituskieli {:koodiarvo "FI"}
+                                    :tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}
+                                    :vahvistus {:päivä "2019-07-23"}}]
+                     :tila {:opiskeluoikeusjaksot [{:alku "2019-07-24"
+                                                    :tila {:koodiarvo "lasna"}}
+                                                   {:alku "2019-07-23"
+                                                    :tila {:koodiarvo "valmistunut"}}]}}
+                    "2019-07-24"))
+    (is (not (check-tila {:oid "1.2.246.562.15.82039738925"
+                          :koulutustoimija {:oid "1.2.246.562.10.35751498086"}
+                          :suoritukset [{:suorituskieli {:koodiarvo "FI"}
+                                         :tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}
+                                         :vahvistus {:päivä "2019-07-24"}}
+                                        {:suorituskieli {:koodiarvo "FI"}
+                                         :tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}
+                                         :vahvistus {:päivä "2019-07-23"}}]
+                          :tila {:opiskeluoikeusjaksot [{:alku "2019-07-24"
+                                                         :tila {:koodiarvo "katsotaaneronneeksi"}}
+                                                        {:alku "2019-07-23"
+                                                         :tila {:koodiarvo "valmistunut"}}]}}
+                         "2019-07-24")))))
