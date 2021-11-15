@@ -270,8 +270,7 @@
                              :viestintapalvelu-id [:n "-1"]
                              :voimassa-loppupvm   [:s loppupvm]
                              :tutkintotunnus      [:s (:tutkintotunnus req-body)]
-                             :osaamisala          [:s (when (:osaamisala req-body)
-                                                        (str (:osaamisala req-body)))]
+                             :osaamisala          [:s (str (:osaamisala req-body))]
                              :toimipiste-oid      [:s (:toimipiste_oid req-body)]
                              :hankintakoulutuksen-toteuttaja
                                                   [:s (:hankintakoulutuksen_toteuttaja
