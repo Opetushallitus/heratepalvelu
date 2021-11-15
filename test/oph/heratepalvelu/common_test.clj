@@ -7,7 +7,7 @@
             [clojure.string :as str])
   (:import (java.time LocalDate)))
 
-;; Cheks for falsey value(nil or false)
+;; Checks if value is falsey (nil or false)
 (defn falsey? [x] (if x false true))
 
 (deftest test-get-koulutustoimija-oid
