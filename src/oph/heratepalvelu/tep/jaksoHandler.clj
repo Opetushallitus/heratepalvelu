@@ -199,6 +199,16 @@
                        :tallennuspvm         [:s (str (LocalDate/now))]
                        :tutkinnonosa_tyyppi  [:s (:tyyppi herate)]
                        :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]
+                       :tutkintonimike       [:s (if-let [tn (:tutkintonimike suoritus)]
+                                                   (str (map :koodiarvo tn)))]
+                       :osaamisala           [:s (if-let [osaamisala
+                                                          (arvo/get-osaamisalat
+                                                            suoritus
+                                                            (:oid opiskeluoikeus))]
+                                                   (str osaamisala))]
+                       :toimipiste_oid       [:s (if-let [toimipiste
+                                                          (arvo/get-toimipiste suoritus)]
+                                                   toimipiste)]
                        :ohjaaja_ytunnus_kj_tutkinto
                                              [:s (str
                                                    (:tyopaikkaohjaaja-nimi herate) "/"
