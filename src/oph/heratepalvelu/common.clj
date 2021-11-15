@@ -198,6 +198,12 @@
               oppija " koulutustoimijalla " koulutustoimija
               "(tyyppi '" kyselytyyppi "' kausi " laskentakausi ")")))
 
+(defn check-valid-herate-date [heratepvm]
+  (try
+    (not (.isAfter (LocalDate/of 2021 7 1) (LocalDate/parse heratepvm)))
+   (catch Exception e
+     (log/error e))))
+
 (def herate-checker
   (s/checker herate-schema))
 

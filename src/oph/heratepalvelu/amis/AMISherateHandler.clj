@@ -30,7 +30,8 @@
                        (check-organisaatio-whitelist?
                          koulutustoimija
                          (date-string-to-timestamp (:alkupvm herate)))
-                       (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
+                       (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus)
+                       (check-valid-herate-date (:alkupvm herate)))
                 (save-herate herate opiskeluoikeus koulutustoimija)
                 (log/info "Ei tallenneta kantaan"
                           (str koulutustoimija "/" (:oppija-oid herate))
