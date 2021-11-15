@@ -269,6 +269,12 @@
                              :rahoituskausi       [:s laskentakausi]
                              :viestintapalvelu-id [:n "-1"]
                              :voimassa-loppupvm   [:s loppupvm]
+                             :tutkintotunnus      [:s (:tutkintotunnus req-body)]
+                             :osaamisala          [:s (str (:osaamisala req-body))]
+                             :toimipiste-oid      [:s (:toimipiste_oid req-body)]
+                             :hankintakoulutuksen-toteuttaja
+                                                  [:s (:hankintakoulutuksen_toteuttaja
+                                                        req-body)]
                              :tallennuspvm        [:s (str (LocalDate/now))]}
                             {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
                                              "attribute_not_exists(tyyppi_kausi)")})
