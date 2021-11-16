@@ -38,7 +38,7 @@
                               (str (:kyselytyyppi herate)))))
                 (log/error "Ei opiskeluoikeutta ID:llä"
                            (:opiskeluoikeus-oid herate))))
-            (log/error "Ei tallenneta kantaan. :alkupvm virheellinen."
+            (log/warn "Ei tallenneta kantaan. Alkupvm virheellinen."
                        (str "alkupvm " (:alkupvm herate))
                        (str "opiskeluoikeus-oid " (:opiskeluoikeus-oid herate))
                        (str "oppija-oid " (:oppija-oid herate))
