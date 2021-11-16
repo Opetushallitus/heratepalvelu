@@ -38,6 +38,7 @@
        (get-kausi-alkupvm jakso) "_"
        (get-kausi-loppupvm)))
 
+;; TODO is this right?
 (defn- get-existing-nippu [jakso]
   (try
     (ddb/get-item {:nippu-id [:s (create-nippu-id jakso)]}
@@ -77,7 +78,7 @@
       (when body
         (:kyselylinkki body))) ;; TODO en ole varma tästä nimestä
     (catch ExceptionInfo e
-      nil)))
+      (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
 
 (defn- query-niputtamattomat []
   (ddb/query-items {:tpk-niputuspvm [:null]
@@ -92,9 +93,9 @@
     (log/info "Käsitellään" (count niputettavat) "niputusta.")
     (when (seq niputettavat)
       (doseq [jakso niputettavat]
-        (when (check-jakso? jakso)
+        (if (check-jakso? jakso)
           (let [existing-nippu (get-existing-nippu jakso)]
-            (when-not existing-nippu
+            (when (empty? existing-nippu)
               (let [nippu (create-nippu jakso)
                     kyselylinkki (get-kyselylinkki nippu)] ;; TODO error handling here
                 (when kyselylinkki ;; TODO if save-nippu returns nil, delete kyselylinkki (or reverse?)
@@ -105,6 +106,7 @@
                      :expr-attr-names {"#value" "tpk-nipututspvm"}
                      :expr-attr-vals {":value" [:s (str (t/today))]}}
                     (:jaksotunnus-table env))
-                  ))))))
+                  ))))
+          (log/info "Jaksoa ei oteta mukaan:" (:hankkimistapa_id jakso))))
       (when (< 120000 (.getRemainingTimeInMillis context))
         (recur (query-niputtamattomat))))))
