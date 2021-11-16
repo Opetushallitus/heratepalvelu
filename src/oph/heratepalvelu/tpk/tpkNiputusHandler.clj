@@ -97,16 +97,18 @@
           (let [existing-nippu (get-existing-nippu jakso)]
             (when (empty? existing-nippu)
               (let [nippu (create-nippu jakso)
-                    kyselylinkki (get-kyselylinkki nippu)] ;; TODO error handling here
-                (when kyselylinkki ;; TODO if save-nippu returns nil, delete kyselylinkki (or reverse?)
-                  (save-nippu (assoc nippu :kyselylinkki kyselylinkki))
-                  (ddb/update-item
-                    {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
-                    {:update-expr "SET #value = :value"
-                     :expr-attr-names {"#value" "tpk-nipututspvm"}
-                     :expr-attr-vals {":value" [:s (str (t/today))]}}
-                    (:jaksotunnus-table env))
-                  ))))
+                    kyselylinkki (get-kyselylinkki nippu)]
+                (if kyselylinkki ;; TODO if save-nippu returns nil, delete kyselylinkki (or reverse?)
+                  (do
+                    (save-nippu (assoc nippu :kyselylinkki kyselylinkki))
+                    (ddb/update-item
+                      {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+                      {:update-expr "SET #value = :value"
+                       :expr-attr-names {"#value" "tpk-nipututspvm"}
+                       :expr-attr-vals {":value" [:s (str (t/today))]}}
+                      (:jaksotunnus-table env)))
+                  (log/error "Kyselylinkkiä ei saatu Arvolta. Jakso:"
+                             (:hankkimistapa_id jakso))))))
           (log/info "Jaksoa ei oteta mukaan:" (:hankkimistapa_id jakso))))
       (when (< 120000 (.getRemainingTimeInMillis context))
         (recur (query-niputtamattomat))))))
