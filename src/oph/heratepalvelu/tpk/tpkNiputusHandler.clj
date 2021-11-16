@@ -97,7 +97,7 @@
             (when (empty? existing-nippu)
               (let [nippu (create-nippu jakso)
                     kyselylinkki (get-kyselylinkki nippu)]
-                (if kyselylinkki ;; TODO if save-nippu returns nil, delete kyselylinkki (or reverse?)
+                (if (some? kyselylinkki)
                   (do
                     (save-nippu (assoc nippu :kyselylinkki kyselylinkki))
                     (ddb/update-item
