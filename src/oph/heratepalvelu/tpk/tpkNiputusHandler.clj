@@ -38,7 +38,6 @@
        (get-kausi-alkupvm jakso) "_"
        (get-kausi-loppupvm)))
 
-;; TODO is this right?
 (defn- get-existing-nippu [jakso]
   (try
     (ddb/get-item {:nippu-id [:s (create-nippu-id jakso)]}
