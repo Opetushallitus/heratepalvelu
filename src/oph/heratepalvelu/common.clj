@@ -202,7 +202,7 @@
   (try
     (not (.isAfter (LocalDate/of 2021 7 1) (LocalDate/parse heratepvm)))
    (catch Exception e
-     (log/warn e))))
+     (log/error e))))
 
 (def herate-checker
   (s/checker herate-schema))
