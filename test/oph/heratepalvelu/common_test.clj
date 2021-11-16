@@ -68,6 +68,15 @@
     (is (str/starts-with?
           (create-nipputunniste "árvíztűrő tükörfúrógép") "arvizturo_tukorfurogep"))))
 
+(deftest test-check-valid-herate-date
+  (testing "True if heratepvm is >= 2021-07-01"
+    (is (true? (check-valid-herate-date "2021-07-02")))
+    (is (true? (check-valid-herate-date "2021-07-01")))
+    (is (not (true? (check-valid-herate-date "2021-06-01"))))
+    (is (not (true? (check-valid-herate-date "2021-07-01xxxx"))))
+    (is (not (true? (check-valid-herate-date ""))))
+    (is (not (true? (check-valid-herate-date nil))))))
+
 (deftest test-check-sisaltyy-opiskeluoikeuteen
   (testing "Check sisältyy opiskeluoikeuteen"
     (let [oo {:oid "1.2.246.562.15.43634207518"

@@ -66,7 +66,7 @@
     (.setReceiptHandle "MessageReceiptHandle")
     (.setBody (generate-string
                 {:kyselytyyppi "HOKS_hyvaksytty"
-                 :alkupvm "2019-05-20"
+                 :alkupvm "2021-07-01"
                  :sahkoposti "testi@testi.fi"
                  :opiskeluoikeus-oid dummy-opiskeluoikeus-oid
                  :ehoks-id 1337
