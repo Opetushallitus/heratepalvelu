@@ -7,9 +7,6 @@
             [clojure.string :as str])
   (:import (java.time LocalDate)))
 
-;; Checks if value is falsey (nil or false)
-(defn falsey? [x] (if x false true))
-
 (deftest test-get-koulutustoimija-oid
   (testing "Get koulutustoimija oid"
     (with-redefs
@@ -75,10 +72,10 @@
   (testing "True if heratepvm is >= 2021-07-01"
     (is (true? (check-valid-herate-date "2021-07-02")))
     (is (true? (check-valid-herate-date "2021-07-01")))
-    (is (falsey? (check-valid-herate-date "2021-06-01")))
-    (is (falsey? (check-valid-herate-date "2021-07-01xxxx")))
-    (is (falsey? (check-valid-herate-date "")))
-    (is (falsey? (check-valid-herate-date nil)))))
+    (is (not (true? (check-valid-herate-date "2021-06-01"))))
+    (is (not (true? (check-valid-herate-date "2021-07-01xxxx"))))
+    (is (not (true? (check-valid-herate-date ""))))
+    (is (not (true? (check-valid-herate-date nil))))))
 
 (deftest test-check-sisaltyy-opiskeluoikeuteen
   (testing "Check sisältyy opiskeluoikeuteen"
