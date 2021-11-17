@@ -19,6 +19,7 @@
   (and (:koulutustoimija jakso)
        (:tyopaikan_nimi jakso)
        (:tyopaikan_ytunnus jakso)
+       (:jakso_loppupvm jakso)
        (or (not= (:hankkimistapa_tyyppi jakso) "oppisopimus")
            (not= (:oppisopimuksen_perusta jakso) "02"))))
 
@@ -37,7 +38,7 @@
        (:tyopaikan_ytunnus jakso) "/"
        (:koulutustoimija jakso) "/"
        (get-kausi-alkupvm jakso) "_"
-       (get-kausi-loppupvm)))
+       (get-kausi-loppupvm jakso)))
 
 (defn- get-existing-nippu [jakso]
   (try
