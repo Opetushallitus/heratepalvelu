@@ -243,10 +243,22 @@
       (log/error e)
       (throw e))))
 
+(defn build-tpk-request-body [nippu]
+  {:tyopaikka              (:tyopaikan-nimi nippu)
+   :tyopaikka_normalisoitu (:tyopaikan-nimi-normalisoitu nippu)
+   :vastaamisajan_alkupvm  (:vastaamisajan-alkupvm nippu)
+   :tyonantaja             (:tyopaikan-ytunnus nippu)
+   :koulutustoimija_oid    (:koulutustoimija-oid nippu)
+   :tiedonkeruu_loppupvm   (:tiedonkeruu-loppupvm nippu)
+   :tiedonkeruu_alkupvm    (:tiedonkeruu-alkupvm nippu)
+   :request_id             (:request-id nippu)
+   :vastaamisajan_loppupvm (:vastaamisajan-loppupvm nippu)})
+
 (defn create-tpk-kyselylinkki [data]
   (try
     (let [resp (client/post
-                 (str (:arvo-url env) "????") ; TODO
+                 (str (:arvo-url env)
+                      "tyoelamapalaute/v1/tyopaikkakysely-tunnus")
                  {:content-type "application/json"
                   :body         (generate-string data)
                   :basic-auth   [(:arvo-user env) @pwd]
@@ -254,6 +266,4 @@
       (log/info resp)
       (:body resp))
     (catch ExceptionInfo e
-      (log/error e)
-      (when-not (= 404 (:status (ex-data e)))
-        (throw e)))))
+      (log/error e))))
