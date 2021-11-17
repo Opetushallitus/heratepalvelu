@@ -1,18 +1,19 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler
   (:require [clj-time.core :as t]
             [clojure.tools.logging :as log]
+            [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (clojure.lang ExceptionInfo)
-           (com.amazonaws.services.lambda.runtime Context)
-           (com.amazonaws.services.lambda.runtime.events ScheduledEvent)
            (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class :name "oph.heratepalvelu.tpk.tpkNiputusHandler"
-           :methods [[^:static handleTpkNiputus [ScheduledEvent Context] void]])
+           :methods [[^:static handleTpkNiputus
+                      [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+                       com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn check-jakso? [jakso]
   (and (:koulutustoimija jakso)
@@ -52,17 +53,19 @@
         kausi-year (if (= kausi-month 1) (+ year 1) year)]
     (LocalDate/of kausi-year kausi-month 1)))
 
-(defn create-nippu [jakso]
+(defn create-nippu [jakso request-id]
   (let [alkupvm (get-next-vastaamisajan-alkupvm-date jakso)
         loppupvm (.minusDays (.plusMonths alkupvm 2) 1)]
-    {:nippu-id               (create-nippu-id jakso)
-     :koulutustoimija_oid    (:koulutustoimija jakso)
-     :tyonantaja             (:tyopaikan_nimi jakso)
-     :tyopaikka              (:tyopaikan_ytunnus jakso)
-     :vastaamisajan_alkupvm  (str alkupvm)
-     :vastaamisajan_loppupvm (str loppupvm)
-     :tiedonkeruu_alkupvm    (get-kausi-alkupvm jakso)
-     :tiedonkeruu_loppupvm   (get-kausi-loppupvm jakso)}))
+    {:nippu-id                    (create-nippu-id jakso)
+     :tyopaikan-nimi              (:tyopaikan_nimi jakso)
+     :tyopaikan-nimi-normalisoitu (c/normalize-string (:tyopaikan_nimi jakso))
+     :vastaamisajan-alkupvm       (str alkupvm)
+     :vastaamisajan-loppupvm      (str loppupvm)
+     :tyopaikan-ytunnus           (:tyopaikan_ytunnus jakso)
+     :koulutustoimija-oid         (:koulutustoimija jakso)
+     :tiedonkeruu-alkupvm         (get-kausi-alkupvm jakso)
+     :tiedonkeruu-loppupvm        (get-kausi-loppupvm jakso)
+     :request-id                  request-id}))
 
 
 (defn- save-nippu [nippu]
@@ -71,11 +74,9 @@
     (catch AwsServiceException e
       (log/error "Virhe DynamoDB tallennuksessa (TPK):" e))))
 
-(defn- get-kyselylinkki [nippu]
+(defn- make-arvo-request [nippu]
   (try
-    (let [body (arvo/create-tpk-kyselylinkki (dissoc nippu :nippu-id))]
-      (when body
-        (:kyselylinkki body))) ;; TODO en ole varma tästä nimestä
+    (arvo/create-tpk-kyselylinkki (arvo/build-tpk-request-body nippu))
     (catch ExceptionInfo e
       (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
 
@@ -95,11 +96,16 @@
         (if (check-jakso? jakso)
           (let [existing-nippu (get-existing-nippu jakso)]
             (when (empty? existing-nippu)
-              (let [nippu (create-nippu jakso)
-                    kyselylinkki (get-kyselylinkki nippu)]
-                (if (some? kyselylinkki)
+              (let [request-id (c/generate-uuid)
+                    nippu (create-nippu jakso)
+                    arvo-resp (make-arvo-request nippu)]
+                (if (some? (:kysely_linkki arvo-resp))
                   (do
-                    (save-nippu (assoc nippu :kyselylinkki kyselylinkki))
+                    (save-nippu
+                      (assoc nippu
+                             :kyselylinkki      (:kysely_linkki arvo-resp)
+                             :tunnus            (:tunnus arvo-resp)
+                             :voimassa-loppupvm (:voimassa_loppupvm arvo-resp)))
                     (ddb/update-item
                       {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
                       {:update-expr "SET #value = :value"
