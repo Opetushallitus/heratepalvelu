@@ -89,7 +89,7 @@
 (defn- query-niputtamattomat []
   (ddb/query-items {:tpk-niputuspvm [:eq [:s "ei_maaritelty"]]
                     :jakso_loppupvm [:le [:s (str (t/today))]]}
-                   {:index "tpkNiputuksenIndex"
+                   {:index "tpkNiputusIndex"
                     :limit 10}
                    (:jaksotunnus-table env)))
 
