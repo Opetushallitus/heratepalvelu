@@ -193,6 +193,7 @@
                        :oppija_oid           [:s (:oppija-oid herate)]
                        :koulutustoimija      [:s koulutustoimija]
                        :niputuspvm           [:s (str niputuspvm)]
+                       :tpk-niputuspvm       [:s "ei_maaritelty"]
                        :alkupvm              [:s (str alkupvm)]
                        :viimeinen_vastauspvm [:s (str (.plusDays alkupvm 60))]
                        :rahoituskausi        [:s (c/kausi (:loppupvm herate))]
