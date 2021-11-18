@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler-test
-  (:require [clojure.test :refer :all]
+  (:require [clj-time.core :as t]
+            [clojure.test :refer :all]
             [oph.heratepalvelu.tpk.tpkNiputusHandler :as tpk]))
 
 (deftest test-check-jakso
@@ -118,4 +119,5 @@
               :tiedonkeruu-alkupvm          "2021-07-01"
               :tiedonkeruu-loppupvm         "2021-12-31"
               :kausi                        "2021-07-01_2021-12-31"
+              :niputuspvm                   (str (t/today))
               :request-id                   "abcde"})))))
