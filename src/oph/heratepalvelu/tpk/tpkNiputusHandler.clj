@@ -102,7 +102,7 @@
           (let [existing-nippu (get-existing-nippu jakso)]
             (if (empty? existing-nippu)
               (let [request-id (c/generate-uuid)
-                    nippu (create-nippu jakso)
+                    nippu (create-nippu jakso request-id)
                     arvo-resp (make-arvo-request nippu)]
                 (if (some? (:kysely_linkki arvo-resp))
                   (do
