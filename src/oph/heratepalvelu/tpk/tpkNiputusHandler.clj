@@ -88,7 +88,7 @@
 (defn- query-niputtamattomat []
   (ddb/query-items {:jakso_loppupvm [:le [:s (str (t/today))]]}
                    {:index "tpkNiputusIndex"
-                    :filter-expression "attribute_not_exists(tpk-niputuspvm)"
+                    :filter-expression "attribute_not_exists('tpk-niputuspvm')"
                     :limit 10}
                    (:jaksotunnus-table env)))
 
