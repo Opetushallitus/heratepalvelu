@@ -31,8 +31,18 @@ if [ "$#" -eq 2 ]; then
       else
         echo "hyväksytyt env parametrit: sieni, pallero, sade"
       fi
+    elif [ "$stack" == "tpk" ]; then
+      if [ "$env" == "$prod" ]; then
+        aws-vault exec oph-prod -- cdk deploy sade-services-heratepalvelu-tpk
+      elif [ "$env" == "$qa" ]; then
+        aws-vault exec oph-dev -- cdk deploy pallero-services-heratepalvelu-tpk
+      elif [ "$env" == "$test" ]; then
+        aws-vault exec oph-dev -- cdk deploy sieni-services-heratepalvelu-tpk
+      else
+        echo "hyväksytyt env parametrit: sieni, pallero, sade"
+      fi
     else
-      echo "hyväksytyt stack parametrit: amis, tep"
+      echo "hyväksytyt stack parametrit: amis, tep, tpk"
     fi
   fi
 else
