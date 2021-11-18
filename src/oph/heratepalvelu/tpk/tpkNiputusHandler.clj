@@ -56,7 +56,9 @@
 
 (defn create-nippu [jakso request-id]
   (let [alkupvm (get-next-vastaamisajan-alkupvm-date jakso)
-        loppupvm (.minusDays (.plusMonths alkupvm 2) 1)]
+        loppupvm (.minusDays (.plusMonths alkupvm 2) 1)
+        kausi-alkupvm (get-kausi-alkupvm jakso)
+        kausi-loppupvm (get-kausi-loppupvm jakso)]
     {:nippu-id                    (create-nippu-id jakso)
      :tyopaikan-nimi              (:tyopaikan_nimi jakso)
      :tyopaikan-nimi-normalisoitu (c/normalize-string (:tyopaikan_nimi jakso))
@@ -64,8 +66,9 @@
      :vastaamisajan-loppupvm      (str loppupvm)
      :tyopaikan-ytunnus           (:tyopaikan_ytunnus jakso)
      :koulutustoimija-oid         (:koulutustoimija jakso)
-     :tiedonkeruu-alkupvm         (get-kausi-alkupvm jakso)
-     :tiedonkeruu-loppupvm        (get-kausi-loppupvm jakso)
+     :tiedonkeruu-alkupvm         kausi-alkupvm
+     :tiedonkeruu-loppupvm        kausi-loppupvm
+     :kausi                       (str kausi-alkupvm "_" kausi-loppupvm)
      :request-id                  request-id}))
 
 

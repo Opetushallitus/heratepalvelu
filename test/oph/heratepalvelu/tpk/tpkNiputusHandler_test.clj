@@ -117,4 +117,5 @@
               :koulutustoimija-oid          "1.2.246.562.10.346830761110"
               :tiedonkeruu-alkupvm          "2021-07-01"
               :tiedonkeruu-loppupvm         "2021-12-31"
+              :kausi                        "2021-07-01_2021-12-31"
               :request-id                   "abcde"})))))
