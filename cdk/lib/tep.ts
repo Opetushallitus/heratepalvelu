@@ -69,7 +69,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     });
 
     jaksotunnusTable.addGlobalSecondaryIndex({
-      indexName: "tpkNiputuksenIndex",
+      indexName: "tpkNiputusIndex",
       partitionKey: {
         name: "tpk-niputuspvm",
         type: dynamodb.AttributeType.STRING
