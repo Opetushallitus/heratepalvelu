@@ -86,10 +86,9 @@
       (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
 
 (defn- query-niputtamattomat []
-  (ddb/query-items {:jakso_loppupvm [:le [:s (str (t/today))]]}
+  (ddb/query-items {:tpk-niputuspvm [:eq [:s "ei_maaritelty"]]
+                    :jakso_loppupvm [:le [:s (str (t/today))]]}
                    {:index "tpkNiputusIndex"
-                    :filter-expression "attribute_not_exists(#value)"
-                    :expr-attr-names {"#value" "tpk-niputuspvm"}
                     :limit 10}
                    (:jaksotunnus-table env)))
 
@@ -101,7 +100,7 @@
       (doseq [jakso niputettavat]
         (if (check-jakso? jakso)
           (let [existing-nippu (get-existing-nippu jakso)]
-            (when (empty? existing-nippu)
+            (if (empty? existing-nippu)
               (let [request-id (c/generate-uuid)
                     nippu (create-nippu jakso)
                     arvo-resp (make-arvo-request nippu)]
@@ -119,7 +118,14 @@
                        :expr-attr-vals {":value" [:s (:niputuspvm nippu)]}}
                       (:jaksotunnus-table env)))
                   (log/error "Kyselylinkkiä ei saatu Arvolta. Jakso:"
-                             (:hankkimistapa_id jakso))))))
+                             (:hankkimistapa_id jakso))))
+              (ddb/update-item
+                {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+                {:update-expr "SET #value = :value"
+                 :expr-attr-names {"#value" "tpk-niputuspvm"}
+                 :expr-attr-vals {":value" [:s (:niputuspvm
+                                                 (first existing-nippu))]}}
+                (:jaksotunnus-table env))))
           (log/info "Jaksoa ei oteta mukaan:" (:hankkimistapa_id jakso))))
       (when (< 120000 (.getRemainingTimeInMillis context))
         (recur (query-niputtamattomat))))))
