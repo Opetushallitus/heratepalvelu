@@ -69,6 +69,7 @@
      :tiedonkeruu-alkupvm         kausi-alkupvm
      :tiedonkeruu-loppupvm        kausi-loppupvm
      :kausi                       (str kausi-alkupvm "_" kausi-loppupvm)
+     :niputuspvm                  (str (t/today))
      :request-id                  request-id}))
 
 
@@ -85,9 +86,9 @@
       (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
 
 (defn- query-niputtamattomat []
-  (ddb/query-items {:tpk-niputuspvm [:eq [:nul true]]
-                    :jakso_loppupvm [:le [:s (str (t/today))]]}
+  (ddb/query-items {:jakso_loppupvm [:le [:s (str (t/today))]]}
                    {:index "tpkNiputusIndex"
+                    :filter-expression "attribute_not_exists(tpk-niputuspvm)"
                     :limit 10}
                    (:jaksotunnus-table env)))
 
@@ -113,8 +114,8 @@
                     (ddb/update-item
                       {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
                       {:update-expr "SET #value = :value"
-                       :expr-attr-names {"#value" "tpk-nipututspvm"}
-                       :expr-attr-vals {":value" [:s (str (t/today))]}}
+                       :expr-attr-names {"#value" "tpk-niputuspvm"}
+                       :expr-attr-vals {":value" [:s (:niputuspvm nippu)]}}
                       (:jaksotunnus-table env)))
                   (log/error "Kyselylinkkiä ei saatu Arvolta. Jakso:"
                              (:hankkimistapa_id jakso))))))
