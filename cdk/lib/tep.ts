@@ -552,5 +552,5 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     );
   }
 
-  jaksotunnusTable: dynamodb.Table = null;
+  jaksotunnusTable: dynamodb.Table;
 }
