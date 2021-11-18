@@ -27,7 +27,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       sortKey: {
-        name: "kausi",
+        name: "tiedonkeruu-alkupvm",
         type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,

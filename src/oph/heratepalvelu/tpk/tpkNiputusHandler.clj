@@ -37,8 +37,7 @@
   (str (c/normalize-string (:tyopaikan_nimi jakso)) "/"
        (:tyopaikan_ytunnus jakso) "/"
        (:koulutustoimija jakso) "/"
-       (get-kausi-alkupvm jakso) "_"
-       (get-kausi-loppupvm jakso)))
+       (:jakso_loppupvm jakso)))
 
 (defn- get-existing-nippu [jakso]
   (try
@@ -68,7 +67,6 @@
      :koulutustoimija-oid         (:koulutustoimija jakso)
      :tiedonkeruu-alkupvm         kausi-alkupvm
      :tiedonkeruu-loppupvm        kausi-loppupvm
-     :kausi                       (str kausi-alkupvm "_" kausi-loppupvm)
      :niputuspvm                  (str (t/today))
      :request-id                  request-id}))
 
@@ -129,6 +127,11 @@
                  :expr-attr-vals {":value" [:s (:niputuspvm
                                                  (first existing-nippu))]}}
                 (:jaksotunnus-table env))))
-          (log/info "Jaksoa ei oteta mukaan:" (:hankkimistapa_id jakso))))
+          (ddb/update-item
+            {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+            {:update-expr "SET #value = :value"
+             :expr-attr-names {"#value" "tpk-niputuspvm"}
+             :expr-attr-vals {":value" [:s "ei_niputeta"]}}
+            (:jaksotunnus-table env))))
       (when (< 120000 (.getRemainingTimeInMillis context))
         (recur (query-niputtamattomat))))))
