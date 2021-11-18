@@ -75,7 +75,10 @@
 
 (defn- save-nippu [nippu]
   (try
-    (ddb/put-item nippu {} (:tpk-nippu-table env))
+    (ddb/put-item
+      (reduce #(assoc %1 (first %2) [:s (second %2)]) {} (seq nippu))
+      {}
+      (:tpk-nippu-table env))
     (catch AwsServiceException e
       (log/error "Virhe DynamoDB tallennuksessa (TPK):" e))))
 
