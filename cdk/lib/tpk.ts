@@ -1,9 +1,10 @@
-import dynamodb from "@aws-cdk/aws-dynamodb";
-import events from "@aws-cdk/aws-events";
-import targets from "@aws-cdk/aws-events-targets";
-import iam from "@aws-cdk/aws-iam";
-import lambda from "@aws-cdk/aws-lambda";
-import s3assets from "@aws-cdk/aws-s3-assets";
+import cdk = require("@aws-cdk/core");
+import dynamodb = require("@aws-cdk/aws-dynamodb");
+import events = require("@aws-cdk/aws-events");
+import targets = require("@aws-cdk/aws-events-targets");
+import iam = require("@aws-cdk/aws-iam");
+import lambda = require("@aws-cdk/aws-lambda");
+import s3assets = require("@aws-cdk/aws-s3-assets");
 import { Duration, Token } from "@aws-cdk/core";
 import { HeratepalveluStack } from "./heratepalvelu";
 
@@ -13,7 +14,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
     id: string,
     envName: string,
     version: string,
-    tepJaksotunnusTable: Table,
+    tepJaksotunnusTable: dynamodb.Table,
     props?: cdk.StackProps,
   ) {
     super(scope, id, envName, version, props);
