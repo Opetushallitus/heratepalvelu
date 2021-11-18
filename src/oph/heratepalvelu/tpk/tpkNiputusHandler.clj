@@ -85,7 +85,7 @@
       (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
 
 (defn- query-niputtamattomat []
-  (ddb/query-items {:tpk-niputuspvm [:null]
+  (ddb/query-items {:tpk-niputuspvm [:eq [:nul]]
                     :jakso_loppupvm [:le [:s (str (t/today))]]}
                    {:index "tpkNiputusIndex"
                     :limit 10}
