@@ -84,7 +84,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         "koulutustoimija",
         "oppisopimuksen_perusta",
         "tyopaikan_nimi",
-        "tyopaikan_ytunnus"
+        "tyopaikan_ytunnus",
+        "alkupvm",
       ],
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
