@@ -43,7 +43,7 @@
 (defn- get-existing-nippu [jakso]
   (try
     (ddb/get-item {:nippu-id [:s (create-nippu-id jakso)]}
-                  {:tpk-nippu-table env})
+                  (:tpk-nippu-table env))
     (catch AwsServiceException e
       nil)))
 
