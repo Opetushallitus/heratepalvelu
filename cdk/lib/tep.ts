@@ -482,6 +482,28 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     jaksotunnusTable.grantReadWriteData(addTyopaikanNormalisoidutNimetDBChanger);
 
+    // Tietojen päivitys Arvoon PATCH-päätepisteen kautta
+
+    const patchArvoHandler = new lambda.Function(
+      this,
+      "patchArvoHandler",
+      {
+        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        code: lambdaCode,
+        environment: {
+          ...this.envVars,
+          table: jaksotunnusTable.tableName,
+          caller_id: `1.2.246.562.10.00000000001.${id}-patchArvoHandler`
+        },
+        handler: "oph.heratepalvelu.util.patchArvoHandler::handlePatchArvo",
+        memorySize: 1024,
+        timeout: Duration.seconds(900),
+        tracing: lambda.Tracing.ACTIVE
+      }
+    );
+
+    jaksotunnusTable.grantReadWriteData(patchArvoHandler);
+
     // IAM
 
     [
@@ -495,6 +517,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       EmailMuistutusHandler,
       oppisopimuksenPerustatDBChanger,
       addTyopaikanNormalisoidutNimetDBChanger,
+      patchArvoHandler,
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({

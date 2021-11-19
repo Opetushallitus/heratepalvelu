@@ -244,3 +244,11 @@
       (log/error "Virhe patch-nippulinkki -funktiossa")
       (log/error e)
       (throw e))))
+
+(defn patch-vastaajatunnus [tunnus data]
+  (client/patch
+    (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
+    {:basic-auth   [(:arvo-user env) @pwd]
+     :content-type "application/json"
+     :body         (generate-string data)
+     :as           :json}))
