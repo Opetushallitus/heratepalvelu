@@ -7,7 +7,7 @@
                                                            AttributeValue)))
 
 (gen-class
-  :name "oph.heratepavlelu.util.patchArvoHandler"
+  :name "oph.heratepalvelu.util.patchArvoHandler"
   :methods [[^:static handlePatchArvo
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
