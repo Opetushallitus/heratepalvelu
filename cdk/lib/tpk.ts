@@ -68,11 +68,6 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE,
     });
 
-  //  new events.Rule(this, "tpkNiputusHandlerScheduleRule", {
-   //   schedule: events.Schedule.expression(`rate(20 minutes)`), // Ei kai pitäisi tapahtua niin usein... TODO
-    //  targets: [new targets.LambdaFunction(tpkNiputusHandler)]
-    //});
-
     tepJaksotunnusTable.grantReadWriteData(tpkNiputusHandler);
     tpkNippuTable.grantReadWriteData(tpkNiputusHandler);
 
