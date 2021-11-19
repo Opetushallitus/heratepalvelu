@@ -1,15 +1,15 @@
 (ns oph.heratepalvelu.tep.jaksoHandler
   (:require [cheshire.core :refer [parse-string]]
+            [clojure.string :as str]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.external.koski :as koski]
-            [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [environ.core :refer [env]]
-            [schema.core :as s]
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.ehoks :as ehoks]
-            [clojure.string :as str])
+            [oph.heratepalvelu.external.koski :as koski]
+            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
+            [schema.core :as s])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (clojure.lang ExceptionInfo)
            (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)
@@ -265,6 +265,7 @@
             (let [arvo-resp (arvo/create-jaksotunnus
                               (arvo/build-jaksotunnus-request-body
                                 herate
+                                (c/normalize-string (:tyopaikan-nimi herate))
                                 kesto
                                 opiskeluoikeus
                                 request-id
