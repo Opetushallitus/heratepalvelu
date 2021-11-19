@@ -1,15 +1,15 @@
 (ns oph.heratepalvelu.external.arvo
-  (:require [clojure.tools.logging :as log]
+  (:require [cheshire.core :refer [generate-string]]
+            [clj-http.util :as util]
+            [clj-time.core :as t]
+            [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [environ.core :refer [env]]
+            [oph.heratepalvelu.external.aws-ssm :as ssm]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.http-client :as client]
             [oph.heratepalvelu.external.koski :as koski]
-            [oph.heratepalvelu.external.organisaatio :as org]
-            [oph.heratepalvelu.external.ehoks :as ehoks]
-            [cheshire.core :refer [generate-string]]
-            [clojure.string :as str]
-            [oph.heratepalvelu.external.aws-ssm :as ssm]
-            [clj-time.core :as t]
-            [clj-http.util :as util])
+            [oph.heratepalvelu.external.organisaatio :as org])
   (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private pwd (delay
@@ -134,6 +134,7 @@
         (throw e)))))
 
 (defn build-jaksotunnus-request-body [herate
+                                      tyopaikka-normalisoitu
                                       kesto
                                       opiskeluoikeus
                                       request-id
@@ -143,6 +144,7 @@
   {:koulutustoimija_oid       koulutustoimija
    :tyonantaja                (:tyopaikan-ytunnus herate)
    :tyopaikka                 (:tyopaikan-nimi herate)
+   :tyopaikka_normalisoitu    tyopaikka-normalisoitu
    :tutkintotunnus            (get-in
                                 suoritus
                                 [:koulutusmoduuli
