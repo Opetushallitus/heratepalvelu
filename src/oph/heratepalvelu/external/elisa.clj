@@ -43,7 +43,7 @@
        "\n\n"
        linkki
        "\n\n"
-       "Kiitos, että vastaat - Tack för att du svarar – Thank you for responding!"
+       "Kiitos, että vastaat - Tack för att du svarar - Thank you for responding!"
        "\n\n"
        (str/join ", " (map :fi oppilaitokset))
        "\n\n"
