@@ -144,7 +144,7 @@
   {:koulutustoimija_oid       koulutustoimija
    :tyonantaja                (:tyopaikan-ytunnus herate)
    :tyopaikka                 (:tyopaikan-nimi herate)
-   :tyopaikka_normalisoitu    tyopaikka-normalisoitu
+   ;; :tyopaikka_normalisoitu    tyopaikka-normalisoitu Laitetaan takaisin, kun Arvo on valmis
    :tutkintotunnus            (get-in
                                 suoritus
                                 [:koulutusmoduuli
