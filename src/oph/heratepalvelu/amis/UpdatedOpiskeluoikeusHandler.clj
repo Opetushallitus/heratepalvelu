@@ -116,6 +116,7 @@
               (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
                     vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
                 (when (and (some? vahvistus-pvm)
+                           (check-valid-herate-date vahvistus-pvm)
                            (check-organisaatio-whitelist?
                              koulutustoimija
                              (date-string-to-timestamp
