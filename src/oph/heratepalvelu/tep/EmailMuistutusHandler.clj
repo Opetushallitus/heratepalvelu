@@ -22,7 +22,7 @@
   (log/info (str "Käsitellään " (count muistutettavat)
                  " lähetettävää muistutusta."))
   (doseq [nippu muistutettavat]
-    (log/info "Kyselylinkin tunnusosa:" (last (str/split (:kyselylinkki nippu) "_")))
+    (log/info "Kyselylinkin tunnusosa:" (last (str/split (:kyselylinkki nippu) #"_")))
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
