@@ -80,7 +80,7 @@
                   :tyopaikan_ytunnus      "1234567-8"
                   :jakso_loppupvm         "2021-11-20"
                   :hankkimistapa_tyyppi   "koulutussopimus"}]
-      (is (= "testi_tyopaikka/1234567-8/1.2.246.562.10.346830761110/2021-11-20"
+      (is (= "testi_tyopaikka/1234567-8/1.2.246.562.10.346830761110/2021-07-01_2021-12-31"
              (tpk/create-nippu-id jakso1))))))
 
 (deftest test-get-next-vastaamisajan-alkupvm-date
@@ -109,7 +109,7 @@
                  :hankkimistapa_tyyppi   "koulutussopimus"}]
       (is (= (tpk/create-nippu jakso "abcde")
              {:nippu-id
-              "testi_tyopaikka/1234567-8/1.2.246.562.10.346830761110/2021-11-20"
+              "testi_tyopaikka/1234567-8/1.2.246.562.10.346830761110/2021-07-01_2021-12-31"
               :tyopaikan-nimi               "Testi työpaikka"
               :tyopaikan-nimi-normalisoitu  "testi_tyopaikka"
               :vastaamisajan-alkupvm        "2022-01-01"
