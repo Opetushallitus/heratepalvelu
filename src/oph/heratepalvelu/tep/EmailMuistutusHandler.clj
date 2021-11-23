@@ -1,13 +1,14 @@
 (ns oph.heratepalvelu.tep.EmailMuistutusHandler
-  (:require [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.viestintapalvelu :as vp]
+  (:require [cheshire.core :refer [parse-string]]
+            [clojure.string :as str]
+            [clojure.tools.logging :as log]
+            [environ.core :refer [env]]
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.organisaatio :as org]
-            [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :as c]
-            [clojure.tools.logging :as log]
-            [cheshire.core :refer [parse-string]]
-            [environ.core :refer [env]])
+            [oph.heratepalvelu.external.viestintapalvelu :as vp]
+            [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
            (java.time LocalDate)))
 
@@ -21,6 +22,7 @@
   (log/info (str "Käsitellään " (count muistutettavat)
                  " lähetettävää muistutusta."))
   (doseq [nippu muistutettavat]
+    (log/info "Kyselylinkin tunnusosa:" (last (str/split (:kyselylinkki nippu) "_")))
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
@@ -83,7 +85,7 @@
                                    [[:s (str (.minusDays (LocalDate/now) 10))]
                                     [:s (str (.minusDays (LocalDate/now) 5))]]]}
                    {:index "emailMuistutusIndex"
-                    :limit 50}
+                    :limit 10}
                    (:nippu-table env)))
 
 (defn -handleSendEmailMuistutus [this event context]

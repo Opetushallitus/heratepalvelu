@@ -1,12 +1,13 @@
 (ns oph.heratepalvelu.tep.SMSMuistutusHandler
-  (:require [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.organisaatio :as org]
-            [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :as c]
+  (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
+            [environ.core :refer [env]]
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.elisa :as elisa]
-            [environ.core :refer [env]])
+            [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
            (java.time LocalDate)))
 
@@ -19,6 +20,7 @@
 (defn- sendSmsMuistutus [muistutettavat]
   (log/info (str "Käsitellään " (count muistutettavat) " muistutusta."))
   (doseq [nippu muistutettavat]
+    (log/info "Kyselylinkin tunnus-osa:" (last (str/split (:kyselylinkki nippu) "_")))
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))
           ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
           niputuspvm (:niputuspvm nippu)]
@@ -27,9 +29,9 @@
         (try
           (let
             [jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                                                :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                                               {:index "niputusIndex"}
-                                               (:jaksotunnus-table env))
+                                      :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
+                                     {:index "niputusIndex"}
+                                     (:jaksotunnus-table env))
              oppilaitokset (seq (into #{}
                                       (map
                                         #(:nimi (org/get-organisaatio (:oppilaitos %1)))
@@ -80,7 +82,7 @@
                                       [[:s (str (.minusDays (LocalDate/now) 10))]
                                        [:s (str (.minusDays (LocalDate/now) 5))]]]}
                    {:index "smsMuistutusIndex"
-                    :limit 50}
+                    :limit 10}
                    (:nippu-table env)))
 
 (defn -handleSendSMSMuistutus [this event context]
