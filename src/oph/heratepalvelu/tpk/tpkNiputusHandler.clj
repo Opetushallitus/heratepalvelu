@@ -37,7 +37,8 @@
   (str (c/normalize-string (:tyopaikan_nimi jakso)) "/"
        (:tyopaikan_ytunnus jakso) "/"
        (:koulutustoimija jakso) "/"
-       (:jakso_loppupvm jakso)))
+       (get-kausi-alkupvm jakso) "_"
+       (get-kausi-loppupvm jakso)))
 
 (defn- get-existing-nippu [jakso]
   (try
