@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.util.dbChanger
   (:require [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as k]
             [environ.core :refer [env]]
@@ -21,6 +22,9 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleAddTyopaikanNormalisoidutNimet
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]
+            [^:static handleEH1269
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
@@ -138,3 +142,44 @@
     (when (.hasLastEvaluatedKey resp)
       (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
                     :filter-expression "attribute_not_exists(tyopaikan_normalisoitu_nimi)"})))))
+
+(defn- doEH1269scan
+  ([] (doEH1269scan nil))
+  ([lastEvaluatedKey]
+   (let [options {:filter-expression
+                  (str "heratepvm >= :alkupvm AND heratepvm <= :loppupvm "
+                       "AND attribute_not_exists(#ht) "
+                       "AND attribute_not_exists(#tpo)")
+                  :expr-attr-names {"#ht" "hankintakoulutuksen-toteuttaja"
+                                    "#tpo" "toimipiste-oid"}
+                  :expr-attr-vals
+                  {":alkupvm" (.build
+                                (.s (AttributeValue/builder) "2021-11-02"))
+                   ":loppupvm" (.build
+                                 (.s (AttributeValue/builder) "2021-11-18"))}}]
+     (scan (if lastEvaluatedKey
+             (assoc options :exclusive-start-key lastEvaluatedKey)
+             options)))))
+
+(defn -handleEH1269 [this event context]
+  (loop [resp (doEH1269scan)]
+    (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+      (try
+        (let [ht (arvo/get-hankintakoulutuksen-toteuttaja (:ehoks-id item))
+              toimipiste-oid (arvo/get-toimipiste
+                               (c/get-suoritus
+                                 (k/get-opiskeluoikeus-catch-404
+                                   (:opiskeluoikeus-oid item))))]
+          (ddb/update-item
+            {:toimija_oppija [:s (:toimija_oppija item)]
+             :tyyppi_kausi [:s (:tyyppi_kausi item)]}
+            {:update-expr "SET #ht = :ht, #tpo = :tpo"
+             :expr-attr-names {"#ht" "hankintakoulutuksen-toteuttaja"
+                               "#tpo" "toimipiste-oid"}
+             :expr-attr-vals {":ht" [:s (str ht)]
+                              ":tpo" [:s (str toimipiste-oid)]}}
+            (:table env)))
+       (catch Exception e
+         (log/error e))))
+    (when (.hasLastEvaluatedKey resp)
+      (recur (doEH1269scan (.lastEvaluatedKey resp))))))

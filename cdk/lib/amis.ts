@@ -420,6 +420,22 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE
     });*/
 
+    const eh1269dbChanger = new lambda.Function(this, "EH1269dbChanger", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        table: AMISherateTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-EH1269dbChanger`
+      },
+      handler: "oph.heratepalvelu.util.dbChanger::handleEH1269",
+      memorySize: 1024,
+      timeout: Duration.seconds(900),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    AMISherateTable.grantReadWriteData(eh1269dbChanger);
+
     [
       AMISHerateHandler,
       AMISherateEmailHandler,
@@ -428,6 +444,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISMuistutusHandler,
       AMISEmailStatusHandler,
       AMISDeleteTunnusHandler,
+      eh1269dbChanger,
       //dbArchiver,
       // dbChanger
     ].forEach(
