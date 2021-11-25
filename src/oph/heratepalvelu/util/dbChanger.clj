@@ -147,7 +147,11 @@
   ([] (doEH1269scan nil))
   ([lastEvaluatedKey]
    (let [options {:filter-expression
-                  "heratepvm >= :alkupvm AND heratepvm <= :loppupvm"
+                  (str "heratepvm >= :alkupvm AND heratepvm <= :loppupvm "
+                       "AND attribute_not_exists(#ht) "
+                       "AND attribute_not_exists(#tpo)")
+                  :expr-attr-names {"#ht" "hankintakoulutuksen-toteuttaja"
+                                    "#tpo" "toimipiste-oid"}
                   :expr-attr-vals
                   {":alkupvm" (.build
                                 (.s (AttributeValue/builder) "2021-11-03"))
