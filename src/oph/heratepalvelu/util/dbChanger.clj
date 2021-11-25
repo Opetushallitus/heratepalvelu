@@ -148,10 +148,7 @@
   ([lastEvaluatedKey]
    (let [options {:filter-expression
                   (str "heratepvm >= :alkupvm AND heratepvm <= :loppupvm "
-                       "AND attribute_not_exists(#ht) "
-                       "AND attribute_not_exists(#tpo)")
-                  :expr-attr-names {"#ht" "hankintakoulutuksen-toteuttaja"
-                                    "#tpo" "toimipiste-oid"}
+                       "AND attribute_not_exists(EH1269updated)")
                   :expr-attr-vals
                   {":alkupvm" (.build
                                 (.s (AttributeValue/builder) "2021-11-02"))
@@ -173,11 +170,13 @@
           (ddb/update-item
             {:toimija_oppija [:s (:toimija_oppija item)]
              :tyyppi_kausi [:s (:tyyppi_kausi item)]}
-            {:update-expr "SET #ht = :ht, #tpo = :tpo"
+            {:update-expr "SET #ht = :ht, #tpo = :tpo, #update = :updated"
              :expr-attr-names {"#ht" "hankintakoulutuksen-toteuttaja"
-                               "#tpo" "toimipiste-oid"}
+                               "#tpo" "toimipiste-oid"
+                               "#updated" "EH1269updated"}
              :expr-attr-vals {":ht" [:s (str ht)]
-                              ":tpo" [:s (str toimipiste-oid)]}}
+                              ":tpo" [:s (str toimipiste-oid)]
+                              ":updated" [:bool true]}}
             (:table env)))
        (catch Exception e
          (log/error e))))
