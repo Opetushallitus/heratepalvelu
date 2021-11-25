@@ -170,7 +170,7 @@
           (ddb/update-item
             {:toimija_oppija [:s (:toimija_oppija item)]
              :tyyppi_kausi [:s (:tyyppi_kausi item)]}
-            {:update-expr "SET #ht = :ht, #tpo = :tpo, #update = :updated"
+            {:update-expr "SET #ht = :ht, #tpo = :tpo, #updated = :updated"
              :expr-attr-names {"#ht" "hankintakoulutuksen-toteuttaja"
                                "#tpo" "toimipiste-oid"
                                "#updated" "EH1269updated"}
