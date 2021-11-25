@@ -36,7 +36,9 @@
                   (:exclusive-start-key options)
                   (.exclusiveStartKey (:exclusive-start-key options))
                   (:expr-attr-vals options)
-                  (.expressionAttributeValues (:expr-attr-vals options)))
+                  (.expressionAttributeValues (:expr-attr-vals options))
+                  (:expr-attr-names options)
+                  (.expressionAttributeNames (:expr-attr-names options)))
                 (.tableName (:table env))
                 (.build))
         response (.scan ddb/ddb-client req)]
