@@ -146,10 +146,13 @@
 (defn- doEH1269scan
   ([] (doEH1269scan nil))
   ([lastEvaluatedKey]
-   (let [options {:filter-expression (str "heratepvm >= :alkupvm "
-                                          "AND heratepvm <= :loppupvm")
-                  :expr-attr-vals {":alkupvm" "2021-11-03"
-                                   ":loppupvm" "2021-11-18"}}]
+   (let [options {:filter-expression
+                  "heratepvm >= :alkupvm AND heratepvm <= :loppupvm"
+                  :expr-attr-vals
+                  {":alkupvm" (.build
+                                (.s (AttributeValue/builder) "2021-11-03"))
+                   ":loppupvm" (.build
+                                 (.s (AttributeValue/builder) "2021-11-18"))}}]
      (scan (if lastEvaluatedKey
              (assoc options :exclusive-start-key lastEvaluatedKey)
              options)))))
