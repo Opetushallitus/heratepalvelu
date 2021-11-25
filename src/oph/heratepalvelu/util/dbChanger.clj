@@ -154,7 +154,7 @@
                                     "#tpo" "toimipiste-oid"}
                   :expr-attr-vals
                   {":alkupvm" (.build
-                                (.s (AttributeValue/builder) "2021-11-03"))
+                                (.s (AttributeValue/builder) "2021-11-02"))
                    ":loppupvm" (.build
                                  (.s (AttributeValue/builder) "2021-11-18"))}}]
      (scan (if lastEvaluatedKey
