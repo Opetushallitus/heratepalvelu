@@ -376,11 +376,12 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         send_messages: (this.envVars.stage === 'sade').toString(),
         caller_id: `1.2.246.562.10.00000000001.${id}-SmsMuistutusHandler`
       },
+      handler: "oph.heratepalvelu.tep.SMSMuistutusHandler::handleSendSMSMuistutus",
       memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(
           Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
-      handler: "oph.heratepalvelu.tep.SMSMuistutusHandler::handleSendSMSMuistutus",
       tracing: lambda.Tracing.ACTIVE
     });
 
