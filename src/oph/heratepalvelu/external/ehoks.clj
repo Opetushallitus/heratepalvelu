@@ -82,3 +82,14 @@
                     :end end
                     :limit limit}
      :as :json}))
+
+(defn get-retry-kyselylinkit [start end limit]
+  (client/get
+    (str (:ehoks-url env) "heratepalvelu/kasittelemattomat-heratteet")
+    {:headers {:ticket (cas/get-service-ticket
+                         "/ehoks-virkailija-backend"
+                         "cas-security-check")}
+     :query-params {:start start
+                    :end end
+                    :limit limit}
+     :as :json}))

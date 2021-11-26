@@ -391,6 +391,30 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       }
     );
 
+    const AMISTimedOperationsHandler = new lambda.Function(
+      this,
+      "AMISTimedOperationsHandler",
+      {
+        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        code: lambdaCode,
+        environment: {
+          ...this.envVars,
+          caller_id: `1.2.246.562.10.00000000001.${id}-AMISTimedOperationsHandler`,
+        },
+        memorySize: Token.asNumber(1024),
+        timeout: Duration.seconds(900),
+        handler: "oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler::handleAMISTimedOperations",
+        tracing: lambda.Tracing.ACTIVE
+      }
+    );
+
+    new events.Rule(this, "AMISTimedOperationsScheduleRule", {
+      schedule: events.Schedule.expression(
+        `rate(${this.getParameterFromSsm("timedoperations-rate")})`
+      ),
+      targets: [new targets.LambdaFunction(AMISTimedOperationsHandler)]
+    });
+
     /*const dbArchiver = new lambda.Function(this, "AMIS-DBArchiver", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code:lambdaCode,
@@ -449,6 +473,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISMuistutusHandler,
       AMISEmailStatusHandler,
       AMISDeleteTunnusHandler,
+      AMISTimedOperationsHandler,
       eh1269dbChanger,
       //dbArchiver,
       // dbChanger
