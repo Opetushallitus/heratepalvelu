@@ -110,4 +110,8 @@
                 (arvo/delete-amis-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
                 (throw e)))
-            (log/error "Ei kyselylinkkiä arvon palautteessa" arvo-resp)))))))
+            (log/error "Ei kyselylinkkiä arvon palautteessa" arvo-resp)))
+        (try
+          (if (= kyselytyyppi "aloittaneet")
+            (ehoks/patch-amis-aloitusherate-kasitelty (:ehoks-id herate))
+            (ehoks/patch-amis-paattoherate-kasitelty (:ehoks-id herate))))))))
