@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.UpdatedOpiskeluoikeusHandler-test
+(ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :refer :all]))
 

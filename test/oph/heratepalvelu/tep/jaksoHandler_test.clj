@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.jaksoHandler-test
+(ns oph.heratepalvelu.tep.jaksoHandler-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.tep.jaksoHandler :as jh])
   (:import (java.time LocalDate)))

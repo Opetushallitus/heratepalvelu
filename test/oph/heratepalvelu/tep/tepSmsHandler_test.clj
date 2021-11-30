@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.tepSmsHandler-test
+(ns oph.heratepalvelu.tep.tepSmsHandler-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.tep.tepSmsHandler :as sh]))
