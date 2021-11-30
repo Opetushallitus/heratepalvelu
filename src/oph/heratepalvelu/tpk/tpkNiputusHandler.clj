@@ -62,7 +62,7 @@
     {:nippu-id                    (create-nippu-id jakso)
      :tyopaikan-nimi              (:tyopaikan_nimi jakso)
      :tyopaikan-nimi-normalisoitu (c/normalize-string (:tyopaikan_nimi jakso))
-     :vastaamisajan-alkupvm       (str alkupvm)
+     :vastaamisajan-alkupvm       "2022-01-15" ; (str alkupvm) ; TODO vastaamisaika alkaa 2022-01-15 vuoden 2022 keväällä. Muutetaan takaisin 1.3.2022.
      :vastaamisajan-loppupvm      (str loppupvm)
      :tyopaikan-ytunnus           (:tyopaikan_ytunnus jakso)
      :koulutustoimija-oid         (:koulutustoimija jakso)
