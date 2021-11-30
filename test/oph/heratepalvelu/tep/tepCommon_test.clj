@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.tepCommon-test
+(ns oph.heratepalvelu.tep.tepCommon-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.tep.tepCommon :as tc]))

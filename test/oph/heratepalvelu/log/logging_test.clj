@@ -1,9 +1,9 @@
-(ns oph.heratepalvelu.logging_test
+(ns oph.heratepalvelu.log.logging_test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISherateHandler :refer :all]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.common :refer :all]
-            [oph.heratepalvelu.util :refer :all])
+            [oph.heratepalvelu.test-util :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (use-fixtures :once clean-logs)

@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.util
+(ns oph.heratepalvelu.test-util
   (:require [clojure.test :refer :all]
             [cheshire.core :refer :all]
             [clojure.java.io :as io]
