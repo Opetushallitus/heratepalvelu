@@ -36,18 +36,27 @@
          :lahetystila tila}))))
 
 (defn update-db [email tila]
-  (ddb/update-item
-    {:toimija_oppija [:s (:toimija_oppija email)]
-     :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-    {:update-expr    "SET #lahetystila = :lahetystila"
-     :expr-attr-names {"#lahetystila" "lahetystila"}
-     :expr-attr-vals  {":lahetystila" [:s tila]}}))
+  (try
+    (ddb/update-item
+      {:toimija_oppija [:s (:toimija_oppija email)]
+       :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+      {:update-expr    "SET #lahetystila = :lahetystila"
+       :expr-attr-names {"#lahetystila" "lahetystila"}
+       :expr-attr-vals  {":lahetystila" [:s tila]}})
+    (catch AwsServiceException e
+      (log/error "Lähetystilan tallennus kantaan epäonnistui" email)
+      (log/error e))))
+
+(defn do-query []
+  (ddb/query-items {:lahetystila [:eq
+                                  [:s
+                                   (:viestintapalvelussa c/kasittelytilat)]]}
+                   {:index "lahetysIndex"
+                    :limit 10}))
 
 (defn -handleEmailStatus [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (loop [emails (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
-                                 {:index "lahetysIndex"
-                                  :limit 100})]
+  (loop [emails (do-query)]
     (doseq [email emails]
       (let [status (vp/get-email-status (:viestintapalvelu-id email))
             tila (convert-vp-email-status status)]
@@ -59,9 +68,6 @@
               (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
               (update-ehoks-if-not-muistutus email status tila)
               (update-db email tila)
-              (catch AwsServiceException e
-                (log/error "Lähetystilan tallennus kantaan epäonnistui" email)
-                (log/error e))
               (catch Exception e
                 (log/error "Lähetystilan tallennus Arvoon epäonnistui" email)
                 (log/error e))))
@@ -72,6 +78,4 @@
     (when (and @new-changes?
                (< 120000 (.getRemainingTimeInMillis context)))
       (reset! new-changes? false)
-      (recur (ddb/query-items {:lahetystila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
-                              {:index "lahetysIndex"
-                               :limit 10})))))
+      (recur (do-query)))))

@@ -78,7 +78,7 @@
   (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty kasittelytilat)]]
                     :alkupvm     [:le [:s (str (t/today))]]}
                    {:index "lahetysIndex"
-                    :limit 50}))
+                    :limit 10}))
 
 (defn -handleSendAMISEmails [this event context]
   (log-caller-details-scheduled "handleSendAMISEmails" event context)
