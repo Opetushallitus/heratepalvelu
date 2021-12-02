@@ -26,6 +26,9 @@
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleEH1269
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]
+            [^:static handleAddTpkNiputuspvmToTEP
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn scan [options]
@@ -184,3 +187,21 @@
          (log/error e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (doEH1269scan (.lastEvaluatedKey resp))))))
+
+(defn -handleAddTpkNiputuspvmToTEP [this event context]
+  (loop [resp (scan {:filter-expression "attribute_not_exists(#value)"
+                     :expr-attr-names {"#value" "tpk-niputuspvm"}})]
+    (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+      (try
+        (ddb/update-item
+          {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
+          {:update-expr "SET #value = :value"
+           :expr-attr-names {"#value" "tpk-niputuspvm"}
+           :expr-attr-vals {":value" [:s "ei_maaritelty"]}}
+          (:table env))
+        (catch Exception e
+          (log/error e))))
+    (when (.hasLastEvaluatedKey resp)
+      (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
+                    :filter-expression "attribute_not_exists(#value)"
+                    :expr-attr-names {"#value" "tpk-niputuspvm"}})))))
