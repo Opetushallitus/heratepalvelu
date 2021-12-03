@@ -212,7 +212,7 @@
 (defn -handleResetTpkNiputuspvmInTEP [this event context]
   (loop [resp (scan {:filter-expression "#value <> :value"
                      :expr-attr-names {"#value" "tpk-niputuspvm"}
-                     :expr-attr-vals {":htp" (.build
+                     :expr-attr-vals {":value" (.build
                                                (.s
                                                  (AttributeValue/builder)
                                                  "ei_maaritelty"))}})]
@@ -230,7 +230,7 @@
       (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
                     :filter-expression "#value <> :value"
                     :expr-attr-names {"#value" "tpk-niputuspvm"}
-                    :expr-attr-vals {":htp" (.build
+                    :expr-attr-vals {":value" (.build
                                               (.s
                                                 (AttributeValue/builder)
                                                 "ei_maaritelty"))}})))))
