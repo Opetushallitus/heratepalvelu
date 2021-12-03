@@ -112,7 +112,7 @@
 (defn -handleTpkNiputus [this event context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
   (let [memoization (atom {})]
-    (loop [niputettavat (query-niputtamattomat nil)]
+    (let [niputettavat (query-niputtamattomat nil)]
       (doseq [jakso (map ddb/map-attribute-values-to-vals
                          (.items niputettavat))]
         (if (check-jakso? jakso)
@@ -151,7 +151,4 @@
             {:update-expr "SET #value = :value"
              :expr-attr-names {"#value" "tpk-niputuspvm"}
              :expr-attr-vals {":value" [:s "ei_niputeta"]}}
-            (:jaksotunnus-table env))))
-      (when (and (< 120000 (.getRemainingTimeInMillis context))
-                 (.hasLastEvaluatedKey niputettavat))
-        (recur (query-niputtamattomat (.lastEvaluatedKey niputettavat)))))))
+            (:jaksotunnus-table env)))))))
