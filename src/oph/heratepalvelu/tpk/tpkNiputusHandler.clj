@@ -8,7 +8,9 @@
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (clojure.lang ExceptionInfo)
            (java.time LocalDate)
-           (software.amazon.awssdk.awscore.exception AwsServiceException)))
+           (software.amazon.awssdk.awscore.exception AwsServiceException)
+           (software.amazon.awssdk.services.dynamodb.model ScanRequest
+                                                           AttributeValue)))
 
 (gen-class :name "oph.heratepalvelu.tpk.tpkNiputusHandler"
            :methods [[^:static handleTpkNiputus
@@ -87,52 +89,64 @@
     (catch ExceptionInfo e
       (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
 
-(defn- query-niputtamattomat []
-  (ddb/query-items {:tpk-niputuspvm [:eq [:s "ei_maaritelty"]]
-                    :jakso_loppupvm [:le [:s (str (t/today))]]}
-                   {:index "tpkNiputusIndex"
-                    :limit 10}
-                   (:jaksotunnus-table env)))
+(defn- query-niputtamattomat [exclusive-start-key]
+  (let [req (-> (ScanRequest/builder)
+                (.filterExpression "#tpkNpvm = :tpkNpvm AND #jl <= :jl")
+                (cond->
+                  exclusive-start-key
+                  (.exclusiveStartKey exclusive-start-key))
+                (.expressionAttributeNames
+                  {"#tpkNpvm" "tpk-niputuspvm"
+                   "#jl"      "jakso_loppupvm"})
+                (.expressionAttributeValues
+                  {":tpkNpvm" (.build (.s (AttributeValue/builder)
+                                          "ei_maaritelty"))
+                   ":jl"      (.build (.s (AttributeValue/builder)
+                                          (str (t/today))))})
+                (.tableName (:jaksotunnus-table env))
+                (.build))
+        response (.scan ddb/ddb-client req)]
+    (log/info "TPK Funktion scan" (count (.items response)))
+    response))
 
 (defn -handleTpkNiputus [this event context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
-  (loop [niputettavat (query-niputtamattomat)]
-    (log/info "Käsitellään" (count niputettavat) "niputusta.")
-    (when (seq niputettavat)
-      (doseq [jakso niputettavat]
-        (if (check-jakso? jakso)
-          (let [existing-nippu (get-existing-nippu jakso)]
-            (if (empty? existing-nippu)
-              (let [request-id (c/generate-uuid)
-                    nippu (create-nippu jakso request-id)
-                    arvo-resp (make-arvo-request nippu)]
-                (if (some? (:kysely_linkki arvo-resp))
-                  (do
-                    (save-nippu
-                      (assoc nippu
-                             :kyselylinkki      (:kysely_linkki arvo-resp)
-                             :tunnus            (:tunnus arvo-resp)
-                             :voimassa-loppupvm (:voimassa_loppupvm arvo-resp)))
-                    (ddb/update-item
-                      {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
-                      {:update-expr "SET #value = :value"
-                       :expr-attr-names {"#value" "tpk-niputuspvm"}
-                       :expr-attr-vals {":value" [:s (:niputuspvm nippu)]}}
-                      (:jaksotunnus-table env)))
-                  (log/error "Kyselylinkkiä ei saatu Arvolta. Jakso:"
-                             (:hankkimistapa_id jakso))))
-              (ddb/update-item
-                {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
-                {:update-expr "SET #value = :value"
-                 :expr-attr-names {"#value" "tpk-niputuspvm"}
-                 :expr-attr-vals {":value" [:s (:niputuspvm
-                                                 (first existing-nippu))]}}
-                (:jaksotunnus-table env))))
-          (ddb/update-item
-            {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
-            {:update-expr "SET #value = :value"
-             :expr-attr-names {"#value" "tpk-niputuspvm"}
-             :expr-attr-vals {":value" [:s "ei_niputeta"]}}
-            (:jaksotunnus-table env))))
-      (when (< 120000 (.getRemainingTimeInMillis context))
-        (recur (query-niputtamattomat))))))
+  (loop [niputettavat (query-niputtamattomat nil)]
+    (doseq [jakso (map ddb/map-attribute-values-to-vals (.items niputettavat))]
+      (if (check-jakso? jakso)
+        (let [existing-nippu (get-existing-nippu jakso)]
+          (if (empty? existing-nippu)
+            (let [request-id (c/generate-uuid)
+                  nippu (create-nippu jakso request-id)
+                  arvo-resp (make-arvo-request nippu)]
+              (if (some? (:kysely_linkki arvo-resp))
+                (do
+                  (save-nippu
+                    (assoc nippu
+                           :kyselylinkki      (:kysely_linkki arvo-resp)
+                           :tunnus            (:tunnus arvo-resp)
+                           :voimassa-loppupvm (:voimassa_loppupvm arvo-resp)))
+                  (ddb/update-item
+                    {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+                    {:update-expr "SET #value = :value"
+                     :expr-attr-names {"#value" "tpk-niputuspvm"}
+                     :expr-attr-vals {":value" [:s (:niputuspvm nippu)]}}
+                    (:jaksotunnus-table env)))
+                (log/error "Kyselylinkkiä ei saatu Arvolta. Jakso:"
+                           (:hankkimistapa_id jakso))))
+            (ddb/update-item
+              {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+              {:update-expr "SET #value = :value"
+               :expr-attr-names {"#value" "tpk-niputuspvm"}
+               :expr-attr-vals {":value" [:s (:niputuspvm
+                                               (first existing-nippu))]}}
+              (:jaksotunnus-table env))))
+        (ddb/update-item
+          {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+          {:update-expr "SET #value = :value"
+           :expr-attr-names {"#value" "tpk-niputuspvm"}
+           :expr-attr-vals {":value" [:s "ei_niputeta"]}}
+          (:jaksotunnus-table env))))
+    (when (and (< 120000 (.getRemainingTimeInMillis context))
+               (.hasLastEvaluatedKey niputettavat))
+      (recur (query-niputtamattomat (.lastEvaluatedKey niputettavat))))))
