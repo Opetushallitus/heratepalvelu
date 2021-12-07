@@ -73,6 +73,10 @@
      :niputuspvm                  (str (t/today))
      :request-id                  request-id}))
 
+(defn extend-nippu [nippu arvo-resp]
+  (assoc nippu :kyselylinkki      (:kysely_linkki arvo-resp)
+               :tunnus            (:tunnus arvo-resp)
+               :voimassa-loppupvm (:voimassa_loppupvm arvo-resp)))
 
 (defn- save-nippu [nippu]
   (try
@@ -88,6 +92,14 @@
     (arvo/create-tpk-kyselylinkki (arvo/build-tpk-request-body nippu))
     (catch ExceptionInfo e
       (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
+
+(defn update-tpk-niputuspvm [jakso new-value]
+  (ddb/update-item
+    {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+    {:update-expr "SET #value = :value"
+     :expr-attr-names {"#value" "tpk-niputuspvm"}
+     :expr-attr-vals {":value" [:s new-value]}}
+    (:jaksotunnus-table env)))
 
 (defn- query-niputtamattomat [exclusive-start-key]
   (let [req (-> (ScanRequest/builder)
@@ -112,43 +124,27 @@
 (defn -handleTpkNiputus [this event context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
   (let [memoization (atom {})]
-    (let [niputettavat (query-niputtamattomat nil)]
+    (loop [niputettavat (query-niputtamattomat nil)]
       (doseq [jakso (map ddb/map-attribute-values-to-vals
                          (.items niputettavat))]
-        (if (check-jakso? jakso)
-          (let [existing-nippu (get-existing-nippu jakso)
-                memoized-nippu (get @memoization (create-nippu-id jakso))]
-            (if (and (empty? existing-nippu) (not memoized-nippu))
-              (let [request-id (c/generate-uuid)
-                    nippu (create-nippu jakso request-id)
-                    arvo-resp (make-arvo-request nippu)]
-                (if (some? (:kysely_linkki arvo-resp))
-                  (do
-                    (save-nippu
-                      (assoc nippu
-                             :kyselylinkki      (:kysely_linkki arvo-resp)
-                             :tunnus            (:tunnus arvo-resp)
-                             :voimassa-loppupvm (:voimassa_loppupvm arvo-resp)))
-                    (swap! memoization assoc (create-nippu-id jakso) nippu)
-                    (ddb/update-item
-                      {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
-                      {:update-expr "SET #value = :value"
-                       :expr-attr-names {"#value" "tpk-niputuspvm"}
-                       :expr-attr-vals {":value" [:s (:niputuspvm nippu)]}}
-                      (:jaksotunnus-table env)))
-                  (log/error "Kyselylinkkiä ei saatu Arvolta. Jakso:"
-                             (:hankkimistapa_id jakso))))
-              (ddb/update-item
-                {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
-                {:update-expr "SET #value = :value"
-                 :expr-attr-names {"#value" "tpk-niputuspvm"}
-                 :expr-attr-vals {":value" [:s (:niputuspvm
-                                                 (or (first existing-nippu)
-                                                     memoized-nippu))]}}
-                (:jaksotunnus-table env))))
-          (ddb/update-item
-            {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
-            {:update-expr "SET #value = :value"
-             :expr-attr-names {"#value" "tpk-niputuspvm"}
-             :expr-attr-vals {":value" [:s "ei_niputeta"]}}
-            (:jaksotunnus-table env)))))))
+        (when (< 30000 (.getRemainingTimeInMillis context))
+          (if (check-jakso? jakso)
+            (let [existing-nippu (get-existing-nippu jakso)
+                  memoized-nippu (get @memoization (create-nippu-id jakso))]
+              (if (and (empty? existing-nippu) (not memoized-nippu))
+                (let [request-id (c/generate-uuid)
+                      nippu (create-nippu jakso request-id)
+                      arvo-resp (make-arvo-request nippu)]
+                  (if (some? (:kysely_linkki arvo-resp))
+                    (do
+                      (save-nippu (extend-nippu nippu arvo-resp))
+                      (swap! memoization assoc (create-nippu-id jakso) nippu)
+                      (update-tpk-niputuspvm jakso (:niputuspvm nippu)))
+                    (log/error "Kyselylinkkiä ei saatu Arvolta. Jakso:"
+                               (:hankkimistapa_id jakso))))
+                (update-tpk-niputuspvm
+                  jakso
+                  (:niputuspvm (or (first existing-nippu) memoized-nippu)))))
+            (update-tpk-niputuspvm jakso "ei_niputeta"))))
+      (when (.hasLastEvaluatedKey niputettavat)
+        (recur (query-niputtamattomat (.lastEvaluatedKey niputettavat)))))))
