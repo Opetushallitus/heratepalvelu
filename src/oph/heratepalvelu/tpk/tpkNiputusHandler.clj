@@ -146,5 +146,6 @@
                   jakso
                   (:niputuspvm (or (first existing-nippu) memoized-nippu)))))
             (update-tpk-niputuspvm jakso "ei_niputeta"))))
-      (when (.hasLastEvaluatedKey niputettavat)
+      (when (and (< 30000 (.getRemainingTimeInMillis context))
+                 (.hasLastEvaluatedKey niputettavat))
         (recur (query-niputtamattomat (.lastEvaluatedKey niputettavat)))))))
