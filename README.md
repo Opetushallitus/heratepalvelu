@@ -111,3 +111,21 @@ jälkeen paljastuu lähteen tarkempi konfiguraatio, jonka oikeassa reunassa
 
 HUOM!! Lambdan disablointi on aina viimeinen keino ja sopii vain
 tilanteisiin, joissa se on ehdoton pakko!
+
+### Kielten käyttö projektissa
+
+Tämä on suomenkielinen projekti, ja ainakin tähän saakka kaikki kehittäjät ovat
+osanneet suomea. Käytämme siis suomea kaikessa dokumentaatiossa, koodin
+kommenteissa, ja docstringeissa. Tämän lisäksi olemme pitkästä aikaa käyttäneet
+suomea myös logiviesteissä, vaikka tämä voi mahdollisesti muuttua joksus
+tulevaisuudessa, jos on päätetty, että suomenkielisten viestien piilottaminen
+automaattisesti generoidun englanninkielisen logituksen sisälle on liian vaikea
+lukea.
+
+_Koodia_ kuitenkin pitäisi kirjoittaa englanniksi paitsi sanat, jotka liittyvät
+suoraan projektiin ja on määritelty alun perin suomeksi, esim. _nippu_ tai
+_jakso_. Nimeä siis funktiot "create-nippu" ja "get-jakso", ei "luo-nippu" tai
+"hae-jakso". Sellaisia tapauksia, joissa tämä sääntö rikotaan, löytyy edelleen
+koodista, mutta yritämme poistaa ne pikkuhiljaa. Näin vältämme ylimääräisiä
+tapauksia, joissa ä:tä ja ö:tä täytää korvata a:lla tai o:lla, ja pidämme koodin
+siistinä ja tavanmukaisena.
