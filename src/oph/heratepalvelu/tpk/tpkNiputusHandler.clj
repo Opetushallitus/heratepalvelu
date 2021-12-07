@@ -47,7 +47,8 @@
     (ddb/get-item {:nippu-id [:s (create-nippu-id jakso)]}
                   (:tpk-nippu-table env))
     (catch AwsServiceException e
-      nil)))
+      (log/error "Haku DynamoDB:stä epäonnistunut:" e)
+      (throw e))))
 
 (defn get-next-vastaamisajan-alkupvm-date [jakso]
   (let [loppupvm (c/to-date (:jakso_loppupvm jakso))
