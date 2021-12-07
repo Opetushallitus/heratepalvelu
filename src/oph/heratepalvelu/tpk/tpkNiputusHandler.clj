@@ -133,8 +133,9 @@
                          (.items niputettavat))]
         (when (< 30000 (.getRemainingTimeInMillis context))
           (if (check-jakso? jakso)
-            (let [existing-nippu (get-existing-nippu jakso)
-                  memoized-nippu (get @memoization (create-nippu-id jakso))]
+            (let [memoized-nippu (get @memoization (create-nippu-id jakso))
+                  existing-nippu (when-not memoized-nippu
+                                   (get-existing-nippu jakso))]
               (if (and (empty? existing-nippu) (not memoized-nippu))
                 (let [request-id (c/generate-uuid)
                       nippu (create-nippu jakso request-id)
@@ -148,7 +149,7 @@
                                (:hankkimistapa_id jakso))))
                 (update-tpk-niputuspvm
                   jakso
-                  (:niputuspvm (or (first existing-nippu) memoized-nippu)))))
+                  (:niputuspvm (or memoized-nippu existing-nippu)))))
             (update-tpk-niputuspvm jakso "ei_niputeta"))))
       (when (and (< 30000 (.getRemainingTimeInMillis context))
                  (.hasLastEvaluatedKey niputettavat))
