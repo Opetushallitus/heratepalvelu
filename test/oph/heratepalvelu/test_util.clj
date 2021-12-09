@@ -87,6 +87,13 @@
       (.setDetailType "Scheduled Event")
       (.setResources (list dummy-scheduled-resources)))))
 
+(defn mock-sqs-event [item]
+  (let [event (SQSEvent.)
+        message (SQSEvent$SQSMessage.)]
+    (.setBody message (generate-string item))
+    (.setRecords event [message])
+    event))
+
 (defn reify-context []
   (reify com.amazonaws.services.lambda.runtime.Context
     (getAwsRequestId [this]

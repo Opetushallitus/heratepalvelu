@@ -2,9 +2,7 @@
   (:require [cheshire.core :refer [generate-string]]
             [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISDeleteTunnusHandler :as dth]
-            [oph.heratepalvelu.test-util :as tu])
-  (:import (com.amazonaws.services.lambda.runtime.events SQSEvent
-                                                         SQSEvent$SQSMessage)))
+            [oph.heratepalvelu.test-util :as tu]))
 
 (deftest test-schema-validation
   (testing "Varmista, että scheman validointi toimii oikein"
@@ -47,13 +45,6 @@
 
 (def store-full-call-results (atom ""))
 
-(defn- mock-sqs-event [item]
-  (let [event (SQSEvent.)
-        message (SQSEvent$SQSMessage.)]
-    (.setBody message (generate-string item))
-    (.setRecords event [message])
-    event))
-
 (defn- mock-delete-one-item [item]
   (reset! store-full-call-results (str @store-full-call-results item)))
 
@@ -73,8 +64,8 @@
        oph.heratepalvelu.amis.AMISDeleteTunnusHandler/get-item-by-kyselylinkki
        mock-get-item-by-kyselylinkki]
       (let [context (tu/mock-handler-context)
-            event (mock-sqs-event {:kyselylinkki "https://a.com/tunnus"})
-            bad-event (mock-sqs-event {})]
+            event (tu/mock-sqs-event {:kyselylinkki "https://a.com/tunnus"})
+            bad-event (tu/mock-sqs-event {})]
         (dth/-handleDeleteTunnus {} event context)
         (is (= @store-full-call-results
                (str "{:kyselylinkki \"https://a.com/tunnus\", "
