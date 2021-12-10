@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler
-  (:require [clj-time.core :as t]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -16,6 +15,9 @@
            :methods [[^:static handleTpkNiputus
                       [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
                        com.amazonaws.services.lambda.runtime.Context] void]])
+
+(def current-kausi-start (LocalDate/of 2021 7 1))
+(def current-kausi-end (LocalDate/of 2021 12 31))
 
 (defn check-jakso? [jakso]
   (and (:koulutustoimija jakso)
@@ -74,7 +76,7 @@
      :koulutustoimija-oid         (:koulutustoimija jakso)
      :tiedonkeruu-alkupvm         kausi-alkupvm
      :tiedonkeruu-loppupvm        kausi-loppupvm
-     :niputuspvm                  (str (t/today))
+     :niputuspvm                  (str (LocalDate/now))
      :request-id                  request-id}))
 
 (defn extend-nippu [nippu arvo-resp]
@@ -106,8 +108,14 @@
     (:jaksotunnus-table env)))
 
 (defn- query-niputtamattomat [exclusive-start-key]
-  (let [req (-> (ScanRequest/builder)
-                (.filterExpression "#tpkNpvm = :tpkNpvm AND #jl <= :jl")
+  (let [today (LocalDate/now)
+        jl-date (if (.isAfter today current-kausi-end)
+                  (str current-kausi-end)
+                  (str today))
+        jl-start-date (str current-kausi-start)
+        req (-> (ScanRequest/builder)
+                (.filterExpression
+                  "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :jlstart AND :jl")
                 (cond->
                   exclusive-start-key
                   (.exclusiveStartKey exclusive-start-key))
@@ -117,8 +125,9 @@
                 (.expressionAttributeValues
                   {":tpkNpvm" (.build (.s (AttributeValue/builder)
                                           "ei_maaritelty"))
-                   ":jl"      (.build (.s (AttributeValue/builder)
-                                          (str (t/today))))})
+                   ":jl"      (.build (.s (AttributeValue/builder) jl-date))
+                   ":jlstart" (.build (.s (AttributeValue/builder)
+                                          jl-start-date))})
                 (.tableName (:jaksotunnus-table env))
                 (.build))
         response (.scan ddb/ddb-client req)]
