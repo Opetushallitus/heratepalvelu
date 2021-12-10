@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler
-  (:require [clj-time.core :as t]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -77,7 +76,7 @@
      :koulutustoimija-oid         (:koulutustoimija jakso)
      :tiedonkeruu-alkupvm         kausi-alkupvm
      :tiedonkeruu-loppupvm        kausi-loppupvm
-     :niputuspvm                  (str (t/today))
+     :niputuspvm                  (str (LocalDate/now))
      :request-id                  request-id}))
 
 (defn extend-nippu [nippu arvo-resp]
@@ -109,7 +108,7 @@
     (:jaksotunnus-table env)))
 
 (defn- query-niputtamattomat [exclusive-start-key]
-  (let [today (t/today)
+  (let [today (LocalDate/now)
         jl-date (if (.isAfter today current-kausi-end)
                   (str current-kausi-end)
                   (str today))
