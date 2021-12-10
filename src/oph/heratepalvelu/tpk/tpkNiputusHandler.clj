@@ -17,6 +17,9 @@
                       [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
                        com.amazonaws.services.lambda.runtime.Context] void]])
 
+(def current-kausi-start (LocalDate/of 2021 7 1))
+(def current-kausi-end (LocalDate/of 2021 12 31))
+
 (defn check-jakso? [jakso]
   (and (:koulutustoimija jakso)
        (:tyopaikan_nimi jakso)
@@ -106,8 +109,14 @@
     (:jaksotunnus-table env)))
 
 (defn- query-niputtamattomat [exclusive-start-key]
-  (let [req (-> (ScanRequest/builder)
-                (.filterExpression "#tpkNpvm = :tpkNpvm AND #jl <= :jl")
+  (let [today (t/today)
+        jl-date (if (.isAfter today current-kausi-end)
+                  (str current-kausi-end)
+                  (str today))
+        jl-start-date (str current-kausi-start)
+        req (-> (ScanRequest/builder)
+                (.filterExpression
+                  "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :jlstart AND :jl")
                 (cond->
                   exclusive-start-key
                   (.exclusiveStartKey exclusive-start-key))
@@ -117,8 +126,9 @@
                 (.expressionAttributeValues
                   {":tpkNpvm" (.build (.s (AttributeValue/builder)
                                           "ei_maaritelty"))
-                   ":jl"      (.build (.s (AttributeValue/builder)
-                                          (str (t/today))))})
+                   ":jl"      (.build (.s (AttributeValue/builder) jl-date))
+                   ":jlstart" (.build (.s (AttributeValue/builder)
+                                          jl-start-date))})
                 (.tableName (:jaksotunnus-table env))
                 (.build))
         response (.scan ddb/ddb-client req)]
