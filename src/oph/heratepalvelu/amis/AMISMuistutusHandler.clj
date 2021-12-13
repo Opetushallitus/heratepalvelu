@@ -63,7 +63,7 @@
      :address (:sahkoposti email)
      :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}))
 
-(defn- sendAMISMuistutus [muistutettavat n]
+(defn sendAMISMuistutus [muistutettavat n]
   (log/info (str "Käsitellään " (count muistutettavat)
                  " lähetettävää " n ". muistutusta."))
   (doseq [email muistutettavat]
@@ -78,7 +78,7 @@
             (log/error e)))
         (update-when-not-sent email n status)))))
 
-(defn- query-muistukset [n]
+(defn query-muistutukset [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
                     :lahetyspvm  [:between
                                   [[:s (str
@@ -94,12 +94,12 @@
 
 (defn -handleSendAMISMuistutus [this event context]
   (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
-  (loop [muistutettavat1 (query-muistukset 1)
-         muistutettavat2 (query-muistukset 2)]
+  (loop [muistutettavat1 (query-muistutukset 1)
+         muistutettavat2 (query-muistutukset 2)]
     (sendAMISMuistutus muistutettavat1 1)
     (sendAMISMuistutus muistutettavat2 2)
     (when (and
             (or (seq muistutettavat1) (seq muistutettavat2))
             (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistukset 1)
-             (query-muistukset 2)))))
+      (recur (query-muistutukset 1)
+             (query-muistutukset 2)))))
