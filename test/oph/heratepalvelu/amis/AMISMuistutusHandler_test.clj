@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.amis.AMISMuistutusHandler-test
-  (:require [clojure.test :refer :all]
+  (:require [clj-time.core :as t]
+            [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISMuistutusHandler :as mh]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
@@ -95,7 +96,7 @@
                                     "answer the survey")
                       :body (vp/amismuistutus-html email)
                       :address (:sahkoposti email)
-                      :sender "Opetushallitus - Utbildningsstyrelsen"}]
+                      :sender "Opetushallitus – Utbildningsstyrelsen"}]
         (mh/send-reminder-email email)
         (is (= @mock-send-email-results expected))))))
 
@@ -116,7 +117,7 @@
     {:vastattu true
      :voimassa_loppupvm "2021-10-10"}))
 
-(defn- mock-has-time-to-answer? [pvm] (<= (compare pvm "2021-11-11") 0))
+(defn- mock-has-time-to-answer? [pvm] (>= (compare pvm "2021-11-11") 0))
 
 (defn- mock-send-reminder-email [email]
   (reset! test-sendAMISMuistutus-results
@@ -143,24 +144,30 @@
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
        oph.heratepalvelu.external.arvo/get-kyselylinkki-status
        mock-get-kyselylinkki-status]
-      (let [muistutettavat1 {:kyselylinkki "kysely.linkki/1"}
-            expected1 (str "reminder-email {:kyselylinkki kysely.linkki/1} "
-                           "{:kyselylinkki kysely.linkki/1} 1 testid ")
-            muistutettavat2 {:kyselylinkki "kysely.linkki/2"}
-            expected2 (str "{:kyselylinkki kysely.linkki/2} 1 "
-                           "{:vastattu false, :voimassa_loppupvm 2021-10-10} ")
-            muistutettavat3 {:kyselylinkki "kysely.linkki/3"}
-            expected3 (str "{:kyselylinkki kysely.linkki/3 1 "
-                           "{:vastattu true, :voimassa_loppupvm 2021-12-12} ")
-            muistutettavat4 {:kyselylinkki "kysely.linkki/4"}
-            expected4 (str "{:kyselylinkki kysely.linkki/4 1 "
-                           "{:vastattu true, :voimassa_loppupvm 2021-10-10} ")]
+      (let [muistutettavat1 [{:kyselylinkki "kysely.linkki/1"}]
+            expected1 (str "reminder-email {:kyselylinkki \"kysely.linkki/1\"} "
+                           "{:kyselylinkki \"kysely.linkki/1\"} 1 testid ")
+            muistutettavat2 [{:kyselylinkki "kysely.linkki/2"}]
+            expected2 (str "{:kyselylinkki \"kysely.linkki/2\"} 1 "
+                           "{:vastattu false, "
+                           ":voimassa_loppupvm \"2021-10-10\"} ")
+            muistutettavat3 [{:kyselylinkki "kysely.linkki/3"}]
+            expected3 (str "{:kyselylinkki \"kysely.linkki/3\"} 1 "
+                           "{:vastattu true, "
+                           ":voimassa_loppupvm \"2021-12-12\"} ")
+            muistutettavat4 [{:kyselylinkki "kysely.linkki/4"}]
+            expected4 (str "{:kyselylinkki \"kysely.linkki/4\"} 1 "
+                           "{:vastattu true, "
+                           ":voimassa_loppupvm \"2021-10-10\"} ")]
         (mh/sendAMISMuistutus muistutettavat1 1)
         (is (= @test-sendAMISMuistutus-results expected1))
+        (reset! test-sendAMISMuistutus-results "")
         (mh/sendAMISMuistutus muistutettavat2 1)
         (is (= @test-sendAMISMuistutus-results expected2))
+        (reset! test-sendAMISMuistutus-results "")
         (mh/sendAMISMuistutus muistutettavat3 1)
         (is (= @test-sendAMISMuistutus-results expected3))
+        (reset! test-sendAMISMuistutus-results "")
         (mh/sendAMISMuistutus muistutettavat4 1)
         (is (= @test-sendAMISMuistutus-results expected4))))))
 
@@ -180,7 +187,7 @@
 
 (deftest test-query-muistutukset
   (testing "Varmista, että query-muistutukset kutsuu query-items oikein"
-    (with-redefs [clj-time.core/today (fn [] (LocalDate/of 2021 10 10))
+    (with-redefs [clj-time.core/today (fn [] (t/local-date 2021 10 10))
                   oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
       (let [expected-1 {:muistutukset 0
                         :start-span "2021-10-01"

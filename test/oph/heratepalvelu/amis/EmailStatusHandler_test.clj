@@ -40,6 +40,7 @@
       (and (= "toimija-oppija-ei-muistutukset"
               (second (:toimija_oppija query-params)))
            (= "tyyppi-kausi" (second (:tyyppi_kausi query-params))))
+      {:muistutukset 0}
       :else nil)))
 
 (deftest test-update-ehoks-if-not-muistutus
@@ -57,12 +58,7 @@
                     :sahkoposti "a@b.com"}
             status {:sendingEnded "2021-10-10T23:45:34"}
             tila (:viestintapalvelussa c/kasittelytilat)
-            expected1 {:toimija-oppija "toimija-oppija-muistutukset"
-                       :tyyppi-kausi "tyyppi-kausi"
-                       :kyselylinkki "kysely.linkki/123"
-                       :lahetyspvm "2021-10-10"
-                       :sahkoposti "a@b.com"
-                       :lahetystila (:viestintapalvelussa c/kasittelytilat)}
+            expected1 {}
             expected2 {:toimija-oppija "toimija-oppija-ei-muistutukset"
                        :tyyppi-kausi "tyyppi-kausi"
                        :kyselylinkki "kysely.linkki/123"
@@ -81,8 +77,8 @@
              (= :s (first (:tyyppi_kausi query-params)))
              (= :s (first (get (:expr-attr-vals options) ":lahetystila"))))
     (reset! mock-update-item-results
-            {:toimija-oppija (:toimija_oppija query-params)
-             :tyyppi-kausi (:tyyppi_kausi query-params)
+            {:toimija-oppija (second (:toimija_oppija query-params))
+             :tyyppi-kausi (second (:tyyppi_kausi query-params))
              :lahetystila (second (get (:expr-attr-vals options)
                                        ":lahetystila"))})))
 
