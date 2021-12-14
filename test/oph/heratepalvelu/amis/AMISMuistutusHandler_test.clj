@@ -96,7 +96,7 @@
                                     "answer the survey")
                       :body (vp/amismuistutus-html email)
                       :address (:sahkoposti email)
-                      :sender "Opetushallitus – Utbildningsstyrelsen"}]
+                      :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}]
         (mh/send-reminder-email email)
         (is (= @mock-send-email-results expected))))))
 

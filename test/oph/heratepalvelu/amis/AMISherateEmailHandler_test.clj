@@ -92,7 +92,7 @@
                                     "Feedback to educational institution")
                       :body (vp/amispalaute-html email)
                       :address (:sahkoposti email)
-                      :sender "Opetushallitus – Utbildningsstyrelsen"}]
+                      :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}]
         (is (= expected (heh/send-feedback-email email)))))))
 
 (def mock-no-time-to-answer-update-item-result (atom {}))
