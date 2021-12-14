@@ -1,7 +1,8 @@
 (ns oph.heratepalvelu.amis.EmailStatusHandler-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.amis.EmailStatusHandler :as esh]))
+            [oph.heratepalvelu.amis.EmailStatusHandler :as esh]
+            [oph.heratepalvelu.test-util :as tu]))
 
 (deftest test-convert-vp-email-status
   (testing "Converts viestintäpalvelu email status to internal tila"
@@ -111,5 +112,53 @@
       (esh/do-query)
       (is (true? @mock-query-items-results)))))
 
+(def test-handleEmailStatus-results (atom ""))
 
-;; TODO -handleEmailStatus
+(defn- mock-do-query [] [{:viestintapalvelu-id "12345"
+                          :kyselylinkki "kysely.linkki/123"}])
+
+(defn- mock-get-email-status [viestintapalvelu-id]
+  {:numberOfSuccessfulSendings 1})
+
+(defn- mock-get-email-status-none [viestintapalvelu-id] {})
+
+(defn- mock-patch-kyselylinkki-metadata [kyselylinkki tila]
+  (reset! test-handleEmailStatus-results
+          (str @test-handleEmailStatus-results kyselylinkki " " tila " ")))
+
+(defn- mock-update-ehoks-if-not-muistutus [email status tila]
+  (reset! test-handleEmailStatus-results
+          (str @test-handleEmailStatus-results email " " status " " tila " ")))
+
+(defn- mock-update-db [email tila]
+  (reset! test-handleEmailStatus-results
+          (str @test-handleEmailStatus-results "update-db " email " " tila)))
+
+(deftest test-handleEmailStatus
+  (testing "Varmista, että -handleEmailStatus kutsuu muita funktioita oikein"
+    (with-redefs
+      [oph.heratepalvelu.amis.EmailStatusHandler/do-query mock-do-query
+       oph.heratepalvelu.amis.EmailStatusHandler/update-db mock-update-db
+       oph.heratepalvelu.amis.EmailStatusHandler/update-ehoks-if-not-muistutus
+       mock-update-ehoks-if-not-muistutus
+       oph.heratepalvelu.external.arvo/patch-kyselylinkki-metadata
+       mock-patch-kyselylinkki-metadata]
+      (let [event (tu/mock-handler-event :scheduledherate)
+            context (tu/mock-handler-context)]
+        (with-redefs
+          [oph.heratepalvelu.external.viestintapalvelu/get-email-status
+           mock-get-email-status]
+          (esh/-handleEmailStatus {} event context)
+          (is (= @test-handleEmailStatus-results
+                 (str "kysely.linkki/123 lahetetty "
+                      "{:viestintapalvelu-id \"12345\", "
+                      ":kyselylinkki \"kysely.linkki/123\"} "
+                      "{:numberOfSuccessfulSendings 1} lahetetty " 
+                      "update-db {:viestintapalvelu-id \"12345\", "
+                      ":kyselylinkki \"kysely.linkki/123\"} lahetetty"))))
+        (reset! test-handleEmailStatus-results "")
+        (with-redefs
+          [oph.heratepalvelu.external.viestintapalvelu/get-email-status
+           mock-get-email-status-none]
+          (esh/-handleEmailStatus {} event context)
+          (is (= @test-handleEmailStatus-results "")))))))
