@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler-test
-  (:require [clojure.test :refer :all]
+  (:require [clj-time.coerce :as ctc]
+            [clojure.test :refer :all]
             [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :refer :all]))
 
 (deftest test-get-vahvistus-pvm
@@ -126,3 +127,61 @@
                                                         {:alku "2019-07-23"
                                                          :tila {:koodiarvo "valmistunut"}}]}}
                          "2019-07-24")))))
+
+(deftest test-parse-herate
+  (testing "Varmista, että parse-herate luo oikeanlaisen objektin"
+    (let [hoks {:id "1234.15.67890"
+                :opiskeluoikeus-oid "123.456.789"
+                :oppija-oid "987.654.321"
+                :sahkoposti "a@b.com"}
+          kyselytyyppi "aloittaneet"
+          alkupvm "2021-10-10"
+          expected {:ehoks-id "1234.15.67890"
+                    :kyselytyyppi "aloittaneet"
+                    :opiskeluoikeus-oid "123.456.789"
+                    :oppija-oid "987.654.321"
+                    :sahkoposti "a@b.com"
+                    :alkupvm "2021-10-10"}]
+      (is (= (parse-herate hoks kyselytyyppi alkupvm) expected)))))
+
+(def test-update-last-checked-results (atom {}))
+
+(defn- mock-update-last-checked-update-item [query-params options table]
+  (when (and (= :s (first (:key query-params)))
+             (= "opiskeluoikeus-last-checked" (second (:key query-params)))
+             (= :s (first (get (:expr-attr-vals options) ":value"))))
+    (reset! test-update-last-checked-results
+            {:time-with-buffer (second (get (:expr-attr-vals options) ":value"))
+             :table table})))
+
+(deftest test-update-last-checked
+  (testing "Varmista, että update-last-checked kutsuu update-item oikein"
+    (with-redefs [environ.core/env {:metadata-table "metadata-table-name"}
+                  oph.heratepalvelu.db.dynamodb/update-item
+                  mock-update-last-checked-update-item]
+      (let [datetime (ctc/from-long 1639478100000)
+            expected {:time-with-buffer "2021-12-14T10:30:00.000Z"
+                      :table "metadata-table-name"}]
+        (update-last-checked datetime)
+        (is (= @test-update-last-checked-results expected))))))
+
+(def test-update-last-page-results (atom {}))
+
+(defn- mock-update-last-page-update-item [query-params options table]
+  (when (and (= :s (first (:key query-params)))
+             (= "opiskeluoikeus-last-page" (second (:key query-params)))
+             (= :s (first (get (:expr-attr-vals options) ":value"))))
+    (reset! test-update-last-page-results
+            {:page (second (get (:expr-attr-vals options) ":value"))
+             :table table})))
+
+(deftest test-update-last-page
+  (testing "Varmista, että update-last-page kutsuu update-item oikein"
+    (with-redefs [environ.core/env {:metadata-table "metadata-table-name"}
+                  oph.heratepalvelu.db.dynamodb/update-item
+                  mock-update-last-page-update-item]
+      (let [page "test-page"
+            expected {:page "test-page"
+                      :table "metadata-table-name"}]
+        (update-last-page page)
+        (is (= @test-update-last-page-results expected))))))
