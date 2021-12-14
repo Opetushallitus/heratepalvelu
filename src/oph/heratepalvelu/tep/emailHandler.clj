@@ -79,7 +79,7 @@
                                                       email
                                                       oppilaitokset)
                                               :address osoite
-                                              :sender "OPH – UBS"}))
+                                              :sender "OPH – UBS – EDUFI"}))
                       lahetyspvm (str (t/today))]
                   (ddb/update-item
                     {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]

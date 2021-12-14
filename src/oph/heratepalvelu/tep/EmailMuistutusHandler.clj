@@ -38,7 +38,7 @@
                 id (:id (vp/send-email {:subject "Muistutus-påminnelse-reminder: Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
                                      :body (vp/tyopaikkaohjaaja-muistutus-html nippu oppilaitokset)
                                      :address (:lahetysosoite nippu)
-                                     :sender "OPH – UBS"}))]
+                                     :sender "OPH – UBS – EDUFI"}))]
             (ddb/update-item
               {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
                :niputuspvm                  [:s (:niputuspvm nippu)]}

@@ -26,7 +26,7 @@
           (let [id (:id (send-email {:subject "Muistutus-påminnelse-reminder: Vastaa kyselyyn - svara på enkäten - answer the survey"
                                      :body (amismuistutus-html email)
                                      :address (:sahkoposti email)
-                                     :sender "Opetushallitus – Utbildningsstyrelsen"}))]
+                                     :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}))]
             (ddb/update-item
               {:toimija_oppija [:s (:toimija_oppija email)]
                :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
