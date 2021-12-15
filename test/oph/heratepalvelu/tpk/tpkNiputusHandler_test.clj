@@ -120,3 +120,18 @@
               :tiedonkeruu-loppupvm         "2021-12-31"
               :niputuspvm                   (str (t/today))
               :request-id                   "abcde"})))))
+
+(deftest test-extend-nippu
+  (testing "Varmistaa, että extend-nippu lisää kenttiä nippuun oikein"
+    (let [nippu {:nippu-id "test-id"}
+          arvo-resp {:kysely_linkki "kysely.linkki/123"
+                     :tunnus "QWERTY"
+                     :voimassa_loppupvm "2021-12-12"}
+          expected {:nippu-id "test-id"
+                    :kyselylinkki "kysely.linkki/123"
+                    :tunnus "QWERTY"
+                    :voimassa-loppupvm "2021-12-12"}]
+      (is (= (tpk/extend-nippu nippu arvo-resp) expected)))))
+
+;; TODO get-existing-nippu, save-nippu, make-arvo-request, update-tpk-niputuspvm
+;; TODO query-niputtamattomat, -handleTpkNiputus
