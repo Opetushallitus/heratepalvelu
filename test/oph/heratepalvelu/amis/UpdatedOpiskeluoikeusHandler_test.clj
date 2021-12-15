@@ -1,7 +1,8 @@
 (ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler-test
   (:require [clj-time.coerce :as ctc]
             [clojure.test :refer :all]
-            [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :refer :all]))
+            [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :refer :all]
+            [oph.heratepalvelu.test-util :as tu]))
 
 (deftest test-get-vahvistus-pvm
   (testing "Get vahvistus pvm"
@@ -185,3 +186,141 @@
                       :table "metadata-table-name"}]
         (update-last-page page)
         (is (= @test-update-last-page-results expected))))))
+
+(def test-handleUpdatedOpiskeluoikeus-results (atom ""))
+
+(defn- mock-get-item [query-params table]
+  (when (and (= :s (first (:key query-params))) (= table "metadata-table-name"))
+    (if (= "opiskeluoikeus-last-checked" (second (:key query-params)))
+      {:key "opiskeluoikeus-last-checked"
+       :value "2021-12-14T10:30:00.000Z"}
+      {:key "opiskeluoikeus-last-page"
+       :value "0"})))
+
+(defn- mock-get-updated-opiskeluoikeudet [last-checked last-page]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results
+               last-checked
+               " "
+               last-page
+               " "))
+  [{:oid "1.2.3"}])
+
+(defn- mock-get-koulutustoimija-oid [opiskeluoikeus]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results opiskeluoikeus " "))
+  "test-koulutustoimija-oid")
+
+(defn- mock-get-vahvistus-pvm [opiskeluoikeus]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results opiskeluoikeus " "))
+  "2021-10-10")
+
+(defn- mock-check-valid-herate-date [vahvistus-pvm]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results vahvistus-pvm " "))
+  true)
+
+(defn- mock-check-organisaatio-whitelist? [koulutustoimija vahvistus-pvm]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results
+               koulutustoimija
+               " "
+               vahvistus-pvm
+               " "))
+  true)
+
+(defn- mock-check-tila [opiskeluoikeus vahvistus-pvm]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results
+               opiskeluoikeus
+               " "
+               vahvistus-pvm
+               " "))
+  true)
+
+(defn- mock-get-hoks-by-opiskeluoikeus [opiskeluoikeus-oid]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results
+               "get-hoks-by-opiskeluoikeus: "
+               opiskeluoikeus-oid
+               " "))
+
+  {:osaamisen-hankkimisen-tarve true
+   :id "123.456.789"
+   :opiskeluoikeus-oid "1.2.3"
+   :oppija-oid "7.8.9"
+   :sahkoposti "a@b.com"})
+
+(defn- mock-get-kysely-type [opiskeluoikeus]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results "get-kysely-type "))
+  "tutkinnon_suorittaneet")
+
+(defn- mock-save-herate [herate opiskeluoikeus koulutustoimija]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results
+               "save-herate: "
+               herate
+               " "
+               opiskeluoikeus
+               " "
+               koulutustoimija
+               " ")))
+
+(defn- mock-update-last-page [last-page]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results
+               "update-last-page: "
+               last-page
+               " ")))
+
+(defn- mock-update-last-checked [start-time]
+  (reset! test-handleUpdatedOpiskeluoikeus-results
+          (str @test-handleUpdatedOpiskeluoikeus-results
+               "update-last-checked: "
+               start-time
+               " ")))
+
+(deftest test-handleUpdatedOpiskeluoikeus
+  (testing "Varmista, että -handleUpdatedOpiskeluoikeus tekee kutsuja oikein"
+    (with-redefs
+      [environ.core/env {:metadata-table "metadata-table-name"}
+       oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/check-tila
+       mock-check-tila
+       oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/get-kysely-type
+       mock-get-kysely-type
+       oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/get-vahvistus-pvm
+       mock-get-vahvistus-pvm
+       oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/update-last-checked
+       mock-update-last-checked
+       oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/update-last-page
+       mock-update-last-page
+       oph.heratepalvelu.common/check-organisaatio-whitelist?
+       mock-check-organisaatio-whitelist?
+       oph.heratepalvelu.common/check-valid-herate-date
+       mock-check-valid-herate-date
+       oph.heratepalvelu.common/get-koulutustoimija-oid
+       mock-get-koulutustoimija-oid
+       oph.heratepalvelu.common/save-herate mock-save-herate
+       oph.heratepalvelu.db.dynamodb/get-item mock-get-item
+       oph.heratepalvelu.external.ehoks/get-hoks-by-opiskeluoikeus
+       mock-get-hoks-by-opiskeluoikeus
+       oph.heratepalvelu.external.koski/get-updated-opiskeluoikeudet
+       mock-get-updated-opiskeluoikeudet]
+      (let [event (tu/mock-handler-event :scheduledherate)
+            context (tu/mock-handler-context)
+            expected (str "2021-12-14T10:30:00.000Z 0 {:oid \"1.2.3\"} "
+                          "{:oid \"1.2.3\"} 2021-10-10 "
+                          "test-koulutustoimija-oid 1633824000000 "
+                          "{:oid \"1.2.3\"} 2021-10-10 "
+                          "get-hoks-by-opiskeluoikeus: 1.2.3 "
+                          "get-kysely-type save-herate: "
+                          "{:ehoks-id \"123.456.789\", "
+                          ":kyselytyyppi \"tutkinnon_suorittaneet\", "
+                          ":opiskeluoikeus-oid \"1.2.3\", "
+                          ":oppija-oid \"7.8.9\", :sahkoposti \"a@b.com\", "
+                          ":alkupvm \"2021-10-10\"} {:oid \"1.2.3\"} "
+                          "test-koulutustoimija-oid update-last-page: 1 ")]
+        (-handleUpdatedOpiskeluoikeus {} event context)
+        (is (= @test-handleUpdatedOpiskeluoikeus-results expected))))))
