@@ -133,5 +133,128 @@
                     :voimassa-loppupvm "2021-12-12"}]
       (is (= (tpk/extend-nippu nippu arvo-resp) expected)))))
 
-;; TODO get-existing-nippu, save-nippu, make-arvo-request, update-tpk-niputuspvm
+(deftest test-make-arvo-request
+  (testing "Varmistaa, että make-arvo-request tekee kutsuja oikein"
+    (with-redefs [oph.heratepalvelu.external.arvo/build-tpk-request-body
+                  (fn [nippu] {:test-field-body (:test-field-nippu nippu)})
+                  oph.heratepalvelu.external.arvo/create-tpk-kyselylinkki
+                  (fn [body] {:test-field (:test-field-body body)
+                              :kyselylinkki "kysely.linkki/123"
+                              :tunnus "QWERTY"
+                              :voimassa-loppupvm "2021-12-12"})]
+      (let [nippu {:test-field-nippu "test-field"
+                   :nippu-id "test-id"}
+            expected {:test-field "test-field"
+                      :kyselylinkki "kysely.linkki/123"
+                      :tunnus "QWERTY"
+                      :voimassa-loppupvm "2021-12-12"}]
+        (is (= (tpk/make-arvo-request nippu) expected))))))
+
+(deftest test-get-existing-nippu
+  (testing "Varmistaa, että get-existing-nippu kutsuu get-item oikein"
+    (with-redefs [environ.core/env {:tpk-nippu-table "tpk-nippu-table-name"}
+                  oph.heratepalvelu.db.dynamodb/get-item
+                  (fn [query-params table]
+                    (when (and (= :s (first (:nippu-id query-params)))
+                               (= :s (first
+                                       (:tiedonkeruu-alkupvm query-params)))
+                               (= table "tpk-nippu-table-name"))
+                      {:nippu-id (second (:nippu-id query-params))
+                       :tiedonkeruu-alkupvm (second (:tiedonkeruu-alkupvm
+                                                      query-params))}))]
+      (let [jakso {:tyopaikan_nimi "Ääkköset Által"
+                   :tyopaikan_ytunnus "123456-7"
+                   :koulutustoimija "test-kt-id"
+                   :jakso_loppupvm "2021-10-10"}
+            expected {:nippu-id (str "aakkoset_altal/123456-7/test-kt-id/"
+                                     "2021-07-01_2021-12-31")
+                      :tiedonkeruu-alkupvm "2021-07-01"}]
+        (is (= (tpk/get-existing-nippu jakso) expected))))))
+
+(def test-save-nippu-results (atom {}))
+
+(defn- mock-put-item [query-params options table]
+  (when (and (= :s (first (:nippu-id query-params)))
+             (= :s (first (:tyopaikan-nimi query-params)))
+             (= :s (first (:tyopaikan-nimi-normalisoitu query-params)))
+             (= :s (first (:vastaamisajan-alkupvm query-params)))
+             (= :s (first (:vastaamisajan-loppupvm query-params)))
+             (= :s (first (:tyopaikan-ytunnus query-params)))
+             (= :s (first (:koulutustoimija-oid query-params)))
+             (= :s (first (:tiedonkeruu-alkupvm query-params)))
+             (= :s (first (:tiedonkeruu-loppupvm query-params)))
+             (= :s (first (:niputuspvm query-params)))
+             (= :s (first (:request-id query-params)))
+             (= :s (first (:kyselylinkki query-params)))
+             (= :s (first (:tunnus query-params)))
+             (= :s (first (:voimassa-loppupvm query-params)))
+             (= {} options)
+             (= "tpk-nippu-table-name" table))
+    (reset! test-save-nippu-results
+            {:nippu-id (second (:nippu-id query-params))
+             :tyopaikan-nimi (second (:tyopaikan-nimi query-params))
+             :tyopaikan-nimi-normalisoitu
+             (second (:tyopaikan-nimi-normalisoitu query-params))
+             :vastaamisajan-alkupvm (second
+                                      (:vastaamisajan-alkupvm query-params))
+             :vastaamisajan-loppupvm (second
+                                       (:vastaamisajan-loppupvm query-params))
+             :tyopaikan-ytunnus (second (:tyopaikan-ytunnus query-params))
+             :koulutustoimija-oid (second (:koulutustoimija-oid query-params))
+             :tiedonkeruu-alkupvm (second (:tiedonkeruu-alkupvm query-params))
+             :tiedonkeruu-loppupvm (second (:tiedonkeruu-loppupvm query-params))
+             :niputuspvm (second (:niputuspvm query-params))
+             :request-id (second (:request-id query-params))
+             :kyselylinkki (second (:kyselylinkki query-params))
+             :tunnus (second (:tunnus query-params))
+             :voimassa-loppupvm (second (:voimassa-loppupvm query-params))})))
+
+(deftest test-save-nippu
+  (testing "Varmistaa, että save-nippu kutsuu put-item oikein"
+    (with-redefs [environ.core/env {:tpk-nippu-table "tpk-nippu-table-name"}
+                  oph.heratepalvelu.db.dynamodb/put-item mock-put-item]
+      (let [nippu {:nippu-id "aakkoset/123456-7/test-id/2021-07-01_2021-12-31"
+                   :tyopaikan-nimi "Ääkköset"
+                   :tyopaikan-nimi-normalisoitu "aakkoset"
+                   :vastaamisajan-alkupvm "2022-01-15"
+                   :vastaamisajan-loppupvm "2022-02-28"
+                   :tyopaikan-ytunnus "123456-7"
+                   :koulutustoimija-oid "test-id"
+                   :tiedonkeruu-alkupvm "2021-07-01"
+                   :tiedonkeruu-loppupvm "2021-12-31"
+                   :niputuspvm "2021-12-15"
+                   :request-id "1234567"
+                   :kyselylinkki "kysely.linkki/132"
+                   :tunnus "QWERTY"
+                   :voimassa-loppupvm "2022-03-01"}]
+        (tpk/save-nippu nippu)
+        (is (= @test-save-nippu-results nippu))))))
+
+(def test-update-tpk-niputuspvm-results (atom {}))
+
+(defn- mock-update-item [query-params options table]
+  (when (and (= :n (first (:hankkimistapa_id query-params)))
+             (= "SET #value = :value" (:update-expr options))
+             (= "tpk-niputuspvm" (get (:expr-attr-names options) "#value"))
+             (= :s (first (get (:expr-attr-vals options) ":value")))
+             (= "jaksotunnus-table-name" table))
+    (reset! test-update-tpk-niputuspvm-results
+            {:hankkimistapa_id (second (:hankkimistapa_id query-params))
+             :new-value (second (get (:expr-attr-vals options) ":value"))})))
+
+(deftest test-update-tpk-niputuspvm
+  (testing "Varmistaa, että update-tpk-niputuspvm kutsuu update-item oikein"
+    (with-redefs [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
+                  oph.heratepalvelu.db.dynamodb/update-item mock-update-item]
+      (let [jakso {:hankkimistapa_id 123
+                   :tyopaikan_nimi "Ääkköset Által"
+                   :tyopaikan_ytunnus "123456-7"
+                   :koulutustoimija "test-kt-id"
+                   :jakso_loppupvm "2021-10-10"}
+            new-value "2021-12-15"
+            expected {:hankkimistapa_id 123
+                      :new-value "2021-12-15"}]
+        (tpk/update-tpk-niputuspvm jakso new-value)
+        (is (= @test-update-tpk-niputuspvm-results expected))))))
+
 ;; TODO query-niputtamattomat, -handleTpkNiputus

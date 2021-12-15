@@ -44,7 +44,7 @@
        (get-kausi-alkupvm jakso) "_"
        (get-kausi-loppupvm jakso)))
 
-(defn- get-existing-nippu [jakso]
+(defn get-existing-nippu [jakso]
   (try
     (ddb/get-item {:nippu-id [:s (create-nippu-id jakso)]
                    ; Alla oleva sort key on turha, mutta sen poisto vaatisi
@@ -84,7 +84,7 @@
                :tunnus            (:tunnus arvo-resp)
                :voimassa-loppupvm (:voimassa_loppupvm arvo-resp)))
 
-(defn- save-nippu [nippu]
+(defn save-nippu [nippu]
   (try
     (ddb/put-item
       (reduce #(assoc %1 (first %2) [:s (second %2)]) {} (seq nippu))
@@ -93,7 +93,7 @@
     (catch AwsServiceException e
       (log/error "Virhe DynamoDB tallennuksessa (TPK):" e))))
 
-(defn- make-arvo-request [nippu]
+(defn make-arvo-request [nippu]
   (try
     (arvo/create-tpk-kyselylinkki (arvo/build-tpk-request-body nippu))
     (catch ExceptionInfo e
@@ -107,7 +107,7 @@
      :expr-attr-vals {":value" [:s new-value]}}
     (:jaksotunnus-table env)))
 
-(defn- query-niputtamattomat [exclusive-start-key]
+(defn query-niputtamattomat [exclusive-start-key]
   (let [today (LocalDate/now)
         jl-date (if (.isAfter today current-kausi-end)
                   (str current-kausi-end)
