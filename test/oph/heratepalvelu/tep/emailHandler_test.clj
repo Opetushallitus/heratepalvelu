@@ -2,8 +2,11 @@
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
-            [oph.heratepalvelu.tep.emailHandler :as eh])
+            [oph.heratepalvelu.tep.emailHandler :as eh]
+            [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
+
+(use-fixtures :each tu/clear-logs-before-test)
 
 (deftest test-bad-phone?
   (testing "Varmista, että bad-phone? palauttaa oikeita arvoja"
@@ -53,9 +56,77 @@
         (eh/lahetysosoite-update-item nippu osoitteet-empty)
         (is (= @test-lahetysosoite-update-item-results expected-empty))))))
 
+(deftest test-get-single-ohjaaja-email
+  (testing (str "Varmista, että get-single-ohjaaja-email palauttaa yhteisen"
+                " sähköpostin, jos kaikissa jaksoissa on sama sähköposti;"
+                " muuten palauttaa nil.")
+    (let [jaksot-same-emails [{:ohjaaja_email "a@b.com"}
+                              {:ohjaaja_email "a@b.com"}]
+          jaksot-different-emails [{:ohjaaja_email "a@b.com"}
+                                   {:ohjaaja_email "x@y.com"}]]
+      (is (= "a@b.com" (eh/get-single-ohjaaja-email jaksot-same-emails)))
+      (is (nil? (eh/get-single-ohjaaja-email jaksot-different-emails))))))
 
-;; TODO lahetysosoite
+(def mock-lahetysosoite-update-item-result (atom {}))
 
+(defn- mock-lahetysosoite-update-item [nippu osoitteet]
+  (reset! mock-lahetysosoite-update-item-result {:nippu nippu
+                                                 :osoitteet osoitteet}))
+
+(def mock-patch-nippulinkki-result (atom {}))
+
+(defn- mock-patch-nippulinkki [linkki data]
+  (reset! mock-patch-nippulinkki-result {:kyselylinkki linkki :data data}))
+
+(defn- reset-lahetysosoite-result-variables []
+  (reset! mock-lahetysosoite-update-item-result {})
+  (reset! mock-patch-nippulinkki-result {}))
+
+(deftest test-lahetysosoite
+  (testing "Varmista, että lahetysosoite kutsuu oikeita funktioita"
+    (with-redefs [clojure.tools.logging/log* tu/mock-log*
+                  oph.heratepalvelu.external.arvo/patch-nippulinkki
+                  mock-patch-nippulinkki
+                  oph.heratepalvelu.tep.emailHandler/lahetysosoite-update-item
+                  mock-lahetysosoite-update-item]
+      (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
+                   :niputuspvm "2021-10-10"
+                   :sms_kasittelytila (:success c/kasittelytilat)
+                   :kyselylinkki "kysely.linkki/123"}
+            nippu-bad-phone {:ohjaaja_ytunnus_kj_tutkinto "test-bad-phone-id"
+                             :niputuspvm "2021-10-10"
+                             :sms_kasittelytila (:phone-mismatch
+                                                  c/kasittelytilat)
+                             :kyselylinkki "kysely.linkki/1234"}
+            jaksot-same-emails [{:ohjaaja_email "a@b.com"}
+                                {:ohjaaja_email "a@b.com"}]
+            jaksot-different-emails [{:ohjaaja_email "a@b.com"}
+                                     {:ohjaaja_email "x@y.com"}]]
+        (is (= (eh/lahetysosoite nippu jaksot-same-emails) "a@b.com"))
+        (reset-lahetysosoite-result-variables)
+        (is (nil? (eh/lahetysosoite nippu jaksot-different-emails)))
+        (is (= @mock-lahetysosoite-update-item-result
+               {:nippu nippu
+                :osoitteet #{"a@b.com" "x@y.com"}}))
+        (is (= @mock-patch-nippulinkki-result {}))
+        (is (true? (tu/logs-contain?
+                     {:level :warn
+                      :message (str "Ei yksiselitteistä ohjaajan sähköpostia  "
+                                    "test-nippu-id , 2021-10-10 , "
+                                    "#{a@b.com x@y.com}")})))
+        (reset-lahetysosoite-result-variables)
+        (is (nil? (eh/lahetysosoite nippu-bad-phone jaksot-different-emails)))
+        (is (= @mock-lahetysosoite-update-item-result
+               {:nippu nippu-bad-phone
+                :osoitteet #{"a@b.com" "x@y.com"}}))
+        (is (= @mock-patch-nippulinkki-result
+               {:kyselylinkki "kysely.linkki/1234"
+                :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}))
+        (is (true? (tu/logs-contain?
+                     {:level :warn
+                      :message (str "Ei yksiselitteistä ohjaajan sähköpostia  "
+                                    "test-bad-phone-id , 2021-10-10 , "
+                                    "#{a@b.com x@y.com}")})))))))
 
 (def test-do-nippu-query-results (atom ""))
 

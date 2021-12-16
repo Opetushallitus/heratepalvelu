@@ -34,15 +34,18 @@
                                               (:email-mismatch c/kasittelytilat))]}}
     (:nippu-table env)))
 
+(defn get-single-ohjaaja-email [jaksot]
+  (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
+                             (if (some? (:ohjaaja_email %2))
+                               (if (= (:ohjaaja_email %1) (:ohjaaja_email %2))
+                                 %1
+                                 (reduced nil))
+                                %1)
+                              %2)
+                            jaksot)))
+
 (defn lahetysosoite [nippu jaksot]
-  (let [ohjaaja-email (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
-                                                 (if (some? (:ohjaaja_email %2))
-                                                   (if (= (:ohjaaja_email %1) (:ohjaaja_email %2))
-                                                     %1
-                                                     (reduced nil))
-                                                   %1)
-                                                 %2)
-                                              jaksot))]
+  (let [ohjaaja-email (get-single-ohjaaja-email jaksot)]
     (if (some? ohjaaja-email)
       ohjaaja-email
       (let [osoitteet (reduce
@@ -50,7 +53,7 @@
                           (conj %1 (:ohjaaja_email %2))
                           %1)
                         #{} jaksot)]
-        (log/warn "Ei yksiselitteistä ohjaajan sahköpostia "
+        (log/warn "Ei yksiselitteistä ohjaajan sähköpostia "
                     (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
                     (:niputuspvm nippu) "," osoitteet)
         (lahetysosoite-update-item nippu osoitteet)
