@@ -158,3 +158,17 @@
 (defn clean-logs [f]
   (f)
   (delete-test-log-file))
+
+
+(def mock-log-file (atom []))
+
+(defn clear-logs-before-test [f]
+  (reset! mock-log-file [])
+  (f))
+
+(defn logs-contain? [obj]
+  (some #(= % obj) (vec (reverse @mock-log-file))))
+
+;; https://stackoverflow.com/a/41823278
+(defn mock-log* [logger level throwable message]
+  (reset! mock-log-file (cons {:level level :message message} @mock-log-file)))
