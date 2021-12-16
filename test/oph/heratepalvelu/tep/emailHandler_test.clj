@@ -305,8 +305,110 @@
         (is (= (eh/get-oppilaitokset jaksot) expected))
         (is (= @test-get-oppilaitokset-results expected-call-log-results))))))
 
+(def test-handleSendTEPEmails-call-log (atom []))
 
+(defn- test-handleSendTEPEmails-add-to-call-log [item]
+  (reset! test-handleSendTEPEmails-call-log
+          (cons item @test-handleSendTEPEmails-call-log)))
 
+(defn- mock-do-nippu-query []
+  (test-handleSendTEPEmails-add-to-call-log "do-nippu-query")
+  [{:id "email-1"
+    :voimassaloppupvm "2021-10-11"}
+   {:id "email-2"
+    :voimassaloppupvm "2021-10-09"}
+   {:id "email-3"
+    :voimassaloppupvm "2021-10-09"}])
 
+(defn- mock-do-jakso-query [email]
+  (test-handleSendTEPEmails-add-to-call-log
+    (str "do-jakso-query: " (:id email)))
+  [{:oppilaitos "123.456.789"}])
 
-;; TODO -handleSendTEPEmails
+(defn- mock-get-oppilaitokset [jaksot]
+  (test-handleSendTEPEmails-add-to-call-log (str "get-oppilaitokset: " jaksot))
+  (seq [{:en "Test Institution"
+         :fi "Testilaitos"
+         :sv "Testanstalt"}]))
+
+(defn- mock-lahetysosoite [email jaksot]
+  (test-handleSendTEPEmails-add-to-call-log
+    (str "lahetysosoite: " (:id email) " " jaksot))
+  (when (= "email-2" (:id email))
+    "a@b.com"))
+
+(defn- mock-send-survey-email [email oppilaitokset osoite]
+  (test-handleSendTEPEmails-add-to-call-log
+    (str "send-survey-email: " (:id email) " " oppilaitokset " " osoite))
+  {:id 123})
+
+(defn- mock-email-sent-update-item [email id lahetyspvm osoite]
+  (test-handleSendTEPEmails-add-to-call-log
+    (str "email-sent-update-item: "
+         (:id email)
+         " "
+         id
+         " "
+         lahetyspvm
+         " "
+         osoite)))
+
+(defn- mock-no-time-to-answer-update-item [email]
+  (test-handleSendTEPEmails-add-to-call-log
+    (str "no-time-to-answer-update-item: " (:id email))))
+
+(defn- mock-has-time-to-answer? [pvm] (<= (compare pvm "2021-10-10") 0))
+
+(deftest test-handleSendTEPEmails
+  (testing "Varmista, että -handleSendTEPEmails kutsuu funktioita oikein"
+    (with-redefs
+      [clj-time.core/today (fn [] (LocalDate/of 2021 10 1))
+       clojure.tools.logging/log* tu/mock-log*
+       oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
+       oph.heratepalvelu.tep.emailHandler/do-nippu-query mock-do-nippu-query
+       oph.heratepalvelu.tep.emailHandler/do-jakso-query mock-do-jakso-query
+       oph.heratepalvelu.tep.emailHandler/lahetysosoite mock-lahetysosoite
+       oph.heratepalvelu.tep.emailHandler/get-oppilaitokset
+       mock-get-oppilaitokset
+       oph.heratepalvelu.tep.emailHandler/send-survey-email
+       mock-send-survey-email
+       oph.heratepalvelu.tep.emailHandler/email-sent-update-item
+       mock-email-sent-update-item
+       oph.heratepalvelu.tep.emailHandler/no-time-to-answer-update-item
+       mock-no-time-to-answer-update-item]
+      (let [event (tu/mock-handler-event :scheduledherate)
+            context (tu/mock-handler-context)
+            expected-call-log ["do-nippu-query"
+                               ;{:id "email-1"
+                               ; :voimassaloppupvm "2021-10-11"}
+                               "do-jakso-query: email-1"
+                               (str "get-oppilaitokset: "
+                                    "[{:oppilaitos \"123.456.789\"}]")
+                               (str "lahetysosoite: email-1 "
+                                    "[{:oppilaitos \"123.456.789\"}]")
+                               "no-time-to-answer-update-item: email-1"
+                              ; {:id "email-2"
+                               ; :voimassaloppupvm "2021-10-09"}
+                               "do-jakso-query: email-2"
+                               (str "get-oppilaitokset: "
+                                    "[{:oppilaitos \"123.456.789\"}]")
+                               (str "lahetysosoite: email-2 "
+                                    "[{:oppilaitos \"123.456.789\"}]")
+                               (str "send-survey-email: email-2 "
+                                    "({:en \"Test Institution\", "
+                                    ":fi \"Testilaitos\", :sv \"Testanstalt\"})"
+                                    " a@b.com")
+                               (str "email-sent-update-item: email-2 123 "
+                                    "2021-10-01 a@b.com")
+                           ;    {:id "email-3"
+                            ;    :voimassaloppupvm "2021-10-09"}
+                               "do-jakso-query: email-3"
+                               (str "get-oppilaitokset: "
+                                    "[{:oppilaitos \"123.456.789\"}]")
+                               (str "lahetysosoite: email-3 "
+                                    "[{:oppilaitos \"123.456.789\"}]")]]
+        (eh/-handleSendTEPEmails {} event context)
+        (is (= @test-handleSendTEPEmails-call-log (reverse expected-call-log)))
+        (is (true? (tu/logs-contain?
+                     {:level :info
+                      :message "Käsitellään  3  lähetettävää viestiä."})))))))
