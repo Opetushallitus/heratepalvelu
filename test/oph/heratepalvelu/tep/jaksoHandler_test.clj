@@ -1,7 +1,10 @@
 (ns oph.heratepalvelu.tep.jaksoHandler-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.tep.jaksoHandler :as jh])
+            [oph.heratepalvelu.tep.jaksoHandler :as jh]
+            [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
+
+(use-fixtures :each tu/clear-logs-before-test)
 
 (deftest kesto-test
   (testing "Keston laskenta ottaa huomioon osa-aikaisuuden, opiskeluoikeuden väliaikaisen keskeytymisen ja lomat"
@@ -92,3 +95,23 @@
       (is (not (jh/check-open-keskeytymisajanjakso herate1)))
       (is (not (jh/check-open-keskeytymisajanjakso herate2)))
       (is (true? (jh/check-open-keskeytymisajanjakso herate3))))))
+
+(defn- mock-check-duplicate-hankkimistapa-get-item [query-params table]
+  (when (and (= :n (first (:hankkimistapa_id query-params)))
+             (= "jaksotunnus-table-name" table))
+    (if (= 123 (second (:hankkimistapa_id query-params)))
+      []
+      {:hankkimistapa_id (second (:hankkimistapa_id query-params))})))
+
+(deftest test-check-duplicate-hankkimistapa
+  (testing "Varmista, että check-duplicate-hankkimistapa toimii oikein"
+    (with-redefs [clojure.tools.logging/log* tu/mock-log*
+                  environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
+                  oph.heratepalvelu.db.dynamodb/get-item
+                  mock-check-duplicate-hankkimistapa-get-item]
+      (is (nil? (jh/check-duplicate-hankkimistapa 456)))
+      (is (true?
+            (tu/logs-contain?
+              {:level :warn
+               :message "Osaamisenhankkimistapa id 456 on jo käsitelty."})))
+      (is (true? (jh/check-duplicate-hankkimistapa 123))))))

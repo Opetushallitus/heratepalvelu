@@ -171,4 +171,5 @@
 
 ;; https://stackoverflow.com/a/41823278
 (defn mock-log* [logger level throwable message]
-  (reset! mock-log-file (cons {:level level :message message} @mock-log-file)))
+  (reset! mock-log-file (cons {:level level :message message} @mock-log-file))
+  nil)

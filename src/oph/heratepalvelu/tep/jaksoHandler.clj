@@ -55,7 +55,7 @@
   (if (empty? (ddb/get-item {:hankkimistapa_id [:n id]}
                             (:jaksotunnus-table env)))
     true
-    (log/warn "Osaamisenhankkimistapa id:llä " id "on jo käsitelty.")))
+    (log/warn "Osaamisenhankkimistapa id" id "on jo käsitelty.")))
 
 (defn check-duplicate-tunnus [tunnus]
   (let [items (ddb/query-items {:tunnus [:eq [:s tunnus]]}
