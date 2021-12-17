@@ -111,7 +111,7 @@
 
 (defn -handleSendEmailMuistutus [this event context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
-  (loop [muistutettavat (query-muistutukset )]
+  (loop [muistutettavat (query-muistutukset)]
     (sendEmailMuistutus muistutettavat)
     (when (and
             (seq muistutettavat)

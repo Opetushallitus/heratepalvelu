@@ -292,5 +292,23 @@
                       :end-date (str (.minusDays (LocalDate/now) 5))}]
         (is (= (emh/query-muistutukset) expected))))))
 
+(def test-handleSendEmailMuistutus-result (atom {}))
 
-;; TODO -handleSendEmailMuistutus
+(defn- mock-query-muistutukset [] [{:muistutus-contents "test-data"}])
+
+(defn- mock-sendEmailMuistutus [muistutettavat]
+  (reset! test-handleSendEmailMuistutus-result
+          {:muistutettavat muistutettavat}))
+
+(deftest test-handleSendEmailMuistutus
+  (testing "Varmista, että -handleSendEmailMuistutus kutsuu funktioita oikein"
+    (with-redefs [clojure.tools.logging/log* tu/mock-log*
+                  oph.heratepalvelu.tep.EmailMuistutusHandler/query-muistutukset
+                  mock-query-muistutukset
+                  oph.heratepalvelu.tep.EmailMuistutusHandler/sendEmailMuistutus
+                  mock-sendEmailMuistutus]
+      (let [event (tu/mock-handler-event :scheduledherate)
+            context (tu/mock-handler-context)
+            expected {:muistutettavat [{:muistutus-contents "test-data"}]}]
+        (emh/-handleSendEmailMuistutus {} event context)
+        (is (= @test-handleSendEmailMuistutus-result expected))))))
