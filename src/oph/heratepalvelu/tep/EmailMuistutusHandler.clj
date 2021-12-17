@@ -100,7 +100,7 @@
           (update-item-email-sent nippu id))
         (update-item-cannot-answer nippu status)))))
 
-(defn- query-muistukset []
+(defn query-muistutukset []
   (ddb/query-items {:muistutukset [:eq [:n 0]]
                     :lahetyspvm   [:between
                                    [[:s (str (.minusDays (LocalDate/now) 10))]
@@ -111,9 +111,9 @@
 
 (defn -handleSendEmailMuistutus [this event context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
-  (loop [muistutettavat (query-muistukset )]
+  (loop [muistutettavat (query-muistutukset )]
     (sendEmailMuistutus muistutettavat)
     (when (and
             (seq muistutettavat)
             (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistukset)))))
+      (recur (query-muistutukset)))))

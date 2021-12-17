@@ -2,8 +2,11 @@
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
-            [oph.heratepalvelu.tep.EmailMuistutusHandler :as emh])
+            [oph.heratepalvelu.tep.EmailMuistutusHandler :as emh]
+            [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
+
+(use-fixtures :each tu/clear-logs-before-test)
 
 (defn- mock-jakso-query-query-items [query-params options table]
   (when (and (= :eq (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
@@ -160,3 +163,134 @@
         (reset! test-update-item-cannot-answer-result {})
         (emh/update-item-cannot-answer nippu status2)
         (is (= @test-update-item-cannot-answer-result expected2))))))
+
+(def test-sendEmailMuistutus-call-log (atom []))
+
+(defn- add-to-test-sendEmailMuistutus-call-log [item]
+  (reset! test-sendEmailMuistutus-call-log
+          (cons item @test-sendEmailMuistutus-call-log)))
+
+(defn- mock-get-nippulinkki-status [kyselylinkki]
+  (add-to-test-sendEmailMuistutus-call-log (str "get-nippulinkki-status: "
+                                                kyselylinkki))
+  (if (= kyselylinkki "kysely.linkki/vastattu_QWERTY")
+    {:vastattu true
+     :voimassa_loppupvm "2021-10-12"}
+    (if (= kyselylinkki "kysely.linkki/ei_vastattu_YUOIOP")
+      {:vastattu false
+       :voimassa_loppupvm "2021-10-12"}
+      {:vastattu false
+       :voimassa_loppupvm "2021-10-08"})))
+
+(defn- mock-has-time-to-answer? [pvm]
+  (add-to-test-sendEmailMuistutus-call-log (str "has-time-to-answer?: " pvm))
+  (>= (compare pvm "2021-10-10") 0))
+
+(defn- mock-do-jakso-query [nippu]
+  (add-to-test-sendEmailMuistutus-call-log (str "do-jakso-query: " nippu))
+  [{:kyselylinkki (:kyselylinkki nippu)}])
+
+(defn- mock-get-oppilaitokset [jaksot]
+  (add-to-test-sendEmailMuistutus-call-log (str "get-oppilaitokset: " jaksot))
+  (seq [{:en "Test Institution"
+         :fi "Testilaitos"
+         :sv "Testanstalt"}]))
+
+(defn- mock-send-reminder-email [nippu oppilaitokset]
+  (add-to-test-sendEmailMuistutus-call-log
+    (str "send-reminder-email: " nippu " " oppilaitokset))
+  {:id (if (= (:kyselylinkki nippu) "kysely.linkki/vastattu_QWERTY")
+         123
+         (if (= (:kyselylinkki nippu) "kysely.linkki/ei_vastattu_YUOIOP")
+           456
+           789))})
+
+(defn- mock-update-item-email-sent [nippu id]
+  (add-to-test-sendEmailMuistutus-call-log
+    (str "update-item-email-sent: " nippu " " id)))
+
+(defn- mock-update-item-cannot-answer [nippu status]
+  (add-to-test-sendEmailMuistutus-call-log
+    (str "update-item-cannot-answer: " nippu " " status)))
+
+(deftest test-sendEmailMuistutus
+  (testing "Varmista, että sendEmailMuistutus kutsuu funktioita oikein"
+    (with-redefs
+      [clojure.tools.logging/log* tu/mock-log*
+       oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
+       oph.heratepalvelu.external.arvo/get-nippulinkki-status
+       mock-get-nippulinkki-status
+       oph.heratepalvelu.tep.EmailMuistutusHandler/do-jakso-query
+       mock-do-jakso-query
+       oph.heratepalvelu.tep.EmailMuistutusHandler/get-oppilaitokset
+       mock-get-oppilaitokset
+       oph.heratepalvelu.tep.EmailMuistutusHandler/send-reminder-email
+       mock-send-reminder-email
+       oph.heratepalvelu.tep.EmailMuistutusHandler/update-item-email-sent
+       mock-update-item-email-sent
+       oph.heratepalvelu.tep.EmailMuistutusHandler/update-item-cannot-answer
+       mock-update-item-cannot-answer]
+      (let [muistutettavat [{:kyselylinkki "kysely.linkki/vastattu_QWERTY"}
+                            {:kyselylinkki "kysely.linkki/ei_vastattu_YUOIOP"}
+                            {:kyselylinkki "kysely.linkki/xyz_GHKJJK"}]
+
+            expected-call-log
+            ["get-nippulinkki-status: kysely.linkki/vastattu_QWERTY"
+             (str "update-item-cannot-answer: "
+                  "{:kyselylinkki \"kysely.linkki/vastattu_QWERTY\"} "
+                  "{:vastattu true, :voimassa_loppupvm \"2021-10-12\"}")
+             "get-nippulinkki-status: kysely.linkki/ei_vastattu_YUOIOP"
+             "has-time-to-answer?: 2021-10-12"
+             (str "do-jakso-query: "
+                  "{:kyselylinkki \"kysely.linkki/ei_vastattu_YUOIOP\"}")
+             (str "get-oppilaitokset: "
+                  "[{:kyselylinkki \"kysely.linkki/ei_vastattu_YUOIOP\"}]")
+             (str "send-reminder-email: "
+                  "{:kyselylinkki \"kysely.linkki/ei_vastattu_YUOIOP\"} "
+                  "({:en \"Test Institution\", :fi \"Testilaitos\", "
+                  ":sv \"Testanstalt\"})")
+             (str "update-item-email-sent: "
+                  "{:kyselylinkki \"kysely.linkki/ei_vastattu_YUOIOP\"} 456")
+             "get-nippulinkki-status: kysely.linkki/xyz_GHKJJK"
+             "has-time-to-answer?: 2021-10-08"
+             (str "update-item-cannot-answer: "
+                  "{:kyselylinkki \"kysely.linkki/xyz_GHKJJK\"} "
+                  "{:vastattu false, :voimassa_loppupvm \"2021-10-08\"}")]]
+        (emh/sendEmailMuistutus muistutettavat)
+        (is (= @test-sendEmailMuistutus-call-log (reverse expected-call-log)))
+        (is (true? (tu/logs-contain?
+                     {:level :info
+                      :message "Käsitellään 3 lähetettävää muistutusta."})))
+        (is (true? (tu/logs-contain?
+                     {:level :info
+                      :message "Kyselylinkin tunnusosa: QWERTY"})))
+        (is (true? (tu/logs-contain?
+                     {:level :info
+                      :message "Kyselylinkin tunnusosa: YUOIOP"})))
+        (is (true? (tu/logs-contain?
+                     {:level :info
+                      :message "Kyselylinkin tunnusosa: GHKJJK"})))))))
+
+(defn- mock-query-items [query-params options table]
+  (when (and (= :eq (first (:muistutukset query-params)))
+             (= :n (first (second (:muistutukset query-params))))
+             (= 0 (second (second (:muistutukset query-params))))
+             (= :between (first (:lahetyspvm query-params)))
+             (= :s (first (first (second (:lahetyspvm query-params)))))
+             (= :s (first (second (second (:lahetyspvm query-params)))))
+             (= "emailMuistutusIndex" (:index options))
+             (= 10 (:limit options))
+             (= "nippu-table-name" table))
+    {:start-date (second (first (second (:lahetyspvm query-params))))
+     :end-date (second (second (second (:lahetyspvm query-params))))}))
+
+(deftest test-query-muistutukset
+  (testing "Varmista, että query-muistutukset kutsuu query-items oikein"
+    (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
+                  oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
+      (let [expected {:start-date (str (.minusDays (LocalDate/now) 10))
+                      :end-date (str (.minusDays (LocalDate/now) 5))}]
+        (is (= (emh/query-muistutukset) expected))))))
+
+
+;; TODO -handleSendEmailMuistutus
