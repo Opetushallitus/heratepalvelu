@@ -196,6 +196,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateEmailHandler`,
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(
         Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
@@ -219,6 +220,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISEmailStatusHandler`
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(
           Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
@@ -242,6 +244,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISMuistutusHandler`,
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(
         Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
@@ -266,6 +269,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       },
       handler: "oph.heratepalvelu.amis.AMISEmailResendHandler::handleEmailResend",
       memorySize: 1024,
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
     });
@@ -287,6 +291,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       memorySize: Token.asNumber(
           this.getParameterFromSsm("updatedoohandler-memory")
       ),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(
         Token.asNumber(this.getParameterFromSsm("updatedoohandler-timeout"))
       ),

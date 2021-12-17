@@ -211,6 +211,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-timedOperationsHandler`,
       },
       memorySize: Token.asNumber(1024),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tep.ehoksTimedOperationsHandler::handleTimedOperations",
       tracing: lambda.Tracing.ACTIVE
@@ -262,6 +263,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-niputusHandler`,
       },
       memorySize: Token.asNumber(1024),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tep.niputusHandler::handleNiputus",
       tracing: lambda.Tracing.ACTIVE
@@ -290,6 +292,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-emailHandler`,
       },
       memorySize: Token.asNumber(1024),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(300),
       handler: "oph.heratepalvelu.tep.emailHandler::handleSendTEPEmails",
       tracing: lambda.Tracing.ACTIVE
@@ -315,6 +318,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-TEPEmailStatusHandler`
       },
       memorySize: Token.asNumber(1024),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(300),
       handler: "oph.heratepalvelu.tep.StatusHandler::handleEmailStatus",
       tracing: lambda.Tracing.ACTIVE
@@ -341,6 +345,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         send_messages: (this.envVars.stage === 'sade').toString()
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("smshandler-memory")),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(
           Token.asNumber(this.getParameterFromSsm("smshandler-timeout"))
       ),
@@ -369,6 +374,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-EmailMuistutusHandler`
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(
           Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
