@@ -234,3 +234,18 @@
                                               (.s
                                                 (AttributeValue/builder)
                                                 "ei_maaritelty"))}})))))
+
+(defn -handleDBRemoveLinksAddedToPriorKausi [this event context]
+    (loop [resp (scan {:filter-expression (str "heratepvm < :heratepvm "
+                                               "AND tallennuspvm >= :tallennuspvm")
+                       :expr-attr-vals {":heratepvm" (.build (.s (AttributeValue/builder) "2021-07-01"))
+                                        ":tallennuspvm" (.build (.s (AttributeValue/builder) "2021-09-01"))}})]
+      (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+        (let [heratepvm (:heratepvm item)
+              tallennuspvm (:tallennuspvm item)]
+          (println (str "heratepvm: " heratepvm ", tallennuspvm: " tallennuspvm))))
+      (when (.hasLastEvaluatedKey resp)
+        (recur (scan {:filter-expression (str "heratepvm < :heratepvm "
+                                              "AND tallennuspvm >= :tallennuspvm")
+                      :expr-attr-vals {":heratepvm" (.build (.s (AttributeValue/builder) "2021-07-01"))
+                                       ":tallennuspvm" (.build (.s (AttributeValue/builder) "2021-09-01"))}})))))

@@ -441,6 +441,22 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     AMISherateTable.grantReadWriteData(eh1269dbChanger);
 
+    const RemoveLinksAddedToPriorKausi = new lambda.Function(this, "RemoveLinksAddedToPriorKausi", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        table: AMISherateTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-RemoveLinksAddedToPriorKausi`
+      },
+      handler: "oph.heratepalvelu.util.dbChanger::handleDBRemoveLinksAddedToPriorKausi",
+      memorySize: 1024,
+      timeout: Duration.seconds(900),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    AMISherateTable.grantReadWriteData(RemoveLinksAddedToPriorKausi);
+
     [
       AMISHerateHandler,
       AMISherateEmailHandler,
@@ -450,6 +466,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISEmailStatusHandler,
       AMISDeleteTunnusHandler,
       eh1269dbChanger,
+      RemoveLinksAddedToPriorKausi
       //dbArchiver,
       // dbChanger
     ].forEach(
