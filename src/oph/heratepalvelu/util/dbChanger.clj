@@ -30,6 +30,9 @@
             [^:static handleAddTpkNiputuspvmToTEP
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]
+            [^:static handleDBRemoveLinksAddedToPriorKausi
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleResetTpkNiputuspvmInTEP
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
