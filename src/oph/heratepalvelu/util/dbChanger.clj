@@ -240,15 +240,38 @@
 
 (defn -handleDBRemoveLinksAddedToPriorKausi [this event context]
     (loop [resp (scan {:filter-expression (str "heratepvm < :heratepvm "
-                                               "AND tallennuspvm >= :tallennuspvm")
+                                               "AND tallennuspvm >= :tallennuspvm "
+                                               "AND #EH1271Removed = :EH1271Removed")
+                       :expr-attr-names {"#EH1271Removed" "EH-1271Removed"}
                        :expr-attr-vals {":heratepvm" (.build (.s (AttributeValue/builder) "2021-07-01"))
-                                        ":tallennuspvm" (.build (.s (AttributeValue/builder) "2021-09-01"))}})]
-      (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
-        (let [heratepvm (:heratepvm item)
-              tallennuspvm (:tallennuspvm item)]
-          (println (str "heratepvm: " heratepvm ", tallennuspvm: " tallennuspvm))))
-      (when (.hasLastEvaluatedKey resp)
-        (recur (scan {:filter-expression (str "heratepvm < :heratepvm "
-                                              "AND tallennuspvm >= :tallennuspvm")
-                      :expr-attr-vals {":heratepvm" (.build (.s (AttributeValue/builder) "2021-07-01"))
-                                       ":tallennuspvm" (.build (.s (AttributeValue/builder) "2021-09-01"))}})))))
+                                        ":tallennuspvm" (.build (.s (AttributeValue/builder) "2021-09-01"))
+                                        ":EH1271Removed" (.build (.bool (AttributeValue/builder) false))}})
+           sum 0
+           count (.count resp)]
+          (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+            (let [kyselylinkki (:kyselylinkki item)]
+              (arvo/delete-amis-kyselylinkki kyselylinkki)
+              (ddb/update-item
+                {:toimija_oppija [:s (:toimija_oppija item)]
+                 :tyyppi_kausi [:s (:tyyppi_kausi item)]}
+                {:update-expr "SET #removed = :removed"
+                 :expr-attr-names {"#removed" "EH-1271Removed"}
+                 :expr-attr-vals {":removed" [:bool true]}}
+                (:table env))))
+          (if (and
+                (.hasLastEvaluatedKey resp)
+                (< 720000 (.getRemainingTimeInMillis context)))
+            (let [newresp (scan {:exclusive-start-key (.lastEvaluatedKey resp)
+                                 :filter-expression (str "heratepvm < :heratepvm "
+                                                         "AND tallennuspvm >= :tallennuspvm "
+                                                         "AND #EH1271Removed = :EH1271Removed")
+                                 :expr-attr-names {"#EH1271Removed" "EH-1271Removed"}
+                                 :expr-attr-vals {":heratepvm" (.build (.s (AttributeValue/builder) "2021-07-01"))
+                                                  ":tallennuspvm" (.build (.s (AttributeValue/builder) "2021-09-01"))
+                                                  ":EH1271Removed" (.build (.bool (AttributeValue/builder) false))}})
+                  newsum (+ count sum)
+                  newcount (.count newresp)]
+              (recur newresp
+                     newsum
+                     newcount))
+            (println sum))))

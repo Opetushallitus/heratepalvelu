@@ -451,6 +451,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       },
       handler: "oph.heratepalvelu.util.dbChanger::handleDBRemoveLinksAddedToPriorKausi",
       memorySize: 1024,
+      reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(900),
       tracing: lambda.Tracing.ACTIVE
     });
