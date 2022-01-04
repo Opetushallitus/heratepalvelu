@@ -2,9 +2,37 @@
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.tep.jaksoHandler :as jh]
             [oph.heratepalvelu.test-util :as tu])
-  (:import (java.time LocalDate)))
+  (:import (clojure.lang ExceptionInfo)
+           (java.time LocalDate)))
 
 (use-fixtures :each tu/clear-logs-before-test)
+
+(deftest test-tep-herate-checker
+  (testing "Varmista, että tep-herate-checker vaatii oikean scheman"
+    (let [good1 {:tyyppi "aloittaneet"
+                 :alkupvm "2022-01-01"
+                 :loppupvm "2022-02-02"
+                 :hoks-id 1234
+                 :opiskeluoikeus-oid "123-456-789"
+                 :oppija-oid "234-567-891"
+                 :hankkimistapa-id 789
+                 :hankkimistapa-tyyppi "01"
+                 :tutkinnonosa-id 67
+                 :tutkinnonosa-koodi "asdf"
+                 :tutkinnonosa-nimi "A S D F"
+                 :tyopaikan-nimi "ABCD"
+                 :tyopaikan-ytunnus "123456-7"
+                 :tyopaikkaohjaaja-email "esa@esimerkki.fi"
+                 :tyopaikkaohjaaja-nimi "Esa Esimerkki"}
+          good2 (assoc good1 :keskeytymisajanjaksot [])
+          good3 (assoc good1 :keskeytymisajanjaksot [{:alku "2022-01-05"}])
+          bad1 (assoc good1 :keskeytymisajanjaksot [{}])
+          bad2 (assoc good1 :tyyppi "")]
+      (is (nil? (jh/tep-herate-checker good1)))
+      (is (nil? (jh/tep-herate-checker good2)))
+      (is (nil? (jh/tep-herate-checker good3)))
+      (is (some? (jh/tep-herate-checker bad1)))
+      (is (some? (jh/tep-herate-checker bad2))))))
 
 (deftest kesto-test
   (testing "Keston laskenta ottaa huomioon osa-aikaisuuden, opiskeluoikeuden väliaikaisen keskeytymisen ja lomat"
@@ -115,3 +143,49 @@
               {:level :warn
                :message "Osaamisenhankkimistapa id 456 on jo käsitelty."})))
       (is (true? (jh/check-duplicate-hankkimistapa 123))))))
+
+(defn- mock-check-duplicate-tunnus-query-items [query-params options table]
+  (when (and (= :eq (first (:tunnus query-params)))
+             (= :s (first (second (:tunnus query-params))))
+             (= "ABCDEF" (second (second (:tunnus query-params))))
+             (= "uniikkiusIndex" (:index options))
+             (= "jaksotunnus-table-name" table))
+    {:items [{:tunnus "ABCDEF"}]}))
+
+(deftest test-check-duplicate-tunnus
+  (testing "Varmista, että check-duplicate-tunnus tunnistaa duplikaattoja"
+    (with-redefs [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
+                  oph.heratepalvelu.db.dynamodb/query-items
+                  mock-check-duplicate-tunnus-query-items]
+      (is (true? (jh/check-duplicate-tunnus "ABCDDD")))
+      (is (thrown-with-msg? ExceptionInfo
+                            #"Tunnus ABCDEF on jo käytössä"
+                            (jh/check-duplicate-tunnus "ABCDEF"))))))
+
+(def mock-save-to-tables-put-item-results (atom {}))
+
+(defn- mock-save-to-tables-put-item [data options table]
+  (if (= table "jaksotunnus-table-name")
+    (when (= "attribute_not_exists(hankkimistapa_id)" (:cond-expr options))
+      (reset! mock-save-to-tables-put-item-results
+              (assoc @mock-save-to-tables-put-item-results
+                     :jaksotunnus-table-data
+                     data)))
+    (when (and (= table "nippu-table-name") (= {} options))
+      (reset! mock-save-to-tables-put-item-results
+              (assoc @mock-save-to-tables-put-item-results
+                     :nippu-table-data
+                     data)))))
+
+(deftest test-save-to-tables
+  (testing "Varmista, että jaksotunnus- ja nipputiedot tallennetaan oikein"
+    (with-redefs
+      [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"
+                         :nippu-table "nippu-table-name"}
+       oph.heratepalvelu.db.dynamodb/put-item mock-save-to-tables-put-item]
+      (let [jaksotunnus-table-data {:contents "jaksotunnus-table-data"}
+            nippu-table-data {:contents "nippu-table-data"}
+            results {:jaksotunnus-table-data jaksotunnus-table-data
+                     :nippu-table-data nippu-table-data}]
+        (jh/save-to-tables jaksotunnus-table-data nippu-table-data)
+        (is (= results @mock-save-to-tables-put-item-results))))))
