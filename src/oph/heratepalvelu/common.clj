@@ -55,6 +55,10 @@
   (let [[year month day] (map #(Integer. %1) (str/split str-date #"-"))]
     (LocalDate/of year month day)))
 
+(defn local-date-now []
+  "Abstraktio LocalDate/now:n ympäri, joka helpottaa testaamista."
+  (LocalDate/now))
+
 (defn has-time-to-answer? [loppupvm]
   (when loppupvm
     (let [enddate (first (str/split loppupvm #"T"))]
