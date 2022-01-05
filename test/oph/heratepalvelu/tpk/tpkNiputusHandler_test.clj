@@ -1,7 +1,10 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler-test
   (:require [clj-time.core :as t]
             [clojure.test :refer :all]
-            [oph.heratepalvelu.tpk.tpkNiputusHandler :as tpk]))
+            [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.tpk.tpkNiputusHandler :as tpk]
+            [oph.heratepalvelu.test-util :as tu])
+  (:import (java.time LocalDate)))
 
 (deftest test-check-jakso
   (testing "check-jakso? tarkistaa jaksot oikein"
@@ -257,4 +260,133 @@
         (tpk/update-tpk-niputuspvm jakso new-value)
         (is (= @test-update-tpk-niputuspvm-results expected))))))
 
-;; TODO query-niputtamattomat, -handleTpkNiputus
+(def mock-handleTpkNiputus-results (atom []))
+
+(defn- append-to-mock-handleTpkNiputus-results [value]
+  (reset! mock-handleTpkNiputus-results
+          (cons value @mock-handleTpkNiputus-results)))
+
+(def mock-niputtamattomat-list
+  [{:hankkimistapa_id [:n 863]
+    :koulutustoimija [:s "12345"]
+    :tyopaikan_nimi [:s "Työ Paikka"]
+    :tyopaikan_ytunnus [:s "123456-7"]
+    :jakso_loppupvm [:s "2021-12-20"]
+    :hankkimistapa_tyyppi [:s "oppisopimus"]
+    :oppisopimuksen_perusta [:s "02"]}
+   {:hankkimistapa_id [:n 1]
+    :koulutustoimija [:s "12345"]
+    :tyopaikan_nimi [:s "Työ Paikka"]
+    :tyopaikan_ytunnus [:s "123456-7"]
+    :jakso_loppupvm [:s "2021-12-20"]
+    :hankkimistapa_tyyppi [:s "koulutussopimus"]
+    :oppisopimuksen_perusta [:s "02"]}
+
+   ;; Tämä jakso kuuluu memoized-nippuun
+   {:hankkimistapa_id [:n 2]
+    :koulutustoimija [:s "12345"]
+    :tyopaikan_nimi [:s "Työ Paikka"]
+    :tyopaikan_ytunnus [:s "123456-7"]
+    :jakso_loppupvm [:s "2021-12-20"]
+    :hankkimistapa_tyyppi [:s "koulutussopimus"]
+    :oppisopimuksen_perusta [:s "02"]}
+
+   ;; Tämä jakso kuuluu olemassa olevaan nippuun
+   {:hankkimistapa_id [:n 1234]
+    :koulutustoimija [:s "12345"]
+    :tyopaikan_nimi [:s "Toinen Työ Paikka"]
+    :tyopaikan_ytunnus [:s "123890-6"]
+    :jakso_loppupvm [:s "2021-12-20"]
+    :hankkimistapa_tyyppi [:s "koulutussopimus"]
+    :oppisopimuksen_perusta [:s "02"]}])
+
+(defn- get-specific-niputtamaton [index]
+  (reduce #(assoc %1 (first %2) (second (second %2)))
+          {}
+          (seq (get mock-niputtamattomat-list index))))
+
+(definterface IMockScanResponse
+  (items [])
+  (hasLastEvaluatedKey []))
+
+(deftype MockScanResponse [items-to-return]
+  IMockScanResponse
+  (items [this] items-to-return)
+  (hasLastEvaluatedKey [this] false))
+
+(defn- mock-query-niputtamattomat [exclusive-start-key]
+  (MockScanResponse.
+    (map ddb/map-vals-to-attribute-values mock-niputtamattomat-list)))
+
+(defn- mock-get-existing-nippu [jakso]
+  (append-to-mock-handleTpkNiputus-results {:type "mock-get-existing-nippu"
+                                            :jakso jakso})
+  (when (= 1234 (:hankkimistapa_id jakso)) {:niputuspvm "2021-12-15"}))
+
+(defn- mock-make-arvo-request [nippu]
+  (append-to-mock-handleTpkNiputus-results {:type "mock-make-arvo-request"
+                                            :nippu (dissoc nippu :request-id)})
+  {:kysely_linkki "kysely.linkki/123"
+   :tunnus "ASDFGH"
+   :voimassa_loppupvm "2022-01-01"})
+
+(defn- mock-save-nippu [nippu]
+  (append-to-mock-handleTpkNiputus-results {:type "mock-save-nippu"
+                                            :nippu (dissoc nippu :request-id)}))
+
+(defn- mock-update-tpk-niputuspvm [jakso new-value]
+  (append-to-mock-handleTpkNiputus-results {:type "mock-update-tpk-niputuspvm"
+                                            :jakso-id (:hankkimistapa_id jakso)
+                                            :new-value new-value}))
+
+(deftest test-handleTpkNiputus
+  (testing "Varmista, että -handleTpkNiputus toimii oikein"
+    (with-redefs
+      [oph.heratepalvelu.tpk.tpkNiputusHandler/get-existing-nippu
+       mock-get-existing-nippu
+       oph.heratepalvelu.tpk.tpkNiputusHandler/make-arvo-request
+       mock-make-arvo-request
+       oph.heratepalvelu.tpk.tpkNiputusHandler/query-niputtamattomat
+       mock-query-niputtamattomat
+       oph.heratepalvelu.tpk.tpkNiputusHandler/save-nippu mock-save-nippu
+       oph.heratepalvelu.tpk.tpkNiputusHandler/update-tpk-niputuspvm
+       mock-update-tpk-niputuspvm]
+      (let [event (tu/mock-handler-event :scheduledherate)
+            context (tu/mock-handler-context 40000)
+            results [{:type "mock-update-tpk-niputuspvm"
+                      :jakso-id 863
+                      :new-value "ei_niputeta"}
+
+                     {:type "mock-get-existing-nippu"
+                      :jakso (get-specific-niputtamaton 1)}
+                     {:type "mock-make-arvo-request"
+                      :nippu (dissoc
+                               (tpk/create-nippu (get-specific-niputtamaton 1)
+                                                 "asdf")
+                               :request-id)}
+                     {:type "mock-save-nippu"
+                      :nippu (assoc
+                               (dissoc
+                                 (tpk/create-nippu (get-specific-niputtamaton 1)
+                                                   "asdf")
+                                 :request-id)
+                               :kyselylinkki "kysely.linkki/123"
+                               :tunnus "ASDFGH"
+                               :voimassa-loppupvm "2022-01-01")}
+                     {:type "mock-update-tpk-niputuspvm"
+                      :jakso-id 1
+                      :new-value (str (LocalDate/now))}
+
+                     ;; Memoized-nipun tulokset
+                     {:type "mock-update-tpk-niputuspvm"
+                      :jakso-id 2
+                      :new-value (str (LocalDate/now))}
+
+                     ;; Olemassa olevan nipun tulokset
+                     {:type "mock-get-existing-nippu"
+                      :jakso (get-specific-niputtamaton 3)}
+                     {:type "mock-update-tpk-niputuspvm"
+                      :jakso-id 1234
+                      :new-value "2021-12-15"}]]
+        (tpk/-handleTpkNiputus {} event context)
+        (is (= results (vec (reverse @mock-handleTpkNiputus-results))))))))

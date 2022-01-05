@@ -94,15 +94,19 @@
     (.setRecords event [message])
     event))
 
-(defn reify-context []
-  (reify com.amazonaws.services.lambda.runtime.Context
-    (getAwsRequestId [this]
-      dummy-request-id)
-    (getRemainingTimeInMillis [this]
-      100)))
+(defn reify-context
+  ([] (reify-context 100))
+  ([milliseconds]
+    (reify com.amazonaws.services.lambda.runtime.Context
+      (getAwsRequestId [this]
+        dummy-request-id)
+      (getRemainingTimeInMillis [this]
+        milliseconds))))
 
-(defn mock-handler-context []
-  (reify-context))
+(defn mock-handler-context
+  ([] (reify-context))
+  ([milliseconds]
+   (reify-context milliseconds)))
 
 (defn mock-get-hankintakoulutus-oids-empty [_]
   [])
