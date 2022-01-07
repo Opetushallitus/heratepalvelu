@@ -6,6 +6,11 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
+;; query-niputtamattomat -funktiota ei tällä hetkellä testata, koska mockien
+;; kirjoittaminen Java-luokkiin näyttää olevan kohtuuttoman vaikea (ainakin
+;; ilman muita kirjastoja). Toivottavasti joskus faktoroidaan scan-logiikka
+;; pois, mikä sallii projektin sisäisen scan-funktion mockaamisen.
+
 (deftest test-check-jakso
   (testing "check-jakso? tarkistaa jaksot oikein"
     (let [good-jakso1 {:koulutustoimija        "1.2.246.562.10.346830761110"
