@@ -18,6 +18,14 @@
 
 (def ^:private new-changes? (atom false))
 
+(defn convert-email-status [status]
+  (if (= (:numberOfSuccessfulSendings status) 1)
+    (:success c/kasittelytilat)
+    (if (= (:numberOfBouncedSendings status) 1)
+      (:bounced c/kasittelytilat)
+      (when (= (:numberOfFailedSendings status) 1)
+        (:failed c/kasittelytilat)))))
+
 (defn -handleEmailStatus [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
   (loop [emails (ddb/query-items {:kasittelytila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
@@ -29,12 +37,7 @@
                                  :niputuspvm                  [:s (:niputuspvm email)]}
                                 (:nippu-table env))
             status (vp/get-email-status (:viestintapalvelu-id nippu))
-            tila (if (= (:numberOfSuccessfulSendings status) 1)
-                   (:success c/kasittelytilat)
-                   (if (= (:numberOfBouncedSendings status) 1)
-                     (:bounced c/kasittelytilat)
-                     (when (= (:numberOfFailedSendings status) 1)
-                       (:failed c/kasittelytilat))))
+            tila (convert-email-status status)
             new-loppupvm (tc/get-new-loppupvm nippu)]
         (if tila
           (do
