@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.tep.StatusHandler :as sh]
-            [oph.heratepalvelu.test-util :as tu]))
+            [oph.heratepalvelu.test-util :as tu])
+  (:import (java.time LocalDate)))
 
 (deftest test-convert-email-status
   (testing "Varmista, että convert-email-status palauttaa oikeat arvot"
@@ -105,6 +106,8 @@
 (deftest test-handleEmailStatus
   (testing "Varmista, että -handleEmailStatus kutsuu kaikkia funktioita oikein"
     (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
+                  oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/of 2022 1 10))
                   oph.heratepalvelu.db.dynamodb/get-item mock-get-item
                   oph.heratepalvelu.db.dynamodb/query-items mock-query-items
                   oph.heratepalvelu.db.dynamodb/update-item mock-update-item

@@ -1,9 +1,8 @@
 (ns oph.heratepalvelu.tep.tepCommon
-  (:require [oph.heratepalvelu.common :as c])
-  (:import (java.time LocalDate)))
+  (:require [oph.heratepalvelu.common :as c]))
 
 (defn get-new-loppupvm
-  ([nippu] (get-new-loppupvm nippu (LocalDate/now)))
+  ([nippu] (get-new-loppupvm nippu (c/local-date-now)))
   ([nippu date]
     (if (or (= (:kasittelytila nippu) (:success c/kasittelytilat))
             (= (:kasittelytila nippu) (:vastattu c/kasittelytilat))
