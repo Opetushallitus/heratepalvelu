@@ -153,7 +153,7 @@
 
 (defn create-nipputunniste [tyopaikan-nimi]
   "Luo nipulle tunnisteen ilman erikoismerkkejä"
-  (str (normalize-string tyopaikan-nimi) "_" (t/today) "_" (rand-str 6)))
+  (str (normalize-string tyopaikan-nimi) "_" (local-date-now) "_" (rand-str 6)))
 
 (defn check-organisaatio-whitelist?
   ([koulutustoimija]
