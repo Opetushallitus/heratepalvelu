@@ -17,7 +17,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- sendSmsMuistutus [muistutettavat]
+(defn sendSmsMuistutus [muistutettavat]
   (log/info (str "Käsitellään " (count muistutettavat) " muistutusta."))
   (doseq [nippu muistutettavat]
     (log/info "Kyselylinkin tunnusosa:" (last (str/split (:kyselylinkki nippu) #"_")))
@@ -49,7 +49,7 @@
                                  "#sms_muistutuspvm"  "sms_muistutuspvm"
                                  "#sms_muistutukset"  "sms_muistutukset"}
                :expr-attr-vals  {":sms_kasittelytila" [:s status]
-                                 ":sms_muistutuspvm"  [:s (str (LocalDate/now))]
+                                 ":sms_muistutuspvm"  [:s (str (c/local-date-now))]
                                  ":sms_muistutukset"  [:n 1]}}
               (:nippu-table env)))
           (catch AwsServiceException e
