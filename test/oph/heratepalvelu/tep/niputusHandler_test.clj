@@ -94,8 +94,7 @@
 (deftest test-niputa
   (testing "Varmista, että niputa-funktio tekee oikeita kutsuja"
     (with-redefs
-      [clj-time.core/today (fn [] (LocalDate/of 2021 12 31))
-       environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"
+      [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"
                          :nippu-table "nippu-table-name"}
        oph.heratepalvelu.common/generate-uuid mock-generate-uuid
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 31))

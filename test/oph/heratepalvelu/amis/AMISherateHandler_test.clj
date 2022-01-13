@@ -37,7 +37,7 @@
 
 (deftest test-handleAMISherate
   (testing "Varmista, että -handleAMISherate toimii oikein"
-    (with-redefs [oph.heratepalvelu.common/save-herate mock-save-herate
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/save-herate mock-save-herate
                   oph.heratepalvelu.common/get-koulutustoimija-oid
                   mock-get-koulutustoimija-oid
                   oph.heratepalvelu.common/check-opiskeluoikeus-suoritus-types?

@@ -1,16 +1,17 @@
 (ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler
   (:require
-    [oph.heratepalvelu.external.koski :refer [get-updated-opiskeluoikeudet]]
-    [oph.heratepalvelu.external.ehoks :refer [get-hoks-by-opiskeluoikeus]]
-    [oph.heratepalvelu.db.dynamodb :as ddb]
-    [oph.heratepalvelu.common :refer :all]
-    [oph.heratepalvelu.log.caller-log :refer :all]
-    [environ.core :refer [env]]
-    [clojure.tools.logging :as log]
-    [schema.core :as s]
-    [clj-time.format :as f]
     [clj-time.coerce :as c]
-    [clj-time.core :as t])
+    [clj-time.core :as t]
+    [clj-time.format :as f]
+    [clojure.tools.logging :as log]
+    [environ.core :refer [env]]
+    [oph.heratepalvelu.amis.AMISCommon :as ac]
+    [oph.heratepalvelu.common :refer :all]
+    [oph.heratepalvelu.db.dynamodb :as ddb]
+    [oph.heratepalvelu.external.ehoks :refer [get-hoks-by-opiskeluoikeus]]
+    [oph.heratepalvelu.external.koski :refer [get-updated-opiskeluoikeudet]]
+    [oph.heratepalvelu.log.caller-log :refer :all]
+    [schema.core :as s])
   (:import (clojure.lang ExceptionInfo)))
 
 (gen-class
@@ -135,7 +136,7 @@
                                            koulutustoimija)
                                  (throw e))))]
                     (if (:osaamisen-hankkimisen-tarve hoks)
-                      (save-herate
+                      (ac/save-herate
                         (parse-herate
                           hoks
                           (get-kysely-type opiskeluoikeus)
