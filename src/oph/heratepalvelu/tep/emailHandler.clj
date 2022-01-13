@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.tep.emailHandler
   (:require [cheshire.core :refer [parse-string]]
-            [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
@@ -63,7 +62,7 @@
 
 (defn do-nippu-query []
   (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-                    :niputuspvm    [:le [:s (str (t/today))]]}
+                    :niputuspvm    [:le [:s (str (c/local-date-now))]]}
                    {:index "niputusIndex"
                     :limit 20}
                    (:nippu-table env)))
@@ -113,7 +112,7 @@
        :expr-attr-names {"#kasittelytila" "kasittelytila"
                          "#lahetyspvm" "lahetyspvm"}
        :expr-attr-vals {":kasittelytila" [:s (:vastausaika-loppunut c/kasittelytilat)]
-                        ":lahetyspvm" [:s (str (t/today))]}}
+                        ":lahetyspvm" [:s (str (c/local-date-now))]}}
       (:nippu-table env))
     (catch Exception e
       (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" email)
@@ -145,7 +144,7 @@
           (if (c/has-time-to-answer? (:voimassaloppupvm email))
             (when (some? osoite)
               (let [id (:id (send-survey-email email oppilaitokset osoite))
-                    lahetyspvm (str (t/today))]
+                    lahetyspvm (str (c/local-date-now))]
                 (email-sent-update-item email id lahetyspvm osoite)))
             (no-time-to-answer-update-item email))))
       (when (< 60000 (.getRemainingTimeInMillis context))

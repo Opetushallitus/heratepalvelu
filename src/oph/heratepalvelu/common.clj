@@ -1,7 +1,6 @@
 (ns oph.heratepalvelu.common
   (:require [clj-time.format :as f]
             [clj-time.coerce :as c]
-            [clj-time.core :as t]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.external.arvo :as arvo]
@@ -165,7 +164,7 @@
          (and
            (:kayttoonottopvm item)
            (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-               (c/to-long (t/today))))
+               (c/to-long (local-date-now))))
          true
          (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa")))))
   ([koulutustoimija timestamp]
@@ -179,7 +178,7 @@
            (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
                timestamp)
            (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-               (c/to-long (t/today))))
+               (c/to-long (local-date-now))))
          true
          (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa,"
                    " tai herätepvm " (str (LocalDate/ofEpochDay (/ timestamp 86400000)))

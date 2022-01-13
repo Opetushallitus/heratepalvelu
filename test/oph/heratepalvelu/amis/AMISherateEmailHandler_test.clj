@@ -111,16 +111,16 @@
 
 (deftest test-save-no-time-to-answer
   (testing "Varmista, että save-no-time-to-answer kutsuu update-item oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/update-item
-                  mock-no-time-to-answer-update-item
-                  clj-time.core/today
-                  (fn [] (LocalDate/parse "2021-10-10"))]
+    (with-redefs [oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/parse "2021-10-10"))
+                  oph.heratepalvelu.db.dynamodb/update-item
+                  mock-no-time-to-answer-update-item]
       (let [email {:toimija_oppija "toimija-oppija"
                    :tyyppi_kausi "tyyppi-kausi"}
             expected {:toimija-oppija "toimija-oppija"
                       :tyyppi-kausi "tyyppi-kausi"
                       :lahetystila (:vastausaika-loppunut c/kasittelytilat)
-                      :lahetyspvm (str (t/today))}]
+                      :lahetyspvm "2021-10-10"}]
         (heh/save-no-time-to-answer email)
         (is (= @mock-no-time-to-answer-update-item-result expected))))))
 
@@ -137,8 +137,9 @@
 
 (deftest test-do-query
   (testing "Varmista, että do-query kutsuu query-items oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/query-items mock-query-items
-                  clj-time.core/today (fn [] (LocalDate/parse "2021-10-10"))]
+    (with-redefs [oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/parse "2021-10-10"))
+                  oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
       (is (true? (heh/do-query))))))
 
 (defn- mock-do-query [] [{:kyselylinkki "good.kyselylinkki/123"}])
@@ -178,8 +179,7 @@
 (deftest test-handleSendAMISEmails
   (testing "Varmista, että -handleSendAMISEmails toimii oikein"
     (with-redefs
-      [clj-time.core/today (fn [] (LocalDate/parse "2025-10-10"))
-       oph.heratepalvelu.amis.AMISherateEmailHandler/save-email-to-db
+      [oph.heratepalvelu.amis.AMISherateEmailHandler/save-email-to-db
        mock-save-email-to-db
        oph.heratepalvelu.amis.AMISherateEmailHandler/update-data-in-ehoks
        mock-update-data-in-ehoks
@@ -188,6 +188,8 @@
        oph.heratepalvelu.amis.AMISherateEmailHandler/send-feedback-email
        mock-send-feedback-email
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
+       oph.heratepalvelu.common/local-date-now
+       (fn [] (LocalDate/of 2025 10 10))
        oph.heratepalvelu.external.arvo/get-kyselylinkki-status
        mock-get-kyselylinkki-status]
       (let [event (tu/mock-handler-event :scheduledherate)

@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.amis.AMISMuistutusHandler
-  (:require [oph.heratepalvelu.db.dynamodb :as ddb]
+  (:require [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amismuistutus-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
             [oph.heratepalvelu.log.caller-log :refer :all]
@@ -31,7 +32,7 @@
        :expr-attr-vals  {":muistutukset" [:n n]
                          ":vpid" [:n id]
                          ":lahetystila" [:s (:viestintapalvelussa kasittelytilat)]
-                         ":muistutuspvm" [:s (str (t/today))]}})
+                         ":muistutuspvm" [:s (str (c/local-date-now))]}})
     (catch AwsServiceException e
       (log/error "Muistutus"
                  email
@@ -83,11 +84,11 @@
                     :lahetyspvm  [:between
                                   [[:s (str
                                          (t/minus
-                                           (t/today)
+                                           (c/local-date-now)
                                            (t/days (- (* 5 (+ n 1)) 1))))]
                                    [:s (str
                                          (t/minus
-                                           (t/today)
+                                           (c/local-date-now)
                                            (t/days (* 5 n))))]]]}
                    {:index "muistutusIndex"
                     :limit 50}))

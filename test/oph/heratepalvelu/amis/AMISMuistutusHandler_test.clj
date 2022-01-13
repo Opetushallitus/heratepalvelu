@@ -29,7 +29,8 @@
 
 (deftest test-update-after-send
   (testing "Varmista, että update-after-send kutsuu update-item oikein"
-    (with-redefs [clj-time.core/today (fn [] (LocalDate/of 2021 10 10))
+    (with-redefs [oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/of 2021 10 10))
                   oph.heratepalvelu.db.dynamodb/update-item
                   mock-update-item-for-update-after-send]
       (let [email {:toimija_oppija "toimija-oppija"
@@ -187,8 +188,9 @@
 
 (deftest test-query-muistutukset
   (testing "Varmista, että query-muistutukset kutsuu query-items oikein"
-    (with-redefs [clj-time.core/today (fn [] (t/local-date 2021 10 10))
-                  oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
+    (with-redefs
+      [oph.heratepalvelu.common/local-date-now (fn [] (t/local-date 2021 10 10))
+       oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
       (let [expected-1 {:muistutukset 0
                         :start-span "2021-10-01"
                         :end-span "2021-10-05"}

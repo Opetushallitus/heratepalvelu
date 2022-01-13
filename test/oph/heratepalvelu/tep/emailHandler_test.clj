@@ -145,8 +145,9 @@
 
 (deftest test-do-nippu-query
   (testing "Varmista, että do-nippu-query kutsuu query-items oikein"
-    (with-redefs [clj-time.core/today (fn [] (LocalDate/of 2021 10 10))
-                  environ.core/env {:nippu-table "nippu-table-name"}
+    (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
+                  oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/of 2021 10 10))
                   oph.heratepalvelu.db.dynamodb/query-items
                   mock-do-nippu-query-query-items]
       (eh/do-nippu-query)
@@ -251,8 +252,9 @@
 
 (deftest test-no-time-to-answer-update-item
   (testing "Varmista, että no-time-to-answer-update-item kutsuu update-item"
-    (with-redefs [clj-time.core/today (fn [] (LocalDate/of 2021 10 10))
-                  environ.core/env {:nippu-table "nippu-table-name"}
+    (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
+                  oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/of 2021 10 10))
                   oph.heratepalvelu.db.dynamodb/update-item
                   mock-nttaui-update-item]
       (let [email {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
@@ -362,9 +364,9 @@
 (deftest test-handleSendTEPEmails
   (testing "Varmista, että -handleSendTEPEmails kutsuu funktioita oikein"
     (with-redefs
-      [clj-time.core/today (fn [] (LocalDate/of 2021 10 1))
-       clojure.tools.logging/log* tu/mock-log*
+      [clojure.tools.logging/log* tu/mock-log*
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
+       oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 10 1))
        oph.heratepalvelu.tep.emailHandler/do-nippu-query mock-do-nippu-query
        oph.heratepalvelu.tep.emailHandler/do-jakso-query mock-do-jakso-query
        oph.heratepalvelu.tep.emailHandler/lahetysosoite mock-lahetysosoite

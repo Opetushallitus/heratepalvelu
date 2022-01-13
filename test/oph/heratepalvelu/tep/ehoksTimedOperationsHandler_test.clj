@@ -15,8 +15,9 @@
 
 (deftest test-handleTimedOperations
   (testing "Varmista, että -handleTimedOperations kutsuu ehoks-palvelun oikein"
-    (with-redefs [clj-time.core/today (fn [] (LocalDate/of 2021 10 10))
-                  clojure.tools.logging/log* tu/mock-log*
+    (with-redefs [clojure.tools.logging/log* tu/mock-log*
+                  oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/of 2021 10 10))
                   oph.heratepalvelu.external.ehoks/get-paattyneet-tyoelamajaksot
                   mock-get-paattyneet-tyoelamajaksot]
       (let [event (tu/mock-handler-event :scheduledherate)
