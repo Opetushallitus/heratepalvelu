@@ -144,9 +144,9 @@
                        :tutkintotunnus "asdf"
                        :tyonantaja "123456-7"
                        :tyopaikka "Testityöpaikka"
-                       :tunnukset ["ABCDEF"]
+                       :tunnukset (seq ["ABCDEF"])
                        :voimassa_alkupvm "2021-12-31"
-                       :request-id "test-uuid"}}
+                       :request_id "test-uuid"}}
                      {:type "mock-niputa-update-item"
                       :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
                       :niputuspvm "2021-12-15"
@@ -170,9 +170,9 @@
                        :tutkintotunnus "aaaa"
                        :tyonantaja "111111-1"
                        :tyopaikka nil
-                       :tunnukset ["ABCDEF"]
+                       :tunnukset (seq ["ABCDEF"])
                        :voimassa_alkupvm "2021-12-31"
-                       :request-id "test-uuid"}}
+                       :request_id "test-uuid"}}
                      {:type "mock-niputa-update-item"
                       :ohjaaja_ytunnus_kj_tutkinto "test-id-2"
                       :niputuspvm "2021-12-15"
