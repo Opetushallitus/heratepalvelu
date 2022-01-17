@@ -207,9 +207,9 @@
   (s/checker herate-schema))
 
 (defn alku [herate-date]
-  (if (.isAfter herate-date (LocalDate/now))
+  (if (.isAfter herate-date (local-date-now))
     herate-date
-    (LocalDate/now)))
+    (local-date-now)))
 
 (defn loppu [herate alku]
   (let [last (.plusDays herate 59)
