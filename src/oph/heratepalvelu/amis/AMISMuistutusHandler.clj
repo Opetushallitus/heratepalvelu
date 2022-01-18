@@ -1,13 +1,11 @@
 (ns oph.heratepalvelu.amis.AMISMuistutusHandler
-  (:require [oph.heratepalvelu.common :as c]
+  (:require [cheshire.core :refer [parse-string]]
+            [clojure.tools.logging :as log] [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amismuistutus-html]]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
+            [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amismuistutus-html]]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :refer [has-time-to-answer? kasittelytilat]]
-            [clojure.tools.logging :as log]
-            [clj-time.core :as t]
-            [cheshire.core :refer [parse-string]])
+            [oph.heratepalvelu.common :refer [has-time-to-answer? kasittelytilat]])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -83,13 +81,13 @@
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
                     :lahetyspvm  [:between
                                   [[:s (str
-                                         (t/minus
+                                         (.minusDays
                                            (c/local-date-now)
-                                           (t/days (- (* 5 (+ n 1)) 1))))]
+                                           (- (* 5 (+ n 1)) 1)))]
                                    [:s (str
-                                         (t/minus
+                                         (.minusDays
                                            (c/local-date-now)
-                                           (t/days (* 5 n))))]]]}
+                                           (* 5 n)))]]]}
                    {:index "muistutusIndex"
                     :limit 50}))
 
