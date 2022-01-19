@@ -55,7 +55,7 @@
   (if (empty? (ddb/get-item {:hankkimistapa_id [:n id]}
                             (:jaksotunnus-table env)))
     true
-    (log/warn "Osaamisenhankkimistapa id:llä " id "on jo käsitelty.")))
+    (log/warn "Osaamisenhankkimistapa id" id "on jo käsitelty.")))
 
 (defn check-duplicate-tunnus [tunnus]
   (let [items (ddb/query-items {:tunnus [:eq [:s tunnus]]}
@@ -165,7 +165,7 @@
     (when (check-duplicate-hankkimistapa tapa-id)
       (try
         (let [request-id (c/generate-uuid)
-              niputuspvm (c/next-niputus-date (str (LocalDate/now)))
+              niputuspvm (c/next-niputus-date (str (c/local-date-now)))
               alkupvm    (c/next-niputus-date (:loppupvm herate))
               suoritus   (c/get-suoritus opiskeluoikeus)
               kesto      (kesto herate (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))
@@ -197,7 +197,7 @@
                        :alkupvm              [:s (str alkupvm)]
                        :viimeinen_vastauspvm [:s (str (.plusDays alkupvm 60))]
                        :rahoituskausi        [:s (c/kausi (:loppupvm herate))]
-                       :tallennuspvm         [:s (str (LocalDate/now))]
+                       :tallennuspvm         [:s (str (c/local-date-now))]
                        :tutkinnonosa_tyyppi  [:s (:tyyppi herate)]
                        :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]
                        :tutkintonimike       [:s (str

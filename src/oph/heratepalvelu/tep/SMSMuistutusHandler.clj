@@ -17,7 +17,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- sendSmsMuistutus [muistutettavat]
+(defn sendSmsMuistutus [muistutettavat]
   (log/info (str "Käsitellään " (count muistutettavat) " muistutusta."))
   (doseq [nippu muistutettavat]
     (log/info "Kyselylinkin tunnusosa:" (last (str/split (:kyselylinkki nippu) #"_")))
@@ -49,7 +49,7 @@
                                  "#sms_muistutuspvm"  "sms_muistutuspvm"
                                  "#sms_muistutukset"  "sms_muistutukset"}
                :expr-attr-vals  {":sms_kasittelytila" [:s status]
-                                 ":sms_muistutuspvm"  [:s (str (LocalDate/now))]
+                                 ":sms_muistutuspvm"  [:s (str (c/local-date-now))]
                                  ":sms_muistutukset"  [:n 1]}}
               (:nippu-table env)))
           (catch AwsServiceException e
@@ -76,20 +76,22 @@
             (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" nippu)
             (log/error e)))))))
 
-(defn- query-muistukset []
+(defn query-muistutukset []
   (ddb/query-items {:sms_muistutukset [:eq [:n 0]]
                     :sms_lahetyspvm  [:between
-                                      [[:s (str (.minusDays (LocalDate/now) 10))]
-                                       [:s (str (.minusDays (LocalDate/now) 5))]]]}
+                                      [[:s (str (.minusDays (c/local-date-now)
+                                                            10))]
+                                       [:s (str (.minusDays (c/local-date-now)
+                                                            5))]]]}
                    {:index "smsMuistutusIndex"
                     :limit 10}
                    (:nippu-table env)))
 
 (defn -handleSendSMSMuistutus [this event context]
   (log-caller-details-scheduled "handleSendSMSMuistutus" event context)
-  (loop [muistutettavat (query-muistukset)]
+  (loop [muistutettavat (query-muistutukset)]
     (sendSmsMuistutus muistutettavat)
     (when (and
             (seq muistutettavat)
             (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistukset)))))
+      (recur (query-muistutukset)))))

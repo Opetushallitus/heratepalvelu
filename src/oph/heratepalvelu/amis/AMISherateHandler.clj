@@ -1,10 +1,11 @@
 (ns oph.heratepalvelu.amis.AMISherateHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
+            [oph.heratepalvelu.amis.AMISCommon :as ac]
+            [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.external.koski
              :refer
              [get-opiskeluoikeus-catch-404]]
-            [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [environ.core :refer [env]])
   (:import (com.fasterxml.jackson.core JsonParseException)
@@ -32,7 +33,7 @@
                              koulutustoimija
                              (date-string-to-timestamp (:alkupvm herate)))
                            (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
-                    (save-herate herate opiskeluoikeus koulutustoimija)
+                    (ac/save-herate herate opiskeluoikeus koulutustoimija)
                     (log/info "Ei tallenneta kantaan"
                               (str koulutustoimija "/" (:oppija-oid herate))
                               (str (:kyselytyyppi herate)))))

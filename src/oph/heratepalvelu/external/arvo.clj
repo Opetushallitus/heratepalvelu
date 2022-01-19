@@ -5,6 +5,7 @@
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
+            [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.aws-ssm :as ssm]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.http-client :as client]
@@ -30,11 +31,11 @@
                       #(and
                          (or (nil? (:loppu %1))
                              (>= (compare (:loppu %1)
-                                          (str (t/today)))
+                                          (str (c/local-date-now)))
                                  0))
                          (or (nil? (:alku %1))
                              (<= (compare (:alku %1)
-                                          (str (t/today)))
+                                          (str (c/local-date-now)))
                                  0)))
                       (:osaamisala suoritus))]
     (if (not-empty osaamisalat)
@@ -208,7 +209,7 @@
    :tyonantaja          (:ytunnus nippu)
    :tyopaikka           (:tyopaikka nippu)
    :tunnukset           tunnukset
-   :voimassa_alkupvm    (str (t/today))
+   :voimassa_alkupvm    (str (c/local-date-now))
    :request_id          request-id})
 
 (defn create-nippu-kyselylinkki [data]

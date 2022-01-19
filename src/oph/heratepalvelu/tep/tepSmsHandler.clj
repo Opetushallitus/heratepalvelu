@@ -36,7 +36,7 @@
       (log/error e)
       false)))
 
-(defn- update-status-to-db [status puhelinnumero nippu new-loppupvm]
+(defn update-status-to-db [status puhelinnumero nippu new-loppupvm]
   (let [ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
         niputuspvm                  (:niputuspvm nippu)]
     (try
@@ -54,7 +54,7 @@
                            "#lahetettynumeroon" "lahetettynumeroon"
                            "#loppupvm" "voimassaloppupvm"}
          :expr-attr-vals  {":sms_kasittelytila" [:s status]
-                           ":sms_lahetyspvm"    [:s (str (LocalDate/now))]
+                           ":sms_lahetyspvm"    [:s (str (c/local-date-now))]
                            ":sms_muistutukset"  [:n 0]
                            ":lahetettynumeroon" [:s puhelinnumero]
                            ":loppupvm"          [:s (if new-loppupvm
@@ -73,7 +73,7 @@
       {:tila (:success c/kasittelytilat)})
     {:tila (:failure c/kasittelytilat)}))
 
-(defn- ohjaaja-puhnro [nippu jaksot]
+(defn ohjaaja-puhnro [nippu jaksot]
   (let [number (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
                                                  (if (some? (:ohjaaja_puhelinnumero %2))
                                                    (if (= (:ohjaaja_puhelinnumero %1) (:ohjaaja_puhelinnumero %2))
@@ -104,31 +104,46 @@
                                (conj %1 (:ohjaaja_puhelinnumero %2))
                                %1) #{} jaksot)]
         (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa, " (count numerot) " numeroa löydetty")
-          (ddb/update-item
-            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-             :niputuspvm                  [:s (:niputuspvm nippu)]}
-            {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila")
-             :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"}
-             :expr-attr-vals {":sms_kasittelytila" [:s (if (empty? numerot)
-                                                         (:no-phone c/kasittelytilat)
-                                                         (:phone-mismatch c/kasittelytilat))]}}
-            (:nippu-table env))
-          (when (or (= (:email-mismatch c/kasittelytilat) (:kasittelytila nippu))
-                    (= (:no-email c/kasittelytilat) (:kasittelytila nippu)))
-            (arvo/patch-nippulinkki (:kyselylinkki nippu) {:tila (:ei-yhteystietoja c/kasittelytilat)}))
-          nil))))
+        (ddb/update-item
+          {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+           :niputuspvm                  [:s (:niputuspvm nippu)]}
+          {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila")
+           :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"}
+           :expr-attr-vals {":sms_kasittelytila" [:s (if (empty? numerot)
+                                                       (:no-phone c/kasittelytilat)
+                                                       (:phone-mismatch c/kasittelytilat))]}}
+          (:nippu-table env))
+        (when (or (= (:email-mismatch c/kasittelytilat) (:kasittelytila nippu))
+                  (= (:no-email c/kasittelytilat) (:kasittelytila nippu)))
+          (arvo/patch-nippulinkki (:kyselylinkki nippu) {:tila (:ei-yhteystietoja c/kasittelytilat)}))
+        nil))))
 
 (defn client-error? [e]
   (and (> (:status (ex-data e)) 399)
        (< (:status (ex-data e)) 500)))
 
+(defn update-vastausaika-loppunut-to-db [nippu]
+  (ddb/update-item
+    {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+     :niputuspvm                  [:s (:niputuspvm nippu)]}
+    {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila, "
+                           "#sms_lahetyspvm = :sms_lahetyspvm")
+     :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"
+                       "#sms_lahetyspvm" "sms_lahetyspvm"}
+     :expr-attr-vals {":sms_kasittelytila" [:s (:vastausaika-loppunut c/kasittelytilat)]
+                      ":sms_lahetyspvm" [:s (str (c/local-date-now))]}}
+    (:nippu-table env)))
+
+(defn query-lahetettavat [limit]
+  (ddb/query-items {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
+                    :niputuspvm    [:le [:s (str (c/local-date-now))]]}
+                   {:index "smsIndex"
+                    :limit limit}
+                   (:nippu-table env)))
+
 (defn -handleTepSmsSending [this event context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
-  (loop [lahetettavat (ddb/query-items {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-                                        :niputuspvm    [:le [:s (str (LocalDate/now))]]}
-                                       {:index "smsIndex"
-                                        :limit 20}
-                                       (:nippu-table env))]
+  (loop [lahetettavat (query-lahetettavat 20)]
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
@@ -170,22 +185,9 @@
                   (catch Exception e
                     (log/error "Unhandled exception " e)))))
             (try
-              (ddb/update-item
-                {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-                 :niputuspvm                  [:s (:niputuspvm nippu)]}
-                {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                                       "#sms_lahetyspvm = :sms_lahetyspvm")
-                 :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"
-                                   "#sms_lahetyspvm" "sms_lahetyspvm"}
-                 :expr-attr-vals {":sms_kasittelytila" [:s (:vastausaika-loppunut c/kasittelytilat)]
-                                  ":sms_lahetyspvm" [:s (str (LocalDate/now))]}}
-                (:nippu-table env))
+              (update-vastausaika-loppunut-to-db nippu)
               (catch Exception e
                 (log/error "Virhe sms-lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut")
                 (log/error e))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (ddb/query-items {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-                                 :niputuspvm    [:le [:s (str (LocalDate/now))]]}
-                                {:index "smsIndex"
-                                 :limit 10}
-                                (:nippu-table env)))))))
+        (recur (query-lahetettavat 10))))))

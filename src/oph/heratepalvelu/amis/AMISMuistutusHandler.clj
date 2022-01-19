@@ -1,12 +1,11 @@
 (ns oph.heratepalvelu.amis.AMISMuistutusHandler
-  (:require [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amismuistutus-html]]
+  (:require [cheshire.core :refer [parse-string]]
+            [clojure.tools.logging :as log] [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
+            [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amismuistutus-html]]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :refer [has-time-to-answer? kasittelytilat]]
-            [clojure.tools.logging :as log]
-            [clj-time.core :as t]
-            [cheshire.core :refer [parse-string]])
+            [oph.heratepalvelu.common :refer [has-time-to-answer? kasittelytilat]])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -15,7 +14,55 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- sendAMISMuistutus [muistutettavat n]
+(defn update-after-send [email n id]
+  (try
+    (ddb/update-item
+      {:toimija_oppija [:s (:toimija_oppija email)]
+       :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+      {:update-expr    (str "SET #muistutukset = :muistutukset, "
+                            "#vpid = :vpid, "
+                            "#lahetystila = :lahetystila, "
+                            "#muistutuspvm = :muistutuspvm")
+       :expr-attr-names {"#muistutukset" "muistutukset"
+                         "#vpid" "viestintapalvelu-id"
+                         "#lahetystila" "lahetystila"
+                         "#muistutuspvm" (str n ".-muistutus-lahetetty")}
+       :expr-attr-vals  {":muistutukset" [:n n]
+                         ":vpid" [:n id]
+                         ":lahetystila" [:s (:viestintapalvelussa kasittelytilat)]
+                         ":muistutuspvm" [:s (str (c/local-date-now))]}})
+    (catch AwsServiceException e
+      (log/error "Muistutus"
+                 email
+                 "lähetty viestintäpalveluun, muttei päivitetty kantaan!")
+      (log/error e))))
+
+(defn update-when-not-sent [email n status]
+  (try
+    (ddb/update-item
+      {:toimija_oppija [:s (:toimija_oppija email)]
+       :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+      {:update-expr     (str "SET #lahetystila = :lahetystila, "
+                             "#muistutukset = :muistutukset")
+       :expr-attr-names {"#lahetystila" "lahetystila"
+                         "#muistutukset" "muistutukset"}
+       :expr-attr-vals {":lahetystila" [:s (if (:vastattu status)
+                                             (:vastattu kasittelytilat)
+                                             (:vastausaika-loppunut-m kasittelytilat))]
+                        ":muistutukset" [:n n]}})
+    (catch Exception e
+      (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
+      (log/error e))))
+
+(defn send-reminder-email [email]
+  (send-email
+    {:subject (str "Muistutus-påminnelse-reminder: "
+                   "Vastaa kyselyyn - svara på enkäten - answer the survey")
+     :body (amismuistutus-html email)
+     :address (:sahkoposti email)
+     :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}))
+
+(defn sendAMISMuistutus [muistutettavat n]
   (log/info (str "Käsitellään " (count muistutettavat)
                  " lähetettävää " n ". muistutusta."))
   (doseq [email muistutettavat]
@@ -23,69 +70,35 @@
       (if (and (not (:vastattu status))
                (has-time-to-answer? (:voimassa_loppupvm status)))
         (try
-          (let [id (:id (send-email {:subject "Muistutus-påminnelse-reminder: Vastaa kyselyyn - svara på enkäten - answer the survey"
-                                     :body (amismuistutus-html email)
-                                     :address (:sahkoposti email)
-                                     :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}))]
-            (ddb/update-item
-              {:toimija_oppija [:s (:toimija_oppija email)]
-               :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-              {:update-expr    (str "SET #muistutukset = :muistutukset, "
-                                    "#vpid = :vpid, "
-                                    "#lahetystila = :lahetystila, "
-                                    "#muistutuspvm = :muistutuspvm")
-               :expr-attr-names {"#muistutukset" "muistutukset"
-                                 "#vpid" "viestintapalvelu-id"
-                                 "#lahetystila" "lahetystila"
-                                 "#muistutuspvm" (str n ".-muistutus-lahetetty")}
-               :expr-attr-vals  {":muistutukset" [:n n]
-                                 ":vpid" [:n id]
-                                 ":lahetystila" [:s (:viestintapalvelussa kasittelytilat)]
-                                 ":muistutuspvm" [:s (str (t/today))]}}))
-          (catch AwsServiceException e
-            (log/error "Muistutus " email " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
-            (log/error e))
+          (let [id (:id (send-reminder-email email))]
+            (update-after-send email n id))
           (catch Exception e
             (log/error "Virhe muistutuksen lähetyksessä!" email)
             (log/error e)))
-        (try
-          (ddb/update-item
-            {:toimija_oppija [:s (:toimija_oppija email)]
-             :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
-            {:update-expr     (str "SET #lahetystila = :lahetystila, "
-                                   "#muistutukset = :muistutukset")
-             :expr-attr-names {"#lahetystila" "lahetystila"
-                               "#muistutukset" "muistutukset"}
-             :expr-attr-vals {":lahetystila" [:s (if (:vastattu status)
-                                                   (:vastattu kasittelytilat)
-                                                   (:vastausaika-loppunut-m kasittelytilat))]
-                              ":muistutukset" [:n n]}})
-          (catch Exception e
-            (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
-            (log/error e)))))))
+        (update-when-not-sent email n status)))))
 
-(defn- query-muistukset [n]
+(defn query-muistutukset [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
                     :lahetyspvm  [:between
                                   [[:s (str
-                                         (t/minus
-                                           (t/today)
-                                           (t/days (- (* 5 (+ n 1)) 1))))]
+                                         (.minusDays
+                                           (c/local-date-now)
+                                           (- (* 5 (+ n 1)) 1)))]
                                    [:s (str
-                                         (t/minus
-                                           (t/today)
-                                           (t/days (* 5 n))))]]]}
+                                         (.minusDays
+                                           (c/local-date-now)
+                                           (* 5 n)))]]]}
                    {:index "muistutusIndex"
                     :limit 50}))
 
 (defn -handleSendAMISMuistutus [this event context]
   (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
-  (loop [muistutettavat1 (query-muistukset 1)
-         muistutettavat2 (query-muistukset 2)]
+  (loop [muistutettavat1 (query-muistutukset 1)
+         muistutettavat2 (query-muistutukset 2)]
     (sendAMISMuistutus muistutettavat1 1)
     (sendAMISMuistutus muistutettavat2 2)
     (when (and
             (or (seq muistutettavat1) (seq muistutettavat2))
             (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistukset 1)
-             (query-muistukset 2)))))
+      (recur (query-muistutukset 1)
+             (query-muistutukset 2)))))

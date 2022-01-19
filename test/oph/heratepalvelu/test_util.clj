@@ -87,15 +87,26 @@
       (.setDetailType "Scheduled Event")
       (.setResources (list dummy-scheduled-resources)))))
 
-(defn reify-context []
-  (reify com.amazonaws.services.lambda.runtime.Context
-    (getAwsRequestId [this]
-      dummy-request-id)
-    (getRemainingTimeInMillis [this]
-      100)))
+(defn mock-sqs-event [item]
+  (let [event (SQSEvent.)
+        message (SQSEvent$SQSMessage.)]
+    (.setBody message (generate-string item))
+    (.setRecords event [message])
+    event))
 
-(defn mock-handler-context []
-  (reify-context))
+(defn reify-context
+  ([] (reify-context 100))
+  ([milliseconds]
+    (reify com.amazonaws.services.lambda.runtime.Context
+      (getAwsRequestId [this]
+        dummy-request-id)
+      (getRemainingTimeInMillis [this]
+        milliseconds))))
+
+(defn mock-handler-context
+  ([] (reify-context))
+  ([milliseconds]
+   (reify-context milliseconds)))
 
 (defn mock-get-hankintakoulutus-oids-empty [_]
   [])
@@ -151,3 +162,18 @@
 (defn clean-logs [f]
   (f)
   (delete-test-log-file))
+
+
+(def mock-log-file (atom []))
+
+(defn clear-logs-before-test [f]
+  (reset! mock-log-file [])
+  (f))
+
+(defn logs-contain? [obj]
+  (some #(= % obj) (vec (reverse @mock-log-file))))
+
+;; https://stackoverflow.com/a/41823278
+(defn mock-log* [logger level throwable message]
+  (reset! mock-log-file (cons {:level level :message message} @mock-log-file))
+  nil)

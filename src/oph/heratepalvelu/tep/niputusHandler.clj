@@ -4,7 +4,6 @@
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.common :as c]
             [clojure.tools.logging :as log]
-            [clj-time.core :as t]
             [environ.core :refer [env]]
             [clojure.string :as str]
             [clj-http.util :as util])
@@ -18,19 +17,19 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn- niputa [nippu]
+(defn niputa [nippu]
   (log/info "Niputetaan " nippu)
   (let [request-id (c/generate-uuid)
         jaksot (filter
                  #(>= (compare (:viimeinen_vastauspvm %1)
-                               (str (t/today)))
+                               (str (c/local-date-now)))
                       0)
                  (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
                                    :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
                                   {:index "niputusIndex"
                                    :filter-expression "#pvm >= :pvm"
                                    :expr-attr-names {"#pvm" "viimeinen_vastauspvm"}
-                                   :expr-attr-vals {":pvm" [:s (str (t/today))]}}
+                                   :expr-attr-vals {":pvm" [:s (str (c/local-date-now))]}}
                                   (:jaksotunnus-table env)))
         tunnukset (map :tunnus jaksot)]
     (if (not-empty tunnukset)
@@ -63,7 +62,7 @@
                                 ":linkki"   [:s (:nippulinkki arvo-resp)]
                                 ":voimassa" [:s (:voimassa_loppupvm arvo-resp)]
                                 ":req"      [:s request-id]
-                                ":pvm"      [:s (str (t/today))]}}
+                                ":pvm"      [:s (str (c/local-date-now))]}}
               (:nippu-table env))
             (catch ConditionalCheckFailedException e
               (log/warn "Nipulla " (:ohjaaja_ytunnus_kj_tutkinto nippu) " on jo kantaan tallennettu kyselylinkki.")
@@ -88,7 +87,7 @@
                  :expr-attr-vals {":tila"     [:s "niputusvirhe"]
                                   ":reason"   [:s (str (or (:errors arvo-resp) "no reason in response"))]
                                   ":req"      [:s request-id]
-                                  ":pvm"      [:s (str (t/today))]}}
+                                  ":pvm"      [:s (str (c/local-date-now))]}}
                 (:nippu-table env)))))
       (do (log/warn "Ei jaksoja, joissa vastausaikaa jäljellä " (:ohjaaja_ytunnus_kj_tutkinto nippu) (:niputuspvm nippu))
           (ddb/update-item
@@ -102,7 +101,7 @@
                                "#pvm" "kasittelypvm"}
              :expr-attr-vals {":tila"     [:s "ei-jaksoja"]
                               ":req"      [:s request-id]
-                              ":pvm"      [:s (str (t/today))]}}
+                              ":pvm"      [:s (str (c/local-date-now))]}}
             (:nippu-table env))))))
 
 (defn -handleNiputus [this event context]
@@ -112,7 +111,7 @@
            :niputuspvm
            #(* -1 (compare %1 %2))
            (ddb/query-items {:kasittelytila [:eq [:s (:ei-niputettu c/kasittelytilat)]]
-                             :niputuspvm    [:le [:s (str (t/today))]]}
+                             :niputuspvm    [:le [:s (str (c/local-date-now))]]}
                             {:index "niputusIndex"
                              :limit 10}
                             (:nippu-table env)))]
@@ -122,7 +121,7 @@
         (niputa nippu))
       (when (< 120000 (.getRemainingTimeInMillis context))
         (recur (ddb/query-items {:kasittelytila [:eq [:s (:ei-niputettu c/kasittelytilat)]]
-                                 :niputuspvm    [:le [:s (str (t/today))]]}
+                                 :niputuspvm    [:le [:s (str (c/local-date-now))]]}
                                 {:index "niputusIndex"
                                  :limit 10}
                                 (:nippu-table env)))))))
