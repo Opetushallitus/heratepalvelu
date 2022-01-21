@@ -97,7 +97,7 @@
 (defn- patch-amisherate-kasitelty [url-tyyppi-element id]
   (client/patch
     (str (:ehoks-url env) "heratepalvelu/hoksit/" id "/" url-tyyppi-element)
-    {:headers {:ticker (cas/get-service-ticket
+    {:headers {:ticket (cas/get-service-ticket
                          "/ehoks-virkailija-backend"
                          "cas-security-check")}
      :content-type "application/json"
