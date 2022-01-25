@@ -40,21 +40,25 @@
   (Reflector/invokeInstanceMethod
     inst m (to-array params)))
 
-(defn- to-attribute-value
+(defn- create-attribute-value-builder [] (AttributeValue/builder))
+
+(defn to-attribute-value
   ([tk v]
    (if-let [t (get attribute-types tk)]
      (.build (invoke-instance-method
-               (AttributeValue/builder) t [(if (= t "n") (str v) v)]))
+               (create-attribute-value-builder) t [(if (= t "n") (str v) v)]))
      (throw (Exception. (str "Unknown attribute type " tk)))))
   ([[tk v]]
    (to-attribute-value tk v)))
 
-(defn- build-condition [op-vals]
+(defn- create-condition-builder [] (Condition/builder))
+
+(defn build-condition [op-vals]
   (let [[op vals] op-vals
         values (if (coll? (first vals))
                  (map to-attribute-value vals)
                  [(to-attribute-value vals)])]
-    (-> (Condition/builder)
+    (-> (create-condition-builder)
         (.attributeValueList values)
         (.comparisonOperator (get comparison-operators op "EQ"))
         (.build))))
@@ -62,10 +66,10 @@
 (defn map-vals-to-attribute-values [map]
   (into {} (for [[k [t v]] map] [(name k) (to-attribute-value t v)])))
 
-(defn- map-vals-to-conditions [map]
+(defn map-vals-to-conditions [map]
   (into {} (for [[k v] map] [(name k) (build-condition v)])))
 
-(defn- get-value [av]
+(defn get-value [av]
   (reduce (fn [o t]
             (let [v (invoke-instance-method av t [])]
               (when (and (some? v)
@@ -86,11 +90,13 @@
   (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
              {} (into {} item)))
 
+(defn- create-put-item-request-builder [] (PutItemRequest/builder))
+
 (defn put-item
   ([item options]
     (put-item item options (:herate-table env)))
   ([item options table]
-   (.putItem ddb-client (-> (PutItemRequest/builder)
+   (.putItem ddb-client (-> (create-put-item-request-builder)
                             (.tableName table)
                             (.item (map-vals-to-attribute-values item))
                             (cond->
@@ -98,12 +104,14 @@
                               (.conditionExpression (:cond-expr options)))
                             (.build)))))
 
+(defn- create-query-request-builder [] (QueryRequest/builder))
+
 (defn query-items
   ([key-conds options]
     (query-items key-conds options (:herate-table env)))
   ([key-conds options table]
    (let [conditions (map-vals-to-conditions key-conds)
-         response (.query ddb-client (-> (QueryRequest/builder)
+         response (.query ddb-client (-> (create-query-request-builder)
                                          (.tableName table)
                                          (.keyConditions conditions)
                                          (cond->
@@ -125,11 +133,13 @@
                 map-attribute-values-to-vals
                 items)))))
 
+(defn- create-update-item-request-builder [] (UpdateItemRequest/builder))
+
 (defn update-item
   ([key-conds options]
     (update-item key-conds options (:herate-table env)))
   ([key-conds options table]
-   (let [req (-> (UpdateItemRequest/builder)
+   (let [req (-> (create-update-item-request-builder)
                  (.tableName table)
                  (.key (map-vals-to-attribute-values key-conds))
                  (.updateExpression (:update-expr options))
@@ -146,11 +156,13 @@
                  (.build))]
      (.updateItem ddb-client req))))
 
+(defn- create-get-item-request-builder [] (GetItemRequest/builder))
+
 (defn get-item
   ([key-conds]
     (get-item key-conds (:herate-table env)))
   ([key-conds table]
-    (let [req (-> (GetItemRequest/builder)
+    (let [req (-> (create-get-item-request-builder)
                   (.tableName table)
                   (.key (map-vals-to-attribute-values key-conds))
                   (.build))
@@ -158,19 +170,22 @@
           item (.item response)]
       (map-attribute-values-to-vals item))))
 
+(defn- create-delete-item-request-builder [] (DeleteItemRequest/builder))
+
 (defn delete-item
   ([key-conds]
     (delete-item key-conds (:herate-table env)))
   ([key-conds table]
-    (let [req (-> (DeleteItemRequest/builder)
+    (let [req (-> (create-delete-item-request-builder)
                   (.tableName table)
                   (.key (map-vals-to-attribute-values key-conds))
                   (.build))]
       (.deleteItem ddb-client req))))
 
+(defn- create-scan-request-builder [] (ScanRequest/builder))
 
 (defn scan [options table]
-  (let [req (-> (ScanRequest/builder)
+  (let [req (-> (create-scan-request-builder)
                 (cond->
                   (:filter-expression options)
                   (.filterExpression (:filter-expression options)))
