@@ -173,6 +173,10 @@
 (defn logs-contain? [obj]
   (some #(= % obj) (vec (reverse @mock-log-file))))
 
+(defn logs-contain-matching? [level regex]
+  (some #(and (= level (:level %)) (re-matches regex (:message %)))
+        (vec (reverse @mock-log-file))))
+
 ;; https://stackoverflow.com/a/41823278
 (defn mock-log* [logger level throwable message]
   (reset! mock-log-file (cons {:level level :message message} @mock-log-file))
