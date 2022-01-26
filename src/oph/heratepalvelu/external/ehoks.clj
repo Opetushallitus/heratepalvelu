@@ -1,8 +1,8 @@
 (ns oph.heratepalvelu.external.ehoks
-  (:require [oph.heratepalvelu.external.http-client :as client]
-            [oph.heratepalvelu.external.cas-client :as cas]
+  (:require [cheshire.core :refer [generate-string]]
             [environ.core :refer [env]]
-            [cheshire.core :refer [generate-string]])
+            [oph.heratepalvelu.external.cas-client :as cas]
+            [oph.heratepalvelu.external.http-client :as client])
   (:import (clojure.lang ExceptionInfo)))
 
 (defn get-hoks-by-opiskeluoikeus [opiskeluoikeus-oid]
