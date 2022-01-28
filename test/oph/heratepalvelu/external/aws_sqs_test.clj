@@ -40,7 +40,7 @@
   (MockSendMessageRequestBuilder. {}))
 
 (deftest test-send-tep-sms-sqs-message
-  (testing "send-tep-sms-sqs-message tekee oikeita kustuja ja virhekäsittelyä"
+  (testing "send-tep-sms-sqs-message tekee oikeita kutsuja ja virhekäsittelyä"
     (with-redefs
       [clojure.tools.logging/log* tu/mock-log*
        environ.core/env {:sms-queue "sms-queue-url"}
