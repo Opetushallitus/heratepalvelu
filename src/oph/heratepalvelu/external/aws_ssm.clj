@@ -13,10 +13,12 @@
                       (.build)))
                 (.build)))
 
+(defn- create-get-parameter-request-builder [] (GetParameterRequest/builder))
+
 (defn get-secret [name]
   (.value
     (.parameter
-      (.getParameter client (-> (GetParameterRequest/builder)
+      (.getParameter client (-> (create-get-parameter-request-builder)
                                 (.name name)
                                 (.withDecryption true)
                                 (.build))))))
