@@ -12,8 +12,10 @@
         (.region (Region/EU_WEST_1))
         (.build)))
 
+(defn- create-send-message-request-builder [] (SendMessageRequest/builder))
+
 (defn send-tep-sms-sqs-message [msg]
-  (let [resp (.sendMessage sqs-client (-> (SendMessageRequest/builder)
+  (let [resp (.sendMessage sqs-client (-> (create-send-message-request-builder)
                                           (.queueUrl (:sms-queue env))
                                           (.messageBody (json/write-str msg))
                                           (.build)))]

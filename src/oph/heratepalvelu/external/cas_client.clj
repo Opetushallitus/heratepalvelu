@@ -21,7 +21,7 @@
                        (str "/" (:stage env)
                             "/services/heratepalvelu/cas-pwd"))))
 
-(defn- init-client []
+(defn init-client []
   (let [username   (:cas-user env)
         password   @pwd
         cas-url    (:cas-url env)
@@ -31,12 +31,12 @@
                      :params     cas-params
                      :session-id (atom nil)})))
 
-(defn- request-with-json-body [request body]
+(defn request-with-json-body [request body]
   (-> request
       (assoc-in [:headers "Content-Type"] "application/json")
       (assoc :body (json/generate-string body))))
 
-(defn- create-params [cas-session-id body]
+(defn create-params [cas-session-id body]
   (cond-> {:headers          {"Caller-Id" (:caller-id env)
                               "clientSubSystemCode" (:caller-id env)
                               "CSRF" (:caller-id env)}
@@ -48,7 +48,7 @@
           (some? body)
           (request-with-json-body body)))
 
-(defn- cas-http [method url options body]
+(defn cas-http [method url options body]
   (when (nil? @client)
     (reset! client (init-client)))
   (let [cas-client     (:client @client)

@@ -10,7 +10,7 @@
    :cookies {"CSRF" {:value (:caller-id env)
                      :path "/"}}})
 
-(defn- merge-options [options]
+(defn merge-options [options]
   (merge (assoc client-options :headers
                                (merge (:headers client-options)
                                       (:headers options)))

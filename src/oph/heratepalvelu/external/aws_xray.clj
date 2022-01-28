@@ -2,8 +2,12 @@
   (:require [clojure.string :as str])
   (:import (com.amazonaws.xray AWSXRay)))
 
+(defn- wrap-begin-subsegment [line] (AWSXRay/beginSubsegment line))
+
+(defn- wrap-end-subsegment [] (AWSXRay/endSubsegment))
+
 (defn wrap-aws-xray [url method request]
-  (let [segment (AWSXRay/beginSubsegment
+  (let [segment (wrap-begin-subsegment
                   (str "HTTP " (str/upper-case (name method))))]
     (try
       (.putHttp segment "request" {"method" (str/upper-case (name method))
@@ -18,4 +22,4 @@
         (.addException segment e)
         (throw e))
       (finally
-        (AWSXRay/endSubsegment)))))
+        (wrap-end-subsegment)))))
