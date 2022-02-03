@@ -3,29 +3,26 @@
             [environ.core :refer [env]]
             [oph.heratepalvelu.integration-tests.parse-cond-expr :as pce]))
 
-;; map of lists (each list represents a table)
-
-;; In each list (table), each row is a map as well. Or maybe use sets instead of lists?
-;; In any case, we need to make sure that lookup always returns the most recent saved
-;; value. With lists, that's easy, since you just cons it on top and then start
-;; your search from the beginning of the list. These tests won't generate enough
-;; data for memory to be an issue, even if we never garbage collect the mock DB.
-
-;; But we need to be able to return everything that matches a condition without
-;; bringing up old values, so maps (keys to values) it is.
+;; mock-db on map taulujen nimistä tauluihin, ja taulut ovat mapeja avaimista
+;; itemeihin.
 
 (def mock-db-tables (atom {}))
 
 (def mock-db-table-key-fields (atom {}))
 
-;; TODO version with index
+;; map table-key -> map index-key -> {:primary-key X :sort-key Y}
+(def mock-db-index-key-fields (atom {}))
+
 (defn- get-table-key-fields [table-name]
   (get @mock-db-table-key-fields table-name))
 
-(defn- get-item-key [table-key-fields item]
-  (let [primary-key-field (:primary-key table-key-fields)
+(defn- get-index-key-fields [table-name index]
+  (get (get @mock-db-index-key-fields table-name) index))
+
+(defn- get-item-key [key-fields item]
+  (let [primary-key-field (:primary-key key-fields)
         primary-key-value (get item primary-key-field)
-        sort-key-field (:sort-key table-key-fields)
+        sort-key-field (:sort-key key-fields)
         item-key {primary-key-field primary-key-value}]
     (if sort-key-field
       (assoc item-key sort-key-field (get item sort-key-field))
@@ -39,6 +36,13 @@
   (reset! mock-db-table-key-fields
           (assoc @mock-db-table-key-fields table-name table-key-fields))
   (reset! mock-db-tables (assoc @mock-db-tables table-name {})))
+
+(defn add-index-key-fields [table-name index index-key-fields]
+  (let [table-indexes (get @mock-db-index-key-fields table-name)]
+    (reset! mock-db-index-key-fields
+            (assoc @mock-db-index-key-fields
+                   table-name
+                   (assoc table-indexes index index-key-fields)))))
 
 (defn set-table-contents [table-name items]
   (let [key-fields (get-table-key-fields table-name)]
@@ -89,7 +93,10 @@
 
 (def comparison-operators
   (merge basic-comparison-operators
-         {})) ;;TODO handle i.e. between
+         {:between (let [gte (attr-val-comparison >=)
+                         lte (attr-val-comparison <=)]
+                     (fn [item [lower-bound upper-bound]]
+                       (and (gte item lower-bound) (lte item upper-bound))))}))
 
 (defn- create-key-cond-predicate [key-conds]
   (let [key-conds-seq (seq key-conds)
@@ -100,22 +107,25 @@
                       ((get comparison-operators op2) (get item k2) v2)))
       (fn [item] ((get comparison-operators op1) (get item k1) v1)))))
 
-(defn- sort-by-index [items index]
-  items ;; TODO
-  )
+(defn- sort-by-index [items key-fields]
+  (sort #(compare (get-item-key key-fields %1) (get-item-key key-fields %2))
+        items))
 
 (defn query-items
   ([key-conds options] (query-items key-conds options (:herate-table env)))
   ([key-conds options table-name]
     (let [table (get @mock-db-tables table-name)
-          index nil ;; TODO
+          key-fields (if (:index options)
+                       (get-index-key-fields table-name (:index options))
+                       (get-table-key-fields table-name))
           filter-expr-predicate (pce/parse (:filter-expression options)
                                            (:expr-attr-names options)
                                            (:expr-attr-vals options))
           key-cond-predicate (create-key-cond-predicate key-conds)
           predicate (fn [item] (and (key-cond-predicate item)
                                     (filter-expr-predicate item)))
-          items-sorted (sort-by-index (filter predicate (vals table)) index)
+          items-sorted (sort-by-index (filter predicate (vals table))
+                                      key-fields)
           items-limited (if (:limit options)
                           (take (:limit options) items-sorted)
                           items-sorted)]

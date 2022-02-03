@@ -6,16 +6,16 @@
 (def unary-operators
   {"attribute_not_exists" (fn [field] (fn [item] (not (get item field))))})
 
+;; Tämä käsittelee vain noita tapauksia, jotka löytyvät meidän koodista. Se voi
+;; täytyä muokata tulevaisuudessa jos tarvitsee monimutkaisempia ekspressioita.
 (defn parse-op [tokens]
-  ;; TODO paren case first
   (let [unop (get unary-operators (first tokens))
         unop-rest (rest tokens)]
     (if unop
-      ;;TODO verify that parens are in the right places
       (if (and (= (first unop-rest) "(")
                (= (second (rest unop-rest)) ")"))
         [(unop (keyword (second unop-rest))) (rest (rest (rest unop-rest)))]
-        (throw (ex-info "Syntaksivirhe" {}))) ;; TODO parempi virhe
+        (throw (ex-info "parse-cond-expr Syntaksivirhe" {})))
 
       (let [field (keyword (first tokens))
             binop-name (first (rest tokens))
@@ -26,11 +26,13 @@
              (let [left (get item field)
                    right (first r-o-r)]
                (when-not (= (first left) (first right))
-                 (throw (ex-info "XYZ" {}))) ;; TODO error message
+                 (throw (ex-info
+                          (str "parse-op: " (first left) " != " (first right))
+                          {})))
                (binop (compare (second left) (second right)) 0)))
            (rest r-o-r)]
           (throw (ex-info
-                  (str "Operator " binop-name
+                  (str "parse-op: Operator " binop-name
                        " ei löytynyt. Lisää se tänne, jos käytit sitä.")
                   {})))))))
 
