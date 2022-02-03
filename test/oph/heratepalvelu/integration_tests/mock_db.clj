@@ -89,7 +89,7 @@
 
 (def basic-comparison-operators
   (into {} (map (fn [[k op]] [k (attr-val-comparison op)])
-                {:eq = :le <})))
+                {:eq = :le <=})))
 
 (def comparison-operators
   (merge basic-comparison-operators
