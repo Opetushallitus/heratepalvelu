@@ -86,7 +86,7 @@
 
 (defn- attr-val-comparison [op]
   (fn [x y] (if (not= (first x) (first y))
-              (throw (ex-info (str (first x) " != " (first y)) {}))
+              (throw (ex-info (str "(first " x ") != (first " y ")") {}))
               (op (compare (second x) (second y)) 0))))
 
 (def basic-comparison-operators

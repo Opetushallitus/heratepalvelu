@@ -21,6 +21,8 @@
 
 (defn bind-get-url [url value] (swap! get-url-bindings assoc url value))
 
+(defn clear-url-bindings [] (reset! get-url-bindings {}))
+
 (def mock-get (let [save-params (create-mock-method :get)]
                 (fn [url & [options]]
                   (save-params url options)
