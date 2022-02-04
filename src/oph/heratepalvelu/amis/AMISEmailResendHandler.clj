@@ -1,10 +1,10 @@
 (ns oph.heratepalvelu.amis.AMISEmailResendHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.common :refer [kausi kasittelytilat]]
             [environ.core :refer [env]]
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [schema.core :as s])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
@@ -30,7 +30,6 @@
       (log/error "Virhe kyselylinkin" kyselylinkki "hakemisessa" e)
       (throw e))))
 
-
 (defn update-email-to-resend [toimija-oppija
                               tyyppi-kausi
                               sahkoposti
@@ -42,7 +41,7 @@
       {:update-expr    "SET #lahetystila = :lahetystila, #sposti = :sposti"
        :expr-attr-names {"#lahetystila" "lahetystila"
                          "#sposti" "sahkoposti"}
-       :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty kasittelytilat)]
+       :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty c/kasittelytilat)]
                          ":sposti" [:s sahkoposti]}})
     (catch AwsServiceException e
       (log/error "Virhe kyselylinkin" kyselylinkki "päivityksessä" e)

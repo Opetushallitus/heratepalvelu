@@ -1,7 +1,7 @@
 (ns oph.heratepalvelu.amis.AMISDeleteTunnusHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [schema.core :as s])
   (:import (com.fasterxml.jackson.core JsonParseException)
