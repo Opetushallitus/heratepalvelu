@@ -54,6 +54,8 @@
 
 (defn get-whole-table [table-name] (get @mock-db-tables table-name))
 
+(defn get-table-values [table-name] (set (vals (get-whole-table table-name))))
+
 (defn- strip-attr-vals [item] (into {} (map (fn [[k v]] [k (second v)]) item)))
 
 (defn put-item
@@ -107,8 +109,11 @@
                       ((get comparison-operators op2) (get item k2) v2)))
       (fn [item] ((get comparison-operators op1) (get item k1) v1)))))
 
+(defn- comparable-key [key-fields item]
+  [(get item (:primary-key key-fields)) (get item (:sort-key key-fields))])
+
 (defn- sort-by-index [items key-fields]
-  (sort #(compare (get-item-key key-fields %1) (get-item-key key-fields %2))
+  (sort #(compare (comparable-key key-fields %1) (comparable-key key-fields %2))
         items))
 
 (defn query-items
