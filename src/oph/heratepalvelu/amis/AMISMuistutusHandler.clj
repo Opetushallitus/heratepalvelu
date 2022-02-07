@@ -80,14 +80,10 @@
 (defn query-muistutukset [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
                     :lahetyspvm  [:between
-                                  [[:s (str
-                                         (.minusDays
-                                           (c/local-date-now)
-                                           (- (* 5 (+ n 1)) 1)))]
-                                   [:s (str
-                                         (.minusDays
-                                           (c/local-date-now)
-                                           (* 5 n)))]]]}
+                                  [[:s (str (.minusDays (c/local-date-now)
+                                                        (- (* 5 (+ n 1)) 1)))]
+                                   [:s (str (.minusDays (c/local-date-now)
+                                                        (* 5 n)))]]]}
                    {:index "muistutusIndex"
                     :limit 50}))
 
