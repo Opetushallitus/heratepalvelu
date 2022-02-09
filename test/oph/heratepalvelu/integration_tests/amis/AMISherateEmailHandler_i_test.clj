@@ -46,10 +46,14 @@
 (defn- setup-test []
   (mhc/clear-results)
   (mhc/clear-url-bindings)
-  (mhc/bind-get-url (str (:arvo-url mock-env) "vastauslinkki/v1/status/123")
-                    {:body {:voimassa_loppupvm "2022-02-28"}})
-  (mhc/bind-get-url (str (:arvo-url mock-env) "vastauslinkki/v1/status/245")
-                    {:body {:voimassa_loppupvm "2022-02-01"}})
+  (mhc/bind-url :get
+                (str (:arvo-url mock-env) "vastauslinkki/v1/status/123")
+                {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
+                {:body {:voimassa_loppupvm "2022-02-28"}})
+  (mhc/bind-url :get
+                (str (:arvo-url mock-env) "vastauslinkki/v1/status/245")
+                {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
+                {:body {:voimassa_loppupvm "2022-02-01"}})
   (mcc/clear-results)
   (mcc/clear-url-bindings)
   (mcc/bind-url :post

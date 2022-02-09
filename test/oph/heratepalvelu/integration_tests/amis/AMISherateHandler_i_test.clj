@@ -33,33 +33,37 @@
 (defn- setup-test []
   (mhc/clear-results)
   (mhc/clear-url-bindings)
-  (mhc/bind-get-url (str (:koski-url mock-env) "/opiskeluoikeus/123.5.9876")
-                    {:body {:oid "123.5.9876"
-                            :koulutustoimija {:oid "test-koulutustoimija-oid"}
-                            :oppilaitos {:oid "test-oppilaitos-oid"}
-                            :suoritukset
-                            [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
-                              :suorituskieli {:koodiarvo "fi"}
-                              :toimipiste {:oid "test-toimipiste-oid"}}]}})
-  (mhc/bind-get-url (str (:organisaatio-url mock-env) "test-toimipiste-oid")
-                    {:body {:tyypit ["organisaatiotyyppi_03"]}})
-  (mhc/bind-post-url (str (:arvo-url mock-env) "vastauslinkki/v1")
-                     {:content-type "application/json"
-                      :basic-auth [(:arvo-user mock-env) "arvo-pwd"]
-                      :as :json
-                      :body
-                      (str
-                        "{\"vastaamisajan_alkupvm\":\"2022-02-02\","
-                        "\"osaamisala\":null,\"heratepvm\":\"2022-01-05\","
-                        "\"koulutustoimija_oid\":\"test-koulutustoimija-oid\","
-                        "\"tutkinnon_suorituskieli\":\"fi\","
-                        "\"toimipiste_oid\":\"test-toimipiste-oid\","
-                        "\"oppilaitos_oid\":\"test-oppilaitos-oid\","
-                        "\"hankintakoulutuksen_toteuttaja\":null,"
-                        "\"kyselyn_tyyppi\":\"aloittaneet\","
-                        "\"tutkintotunnus\":null,\"request_id\":\"test-uuid\","
-                        "\"vastaamisajan_loppupvm\":\"2022-03-03\"}")}
-                     {:body {:kysely_linkki "kysely.linkki/ABCDE"}})
+  (mhc/bind-url :get
+                (str (:koski-url mock-env) "/opiskeluoikeus/123.5.9876")
+                {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
+                {:body {:oid "123.5.9876"
+                        :koulutustoimija {:oid "test-koulutustoimija-oid"}
+                        :oppilaitos {:oid "test-oppilaitos-oid"}
+                        :suoritukset
+                        [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
+                          :suorituskieli {:koodiarvo "fi"}
+                          :toimipiste {:oid "test-toimipiste-oid"}}]}})
+  (mhc/bind-url :get
+                (str (:organisaatio-url mock-env) "test-toimipiste-oid")
+                {:as :json}
+                {:body {:tyypit ["organisaatiotyyppi_03"]}})
+  (mhc/bind-url :post
+                (str (:arvo-url mock-env) "vastauslinkki/v1")
+                {:content-type "application/json"
+                 :basic-auth [(:arvo-user mock-env) "arvo-pwd"]
+                 :as :json
+                 :body (str
+                         "{\"vastaamisajan_alkupvm\":\"2022-02-02\","
+                         "\"osaamisala\":null,\"heratepvm\":\"2022-01-05\","
+                         "\"koulutustoimija_oid\":\"test-koulutustoimija-oid\","
+                         "\"tutkinnon_suorituskieli\":\"fi\","
+                         "\"toimipiste_oid\":\"test-toimipiste-oid\","
+                         "\"oppilaitos_oid\":\"test-oppilaitos-oid\","
+                         "\"hankintakoulutuksen_toteuttaja\":null,"
+                         "\"kyselyn_tyyppi\":\"aloittaneet\","
+                         "\"tutkintotunnus\":null,\"request_id\":\"test-uuid\","
+                         "\"vastaamisajan_loppupvm\":\"2022-03-03\"}")}
+                {:body {:kysely_linkki "kysely.linkki/ABCDE"}})
   (mcc/clear-results)
   (mdb/clear-mock-db)
   (mdb/create-table (:herate-table mock-env) {:primary-key :toimija_oppija

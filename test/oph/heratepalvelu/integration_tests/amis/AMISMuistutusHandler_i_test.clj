@@ -89,17 +89,22 @@
                 {:body {:id 222}})
   (mhc/clear-results)
   (mhc/clear-url-bindings)
-  (mhc/bind-get-url (str (:arvo-url mock-env) "vastauslinkki/v1/status/123")
-                    {:body {:vastattu false
-                            :voimassa_loppupvm "2022-03-01"}})
-  (mhc/bind-get-url (str (:arvo-url mock-env) "vastauslinkki/v1/status/245")
-                    {:body {:vastattu false
-                           :voimassa_loppupvm "2022-03-03"}})
-  (mhc/bind-get-url (str (:arvo-url mock-env) "vastauslinkki/v1/status/333")
-                    {:body {:vastattu false
-                            :voimassa_loppupvm "2022-01-05"}})
-  (mhc/bind-get-url (str (:arvo-url mock-env) "vastauslinkki/v1/status/444")
-                    {:body {:vastattu true}})
+  (mhc/bind-url :get
+                (str (:arvo-url mock-env) "vastauslinkki/v1/status/123")
+                {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
+                {:body {:vastattu false :voimassa_loppupvm "2022-03-01"}})
+  (mhc/bind-url :get
+                (str (:arvo-url mock-env) "vastauslinkki/v1/status/245")
+                {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
+                {:body {:vastattu false :voimassa_loppupvm "2022-03-03"}})
+  (mhc/bind-url :get
+                (str (:arvo-url mock-env) "vastauslinkki/v1/status/333")
+                {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
+                {:body {:vastattu false :voimassa_loppupvm "2022-01-05"}})
+  (mhc/bind-url :get
+                (str (:arvo-url mock-env) "vastauslinkki/v1/status/444")
+                {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
+                {:body {:vastattu true}})
 
   (mdb/clear-mock-db)
   (mdb/create-table (:herate-table mock-env) {:primary-key :toimija_oppija
