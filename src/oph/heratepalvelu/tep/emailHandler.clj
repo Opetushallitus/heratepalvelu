@@ -34,14 +34,15 @@
     (:nippu-table env)))
 
 (defn get-single-ohjaaja-email [jaksot]
-  (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
-                             (if (some? (:ohjaaja_email %2))
-                               (if (= (:ohjaaja_email %1) (:ohjaaja_email %2))
-                                 %1
-                                 (reduced nil))
-                                %1)
-                              %2)
-                            jaksot)))
+  (when (not-empty jaksot)
+    (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
+                               (if (some? (:ohjaaja_email %2))
+                                 (if (= (:ohjaaja_email %1) (:ohjaaja_email %2))
+                                   %1
+                                   (reduced nil))
+                                  %1)
+                                %2)
+                              jaksot))))
 
 (defn lahetysosoite [nippu jaksot]
   (let [ohjaaja-email (get-single-ohjaaja-email jaksot)]
