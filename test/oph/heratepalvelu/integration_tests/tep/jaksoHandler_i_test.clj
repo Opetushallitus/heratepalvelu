@@ -33,7 +33,7 @@
                   :tyopaikkaohjaaja-email "ohjaaja@esimerkki.fi"
                   :tyopaikkaohjaaja-nimi "Olli Ohjaaja"
                   :osa-aikaisuus 50
-                  :oppisopimuksen-perusta "asdf_01" ;; TODO actual value
+                  :oppisopimuksen-perusta "oppisopimuksenperusta_01"
                   :tyopaikkaohjaaja-puhelinnumero "+358 0401234567"
                   :keskeytymisajanjaksot [{:alku "2022-01-08"
                                            :loppu "2022-01-14"}]})
@@ -59,22 +59,29 @@
   (mcc/clear-url-bindings)
   (mhc/clear-results)
   (mhc/clear-url-bindings)
-  ;; TODO calls for organisaatio
-
   (mhc/bind-url :get
                 (str (:koski-url mock-env) "/opiskeluoikeus/test-oo-oid")
                 {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
                 {:body {:oid "test-oo-oid"
                         :koulutustoimija {:oid "koulutustoimija-oid"}
-                        :suoritukset [{:tyyppi
+                        :suoritukset [{:toimipiste {:oid "test-toimipiste"}
+                                       :tyyppi
                                        {:koodiarvo "ammatillinentutkinto"}
                                        :koulutusmoduuli
                                        {:tunniste
-                                        {:koodiarvo "testitutkinto"}}}]
+                                        {:koodiarvo "testitutkinto"}}
+                                       :osaamisala
+                                       [{:koodiarvo "test-osaamisala"}]
+                                       :tutkintonimike
+                                       [{:koodiarvo "test-tutkintonimike"}]}]
                         :tila {:opiskeluoikeusjaksot
                                [{:alku "2022-01-05"
                                  :tila {:koodiarvo "lasna"}}]}
                         :oppilaitos {:oid "testilaitos"}}})
+  (mhc/bind-url :get
+                (str (:organisaatio-url mock-env) "test-toimipiste")
+                {:as :json}
+                {:body {:tyypit ["organisaatiotyyppi_03"]}})
   (mhc/bind-url :post
                 (str (:arvo-url mock-env) "tyoelamapalaute/v1/vastaajatunnus")
                 {:content-type "application/json"
@@ -83,16 +90,18 @@
                             "\"vastaamisajan_alkupvm\":\"2022-02-16\","
                             "\"tyonantaja\":\"123456-7\","
                             "\"oppisopimuksen_perusta\":\"01\","
-                            "\"tyopaikkajakson_kesto\":8,\"osaamisala\":null,"
+                            "\"tyopaikkajakson_kesto\":8,"
+                            "\"osaamisala\":[\"test-osaamisala\"],"
                             "\"koulutustoimija_oid\":\"koulutustoimija-oid\","
                             "\"paikallinen_tutkinnon_osa\":\"Test Kurssi\","
                             "\"tyopaikkajakson_loppupvm\":\"2022-02-02\","
-                            "\"toimipiste_oid\":null,"
+                            "\"toimipiste_oid\":\"test-toimipiste\","
                             "\"oppilaitos_oid\":\"testilaitos\","
                             "\"tyopaikkajakson_alkupvm\":\"2022-01-05\","
                             "\"tutkintotunnus\":\"testitutkinto\","
                             "\"sopimustyyppi\":\"oppisopimus\","
-                            "\"tutkintonimike\":[],\"request_id\":\"test-uuid\""
+                            "\"tutkintonimike\":[\"test-tutkintonimike\"],"
+                            "\"request_id\":\"test-uuid\""
                             ",\"tutkinnon_osa\":\"test-tutkinnonosa\"}")
                  :basic-auth [(:arvo-user mock-env) "arvo-pwd"]
                  :as :json}
@@ -131,7 +140,7 @@
      :tyopaikan_ytunnus [:s "123456-7"]
      :jakso_loppupvm [:s "2022-02-02"]
      :ohjaaja_puhelinnumero [:s "+358 0401234567"]
-     :osaamisala [:s ""]; TODO ???
+     :osaamisala [:s "(\"test-osaamisala\")"]
      :tutkinnonosa_tyyppi [:s "aloittaneet"]
      :tutkinnonosa_koodi [:s "test-tutkinnonosa"]
      :tpk-niputuspvm [:s "ei_maaritelty"]
@@ -141,7 +150,7 @@
      :tutkinnonosa_id [:n 1]
      :kesto [:n 8]
      :tyopaikan_normalisoitu_nimi [:s "testi_oy"]
-     :toimipiste_oid [:s ""]; TODO ???
+     :toimipiste_oid [:s "test-toimipiste"]
      :tutkinto [:s "testitutkinto"]
      :alkupvm [:s "2022-02-16"]
      :koulutustoimija [:s "koulutustoimija-oid"]
@@ -150,7 +159,7 @@
      :hankkimistapa_id [:n 234]
      :oppija_oid [:s "test-oppija-oid"]
      :rahoituskausi [:s "2021-2022"]
-     :tutkintonimike [:s ""];; TODO
+     :tutkintonimike [:s "(\"test-tutkintonimike\")"]
      :viimeinen_vastauspvm [:s "2022-04-17"]
      :request_id [:s "test-uuid"]}})
 
@@ -171,10 +180,10 @@
     :url "https://oph-koski.com/opiskeluoikeus/test-oo-oid"
     :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
    {:method :get
-    :url "https://oph-organisaatio.com/"
+    :url "https://oph-organisaatio.com/test-toimipiste"
     :options {:as :json}}
    {:method :get
-    :url "https://oph-organisaatio.com/"
+    :url "https://oph-organisaatio.com/test-toimipiste"
     :options {:as :json}}
    {:method :post
     :url "https://oph-arvo.com/tyoelamapalaute/v1/vastaajatunnus"
@@ -184,16 +193,18 @@
                          "\"vastaamisajan_alkupvm\":\"2022-02-16\","
                          "\"tyonantaja\":\"123456-7\","
                          "\"oppisopimuksen_perusta\":\"01\","
-                         "\"tyopaikkajakson_kesto\":8,\"osaamisala\":null,"
+                         "\"tyopaikkajakson_kesto\":8,"
+                         "\"osaamisala\":[\"test-osaamisala\"],"
                          "\"koulutustoimija_oid\":\"koulutustoimija-oid\","
                          "\"paikallinen_tutkinnon_osa\":\"Test Kurssi\","
                          "\"tyopaikkajakson_loppupvm\":\"2022-02-02\","
-                         "\"toimipiste_oid\":null,"
+                         "\"toimipiste_oid\":\"test-toimipiste\","
                          "\"oppilaitos_oid\":\"testilaitos\","
                          "\"tyopaikkajakson_alkupvm\":\"2022-01-05\","
                          "\"tutkintotunnus\":\"testitutkinto\","
                          "\"sopimustyyppi\":\"oppisopimus\","
-                         "\"tutkintonimike\":[],\"request_id\":\"test-uuid\","
+                         "\"tutkintonimike\":[\"test-tutkintonimike\"],"
+                         "\"request_id\":\"test-uuid\","
                          "\"tutkinnon_osa\":\"test-tutkinnonosa\"}")
               :basic-auth ["arvo-user" "arvo-pwd"]
               :as :json}}
