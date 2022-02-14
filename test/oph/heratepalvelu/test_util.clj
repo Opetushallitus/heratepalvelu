@@ -135,6 +135,10 @@
 
 (defn mock-deactivate-kyselylinkki [_] nil)
 
+(defn mock-patch-amis-aloitusherate-kasitelty [_] nil)
+
+(defn mock-patch-amis-paattoherate-kasitelty [_] nil)
+
 (defn mock-put-item-aws-exception [_ _]
   (throw (-> (AwsServiceException/builder)
              (.message "exception")

@@ -27,9 +27,7 @@
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
           suorituskieli (str/lower-case
                           (:koodiarvo (:suorituskieli suoritus)))]
-      (when
-        (c/check-duplicate-herate?
-          oppija koulutustoimija laskentakausi kyselytyyppi)
+      (if (c/check-duplicate-herate? oppija koulutustoimija laskentakausi kyselytyyppi)
         (let [req-body (arvo/build-arvo-request-body
                          herate
                          opiskeluoikeus
@@ -82,6 +80,12 @@
                                            :lahetystila  (:ei-lahetetty c/kasittelytilat)})
                 (catch Exception e
                   (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
+              (try
+                (if (= kyselytyyppi "aloittaneet")
+                  (ehoks/patch-amis-aloitusherate-kasitelty (:ehoks-id herate))
+                  (ehoks/patch-amis-paattoherate-kasitelty (:ehoks-id herate)))
+                (catch Exception e
+                  (log/error "Virhe käsittelytilan päivittämisessä eHOKS-palveluun")))
               (when (c/has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
                 (log/info {:nayttotutkinto        true
                            :hoks-id               (:ehoks-id herate)
@@ -106,4 +110,8 @@
                 (arvo/delete-amis-kyselylinkki kyselylinkki)
                 (log/error "Unknown error " e)
                 (throw e)))
-            (log/error "Ei kyselylinkkiä arvon palautteessa" arvo-resp)))))))
+            (log/error "Ei kyselylinkkiä arvon palautteessa" arvo-resp)))
+        (try
+          (if (= kyselytyyppi "aloittaneet")
+            (ehoks/patch-amis-aloitusherate-kasitelty (:ehoks-id herate))
+            (ehoks/patch-amis-paattoherate-kasitelty (:ehoks-id herate))))))))

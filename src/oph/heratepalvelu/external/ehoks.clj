@@ -82,3 +82,29 @@
                     :end end
                     :limit limit}
      :as :json}))
+
+(defn get-retry-kyselylinkit [start end limit]
+  (client/get
+    (str (:ehoks-url env) "heratepalvelu/kasittelemattomat-heratteet")
+    {:headers {:ticket (cas/get-service-ticket
+                         "/ehoks-virkailija-backend"
+                         "cas-security-check")}
+     :query-params {:start start
+                    :end end
+                    :limit limit}
+     :as :json}))
+
+(defn- patch-amisherate-kasitelty [url-tyyppi-element id]
+  (client/patch
+    (str (:ehoks-url env) "heratepalvelu/hoksit/" id "/" url-tyyppi-element)
+    {:headers {:ticket (cas/get-service-ticket
+                         "/ehoks-virkailija-backend"
+                         "cas-security-check")}
+     :content-type "application/json"
+     :as :json}))
+
+(defn patch-amis-aloitusherate-kasitelty [id]
+  (patch-amisherate-kasitelty "aloitusherate-kasitelty" id))
+
+(defn patch-amis-paattoherate-kasitelty [id]
+  (patch-amisherate-kasitelty "paattoherate-kasitelty" id))

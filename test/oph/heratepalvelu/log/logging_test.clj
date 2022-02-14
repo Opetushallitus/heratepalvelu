@@ -63,7 +63,9 @@
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item-cond-check-exception
        oph.heratepalvelu.external.arvo/create-amis-kyselylinkki mock-get-kyselylinkki
        oph.heratepalvelu.external.arvo/delete-amis-kyselylinkki mock-deactivate-kyselylinkki
-       oph.heratepalvelu.external.ehoks/get-hankintakoulutus-oids mock-get-hankintakoulutus-oids-empty]
+       oph.heratepalvelu.external.ehoks/get-hankintakoulutus-oids mock-get-hankintakoulutus-oids-empty
+       oph.heratepalvelu.external.ehoks/patch-amis-aloitusherate-kasitelty mock-patch-amis-aloitusherate-kasitelty
+       oph.heratepalvelu.external.ehoks/patch-amis-paattoherate-kasitelty mock-patch-amis-paattoherate-kasitelty]
       (do
         (-handleAMISherate nil (mock-handler-event :ehoksherate) (mock-handler-context))
         (is (true? (did-log? "Tämän kyselyn linkki on jo toimituksessa oppilaalle" "WARN")))))))
