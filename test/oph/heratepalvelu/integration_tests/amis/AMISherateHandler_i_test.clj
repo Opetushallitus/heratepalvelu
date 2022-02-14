@@ -145,9 +145,20 @@
      :body (str "{\"kyselylinkki\":\"kysely.linkki/ABCDE\","
                 "\"tyyppi\":\"aloittaneet\",\"alkupvm\":\"2022-02-02\","
                 "\"lahetystila\":\"ei_lahetetty\"}")
+     :as :json}}
+   {:method :patch
+    :url (str (:ehoks-url mock-env)
+              "heratepalvelu/hoksit/456/aloitusherate-kasitelty")
+    :options
+    {:headers
+     {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+     :content-type "application/json"
      :as :json}}])
 
 (def expected-cas-client-results [{:type :get-service-ticket
+                                   :service "/ehoks-virkailija-backend"
+                                   :suffix "cas-security-check"}
+                                  {:type :get-service-ticket
                                    :service "/ehoks-virkailija-backend"
                                    :suffix "cas-security-check"}
                                   {:type :get-service-ticket
@@ -167,6 +178,7 @@
                   mcc/mock-get-service-ticket
                   oph.heratepalvelu.external.koski/pwd (delay "koski-pwd")
                   oph.heratepalvelu.external.http-client/get mhc/mock-get
+                  oph.heratepalvelu.external.http-client/patch mhc/mock-patch
                   oph.heratepalvelu.external.http-client/post mhc/mock-post]
       (setup-test)
       (hh/-handleAMISherate {}
