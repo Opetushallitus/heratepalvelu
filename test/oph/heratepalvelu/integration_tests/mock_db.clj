@@ -151,3 +151,19 @@
       (put-item (merge existing updates)
                 {:cond-expr (:cond-expr options)}
                 table-name))))
+
+(defn scan
+  ([options] (scan options (:herate-table env)))
+  ([options table-name]
+    (let [table (get @mock-db-tables table-name)
+          key-fields (get-table-key-fields table-name)
+          filter-expr-predicate (pce/parse (:filter-expression options)
+                                           (:expr-attr-names options)
+                                           (:expr-attr-vals options))
+          items-sorted (sort-by-index (vals table) key-fields)
+          last-eval-key (:last-evaluated-key options)
+          items-sliced (if (and last-eval-key (>= last-eval-key 0))
+                         (nthrest items-sorted (+ last-eval-key 1))
+                         items-sorted)
+          items-filtered (filter filter-expr-predicate items-sliced)]
+      {:items (map strip-attr-vals items-filtered)})))
