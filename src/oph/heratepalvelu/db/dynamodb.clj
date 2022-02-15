@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.db.dynamodb
-  (:require [environ.core :refer [env]])
+  (:require [clojure.tools.logging :as log]
+            [environ.core :refer [env]])
   (:import (clojure.lang Reflector)
            (software.amazon.awssdk.services.dynamodb DynamoDbClient)
            (software.amazon.awssdk.services.dynamodb.model AttributeValue
@@ -188,11 +189,19 @@
   (let [req (-> (create-scan-request-builder)
                 (cond->
                   (:filter-expression options)
-                  (.filterExpression (:filter-expression options)))
+                  (.filterExpression (:filter-expression options))
+                  (:exclusive-start-key options)
+                  (.exclusiveStartKey (:exclusive-start-key options))
+                  (:expr-attr-names options)
+                  (.expressionAttributeNames
+                    (:expr-attr-names options))
+                  (:expr-attr-vals options)
+                  (.expressionAttributeValues
+                    (map-vals-to-attribute-values (:expr-attr-vals options))))
                 (.tableName table)
                 (.build))
         response (.scan ddb-client req)
         items (.items response)]
-    (into [] (map
-               map-attribute-values-to-vals
-               items))))
+    {:items (into [] (map map-attribute-values-to-vals items))
+     :last-evaluated-key (when (.hasLastEvaluatedKey response)
+                           (.lastEvaluatedKey response))}))
