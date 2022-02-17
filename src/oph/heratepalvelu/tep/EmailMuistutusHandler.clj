@@ -9,8 +9,7 @@
             [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all])
-  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (java.time LocalDate)))
+  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
   :name "oph.heratepalvelu.tep.EmailMuistutusHandler"
@@ -61,7 +60,7 @@
                          "#muistutukset" "muistutukset"}
        :expr-attr-vals  {":kasittelytila" [:s (:viestintapalvelussa c/kasittelytilat)]
                          ":vpid" [:n id]
-                         ":muistutuspvm" [:s (str (LocalDate/now))]
+                         ":muistutuspvm" [:s (str (c/local-date-now))]
                          ":muistutukset" [:n 1]}}
       (:nippu-table env))
     (catch AwsServiceException e
@@ -103,8 +102,8 @@
 (defn query-muistutukset []
   (ddb/query-items {:muistutukset [:eq [:n 0]]
                     :lahetyspvm   [:between
-                                   [[:s (str (.minusDays (LocalDate/now) 10))]
-                                    [:s (str (.minusDays (LocalDate/now) 5))]]]}
+                                   [[:s (str (.minusDays (c/local-date-now) 10))]
+                                    [:s (str (.minusDays (c/local-date-now) 5))]]]}
                    {:index "emailMuistutusIndex"
                     :limit 10}
                    (:nippu-table env)))

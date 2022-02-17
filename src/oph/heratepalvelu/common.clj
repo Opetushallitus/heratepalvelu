@@ -31,8 +31,10 @@
    :bounced "bounced"
    :ei-niputettu "ei_niputettu"
    :ei-niputeta "ei_niputeta"
+   :niputusvirhe "niputusvirhe"
    :ei-laheteta "ei_laheteta"
    :ei-yhteystietoja "ei_kelvollisia_yhteystietoja"
+   :ei-jaksoja "ei-jaksoja"
    :no-email "no-email"
    :no-phone "no-phone"
    :email-mismatch "email-mismatch"
@@ -57,7 +59,7 @@
 (defn has-time-to-answer? [loppupvm]
   (when loppupvm
     (let [enddate (first (str/split loppupvm #"T"))]
-      (not (.isBefore (to-date enddate) (LocalDate/now))))))
+      (not (.isBefore (to-date enddate) (local-date-now))))))
 
 (defn send-lahetys-data-to-ehoks [toimija-oppija tyyppi-kausi data]
   (try
@@ -154,7 +156,7 @@
   ([koulutustoimija]
    (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                             (:orgwhitelist-table env))]
-     (if (.isBefore (LocalDate/of 2021 6 30) (LocalDate/now))
+     (if (.isBefore (LocalDate/of 2021 6 30) (local-date-now))
        true
        (if
          (and

@@ -31,10 +31,18 @@
                           {})))
                (binop (compare (second left) (second right)) 0)))
            (rest r-o-r)]
-          (throw (ex-info
-                  (str "parse-op: Operator " binop-name
-                       " ei löytynyt. Lisää se tänne, jos käytit sitä.")
-                  {})))))))
+          (if (= binop-name "BETWEEN")
+            (let [right-1 (first r-o-r)
+                  right-2 (first (rest (rest r-o-r)))]
+              [(fn [item]
+                 (let [left (get item field)]
+                   (and (>= (compare (second left) (second right-1)) 0)
+                        (<= (compare (second left) (second right-2)) 0))))
+               (rest (rest (rest r-o-r)))])
+            (throw (ex-info
+                     (str "parse-op: Operator " binop-name
+                          " ei löytynyt. Lisää se tänne, jos käytit sitä.")
+                     {}))))))))
 
 (defn parse-not [tokens]
   (if (= (first tokens) "NOT")

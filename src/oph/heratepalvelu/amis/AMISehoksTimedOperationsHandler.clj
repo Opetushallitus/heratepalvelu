@@ -1,6 +1,6 @@
 (ns oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler
-  (:require [clj-time.core :as t]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
+            [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.ehoks :as ehoks]))
 
 (gen-class
@@ -11,5 +11,7 @@
 
 (defn -handleAMISTimedOperations [this event context]
   (log/info "Käynnistetään herätteiden lähetys")
-  (let [resp (ehoks/get-retry-kyselylinkit "2021-07-01" (str (t/today)) 100)]
-    (log/info "Lähetetty " (:data (:body resp)) " viestiä")))
+  (let [resp (ehoks/get-retry-kyselylinkit "2021-07-01"
+                                           (str (c/local-date-now))
+                                           100)]
+    (log/info "Lähetetty" (:data (:body resp)) "viestiä")))

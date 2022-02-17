@@ -1,11 +1,11 @@
 (ns oph.heratepalvelu.amis.AMISMuistutusHandler
   (:require [cheshire.core :refer [parse-string]]
-            [clojure.tools.logging :as log] [oph.heratepalvelu.common :as c]
+            [clojure.tools.logging :as log]
+            [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.arvo :refer [get-kyselylinkki-status]]
-            [oph.heratepalvelu.external.viestintapalvelu :refer [send-email amismuistutus-html]]
-            [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :refer [has-time-to-answer? kasittelytilat]])
+            [oph.heratepalvelu.external.arvo :as arvo]
+            [oph.heratepalvelu.external.viestintapalvelu :as vp]
+            [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -29,7 +29,8 @@
                          "#muistutuspvm" (str n ".-muistutus-lahetetty")}
        :expr-attr-vals  {":muistutukset" [:n n]
                          ":vpid" [:n id]
-                         ":lahetystila" [:s (:viestintapalvelussa kasittelytilat)]
+                         ":lahetystila" [:s (:viestintapalvelussa
+                                              c/kasittelytilat)]
                          ":muistutuspvm" [:s (str (c/local-date-now))]}})
     (catch AwsServiceException e
       (log/error "Muistutus"
@@ -47,18 +48,21 @@
        :expr-attr-names {"#lahetystila" "lahetystila"
                          "#muistutukset" "muistutukset"}
        :expr-attr-vals {":lahetystila" [:s (if (:vastattu status)
-                                             (:vastattu kasittelytilat)
-                                             (:vastausaika-loppunut-m kasittelytilat))]
+                                             (:vastattu c/kasittelytilat)
+                                             (:vastausaika-loppunut-m
+                                               c/kasittelytilat))]
                         ":muistutukset" [:n n]}})
     (catch Exception e
-      (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" email)
+      (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on"
+                 "vastattu tai jonka vastausaika umpeutunut"
+                 email)
       (log/error e))))
 
 (defn send-reminder-email [email]
-  (send-email
+  (vp/send-email
     {:subject (str "Muistutus-påminnelse-reminder: "
                    "Vastaa kyselyyn - svara på enkäten - answer the survey")
-     :body (amismuistutus-html email)
+     :body (vp/amismuistutus-html email)
      :address (:sahkoposti email)
      :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}))
 
@@ -66,9 +70,9 @@
   (log/info (str "Käsitellään " (count muistutettavat)
                  " lähetettävää " n ". muistutusta."))
   (doseq [email muistutettavat]
-    (let [status (get-kyselylinkki-status (:kyselylinkki email))]
+    (let [status (arvo/get-kyselylinkki-status (:kyselylinkki email))]
       (if (and (not (:vastattu status))
-               (has-time-to-answer? (:voimassa_loppupvm status)))
+               (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (try
           (let [id (:id (send-reminder-email email))]
             (update-after-send email n id))
@@ -80,14 +84,10 @@
 (defn query-muistutukset [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
                     :lahetyspvm  [:between
-                                  [[:s (str
-                                         (.minusDays
-                                           (c/local-date-now)
-                                           (- (* 5 (+ n 1)) 1)))]
-                                   [:s (str
-                                         (.minusDays
-                                           (c/local-date-now)
-                                           (* 5 n)))]]]}
+                                  [[:s (str (.minusDays (c/local-date-now)
+                                                        (- (* 5 (+ n 1)) 1)))]
+                                   [:s (str (.minusDays (c/local-date-now)
+                                                        (* 5 n)))]]]}
                    {:index "muistutusIndex"
                     :limit 50}))
 

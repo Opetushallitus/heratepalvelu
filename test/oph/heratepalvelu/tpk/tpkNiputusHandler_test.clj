@@ -310,18 +310,10 @@
           {}
           (seq (get mock-niputtamattomat-list index))))
 
-(definterface IMockScanResponse
-  (items [])
-  (hasLastEvaluatedKey []))
-
-(deftype MockScanResponse [items-to-return]
-  IMockScanResponse
-  (items [this] items-to-return)
-  (hasLastEvaluatedKey [this] false))
-
 (defn- mock-query-niputtamattomat [exclusive-start-key]
-  (MockScanResponse.
-    (map ddb/map-vals-to-attribute-values mock-niputtamattomat-list)))
+  {:items (map
+            ddb/map-attribute-values-to-vals
+            (map ddb/map-vals-to-attribute-values mock-niputtamattomat-list))})
 
 (defn- mock-get-existing-nippu [jakso]
   (append-to-mock-handleTpkNiputus-results {:type "mock-get-existing-nippu"

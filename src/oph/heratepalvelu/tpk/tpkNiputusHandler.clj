@@ -7,9 +7,7 @@
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (clojure.lang ExceptionInfo)
            (java.time LocalDate)
-           (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (software.amazon.awssdk.services.dynamodb.model ScanRequest
-                                                           AttributeValue)))
+           (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class :name "oph.heratepalvelu.tpk.tpkNiputusHandler"
            :methods [[^:static handleTpkNiputus
@@ -76,7 +74,7 @@
      :koulutustoimija-oid         (:koulutustoimija jakso)
      :tiedonkeruu-alkupvm         kausi-alkupvm
      :tiedonkeruu-loppupvm        kausi-loppupvm
-     :niputuspvm                  (str (LocalDate/now))
+     :niputuspvm                  (str (c/local-date-now))
      :request-id                  request-id}))
 
 (defn extend-nippu [nippu arvo-resp]
@@ -108,38 +106,28 @@
     (:jaksotunnus-table env)))
 
 (defn query-niputtamattomat [exclusive-start-key]
-  (let [today (LocalDate/now)
+  (let [today (c/local-date-now)
         jl-date (if (.isAfter today current-kausi-end)
                   (str current-kausi-end)
                   (str today))
         jl-start-date (str current-kausi-start)
-        req (-> (ScanRequest/builder)
-                (.filterExpression
-                  "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :jlstart AND :jl")
-                (cond->
-                  exclusive-start-key
-                  (.exclusiveStartKey exclusive-start-key))
-                (.expressionAttributeNames
-                  {"#tpkNpvm" "tpk-niputuspvm"
-                   "#jl"      "jakso_loppupvm"})
-                (.expressionAttributeValues
-                  {":tpkNpvm" (.build (.s (AttributeValue/builder)
-                                          "ei_maaritelty"))
-                   ":jl"      (.build (.s (AttributeValue/builder) jl-date))
-                   ":jlstart" (.build (.s (AttributeValue/builder)
-                                          jl-start-date))})
-                (.tableName (:jaksotunnus-table env))
-                (.build))
-        response (.scan ddb/ddb-client req)]
-    (log/info "TPK Funktion scan" (count (.items response)))
-    response))
+        resp (ddb/scan {:filter-expression
+                        "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :jlstart AND :jl"
+                        :exclusive-start-key exclusive-start-key
+                        :expr-attr-names {"#tpkNpvm" "tpk-niputuspvm"
+                                          "#jl"      "jakso_loppupvm"}
+                        :expr-attr-vals {":tpkNpvm" [:s "ei_maaritelty"]
+                                         ":jl"      [:s jl-date]
+                                         ":jlstart" [:s jl-start-date]}}
+                       (:jaksotunnus-table env))]
+    (log/info "TPK Funktion scan" (count (:items resp)))
+    resp))
 
 (defn -handleTpkNiputus [this event context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
   (let [memoization (atom {})]
     (loop [niputettavat (query-niputtamattomat nil)]
-      (doseq [jakso (map ddb/map-attribute-values-to-vals
-                         (.items niputettavat))]
+      (doseq [jakso (:items niputettavat)]
         (when (< 30000 (.getRemainingTimeInMillis context))
           (if (check-jakso? jakso)
             (let [memoized-nippu (get @memoization (create-nippu-id jakso))
@@ -161,5 +149,5 @@
                   (:niputuspvm (or memoized-nippu existing-nippu)))))
             (update-tpk-niputuspvm jakso "ei_niputeta"))))
       (when (and (< 30000 (.getRemainingTimeInMillis context))
-                 (.hasLastEvaluatedKey niputettavat))
-        (recur (query-niputtamattomat (.lastEvaluatedKey niputettavat)))))))
+                 (:last-evaluated-key niputettavat))
+        (recur (query-niputtamattomat (:last-evaluated-key niputettavat)))))))

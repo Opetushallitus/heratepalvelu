@@ -135,11 +135,16 @@
   IMockQueryResponse
   (items [this] items-set))
 
-(definterface IMockScanResponse (items []))
+(definterface IMockScanResponse
+  (items [])
+  (hasLastEvaluatedKey [])
+  (lastEvaluatedKey []))
 
 (deftype MockScanResponse [items-set]
   IMockScanResponse
-  (items [this] items-set))
+  (items [this] items-set)
+  (hasLastEvaluatedKey [this] true)
+  (lastEvaluatedKey [this] "mock-last-evaluated-key"))
 
 (definterface IMockGetItemResponse (item []))
 
@@ -404,6 +409,8 @@
                   mock-map-attribute-values-to-vals]
       (let [test-options {:filter-expression "a = b"}
             test-table "test-table-name"
-            results [{:mapped-request-body {:filterExpression "a = b"
-                                            :tableName "test-table-name"}}]]
+            results {:items [{:mapped-request-body
+                              {:filterExpression "a = b"
+                               :tableName "test-table-name"}}]
+                     :last-evaluated-key "mock-last-evaluated-key"}]
         (is (= (ddb/scan test-options test-table) results))))))

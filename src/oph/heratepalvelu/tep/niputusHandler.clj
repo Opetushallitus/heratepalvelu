@@ -37,9 +37,7 @@
             arvo-resp (arvo/create-nippu-kyselylinkki
                         (arvo/build-niputus-request-body
                           tunniste
-                          (if (some? (:tyopaikka nippu))
-                            nippu
-                            (assoc nippu :tyopaikka (:tyopaikan-nimi (first jaksot)))) ;poista ennen tuotantoa
+                          nippu
                           tunnukset
                           request-id))]
         (if (some? (:nippulinkki arvo-resp))
@@ -84,10 +82,10 @@
                                    "#reason" "reason"
                                    "#req" "request_id"
                                    "#pvm" "kasittelypvm"}
-                 :expr-attr-vals {":tila"     [:s "niputusvirhe"]
-                                  ":reason"   [:s (str (or (:errors arvo-resp) "no reason in response"))]
-                                  ":req"      [:s request-id]
-                                  ":pvm"      [:s (str (c/local-date-now))]}}
+                 :expr-attr-vals {":tila"   [:s (:niputusvirhe c/kasittelytilat)]
+                                  ":reason" [:s (str (or (:errors arvo-resp) "no reason in response"))]
+                                  ":req"    [:s request-id]
+                                  ":pvm"    [:s (str (c/local-date-now))]}}
                 (:nippu-table env)))))
       (do (log/warn "Ei jaksoja, joissa vastausaikaa jäljellä " (:ohjaaja_ytunnus_kj_tutkinto nippu) (:niputuspvm nippu))
           (ddb/update-item
@@ -99,9 +97,9 @@
              :expr-attr-names {"#tila" "kasittelytila"
                                "#req" "request_id"
                                "#pvm" "kasittelypvm"}
-             :expr-attr-vals {":tila"     [:s "ei-jaksoja"]
-                              ":req"      [:s request-id]
-                              ":pvm"      [:s (str (c/local-date-now))]}}
+             :expr-attr-vals {":tila" [:s (:ei-jaksoja c/kasittelytilat)]
+                              ":req"  [:s request-id]
+                              ":pvm"  [:s (str (c/local-date-now))]}}
             (:nippu-table env))))))
 
 (defn -handleNiputus [this event context]

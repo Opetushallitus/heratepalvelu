@@ -30,8 +30,8 @@
                        "muuttunutJälkeen" datetime-str
                        "pageSize" 100
                        "pageNumber" page}
-                          :basic-auth [(:koski-user env) @pwd]
-                          :as :json-strict})]
+        :basic-auth [(:koski-user env) @pwd]
+        :as :json-strict})]
     (sort-by :aikaleima
              (reduce
                #(into %1 (:opiskeluoikeudet %2))

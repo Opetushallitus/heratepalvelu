@@ -48,5 +48,5 @@
                                  {:kyselylinkki "kysely.linkki/123"})
                                (tu/mock-handler-context))
       (is (= (mdb/get-table-values (:herate-table mock-env))
-          expected-table-contents))
+             expected-table-contents))
       (mdb/clear-mock-db))))
