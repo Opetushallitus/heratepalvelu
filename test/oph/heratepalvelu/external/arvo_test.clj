@@ -280,15 +280,69 @@
 
 ; TODO create-nippu-kyselylinkki
 
-; TODO delete-nippukyselylinkki
+(deftest test-delete-nippukyselylinkki
+  (testing "Delete nippukyselylinkki"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/delete (mock-http
+                                                                  :delete)]
+      (is (= (arvo/delete-nippukyselylinkki "1234")
+             {:body {:method :delete
+                     :url "example.com/tyoelamapalaute/v1/nippu/1234"
+                     :options {:basic-auth ["arvo-user" "arvo-pwd"]}}})))))
 
-;TODO patch-nippulinkki
+(deftest test-patch-nippulinkki
+  (testing "Patch nippulinkki"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/patch (mock-http
+                                                                 :patch)]
+      (is (= (arvo/patch-nippulinkki "kysely.linkki/123" {:data "data"})
+             {:method :patch
+              :url "example.com/tyoelamapalaute/v1/nippu/123"
+              :options {:basic-auth ["arvo-user" "arvo-pwd"]
+                        :content-type "application/json"
+                        :body "{\"data\":\"data\"}"
+                        :as :json}})))))
 
-; TODO patch-vastaajatunnus
+(deftest test-patch-vastaajatunnus
+  (testing "Patch vastaajatunnus"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/patch (mock-http
+                                                                 :patch)]
+      (is (= (arvo/patch-vastaajatunnus "123" {:data "data"})
+             {:body {:method :patch
+                     :url "example.com/tyoelamapalaute/v1/vastaajatunnus/123"
+                     :options {:basic-auth ["arvo-user" "arvo-pwd"]
+                               :content-type "application/json"
+                               :body "{\"data\":\"data\"}"
+                               :as :json}}})))))
 
-; TODO build-tpk-request-body
-
-
+(deftest test-build-tpk-request-body
+  (testing "Build TPK request body"
+    (let [nippu {:tyopaikan-nimi "Työ Paikka"
+                 :tyopaikan-nimi-normalisoitu "tyo_paikka"
+                 :tyopaikan-ytunnus "123456-7"
+                 :vastaamisajan-alkupvm "2022-01-15"
+                 :vastaamisajan-loppupvm "2022-02-28"
+                 :koulutustoimija-oid "test-kt"
+                 :tiedonkeruu-alkupvm "2021-07-01"
+                 :tiedonkeruu-loppupvm "2021-12-31"
+                 :request-id "test-request-id"}]
+      (is (= (arvo/build-tpk-request-body nippu)
+             {:tyopaikka "Työ Paikka"
+              :tyopaikka_normalisoitu "tyo_paikka"
+              :tyonantaja "123456-7"
+              :vastaamisajan_alkupvm "2022-01-15"
+              :vastaamisajan_loppupvm "2022-02-28"
+              :koulutustoimija_oid "test-kt"
+              :tiedonkeruu_alkupvm "2021-07-01"
+              :tiedonkeruu_loppupvm "2021-12-31"
+              :request_id "test-request-id"})))))
 
 (deftest test-create-tpk-kyselylinkki
   (testing "Create TPK kyselylinkki"
