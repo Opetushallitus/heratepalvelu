@@ -1,7 +1,8 @@
 (ns oph.heratepalvelu.external.arvo-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.external.arvo :as arvo])
-  (:import (java.time LocalDate)))
+  (:import (clojure.lang ExceptionInfo)
+           (java.time LocalDate)))
 
 (defn- mock-get-organisaatio [oid]
   (cond
@@ -121,3 +122,61 @@
                                              alkupvm
                                              loppupvm)
                expected))))))
+
+(defn- mock-http [method]
+  (fn [url options] {:body {:method method :url url :options options}}))
+
+(deftest test-create-amis-kyselylinkki
+  (testing "Create AMIS kyselylinkki"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/post (mock-http :post)]
+      (is (= (arvo/create-amis-kyselylinkki {:data "data"})
+             {:method :post
+              :url "example.com/vastauslinkki/v1"
+              :options {:content-type "application/json"
+                        :body "{\"data\":\"data\"}"
+                        :basic-auth ["arvo-user" "arvo-pwd"]
+                        :as :json}})))))
+
+(deftest test-create-amis-kyselylinkki-catch-404-good
+  (testing "Create AMIS kyselylinkki catch 404"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/post (mock-http :post)]
+      (is (= (arvo/create-amis-kyselylinkki-catch-404 {:data "data"})
+             {:method :post
+              :url "example.com/vastauslinkki/v1"
+              :options {:content-type "application/json"
+                        :body "{\"data\":\"data\"}"
+                        :basic-auth ["arvo-user" "arvo-pwd"]
+                        :as :json}})))))
+
+(deftest test-create-amis-kyselylinkki-catch-404-regular-error
+  (testing "Create AMIS kyselylinkki catch 404 with exeption"
+    (with-redefs [oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
+                  (fn [data] (throw (ex-info "Test" {:data data})))]
+      (is (thrown-with-msg?
+            ExceptionInfo
+            #"Test"
+            (arvo/create-amis-kyselylinkki-catch-404 {:data "data"}))))))
+
+(deftest test-create-amis-kyselylinkki-catch-404-regular-error
+  (testing "Create AMIS kyselylinkki catch 404 with 404 exeption"
+    (with-redefs [oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
+                  (fn [data] (throw (ex-info "Test" {:status 404})))]
+      (is (nil? (arvo/create-amis-kyselylinkki-catch-404 {:data "data"}))))))
+
+(deftest test-delete-amis-kyselylinkki
+  (testing "Delete AMIS kyselylinkki"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/delete (mock-http
+                                                                  :delete)]
+      (is (= (arvo/delete-amis-kyselylinkki "kysely.linkki/123")
+             {:body {:method :delete
+                     :url "example.com/vastauslinkki/v1/123"
+                     :options {:basic-auth ["arvo-user" "arvo-pwd"]}}})))))
