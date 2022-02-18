@@ -1,10 +1,10 @@
 (ns oph.heratepalvelu.external.elisa
-  (:require [oph.heratepalvelu.external.aws-ssm :as ssm]
-            [oph.heratepalvelu.external.http-client :as client]
-            [cheshire.core :refer [generate-string]]
+  (:require [cheshire.core :refer [generate-string]]
+            [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
-            [clojure.string :as str])
+            [oph.heratepalvelu.external.aws-ssm :as ssm]
+            [oph.heratepalvelu.external.http-client :as client])
   (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private apikey (delay

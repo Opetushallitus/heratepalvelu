@@ -74,14 +74,15 @@
     {:tila (:failure c/kasittelytilat)}))
 
 (defn ohjaaja-puhnro [nippu jaksot]
-  (let [number (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
-                                                 (if (some? (:ohjaaja_puhelinnumero %2))
-                                                   (if (= (:ohjaaja_puhelinnumero %1) (:ohjaaja_puhelinnumero %2))
-                                                     %1
-                                                     (reduced nil))
-                                                   %1)
-                                                 %2)
-                                              jaksot))]
+  (let [number (when-not (empty? jaksot)
+                 (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
+                                                   (if (some? (:ohjaaja_puhelinnumero %2))
+                                                     (if (= (:ohjaaja_puhelinnumero %1) (:ohjaaja_puhelinnumero %2))
+                                                       %1
+                                                       (reduced nil))
+                                                     %1)
+                                                   %2)
+                                                jaksot)))]
     (if (some? number)
       (if (valid-number? number)
         number
