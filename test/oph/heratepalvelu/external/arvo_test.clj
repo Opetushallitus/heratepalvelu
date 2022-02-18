@@ -154,20 +154,20 @@
                         :basic-auth ["arvo-user" "arvo-pwd"]
                         :as :json}})))))
 
-(deftest test-create-amis-kyselylinkki-catch-404-regular-error
-  (testing "Create AMIS kyselylinkki catch 404 with exeption"
+(deftest test-create-amis-kyselylinkki-catch-404-not-found-error
+  (testing "Create AMIS kyselylinkki catch 404 with 404 exeption"
+    (with-redefs [oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
+                  (fn [data] (throw (ex-info "Test" {:status 404})))]
+      (is (nil? (arvo/create-amis-kyselylinkki-catch-404 {:data "data"}))))))
+
+(deftest test-create-amis-kyselylinkki-catch-404-other-error
+  (testing "Create AMIS kyselylinkki catch 404 with other exeption"
     (with-redefs [oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
                   (fn [data] (throw (ex-info "Test" {:data data})))]
       (is (thrown-with-msg?
             ExceptionInfo
             #"Test"
             (arvo/create-amis-kyselylinkki-catch-404 {:data "data"}))))))
-
-(deftest test-create-amis-kyselylinkki-catch-404-regular-error
-  (testing "Create AMIS kyselylinkki catch 404 with 404 exeption"
-    (with-redefs [oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
-                  (fn [data] (throw (ex-info "Test" {:status 404})))]
-      (is (nil? (arvo/create-amis-kyselylinkki-catch-404 {:data "data"}))))))
 
 (deftest test-delete-amis-kyselylinkki
   (testing "Delete AMIS kyselylinkki"
@@ -272,13 +272,109 @@
                 :toimipiste_oid "test-toimipiste"
                 :request_id "test-request-id"}))))))
 
-;TODO create-jaksotunnus
+(deftest test-create-jaksotunnus
+  (testing "Create jaksotunnus"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/post (mock-http :post)]
+      (is (= (arvo/create-jaksotunnus {:data "data"})
+             {:body {:method :post
+                     :url "example.com/tyoelamapalaute/v1/vastaajatunnus"
+                     :options {:content-type "application/json"
+                               :body "{\"data\":\"data\"}"
+                               :basic-auth ["arvo-user" "arvo-pwd"]
+                               :as :json}}})))))
 
-; TODO delete-jaksotunnus
+(deftest test-create-jaksotunnus-not-found-error
+  (testing "Create jaksotunnus with 404 exeption"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/post
+                  (fn [url options] (throw (ex-info "Test" {:status 404})))]
+      (is (nil? (arvo/create-jaksotunnus {:data "data"}))))))
 
-;TODO build-niputus-request-body
+(deftest test-create-jaksotunnus-other-error
+  (testing "Create jaksotunnus with other exeption"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/post
+                  (fn [url options] (throw (ex-info "Test" {})))]
+      (is (thrown-with-msg? ExceptionInfo
+                            #"Test"
+                            (arvo/create-jaksotunnus {:data "data"}))))))
 
-; TODO create-nippu-kyselylinkki
+(deftest test-delete-jaksotunnus
+  (testing "Delete jaksotunnus"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/delete (mock-http
+                                                                  :delete)]
+      (is (= (arvo/delete-jaksotunnus "1234")
+             {:body {:method :delete
+                     :url "example.com/tyoelamapalaute/v1/vastaajatunnus/1234"
+                     :options {:basic-auth ["arvo-user" "arvo-pwd"]}}})))))
+
+(deftest test-build-niputus-request-body
+  (testing "Build niputus request body"
+    (with-redefs [oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/of 2022 2 2))]
+      (let [tunniste "test-tunniste"
+            nippu {:tyopaikka "Työ Paikka"
+                   :ytunnus "123456-7"
+                   :koulutuksenjarjestaja "test-kj"
+                   :tutkinto "test-tutkinto"}
+            tunnukset ["ASDF" "HJKL"]
+            request-id "test-request-id"]
+        (is (= (arvo/build-niputus-request-body tunniste
+                                                nippu
+                                                tunnukset
+                                                request-id)
+               {:tunniste "test-tunniste"
+                :koulutustoimija_oid "test-kj"
+                :tutkintotunnus "test-tutkinto"
+                :tyonantaja "123456-7"
+                :tyopaikka "Työ Paikka"
+                :tunnukset ["ASDF" "HJKL"]
+                :voimassa_alkupvm "2022-02-02"
+                :request_id "test-request-id"}))))))
+
+(deftest test-create-nippu-kyselylinkki
+  (testing "Create nippu kyselylinkki"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/post (mock-http :post)]
+      (is (= (arvo/create-nippu-kyselylinkki {:data "data"})
+             {:method :post
+              :url "example.com/tyoelamapalaute/v1/nippu"
+              :options {:content-type "application/json"
+                        :body "{\"data\":\"data\"}"
+                        :basic-auth ["arvo-user" "arvo-pwd"]
+                        :as :json}})))))
+
+(deftest test-create-nippu-kyselylinkki-not-found-error
+  (testing "Create nippu kyselylinkki with 404 exeption"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/post
+                  (fn [url options] (throw (ex-info "Test" {:status 404})))]
+      (is (nil? (arvo/create-nippu-kyselylinkki {:data "data"}))))))
+
+(deftest test-create-nippu-kyselylinkki-other-error
+  (testing "Create nippu kyselylinkki with other exeption"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/post
+                  (fn [url options] (throw (ex-info "Test" {})))]
+      (is (thrown-with-msg? ExceptionInfo
+                            #"Test"
+                            (arvo/create-nippu-kyselylinkki {:data "data"}))))))
 
 (deftest test-delete-nippukyselylinkki
   (testing "Delete nippukyselylinkki"
