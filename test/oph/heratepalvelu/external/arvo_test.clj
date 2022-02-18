@@ -180,3 +180,62 @@
              {:body {:method :delete
                      :url "example.com/vastauslinkki/v1/123"
                      :options {:basic-auth ["arvo-user" "arvo-pwd"]}}})))))
+
+(deftest test-get-kyselylinkki-status
+  (testing "Get kyselylinkki status"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/get (mock-http :get)]
+      (is (= (arvo/get-kyselylinkki-status "kysely.linkki/123")
+             {:method :get
+              :url "example.com/vastauslinkki/v1/status/123"
+              :options {:basic-auth ["arvo-user" "arvo-pwd"] :as :json}})))))
+
+(deftest test-get-nippulinkki-status
+  (testing "Get nippulinkki status"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/get (mock-http :get)]
+      (is (= (arvo/get-nippulinkki-status "kysely.linkki/123")
+             {:method :get
+              :url "example.com/tyoelamapalaute/v1/status/123"
+              :options {:basic-auth ["arvo-user" "arvo-pwd"] :as :json}})))))
+
+(deftest test-patch-kyselylinkki-metadata
+  (testing "Patch kyselylinkki metadata"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/patch (mock-http
+                                                                 :patch)]
+      (is (= (arvo/patch-kyselylinkki-metadata "kysely.linkki/123" "test-tila")
+             {:method :patch
+              :url "example.com/vastauslinkki/v1/123/metatiedot"
+              :options {:basic-auth ["arvo-user" "arvo-pwd"]
+                        :content-type "application/json"
+                        :body "{\"tila\":\"test-tila\"}"
+                        :as :json}})))))
+
+; TODO build-jaksotunnus-request-body
+
+;TODO create-jaksotunnus
+
+; TODO delete-jaksotunnus
+
+;TODO build-niputus-request-body
+
+; TODO create-nippu-kyselylinkki
+
+; TODO delete-nippukyselylinkki
+
+;TODO patch-nippulinkki
+
+; TODO patch-vastaajatunnus
+
+; TODO build-tpk-request-body
+
+; TODO create-tpk-kyselylinkki
+
+
