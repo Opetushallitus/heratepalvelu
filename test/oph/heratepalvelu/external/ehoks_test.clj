@@ -194,3 +194,28 @@
                                                     "2021-09-09"
                                                     100)
                expected))))))
+
+(deftest test-get-retry-kyselylinkit
+  (testing "Varmista, että get-retry-kyselylinkit toimii oikein"
+    (with-redefs [environ.core/env {:ehoks-url "example.com/"}
+                  oph.heratepalvelu.external.cas-client/get-service-ticket
+                  mock-get-service-ticket
+                  oph.heratepalvelu.external.http-client/get mock-client-get]
+      (let [expected {:body
+                      {:data
+                       {:type "mock-client-call-response"
+                        :params
+                        {:method "get"
+                         :uri (str "example.com/heratepalvelu/"
+                                   "kasittelemattomat-heratteet")
+                         :options
+                         {:headers
+                          {:ticket {:type "cas-service-ticket"
+                                    :service "/ehoks-virkailija-backend"
+                                    :suffix "cas-security-check"}}
+                          :query-params {:start "2021-08-08"
+                                         :end "2021-09-09"
+                                         :limit 100}
+                          :as :json}}}}}]
+        (is (= (ehoks/get-retry-kyselylinkit "2021-08-08" "2021-09-09" 100)
+               expected))))))
