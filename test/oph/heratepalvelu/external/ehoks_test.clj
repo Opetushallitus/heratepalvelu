@@ -219,3 +219,35 @@
                           :as :json}}}}}]
         (is (= (ehoks/get-retry-kyselylinkit "2021-08-08" "2021-09-09" 100)
                expected))))))
+
+(deftest test-patch-amisherate-kasitelty
+  (testing "Varmista, että patch-amisherate-kasitelty toimii oikein"
+    (with-redefs [environ.core/env {:ehoks-url "example.com/"}
+                  oph.heratepalvelu.external.cas-client/get-service-ticket
+                  mock-get-service-ticket
+                  oph.heratepalvelu.external.http-client/patch
+                  mock-client-patch]
+      (let [expect {:body
+                    {:data
+                     {:type "mock-client-call-response"
+                      :params
+                      {:method "patch"
+                       :uri "example.com/heratepalvelu/hoksit/12/test-element"
+                       :options
+                       {:headers {:ticket {:type "cas-service-ticket"
+                                           :service "/ehoks-virkailija-backend"
+                                           :suffix "cas-security-check"}}
+                        :content-type "application/json"
+                        :as :json}}}}}]
+        (is (= (ehoks/patch-amisherate-kasitelty "test-element" 12) expect))))))
+
+(deftest test-patch-amis-aloitus-ja-paattoheratteet-kasitellyt
+  (testing (str "Varmista, että patch-amis-aloitusherate-kasitelty ja"
+                "patch-amis-paattoherate-kasitelty toimivat oikein")
+    (with-redefs [oph.heratepalvelu.external.ehoks/patch-amisherate-kasitelty
+                  (fn [url-tyyppi-element id]
+                    {:url-tyyppi-element url-tyyppi-element :id id})]
+      (is (= (ehoks/patch-amis-aloitusherate-kasitelty 34)
+             {:url-tyyppi-element "aloitusherate-kasitelty" :id 34}))
+      (is (= (ehoks/patch-amis-paattoherate-kasitelty 56)
+             {:url-tyyppi-element "paattoherate-kasitelty" :id 56})))))

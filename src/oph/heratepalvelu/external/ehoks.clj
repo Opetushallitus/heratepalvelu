@@ -94,7 +94,7 @@
                     :limit limit}
      :as :json}))
 
-(defn- patch-amisherate-kasitelty [url-tyyppi-element id]
+(defn patch-amisherate-kasitelty [url-tyyppi-element id]
   (client/patch
     (str (:ehoks-url env) "heratepalvelu/hoksit/" id "/" url-tyyppi-element)
     {:headers {:ticket (cas/get-service-ticket
