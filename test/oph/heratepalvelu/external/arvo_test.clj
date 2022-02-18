@@ -218,7 +218,59 @@
                         :body "{\"tila\":\"test-tila\"}"
                         :as :json}})))))
 
-; TODO build-jaksotunnus-request-body
+(deftest test-build-jaksotunnus-request-body
+  (testing "Build jaksotunnus request body"
+    (with-redefs [oph.heratepalvelu.external.arvo/get-osaamisalat
+                  (fn [suoritus oo] (str "osaamisala: " (:oid suoritus) " " oo))
+                  oph.heratepalvelu.external.arvo/get-toimipiste
+                  (fn [suoritus] (:oid (:toimipiste suoritus)))]
+      (let [herate {:tyopaikan-ytunnus "123456-7"
+                    :tyopaikan-nimi "Työ Paikka"
+                    :tutkinnonosa-koodi "asdf_oiuoiu_lkj"
+                    :tutkinnonosa-nimi "LKJ"
+                    :alkupvm "2022-01-01"
+                    :loppupvm "2022-03-01"
+                    :osa-aikaisuus 90
+                    :hankkimistapa-tyyppi "osaamisenhankkimistapa_oppisopimus"
+                    :oppisopimuksen-perusta "oppisopimuksenperusta_01"}
+            tyopaikka-normalisoitu "tyo_paikka"
+            kesto 34
+            opiskeluoikeus {:oid "test-oo"
+                            :oppilaitos {:oid "test-laitos"}}
+            request-id "test-request-id"
+            koulutustoimija "test-kt"
+            suoritus {:oid "test-suoritus"
+                      :koulutusmoduuli {:tunniste {:koodiarvo "test-tunniste"}}
+                      :tutkintonimike [{:koodiarvo "test-tutkintonimike"}]
+                      :toimipiste {:oid "test-toimipiste"}}
+            niputuspvm "2022-03-16"]
+        (is (= (arvo/build-jaksotunnus-request-body herate
+                                                    tyopaikka-normalisoitu
+                                                    kesto
+                                                    opiskeluoikeus
+                                                    request-id
+                                                    koulutustoimija
+                                                    suoritus
+                                                    niputuspvm)
+               {:koulutustoimija_oid "test-kt"
+                :tyonantaja "123456-7"
+                :tyopaikka "Työ Paikka"
+                :tyopaikka_normalisoitu "tyo_paikka"
+                :tutkintotunnus "test-tunniste"
+                :tutkinnon_osa "lkj"
+                :paikallinen_tutkinnon_osa "LKJ"
+                :tutkintonimike (seq ["test-tutkintonimike"])
+                :osaamisala "osaamisala: test-suoritus test-oo"
+                :tyopaikkajakson_alkupvm "2022-01-01"
+                :tyopaikkajakson_loppupvm "2022-03-01"
+                :tyopaikkajakson_kesto 34
+                :osa_aikaisuus 90
+                :sopimustyyppi "oppisopimus"
+                :oppisopimuksen_perusta "01"
+                :vastaamisajan_alkupvm "2022-03-16"
+                :oppilaitos_oid "test-laitos"
+                :toimipiste_oid "test-toimipiste"
+                :request_id "test-request-id"}))))))
 
 ;TODO create-jaksotunnus
 
@@ -236,6 +288,18 @@
 
 ; TODO build-tpk-request-body
 
-; TODO create-tpk-kyselylinkki
 
 
+(deftest test-create-tpk-kyselylinkki
+  (testing "Create TPK kyselylinkki"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/post (mock-http :post)]
+      (is (= (arvo/create-tpk-kyselylinkki {:data "data"})
+             {:method :post
+              :url "example.com/tyoelamapalaute/v1/tyopaikkakysely-tunnus"
+              :options {:content-type "application/json"
+                        :body "{\"data\":\"data\"}"
+                        :basic-auth ["arvo-user" "arvo-pwd"]
+                        :as :json}})))))
