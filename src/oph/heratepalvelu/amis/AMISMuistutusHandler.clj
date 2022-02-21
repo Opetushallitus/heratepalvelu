@@ -8,13 +8,19 @@
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
+;; Käsittelee sähköpostimuistutuksia ja lähettää viestit viestintäpalveluun, jos
+;; kyselyyn ei ole vastattu ja vastausaika ei ole umpeutunut.
+
 (gen-class
   :name "oph.heratepalvelu.amis.AMISMuistutusHandler"
   :methods [[^:static handleSendAMISMuistutus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn update-after-send [email n id]
+(defn update-after-send
+  "Päivittää sähköposti- ja herätetiedot tietokantaan, kun muistutus on
+  lähetetty viestintäpalveluun."
+  [email n id]
   (try
     (ddb/update-item
       {:toimija_oppija [:s (:toimija_oppija email)]
@@ -38,7 +44,9 @@
                  "lähetty viestintäpalveluun, muttei päivitetty kantaan!")
       (log/error e))))
 
-(defn update-when-not-sent [email n status]
+(defn update-when-not-sent
+  "Päivittää herätteen tietokantaan, jos muistutusta ei lähetetty."
+  [email n status]
   (try
     (ddb/update-item
       {:toimija_oppija [:s (:toimija_oppija email)]
@@ -58,7 +66,9 @@
                  email)
       (log/error e))))
 
-(defn send-reminder-email [email]
+(defn send-reminder-email
+  "Lähettää muistutusviestin viestintäpalveluun."
+  [email]
   (vp/send-email
     {:subject (str "Muistutus-påminnelse-reminder: "
                    "Vastaa kyselyyn - svara på enkäten - answer the survey")
@@ -66,7 +76,10 @@
      :address (:sahkoposti email)
      :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}))
 
-(defn sendAMISMuistutus [muistutettavat n]
+(defn sendAMISMuistutus
+  "Lähettää muistutusviestin ja tallentaa sen tilan tietokantaan, jos kyselyyn
+  ei ole vastattu ja vastausaika ei ole umpeutunut."
+  [muistutettavat n]
   (log/info (str "Käsitellään " (count muistutettavat)
                  " lähetettävää " n ". muistutusta."))
   (doseq [email muistutettavat]
@@ -81,7 +94,9 @@
             (log/error e)))
         (update-when-not-sent email n status)))))
 
-(defn query-muistutukset [n]
+(defn query-muistutukset
+  "Hakee tietokannasta herätteet, joilla on lähetettäviä muistutusviestejä."
+  [n]
   (ddb/query-items {:muistutukset [:eq [:n (- n 1)]]
                     :lahetyspvm  [:between
                                   [[:s (str (.minusDays (c/local-date-now)

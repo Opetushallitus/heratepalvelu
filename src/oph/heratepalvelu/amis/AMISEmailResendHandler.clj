@@ -9,6 +9,9 @@
   (:import (com.fasterxml.jackson.core JsonParseException)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
+;; Ottaa vastaan viestejä ehoksAmisResendQueuesta ja merkitsee kyseessä olevan
+;; kyselylinkin sähköpostin lähetettäväksi uudestaan, jos osoite löytyy.
+
 (gen-class
   :name "oph.heratepalvelu.amis.AMISEmailResendHandler"
   :methods [[^:static handleEmailResend
@@ -22,7 +25,9 @@
 (def resend-checker
   (s/checker resend-schema))
 
-(defn get-one-item-by-kyselylinkki [kyselylinkki]
+(defn get-one-item-by-kyselylinkki
+  "Hakee yhden tietueen tietokannasta kyselylinkin perusteella."
+  [kyselylinkki]
   (try
     (first (ddb/query-items {:kyselylinkki [:eq [:s kyselylinkki]]}
                             {:index "resendIndex"}))
@@ -30,10 +35,9 @@
       (log/error "Virhe kyselylinkin" kyselylinkki "hakemisessa" e)
       (throw e))))
 
-(defn update-email-to-resend [toimija-oppija
-                              tyyppi-kausi
-                              sahkoposti
-                              kyselylinkki]
+(defn update-email-to-resend
+  "Päivittää lähetettävän sähköpostin osoitteen ja lähetystilan tietokantaan."
+  [toimija-oppija tyyppi-kausi sahkoposti kyselylinkki]
   (try
     (ddb/update-item
       {:toimija_oppija [:s toimija-oppija]
@@ -47,7 +51,10 @@
       (log/error "Virhe kyselylinkin" kyselylinkki "päivityksessä" e)
       (throw e))))
 
-(defn -handleEmailResend [this event context]
+(defn -handleEmailResend
+  "Merkistee sähköpostin lähetettäväksi uudestaan, jos osoite löytyy
+  SQS-viestistä tai tietokannasta."
+  [this event context]
   (log-caller-details-sqs "handleEmailResend" context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]

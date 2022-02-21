@@ -14,13 +14,18 @@
     [schema.core :as s])
   (:import (clojure.lang ExceptionInfo)))
 
+;; Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
+;; tietokantaan.
+
 (gen-class
   :name "oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler"
   :methods [[^:static handleUpdatedOpiskeluoikeus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn parse-herate [hoks kyselytyyppi alkupvm]
+(defn parse-herate
+  "Luo heräte-objektin HOKSista, kyselytyypistä ja alkupäivämäärästä."
+  [hoks kyselytyyppi alkupvm]
   {:ehoks-id           (:id hoks)
    :kyselytyyppi       kyselytyyppi
    :opiskeluoikeus-oid (:opiskeluoikeus-oid hoks)
@@ -28,7 +33,10 @@
    :sahkoposti         (:sahkoposti hoks)
    :alkupvm            alkupvm})
 
-(defn get-vahvistus-pvm [opiskeluoikeus]
+(defn get-vahvistus-pvm
+  "Palauttaa ensimmäisen hyväksyttävän suorituksen vahvistuspäivämäärä, jos
+  sellainen on olemassa."
+  [opiskeluoikeus]
   (if-let [vahvistus-pvm
            (reduce
              (fn [_ suoritus]
@@ -56,7 +64,9 @@
        :expr-attr-vals {":value" [:s (str time-with-buffer)]}}
       (:metadata-table env))))
 
-(defn update-last-page [page]
+(defn update-last-page
+  "Tallentaa viimeisen sivun numeron tietokantaan."
+  [page]
   (ddb/update-item
     {:key [:s "opiskeluoikeus-last-page"]}
     {:update-expr     "SET #value = :value"
@@ -64,7 +74,9 @@
      :expr-attr-vals {":value" [:s (str page)]}}
     (:metadata-table env)))
 
-(defn get-kysely-type [opiskeluoikeus]
+(defn get-kysely-type
+  "Hakee opiskeluoikeuden suorituksen tyypin."
+  [opiskeluoikeus]
   (let [tyyppi (get-in
                  (get-suoritus opiskeluoikeus)
                  [:tyyppi :koodiarvo])]
@@ -74,7 +86,9 @@
       (= tyyppi "ammatillinentutkintoosittainen")
       "tutkinnon_osia_suorittaneet")))
 
-(defn get-tila [opiskeluoikeus vahvistus-pvm]
+(defn get-tila
+  "Hakee opiskeluoikeuden tilan."
+  [opiskeluoikeus vahvistus-pvm]
   (let [tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
         voimassa (reduce
                    (fn [res next]
@@ -84,7 +98,9 @@
                    (sort-by :alku tilat))]
     (:koodiarvo (:tila voimassa))))
 
-(defn check-tila [opiskeluoikeus vahvistus-pvm]
+(defn check-tila
+  "Varmistaa, että opiskeluoikeuden tila on 'valmistunut' tai 'läsnä'."
+  [opiskeluoikeus vahvistus-pvm]
   (let [tila (get-tila opiskeluoikeus vahvistus-pvm)]
     (if (or (= tila "valmistunut") (= tila "lasna"))
       true
@@ -97,7 +113,10 @@
                     ". Odotettu arvo on 'valmistunut' tai 'läsnä'.")
           false))))
 
-(defn -handleUpdatedOpiskeluoikeus [this event context]
+(defn -handleUpdatedOpiskeluoikeus
+  "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
+  tietokantaan."
+  [this event context]
   (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus" event context)
   (let [start-time (System/currentTimeMillis)
         last-checked

@@ -9,7 +9,9 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn -handleAMISTimedOperations [this event context]
+(defn -handleAMISTimedOperations
+  "Pyytää ehoksilta lähettää käsittelemättömät herätteet uudestaan."
+  [this event context]
   (log/info "Käynnistetään herätteiden lähetys")
   (let [resp (ehoks/get-retry-kyselylinkit "2021-07-01"
                                            (str (c/local-date-now))

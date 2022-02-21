@@ -8,13 +8,18 @@
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
+;; Lähettää herätteiden sähköpostiviestit viestintäpalveluun.
+
 (gen-class
   :name "oph.heratepalvelu.amis.AMISherateEmailHandler"
   :methods [[^:static handleSendAMISEmails
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn save-email-to-db [email id lahetyspvm]
+(defn save-email-to-db
+  "Tallentaa sähköpostin tiedot tietokantaan, kun sähköposti on lähetetty
+  viestintäpalveluun."
+  [email id lahetyspvm]
   (try
     (ddb/update-item
       {:toimija_oppija [:s (:toimija_oppija email)]
@@ -35,7 +40,10 @@
       (log/error "Viesti" email "ei päivitetty kantaan")
       (log/error e))))
 
-(defn update-data-in-ehoks [email lahetyspvm]
+(defn update-data-in-ehoks
+  "Päivittää sähköpostin tiedot ehoks-palveluun, kun sähköposti on lähetetty
+  viestintäpalveluun."
+  [email lahetyspvm]
   (try
     (c/send-lahetys-data-to-ehoks
       (:toimija_oppija email)
@@ -48,7 +56,9 @@
       (log/error "Virhe tietojen päivityksessä ehoksiin:" email)
       (log/error e))))
 
-(defn send-feedback-email [email]
+(defn send-feedback-email
+  "Lähettää palautekyselyviestin viestintäpalveluun."
+  [email]
   (try
     (vp/send-email {:subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
                     :body (vp/amispalaute-html email)
@@ -58,7 +68,9 @@
       (log/error "Virhe palautesähköpostin lähetyksessä:" email)
       (log/error e))))
 
-(defn save-no-time-to-answer [email]
+(defn save-no-time-to-answer
+  "Päivittää tietueen, jos herätteen vastausaika on umpeutunut."
+  [email]
   (try
     (ddb/update-item
       {:toimija_oppija [:s (:toimija_oppija email)]
@@ -73,13 +85,18 @@
       (log/error "Virhe lähetystilan päivityksessä herätteelle, jonka vastausaika umpeutunut" email)
       (log/error e))))
 
-(defn do-query []
+(defn do-query
+  "Hakee tietueita tietokannasta, joiden lähetystilat ovat 'ei lähetetty'."
+  []
   (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                     :alkupvm     [:le [:s (str (c/local-date-now))]]}
                    {:index "lahetysIndex"
                     :limit 10}))
 
-(defn -handleSendAMISEmails [this event context]
+(defn -handleSendAMISEmails
+  "Hakee lähetettäviä herätteitä tietokannasta ja lähettää viestit
+  viestintäpalveluun."
+  [this event context]
   (log-caller-details-scheduled "handleSendAMISEmails" event context)
   (loop [lahetettavat (do-query)]
     (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")

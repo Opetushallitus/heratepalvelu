@@ -17,7 +17,9 @@
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn -handleAMISherate [this event context]
+(defn -handleAMISherate
+  "Käsittelee herätteitä ja tallentaa ne tietokantaan, jos ne ovat valideja."
+  [this event context]
   (log-caller-details-sqs "handleAMISherate" context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
