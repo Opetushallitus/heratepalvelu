@@ -193,6 +193,7 @@
   (str (normalize-string tyopaikan-nimi) "_" (local-date-now) "_" (rand-str 6)))
 
 (defn check-organisaatio-whitelist?
+  "Tarkistaa, onko koulutustoimija mukana automaatiossa."
   [koulutustoimija timestamp]
   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                            (:orgwhitelist-table env))]
@@ -210,7 +211,10 @@
                   " tai herätepvm " (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
                   " on ennen käyttöönotto päivämäärää")))))
 
-(defn check-duplicate-herate? [oppija koulutustoimija laskentakausi kyselytyyppi]
+(defn check-duplicate-herate?
+  "Palauttaa true, jos ei ole vielä herätettä tallennettua tietokantaan samoilla
+  koulutustoimijalla, oppijalla, tyypillä ja laskentakaudella."
+  [oppija koulutustoimija laskentakausi kyselytyyppi]
   (if
     (let [check-db?
           (fn [tyyppi]
@@ -227,7 +231,9 @@
               oppija " koulutustoimijalla " koulutustoimija
               "(tyyppi '" kyselytyyppi "' kausi " laskentakausi ")")))
 
-(defn check-valid-herate-date [heratepvm]
+(defn check-valid-herate-date
+  "Varmistaa, että herätteen päivämäärä ei ole ennen 1.7.2021."
+  [heratepvm]
   (try
     (not (.isAfter (LocalDate/of 2021 7 1) (LocalDate/parse heratepvm)))
    (catch Exception e
@@ -236,12 +242,18 @@
 (def herate-checker
   (s/checker herate-schema))
 
-(defn alku [herate-date]
+(defn alku
+  "Laskee vastausajan alkupäivämäärän: annettu päivämäärä jos se on vielä
+  tulevaisuudessa; muuten tämä päivä."
+  [herate-date]
   (if (.isAfter herate-date (local-date-now))
     herate-date
     (local-date-now)))
 
-(defn loppu [herate alku]
+(defn loppu
+  "Laskee vastausajan loppupäivämäärän: 30 päivän päästä (inklusiivisesti),
+  mutta ei myöhempi kuin 60 päivää (inklusiivisesti) herätepäivän jälkeen."
+  [herate alku]
   (let [last (.plusDays herate 59)
         normal (.plusDays alku 29)]
     (if (.isBefore last normal)
