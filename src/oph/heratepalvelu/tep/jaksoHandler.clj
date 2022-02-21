@@ -306,7 +306,6 @@
                   (and
                     (check-opiskeluoikeus-tila opiskeluoikeus (:loppupvm herate))
                     (check-not-fully-keskeytynyt herate)
-                    (c/check-organisaatio-whitelist? koulutustoimija)
                     (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
                     (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
                   (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))))

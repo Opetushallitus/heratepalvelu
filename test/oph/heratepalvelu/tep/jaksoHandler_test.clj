@@ -494,12 +494,6 @@
      :herate herate})
   true)
 
-(defn- mock-check-organisaatio-whitelist? [koulutustoimija]
-  (add-to-test-handleJaksoHerate-results
-    {:type "mock-check-organisaatio-whitelist?"
-     :koulutustoimija koulutustoimija})
-  true)
-
 (defn- mock-check-opiskeluoikeus-suoritus-types? [opiskeluoikeus]
   (add-to-test-handleJaksoHerate-results
     {:type "mock-check-opiskeluoikeus-suoritus-types?"
@@ -527,8 +521,6 @@
   (testing "Varmista, että -handleJaksoHerate kutsuu funktioita oikein"
     (with-redefs [oph.heratepalvelu.common/check-opiskeluoikeus-suoritus-types?
                   mock-check-opiskeluoikeus-suoritus-types?
-                  oph.heratepalvelu.common/check-organisaatio-whitelist?
-                  mock-check-organisaatio-whitelist?
                   oph.heratepalvelu.common/check-sisaltyy-opiskeluoikeuteen?
                   mock-check-sisaltyy-opiskeluoikeuteen?
                   oph.heratepalvelu.common/get-koulutustoimija-oid
@@ -564,8 +556,6 @@
                       :herate {:opiskeluoikeus-oid "123.456.789"
                                :loppupvm "2021-12-15"
                                :hankkimistapa-id 12345}}
-                     {:type "mock-check-organisaatio-whitelist?"
-                      :koulutustoimija "mock-koulutustoimija-oid"}
                      {:type "mock-check-opiskeluoikeus-suoritus-types?"
                       :opiskeluoikeus
                       {:oid "123.456.789"
