@@ -22,18 +22,21 @@
                           (.build)))
                     (.build)))
 
+(defn- create-get-queue-url-request-builder [] (GetQueueUrlRequest/builder))
+(defn- create-send-message-request-builder [] (SendMessageRequest/builder))
+
 (defn -handleDLQresend [this event context]
   (let [messages (seq (.getRecords event))
         queue-url (.queueUrl
                     (.getQueueUrl
                       sqs-client
-                      (-> (GetQueueUrlRequest/builder)
+                      (-> (create-get-queue-url-request-builder)
                           (.queueName (:queue-name env))
                           (.build))))]
     (doseq [msg messages]
       (log/info (.getBody msg))
       (try
-        (.sendMessage sqs-client (-> (SendMessageRequest/builder)
+        (.sendMessage sqs-client (-> (create-send-message-request-builder)
                                      (.queueUrl queue-url)
                                      (.messageBody (.getBody msg))
                                      (.build)))
