@@ -13,7 +13,9 @@
                                "/services/heratepalvelu/elisa-sms-dialogi-key"))))
 
 
-(defn msg-body [linkki oppilaitokset]
+(defn msg-body
+  "Luo työpaikkaohjaajakyselyn viestin tekstin."
+  [linkki oppilaitokset]
   (str "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors."
        "\n\n"
        "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
@@ -32,7 +34,9 @@
        (str/join ", " (map :fi oppilaitokset)) "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
-(defn muistutus-msg-body [linkki oppilaitokset]
+(defn muistutus-msg-body 
+  "Luo työpaikkaohjaajakyselyn muistutuksen viestin tekstin."
+  [linkki oppilaitokset]
   (str "Muistutus-påminnelse-reminder: Työpaikkaohjaajakysely - "
        "Enkät till arbetsplatshandledaren - "
        "Survey to workplace instructors"
@@ -49,10 +53,12 @@
        "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
-(defn send-tep-sms [number message]
+(defn send-tep-sms
+  "Lähettää SMS-viestin viestintäpalveluun."
+  [number message]
   (if (= "true" (:send-messages env))
     (try
-      (client/post (str "https://viestipalvelu-api.elisa.fi/api/v1/")
+      (client/post "https://viestipalvelu-api.elisa.fi/api/v1/"
                    {:headers {:Authorization  (str "apikey " @apikey)
                               :content-type "application/json"}
                     :body    (generate-string {:sender "OPH"

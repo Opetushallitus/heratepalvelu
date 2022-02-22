@@ -21,7 +21,9 @@
                        (str "/" (:stage env)
                             "/services/heratepalvelu/cas-pwd"))))
 
-(defn init-client []
+(defn init-client
+  "Luo ja asentaa uuden CasClient-rekordin."
+  []
   (let [username   (:cas-user env)
         password   @pwd
         cas-url    (:cas-url env)
@@ -31,12 +33,16 @@
                      :params     cas-params
                      :session-id (atom nil)})))
 
-(defn request-with-json-body [request body]
+(defn request-with-json-body
+  "Muuttaa request bodyn JSON-muodoksi ja lisää sen requestiin."
+  [request body]
   (-> request
       (assoc-in [:headers "Content-Type"] "application/json")
       (assoc :body (json/generate-string body))))
 
-(defn create-params [cas-session-id body]
+(defn create-params
+  "Luo objekti, joka sisältää parametreja requestille."
+  [cas-session-id body]
   (cond-> {:headers          {"Caller-Id" (:caller-id env)
                               "clientSubSystemCode" (:caller-id env)
                               "CSRF" (:caller-id env)}
@@ -48,7 +54,9 @@
           (some? body)
           (request-with-json-body body)))
 
-(defn cas-http [method url options body]
+(defn cas-http
+  "Tekee Cas-autentikoidun requestin."
+  [method url options body]
   (when (nil? @client)
     (reset! client (init-client)))
   (let [cas-client     (:client @client)
@@ -69,22 +77,30 @@
                           options)))
         resp))))
 
-(defn cas-authenticated-get [url & [options]]
+(defn cas-authenticated-get
+  "Tekee Cas-autentikoidun GET-requestin."
+  [url & [options]]
   (wrap-aws-xray url :get
                  #(cas-http :get url options nil)))
 
-(defn cas-authenticated-post [url body & [options]]
+(defn cas-authenticated-post
+  "Tekee Cas-autentikoidun POST-requestin."
+  [url body & [options]]
   (wrap-aws-xray url :post
                  #(cas-http :post url options body)))
 
-(defn- get-uri [uri]
+(defn- get-uri
+  "Muuttaa stringin Uri-objektiksi."
+  [uri]
   (-> (Uri/fromString uri)
       (.toOption)
       (.get)))
 
 (def tgt (atom nil))
 
-(defn get-service-ticket [service suffix]
+(defn get-service-ticket
+  "Hakee service ticketin palvelusta."
+  [service suffix]
   (let [username    (:cas-user env)
         password    @pwd
         params      (CasParams/apply service suffix username password)

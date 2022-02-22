@@ -9,7 +9,9 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn -handleTimedOperations [this event context]
+(defn -handleTimedOperations
+  "Pyytää ehoksilta lähettää käsittelemättömät jaksot SQS:iin."
+  [this event context]
   (log/info "Käynnistetään jaksojen lähetys")
   (let [resp (ehoks/get-paattyneet-tyoelamajaksot "2021-07-01"
                                                   (str (c/local-date-now))
