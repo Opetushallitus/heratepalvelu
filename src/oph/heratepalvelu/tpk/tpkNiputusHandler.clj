@@ -9,6 +9,9 @@
            (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
+;; Luo työpaikkakyselynippuja työpaikkajaksojen perusteella, ja hakee niille
+;; kyselylinkkejä Arvosta.
+
 (gen-class :name "oph.heratepalvelu.tpk.tpkNiputusHandler"
            :methods [[^:static handleTpkNiputus
                       [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
@@ -17,7 +20,10 @@
 (def current-kausi-start (LocalDate/of 2021 7 1))
 (def current-kausi-end (LocalDate/of 2021 12 31))
 
-(defn check-jakso? [jakso]
+(defn check-jakso?
+  "Varmistaa, että jaksossa on kaikki pakolliset kentät ja oppisopimuksen
+  perusta ei ole 02 (yrittäjä)."
+  [jakso]
   (and (:koulutustoimija jakso)
        (:tyopaikan_nimi jakso)
        (:tyopaikan_ytunnus jakso)
@@ -25,24 +31,33 @@
        (or (not= (:hankkimistapa_tyyppi jakso) "oppisopimus")
            (not= (:oppisopimuksen_perusta jakso) "02"))))
 
-(defn get-kausi-alkupvm [jakso]
+(defn get-kausi-alkupvm
+  "Laske alkupäivämäärän tiedonkeruukaudelle, johon jakso kuuluu."
+  [jakso]
   (let [jakso-loppupvm (c/to-date (:jakso_loppupvm jakso))]
     (str (.getYear jakso-loppupvm)
          (if (<= (.getMonthValue jakso-loppupvm) 6) "-01-01" "-07-01"))))
 
-(defn get-kausi-loppupvm [jakso]
+(defn get-kausi-loppupvm
+  "Laske loppupäivämäärän tiedonkeruukaudelle, johon jakso kuuluu."
+  [jakso]
   (let [jakso-loppupvm (c/to-date (:jakso_loppupvm jakso))]
     (str (.getYear jakso-loppupvm)
          (if (<= (.getMonthValue jakso-loppupvm) 6) "-06-30" "-12-31"))))
 
-(defn create-nippu-id [jakso]
+(defn create-nippu-id
+  "Luo nipputunnisteen työpaikan normalisoidun nimen, työpaikan Y-tunnuksen,
+  koulutustoimijan ja tiedonkeruukauden perustella."
+  [jakso]
   (str (c/normalize-string (:tyopaikan_nimi jakso)) "/"
        (:tyopaikan_ytunnus jakso) "/"
        (:koulutustoimija jakso) "/"
        (get-kausi-alkupvm jakso) "_"
        (get-kausi-loppupvm jakso)))
 
-(defn get-existing-nippu [jakso]
+(defn get-existing-nippu
+  "Hakee nipun tietokannasta jakson tietojen perusteella, jos se on olemassa."
+  [jakso]
   (try
     (ddb/get-item {:nippu-id [:s (create-nippu-id jakso)]
                    ; Alla oleva sort key on turha, mutta sen poisto vaatisi
@@ -53,14 +68,18 @@
       (log/error "Haku DynamoDB:stä epäonnistunut:" e)
       (throw e))))
 
-(defn get-next-vastaamisajan-alkupvm-date [jakso]
+(defn get-next-vastaamisajan-alkupvm-date
+  "Laske vastaamisajan alkupäivämäärän jakso loppupäivämäärän perusteella."
+  [jakso]
   (let [loppupvm (c/to-date (:jakso_loppupvm jakso))
         year (.getYear loppupvm)
         kausi-month (if (<= (.getMonthValue loppupvm) 6) 7 1)
         kausi-year (if (= kausi-month 1) (+ year 1) year)]
     (LocalDate/of kausi-year kausi-month 1)))
 
-(defn create-nippu [jakso request-id]
+(defn create-nippu
+  "Luo TPK-nipun jakson tietojen perusteella."
+  [jakso request-id]
   (let [alkupvm (get-next-vastaamisajan-alkupvm-date jakso)
         loppupvm (.minusDays (.plusMonths alkupvm 2) 1)
         kausi-alkupvm (get-kausi-alkupvm jakso)
@@ -77,12 +96,16 @@
      :niputuspvm                  (str (c/local-date-now))
      :request-id                  request-id}))
 
-(defn extend-nippu [nippu arvo-resp]
+(defn extend-nippu
+  "Lisää Arvosta saadun kyselylinkin ja muut tiedot nippuun."
+  [nippu arvo-resp]
   (assoc nippu :kyselylinkki      (:kysely_linkki arvo-resp)
                :tunnus            (:tunnus arvo-resp)
                :voimassa-loppupvm (:voimassa_loppupvm arvo-resp)))
 
-(defn save-nippu [nippu]
+(defn save-nippu
+  "Tallentaa nipun tietokantaan."
+  [nippu]
   (try
     (ddb/put-item
       (reduce #(assoc %1 (first %2) [:s (second %2)]) {} (seq nippu))
@@ -91,13 +114,17 @@
     (catch AwsServiceException e
       (log/error "Virhe DynamoDB tallennuksessa (TPK):" e))))
 
-(defn make-arvo-request [nippu]
+(defn make-arvo-request
+  "Pyytää TPK-kyselylinkin Arvosta."
+  [nippu]
   (try
     (arvo/create-tpk-kyselylinkki (arvo/build-tpk-request-body nippu))
     (catch ExceptionInfo e
       (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
 
-(defn update-tpk-niputuspvm [jakso new-value]
+(defn update-tpk-niputuspvm
+  "Päivittää jakson TPK-niputuspäivämäärän jaksotunnus-tauluun."
+  [jakso new-value]
   (ddb/update-item
     {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
     {:update-expr "SET #value = :value"
@@ -105,7 +132,12 @@
      :expr-attr-vals {":value" [:s new-value]}}
     (:jaksotunnus-table env)))
 
-(defn query-niputtamattomat [exclusive-start-key]
+(defn query-niputtamattomat
+  "Hakee jaksoja nykyisen tiedonkeruukauden alkupäivästä tiedonkeruukauden
+  loppupäivään asti (tai nykyiseen päivään asti, jos tiedonkeruukauden
+  loppupäivä ei ole vielä tullut). Hakee vain ne jaksot, joiden
+  TPK-niputuspäivämäärä ei ole vielä määritelty."
+  [exclusive-start-key]
   (let [today (c/local-date-now)
         jl-date (if (.isAfter today current-kausi-end)
                   (str current-kausi-end)
@@ -123,7 +155,11 @@
     (log/info "TPK Funktion scan" (count (:items resp)))
     resp))
 
-(defn -handleTpkNiputus [this event context]
+(defn -handleTpkNiputus
+  "Käsittelee työpaikkajaksoja ja luo vastaavia TPK-nippuja, ja hakee niille
+  kyselylinkkejä Arvosta. Luo vain yhden kyselylinkin per nippu, vaikka siihen
+  kuuluisi useita jaksoja."
+  [this event context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
   (let [memoization (atom {})]
     (loop [niputettavat (query-niputtamattomat nil)]
