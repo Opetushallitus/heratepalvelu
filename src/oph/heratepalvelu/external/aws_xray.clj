@@ -6,7 +6,9 @@
 
 (defn- wrap-end-subsegment [] (AWSXRay/endSubsegment))
 
-(defn wrap-aws-xray [url method request]
+(defn wrap-aws-xray
+  "Käärii requestin X-Rayiin."
+  [url method request]
   (let [segment (wrap-begin-subsegment
                   (str "HTTP " (str/upper-case (name method))))]
     (try

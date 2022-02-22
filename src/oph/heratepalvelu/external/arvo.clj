@@ -18,7 +18,11 @@
                        (str "/" (:stage env)
                             "/services/heratepalvelu/arvo-pwd"))))
 
-(defn get-toimipiste [suoritus]
+(defn get-toimipiste
+  "Palauttaa toimipisteen OID jos sen organisaatiotyyppi on toimipiste. Tämä
+  tarkistetaan tekemällä request organisaatiopalveluun. Jos organisaatiotyyppi
+  ei ole toimipiste, palauttaa nil."
+  [suoritus]
   (let [oid (:oid (:toimipiste suoritus))
         org (org/get-organisaatio oid)
         org-tyypit (:tyypit org)]
@@ -26,7 +30,9 @@
       oid
       nil)))
 
-(defn get-osaamisalat [suoritus opiskeluoikeus-oid]
+(defn get-osaamisalat
+  "Hakee voimassa olevat osaamisalat suorituksesta."
+  [suoritus opiskeluoikeus-oid]
   (let [osaamisalat (filter
                       #(and
                          (or (nil? (:loppu %1))
@@ -44,7 +50,9 @@
            osaamisalat)
       (log/warn "Ei osaamisaloja opiskeluoikeudessa" opiskeluoikeus-oid))))
 
-(defn get-hankintakoulutuksen-toteuttaja [ehoks-id]
+(defn get-hankintakoulutuksen-toteuttaja
+  "Hakee hankintakoulutuksen toteuttajan OID:n eHOKS-palvelusta ja Koskesta."
+  [ehoks-id]
   (let [oids (ehoks/get-hankintakoulutus-oids ehoks-id)]
     (when (not-empty oids)
       (if (> (count oids) 1)
@@ -57,13 +65,9 @@
           (log/info "Hoks " ehoks-id ", hankintakoulutuksen toteuttaja:" toteuttaja-oid)
           toteuttaja-oid)))))
 
-(defn build-arvo-request-body [herate
-                               opiskeluoikeus
-                               request-id
-                               koulutustoimija
-                               suoritus
-                               alkupvm
-                               loppupvm]
+(defn build-arvo-request-body
+  "Luo AMISin Arvo-requestin dataobjektin."
+  [herate opiskeluoikeus request-id koulutustoimija suoritus alkupvm loppupvm]
   {:vastaamisajan_alkupvm          alkupvm
    :heratepvm                      (:alkupvm herate)
    :vastaamisajan_loppupvm         loppupvm
@@ -81,7 +85,9 @@
    :hankintakoulutuksen_toteuttaja (get-hankintakoulutuksen-toteuttaja
                                      (:ehoks-id herate))})
 
-(defn create-amis-kyselylinkki [data]
+(defn create-amis-kyselylinkki
+  "Pyytää Arvolta uuden AMIS-kyselylinkin annettujen tietojen perusteella."
+  [data]
   (try
     (let [resp (client/post
                  (str (:arvo-url env) "vastauslinkki/v1")
@@ -95,31 +101,42 @@
       (log/error e)
       (throw e))))
 
-(defn create-amis-kyselylinkki-catch-404 [data]
+(defn create-amis-kyselylinkki-catch-404
+  "Pyytää Arvolta uuden AMIS-kyselylinkin annettujen tietojen perusteella, ja
+  palauttaa nil jos vastaus on 404-virhe."
+  [data]
   (try
     (create-amis-kyselylinkki data)
     (catch ExceptionInfo e
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
 
-(defn delete-amis-kyselylinkki [linkki]
+(defn delete-amis-kyselylinkki
+  "Poistaa AMIS-kyselylinkin Arvosta."
+  [linkki]
   (let [tunnus (last (str/split linkki #"/"))]
     (client/delete (str (:arvo-url env) "vastauslinkki/v1/" tunnus)
                    {:basic-auth [(:arvo-user env) @pwd]})))
 
-(defn get-kyselylinkki-status [linkki]
+(defn get-kyselylinkki-status
+  "Hakee Arvolta AMIS-kyselylinkin tilan."
+  [linkki]
   (let [tunnus (last (str/split linkki #"/"))]
     (:body (client/get (str (:arvo-url env) "vastauslinkki/v1/status/" tunnus)
                        {:basic-auth [(:arvo-user env) @pwd]
                         :as         :json}))))
 
-(defn get-nippulinkki-status [linkki]
+(defn get-nippulinkki-status
+  "Hakee TEP-kyselylinkin tilan."
+  [linkki]
   (let [tunniste (last (str/split linkki #"/"))]
     (:body (client/get (str (:arvo-url env) "tyoelamapalaute/v1/status/" tunniste)
                        {:basic-auth [(:arvo-user env) @pwd]
                         :as         :json}))))
 
-(defn patch-kyselylinkki-metadata [linkki tila]
+(defn patch-kyselylinkki-metadata
+  "Päivittää AMIS-kyselinkin tilan Arvoon."
+  [linkki tila]
   (try
     (let [tunnus (last (str/split linkki #"/"))]
       (:body (client/patch
@@ -134,14 +151,16 @@
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
 
-(defn build-jaksotunnus-request-body [herate
-                                      tyopaikka-normalisoitu
-                                      kesto
-                                      opiskeluoikeus
-                                      request-id
-                                      koulutustoimija
-                                      suoritus
-                                      niputuspvm]
+(defn build-jaksotunnus-request-body
+  "Luo dataobjektin TEP-jaksotunnuksen luomisrequestille."
+  [herate
+   tyopaikka-normalisoitu
+   kesto
+   opiskeluoikeus
+   request-id
+   koulutustoimija
+   suoritus
+   niputuspvm]
   {:koulutustoimija_oid       koulutustoimija
    :tyonantaja                (:tyopaikan-ytunnus herate)
    :tyopaikka                 (:tyopaikan-nimi herate)
@@ -175,12 +194,13 @@
                                     (:oppisopimuksen-perusta herate)
                                     #"_")))
    :vastaamisajan_alkupvm     niputuspvm
-   ;:vastaamisajan_loppupvm
    :oppilaitos_oid            (:oid (:oppilaitos opiskeluoikeus))
    :toimipiste_oid            (get-toimipiste suoritus)
    :request_id                request-id})
 
-(defn create-jaksotunnus [data]
+(defn create-jaksotunnus
+  "Pyytää Arvolta TEP-jaksotunnuksen."
+  [data]
   (try
     (let [resp (client/post
                  (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus")
@@ -194,15 +214,16 @@
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
 
-(defn delete-jaksotunnus [tunnus]
+(defn delete-jaksotunnus
+  "Poistaa TEP-jaksotunnuksen Arvosta."
+  [tunnus]
   (client/delete
     (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
     {:basic-auth   [(:arvo-user env) @pwd]}))
 
-(defn build-niputus-request-body [tunniste
-                                  nippu
-                                  tunnukset
-                                  request-id]
+(defn build-niputus-request-body
+  "Luo dataobjektin TEP-nippulinkin luomisrequestille."
+  [tunniste nippu tunnukset request-id]
   {:tunniste            tunniste
    :koulutustoimija_oid (:koulutuksenjarjestaja nippu)
    :tutkintotunnus      (:tutkinto nippu)
@@ -212,7 +233,9 @@
    :voimassa_alkupvm    (str (c/local-date-now))
    :request_id          request-id})
 
-(defn create-nippu-kyselylinkki [data]
+(defn create-nippu-kyselylinkki
+  "Pyytää TEP-kyselylinkin Arvolta."
+  [data]
   (try
     (let [resp (client/post
                  (str (:arvo-url env) "tyoelamapalaute/v1/nippu")
@@ -227,12 +250,16 @@
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
 
-(defn delete-nippukyselylinkki [tunniste]
+(defn delete-nippukyselylinkki
+  "Poistaa TEP-kyselylinkin Arvosta."
+  [tunniste]
   (client/delete
     (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (util/url-encode tunniste))
     {:basic-auth   [(:arvo-user env) @pwd]}))
 
-(defn patch-nippulinkki [linkki data]
+(defn patch-nippulinkki
+  "Päivittää TEP-kyselylinkin tiedot Arvoon."
+  [linkki data]
   (try
     (let [tunniste (last (str/split linkki #"/"))]
       (:body (client/patch
@@ -246,7 +273,9 @@
       (log/error e)
       (throw e))))
 
-(defn patch-vastaajatunnus [tunnus data]
+(defn patch-vastaajatunnus
+  "Päivittää TEP-jaksotunnuksen tiedot Arvoon."
+  [tunnus data]
   (client/patch
     (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
     {:basic-auth   [(:arvo-user env) @pwd]
@@ -254,7 +283,9 @@
      :body         (generate-string data)
      :as           :json}))
 
-(defn build-tpk-request-body [nippu]
+(defn build-tpk-request-body
+  "Luo dataobjektin TPK-kyselylinkin luomisrequestille."
+  [nippu]
   {:tyopaikka              (:tyopaikan-nimi nippu)
    :tyopaikka_normalisoitu (:tyopaikan-nimi-normalisoitu nippu)
    :vastaamisajan_alkupvm  (:vastaamisajan-alkupvm nippu)
@@ -265,7 +296,9 @@
    :request_id             (:request-id nippu)
    :vastaamisajan_loppupvm (:vastaamisajan-loppupvm nippu)})
 
-(defn create-tpk-kyselylinkki [data]
+(defn create-tpk-kyselylinkki
+  "Pyytää TPK-kyselylinkin Arvolta annettujen tietojen perusteella."
+  [data]
   (try
     (let [resp (client/post
                  (str (:arvo-url env)
