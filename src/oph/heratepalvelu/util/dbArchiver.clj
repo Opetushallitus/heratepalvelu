@@ -9,7 +9,11 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn doArchiving [kausi to-table]
+(defn doArchiving
+  "Arkistoi tietueet toiseen tauluun, jos niiden rahoituskaudet täsmäävät
+  kausi-parametrin arvon kanssa. Arkistoidut tietueet poistetaan alkuperäisestä
+  taulusta."
+  [kausi to-table]
   (loop [resp (ddb/scan {:filter-expression "rahoituskausi = :kausi"
                          :expr-attr-vals    {":kausi" [:s kausi]}}
                         (:from-table env))]
@@ -44,6 +48,8 @@
                         :exclusive-start-key (:last-evaluated-key resp)}
                        (:from-table env))))))
 
-(defn -handleDBArchiving [this event context]
+(defn -handleDBArchiving
+  "Tekee arkistointia niille rahoituskausille, jotka ovat jo päättyneet."
+  [this event context]
   (doArchiving "2019-2020" (:to-table env))
   (doArchiving "2020-2021" (:to-table-2020-2021 env)))
