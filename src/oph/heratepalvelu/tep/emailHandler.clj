@@ -11,18 +11,26 @@
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
+;; Käsittelee TEP-jaksoja, joiden sähköpostit on määrä lähettää.
+
 (gen-class
   :name "oph.heratepalvelu.tep.emailHandler"
   :methods [[^:static handleSendTEPEmails
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn bad-phone? [nippu]
+(defn bad-phone?
+  "Palauttaa true, jos nipun SMS-käsittelytilan mukaan puhelinnumero puuttuu tai
+  on virheellinen."
+  [nippu]
   (or (= (:phone-mismatch c/kasittelytilat) (:sms_kasittelytila nippu))
       (= (:no-phone c/kasittelytilat) (:sms_kasittelytila nippu))
       (= (:phone-invalid c/kasittelytilat) (:sms_kasittelytila nippu))))
 
-(defn lahetysosoite-update-item [nippu osoitteet]
+(defn lahetysosoite-update-item
+  "Päivittää nipun käsittelytilan tietokantaan, kun ei ole yksi kunnon
+  sähköpostiosoite. Parametri osoitteet on lista sähköpostiosoitteista."
+  [nippu osoitteet]
   (ddb/update-item
     {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
      :niputuspvm                  [:s (:niputuspvm nippu)]}
@@ -33,7 +41,10 @@
                                               (:email-mismatch c/kasittelytilat))]}}
     (:nippu-table env)))
 
-(defn get-single-ohjaaja-email [jaksot]
+(defn get-single-ohjaaja-email
+  "Jos jaksoissa on vain yksi ohjaajan sähköpostiosoite, palauttaa sen. Jos ei
+  ole sähköpostiosoitetta tai on useita, palauttaa nil."
+  [jaksot]
   (when (not-empty jaksot)
     (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
                                (if (some? (:ohjaaja_email %2))
@@ -44,7 +55,12 @@
                                 %2)
                               jaksot))))
 
-(defn lahetysosoite [nippu jaksot]
+(defn lahetysosoite
+  "Yrittää hakea yksittäisen sähköpostiosoitteen nippuun liittyvistä jaksoista.
+  Jos löytyy, palauttaa sen. Jos sitä ei löydy, päivittää tiedot tietokantaan
+  ja palauttaa nil. Jos yksittäistä sahköpostia ei löydy eikä kunnon
+  puhelinnumeroa on olemassa, ilmoittaa Arvoon, että ei ole yhteistietoja."
+  [nippu jaksot]
   (let [ohjaaja-email (get-single-ohjaaja-email jaksot)]
     (if (some? ohjaaja-email)
       ohjaaja-email
@@ -61,18 +77,23 @@
           (arvo/patch-nippulinkki (:kyselylinkki nippu) {:tila (:ei-yhteystietoja c/kasittelytilat)}))
         nil))))
 
-(defn do-nippu-query []
+(defn do-nippu-query
+  "Hakee nippuja tietokannasta, joiden sähköpostit on aika lähettää."
+  []
   (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                     :niputuspvm    [:le [:s (str (c/local-date-now))]]}
                    {:index "niputusIndex"
                     :limit 20}
                    (:nippu-table env)))
 
-(defn email-sent-update-item [email id lahetyspvm osoite]
+(defn email-sent-update-item
+  "Päivittää tiedot tietokantaan, kun sähköposti on lähetetty
+  viestintäpalveluun. Parametri id on lähetyksen ID viestintäpalvelussa."
+  [nippu id lahetyspvm osoite]
   (try
     (ddb/update-item
-      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
-       :niputuspvm                  [:s (:niputuspvm email)]}
+      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+       :niputuspvm                  [:s (:niputuspvm nippu)]}
       {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
                              "#vpid = :vpid, "
                              "#lahetyspvm = :lahetyspvm, "
@@ -90,24 +111,30 @@
                          ":lahetysosoite" [:s osoite]}}
       (:nippu-table env))
     (catch AwsServiceException e
-      (log/error "Viesti" email "ei päivitetty kantaan!")
+      (log/error "Viestitiedot nipusta" nippu "ei päivitetty kantaan!")
       (log/error e))))
 
-(defn send-survey-email [email oppilaitokset osoite]
+(defn send-survey-email
+  "Lähettää sähköpostiviestin viestintäpalveluun. Parametri oppilaitokset on
+  lista objekteista, joissa on ko. oppilaitoksen nimi kolmeksi eri kieleksi
+  (avaimet :en, :fi, ja :sv); parametri osoite on sähköpostiosoite stringinä."
+  [nippu oppilaitokset osoite]
   (try
     (vp/send-email {:subject "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
-                    :body (vp/tyopaikkaohjaaja-html email oppilaitokset)
+                    :body (vp/tyopaikkaohjaaja-html nippu oppilaitokset)
                     :address osoite
                     :sender "OPH – UBS – EDUFI"})
     (catch Exception e
-      (log/error "Virhe viestin lähetyksessä!" email)
+      (log/error "Virhe viestin lähetyksessä!" nippu)
       (log/error e))))
 
-(defn no-time-to-answer-update-item [email]
+(defn no-time-to-answer-update-item
+  "Päivittää tietokantaan tiedot, että vastausaika on loppunut."
+  [nippu]
   (try
     (ddb/update-item
-      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
-       :niputuspvm                  [:s (:niputuspvm email)]}
+      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+       :niputuspvm                  [:s (:niputuspvm nippu)]}
       {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
                              "#lahetyspvm = :lahetyspvm")
        :expr-attr-names {"#kasittelytila" "kasittelytila"
@@ -116,16 +143,21 @@
                         ":lahetyspvm" [:s (str (c/local-date-now))]}}
       (:nippu-table env))
     (catch Exception e
-      (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" email)
+      (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" nippu)
       (log/error e))))
 
-(defn do-jakso-query [email]
-  (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto email)]]
-                    :niputuspvm                  [:eq [:s (:niputuspvm email)]]}
+(defn do-jakso-query
+  "Hakee jaksot, jotka kuuluvat ko. nippuun."
+  [nippu]
+  (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
+                    :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
                    {:index "niputusIndex"}
                    (:jaksotunnus-table env)))
 
-(defn get-oppilaitokset [jaksot]
+(defn get-oppilaitokset
+  "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaitos-kenttien
+  perusteella."
+  [jaksot]
   (try
     (seq (into #{} (map #(:nimi (org/get-organisaatio (:oppilaitos %1)))
                         jaksot)))
@@ -133,20 +165,23 @@
       (log/error "Virhe kutsussa organisaatiopalveluun")
       (log/error e))))
 
-(defn -handleSendTEPEmails [this event context]
+(defn -handleSendTEPEmails
+  "Hakee nippuja tietokannasta, joiden sähköpostit on aika lähettää, ja
+  käsittelee näiden viestien lähettämistä viestinäpalveluun."
+  [this event context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
   (loop [lahetettavat (do-nippu-query)]
-    (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
+    (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
-      (doseq [email lahetettavat]
-        (let [jaksot (do-jakso-query email)
+      (doseq [nippu lahetettavat]
+        (let [jaksot (do-jakso-query nippu)
               oppilaitokset (get-oppilaitokset jaksot)
-              osoite (lahetysosoite email jaksot)]
-          (if (c/has-time-to-answer? (:voimassaloppupvm email))
+              osoite (lahetysosoite nippu jaksot)]
+          (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
             (when (some? osoite)
-              (let [id (:id (send-survey-email email oppilaitokset osoite))
+              (let [id (:id (send-survey-email nippu oppilaitokset osoite))
                     lahetyspvm (str (c/local-date-now))]
-                (email-sent-update-item email id lahetyspvm osoite)))
-            (no-time-to-answer-update-item email))))
+                (email-sent-update-item nippu id lahetyspvm osoite)))
+            (no-time-to-answer-update-item nippu))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (do-nippu-query))))))
