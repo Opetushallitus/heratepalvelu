@@ -18,7 +18,9 @@
 
 (def ^:private new-changes? (atom false))
 
-(defn convert-email-status [status]
+(defn convert-email-status
+  "Muuttaa viestintäpalvelun palauttaman statuksen käsittelytilaksi."
+  [status]
   (if (= (:numberOfSuccessfulSendings status) 1)
     (:success c/kasittelytilat)
     (if (= (:numberOfBouncedSendings status) 1)
@@ -26,7 +28,11 @@
       (when (= (:numberOfFailedSendings status) 1)
         (:failed c/kasittelytilat)))))
 
-(defn -handleEmailStatus [this event context]
+(defn -handleEmailStatus
+  "Hakee nippuja, joilla on sähköpostiviestejä viestintäpalvelussa, ja päivittää
+  niiden tiedot tietokantaan ja Arvoon. Laskee uuden loppupäivämäärän nipulle,
+  jos kyselyyn ei ole vielä vastattu ja kyselyä ei ole vielä lähetetty."
+  [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
   (loop [emails (ddb/query-items {:kasittelytila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                                  {:index "niputusIndex"

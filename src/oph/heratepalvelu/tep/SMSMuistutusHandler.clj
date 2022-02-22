@@ -11,14 +11,19 @@
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
            (java.time LocalDate)))
 
+;; Käsittelee ja lähettää SMS-muistutukset
+
 (gen-class
   :name "oph.heratepalvelu.tep.SMSMuistutusHandler"
   :methods [[^:static handleSendSMSMuistutus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn sendSmsMuistutus [muistutettavat]
-  (log/info (str "Käsitellään " (count muistutettavat) " muistutusta."))
+(defn sendSmsMuistutus
+  "Hakee jaksot ja oppilaitokset tietokannasta nipun sisällön perusteella ja
+  lähettää niistä luodut SMS-muistutukset viestintäpalveluun."
+  [muistutettavat]
+  (log/info (str "Käsitellään" (count muistutettavat) "muistutusta."))
   (doseq [nippu muistutettavat]
     (log/info "Kyselylinkin tunnusosa:" (last (str/split (:kyselylinkki nippu) #"_")))
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))
@@ -76,7 +81,9 @@
             (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" nippu)
             (log/error e)))))))
 
-(defn query-muistutukset []
+(defn query-muistutukset
+  "Hakee nippuja tietokannasta, joilla on aika lähettää SMS-muistutus."
+  []
   (ddb/query-items {:sms_muistutukset [:eq [:n 0]]
                     :sms_lahetyspvm  [:between
                                       [[:s (str (.minusDays (c/local-date-now)
@@ -87,7 +94,9 @@
                     :limit 10}
                    (:nippu-table env)))
 
-(defn -handleSendSMSMuistutus [this event context]
+(defn -handleSendSMSMuistutus
+  "Hakee SMS-muistutettavia nippuja tietokannasta ja lähettää viestejä."
+  [this event context]
   (log-caller-details-scheduled "handleSendSMSMuistutus" event context)
   (loop [muistutettavat (query-muistutukset)]
     (sendSmsMuistutus muistutettavat)

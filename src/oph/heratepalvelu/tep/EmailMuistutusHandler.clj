@@ -11,13 +11,17 @@
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
+;; Käsittelee ja lähettää TEP-sähköpostimuistutuksia
+
 (gen-class
   :name "oph.heratepalvelu.tep.EmailMuistutusHandler"
   :methods [[^:static handleSendEmailMuistutus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn do-jakso-query [nippu]
+(defn do-jakso-query
+  "Hakee nippuun liittyvät jaksot tietokannasta."
+  [nippu]
   (try
     (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
                       :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
@@ -27,7 +31,10 @@
       (log/error "Jakso-query epäonnistui nipulla" nippu)
       (log/error e))))
 
-(defn get-oppilaitokset [jaksot]
+(defn get-oppilaitokset
+  "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaiton-kentän
+  perusteella."
+  [jaksot]
   (try
     (seq (into #{} (map #(:nimi (org/get-organisaatio (:oppilaitos %1)))
                         jaksot)))
@@ -35,7 +42,11 @@
       (log/error "Virhe kutsussa organisaatiopalveluun")
       (log/error e))))
 
-(defn send-reminder-email [nippu oppilaitokset]
+(defn send-reminder-email
+  "Lähettää muistutusviestin viestintäpalveluun. Parametrin oppilaitokset tulee
+  olla lista objekteista, joissa on oppilaitoksen nimi kolmeksi eri kieleksi
+  (avaimet :en, :fi ja :sv)."
+  [nippu oppilaitokset]
   (try
     (vp/send-email {:subject "Muistutus-påminnelse-reminder: Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
                     :body (vp/tyopaikkaohjaaja-muistutus-html nippu oppilaitokset)
@@ -45,7 +56,10 @@
       (log/error "Virhe muistutuksen lähetyksessä!" nippu)
       (log/error e))))
 
-(defn update-item-email-sent [nippu id]
+(defn update-item-email-sent
+  "Päivittää tiedot tietokantaan, kun muistutusviesti on lähetetty. Parametri id
+  on lähetyksen ID viestintäpalvelussa."
+  [nippu id]
   (try
     (ddb/update-item
       {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
@@ -67,7 +81,11 @@
       (log/error "Muistutus" nippu "ei päivitetty kantaan!")
       (log/error e))))
 
-(defn update-item-cannot-answer [nippu status]
+(defn update-item-cannot-answer
+  "Päivittää tiedot tietokantaan, jos kyselyyn ei voi enää vastata koska siihen
+  on jo vastattu tai vastausaika on umpeutunut. Parametri status on objekti,
+  jossa pitää olla boolean-arvo avaimella :vastattu."
+  [nippu status]
   (try
     (ddb/update-item
       {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
@@ -86,7 +104,10 @@
       (log/error status)
       (log/error e))))
 
-(defn sendEmailMuistutus [muistutettavat]
+(defn sendEmailMuistutus
+  "Käsittelee ryhmää muistutuksia. Hakee niiden statuksia Arvosta ja lähettää
+  ne, jos niihin ei ole vastattu ja vastausaika ei ole loppunut."
+  [muistutettavat]
   (log/info "Käsitellään" (count muistutettavat) "lähetettävää muistutusta.")
   (doseq [nippu muistutettavat]
     (log/info "Kyselylinkin tunnusosa:" (last (str/split (:kyselylinkki nippu) #"_")))
@@ -99,7 +120,9 @@
           (update-item-email-sent nippu id))
         (update-item-cannot-answer nippu status)))))
 
-(defn query-muistutukset []
+(defn query-muistutukset
+  "Hakee tietokannasta nippuja, joista on aika lähettää muistutus."
+  []
   (ddb/query-items {:muistutukset [:eq [:n 0]]
                     :lahetyspvm   [:between
                                    [[:s (str (.minusDays (c/local-date-now) 10))]
@@ -108,7 +131,9 @@
                     :limit 10}
                    (:nippu-table env)))
 
-(defn -handleSendEmailMuistutus [this event context]
+(defn -handleSendEmailMuistutus
+  "Käsittelee muistettavia nippuja."
+  [this event context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
   (loop [muistutettavat (query-muistutukset)]
     (sendEmailMuistutus muistutettavat)

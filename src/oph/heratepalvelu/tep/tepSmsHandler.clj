@@ -13,17 +13,20 @@
            (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
+;; Käsittelee SMS-viestien lähetystä nipuilta.
+
 (gen-class
   :name "oph.heratepalvelu.tep.tepSmsHandler"
   :methods [[^:static handleTepSmsSending
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-;; Sallii vain numeroita, jotka kirjasto voi luokitella mobiilin tai
-;; mahdollisesti mobiilin (FIXED_LINE_OR_MOBILE) numeroiksi. Jos tämä Lambda
-;; ei tulevaisuudessa hyväksy numeroa, jonka tiedät olevan validi, tarkista,
-;; miten tämä kirjasto luokittelee sen: https://libphonenumber.appspot.com/.
-(defn valid-number? [number]
+(defn valid-number?
+  "Sallii vain numeroita, jotka kirjasto voi luokitella mobiilin tai
+  mahdollisesti mobiilin (FIXED_LINE_OR_MOBILE) numeroiksi. Jos funktio ei
+  hyväksy numeroa, jonka tiedät olevan validi, tarkista, miten kirjasto
+  luokittelee sen: https://libphonenumber.appspot.com/."
+  [number]
   (try
     (let [utilobj (PhoneNumberUtil/getInstance)
           numberobj (.parse utilobj number "FI")]
@@ -36,7 +39,10 @@
       (log/error e)
       false)))
 
-(defn update-status-to-db [status puhelinnumero nippu new-loppupvm]
+(defn update-status-to-db
+  "Päivittää tiedot tietokantaan, kun SMS-viesti on lähetetty
+  viestintäpalveluun. Parametrin status pitäisi olla string."
+  [status puhelinnumero nippu new-loppupvm]
   (let [ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
         niputuspvm                  (:niputuspvm nippu)]
     (try
@@ -65,7 +71,9 @@
         (log/error (str "Error in update-status-to-db. Status:" status))
         (throw e)))))
 
-(defn update-arvo-obj-sms [status new-loppupvm]
+(defn update-arvo-obj-sms
+  "Luo Arvon päivitysobjektin tilan ja uuden loppupäivämäärän perusteella."
+  [status new-loppupvm]
   (if (or (= status "CREATED") (= status "mock-lahetys"))
     (if new-loppupvm
       {:tila (:success c/kasittelytilat)
@@ -73,7 +81,14 @@
       {:tila (:success c/kasittelytilat)})
     {:tila (:failure c/kasittelytilat)}))
 
-(defn ohjaaja-puhnro [nippu jaksot]
+(defn ohjaaja-puhnro
+  "Yrittää löytää yksittäisen ohjaajan puhelinnumeron jaksoista. Jos yksittäinen
+  numero on olemassa ja on validi, se palautetaan. Jos numeroa ei ole, useita
+  numeroita löytyy, tai numero on virheellinen, nämä tiedot tallennetaan
+  tietokantaan ja funktio palauttaa nil. Jos yksittäistä numeroa ei löydy ja
+  nipussa on merkattu, että kunnon sähköpostiosoitettakaan ei löytynyt,
+  päivittää myös Arvoon sen, että nippulinkillä ei ole yhetystietoja."
+  [nippu jaksot]
   (let [number (when-not (empty? jaksot)
                  (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
                                                    (if (some? (:ohjaaja_puhelinnumero %2))
@@ -119,11 +134,15 @@
           (arvo/patch-nippulinkki (:kyselylinkki nippu) {:tila (:ei-yhteystietoja c/kasittelytilat)}))
         nil))))
 
-(defn client-error? [e]
+(defn client-error?
+  "Tarkistaa, onko virheen statuskoodi 4xx-haitarissa."
+  [e]
   (and (> (:status (ex-data e)) 399)
        (< (:status (ex-data e)) 500)))
 
-(defn update-vastausaika-loppunut-to-db [nippu]
+(defn update-vastausaika-loppunut-to-db
+  "Päivittää tietokantaan sen, että vastausaika on loppunut."
+  [nippu]
   (ddb/update-item
     {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
      :niputuspvm                  [:s (:niputuspvm nippu)]}
@@ -135,17 +154,23 @@
                       ":sms_lahetyspvm" [:s (str (c/local-date-now))]}}
     (:nippu-table env)))
 
-(defn query-lahetettavat [limit]
+(defn query-lahetettavat
+  "Hakee enintään limit nippua tietokannasta, joilta SMS-viesti ei ole vielä
+  lähetetty ja niputuspäivämäärä on jo mennyt."
+  [limit]
   (ddb/query-items {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                     :niputuspvm    [:le [:s (str (c/local-date-now))]]}
                    {:index "smsIndex"
                     :limit limit}
                    (:nippu-table env)))
 
-(defn -handleTepSmsSending [this event context]
+(defn -handleTepSmsSending
+  "Hakee nippuja tietokannasta, joilta ei ole lähetetty SMS-viestejä, ja
+  käsittelee viestien lähetystä."
+  [this event context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
   (loop [lahetettavat (query-lahetettavat 20)]
-    (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
+    (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
         (when-not (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))

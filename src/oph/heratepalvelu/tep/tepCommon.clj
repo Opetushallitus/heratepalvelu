@@ -2,6 +2,8 @@
   (:require [oph.heratepalvelu.common :as c]))
 
 (defn get-new-loppupvm
+  "Laskee uuden loppupäivämäärän nipulle, jos kyselyä ei ole lähetetty ja siihen
+  ei ole vastattu. Palauttaa muuten nil."
   ([nippu] (get-new-loppupvm nippu (c/local-date-now)))
   ([nippu date]
     (if (or (= (:kasittelytila nippu) (:success c/kasittelytilat))

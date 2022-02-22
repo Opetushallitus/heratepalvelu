@@ -11,13 +11,18 @@
            (clojure.lang ExceptionInfo)
            (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
 
+;; Käsittelee alustavia nippuja ja luo niille kyselylinkeille.
+
 (gen-class
   :name "oph.heratepalvelu.tep.niputusHandler"
   :methods [[^:static handleNiputus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn niputa [nippu]
+(defn niputa
+  "Luo nippukyselylinkin jokaiselle alustavalle nipulle, jos sillä on vielä
+  jaksoja, joilla on vielä aikaa vastata."
+  [nippu]
   (log/info "Niputetaan " nippu)
   (let [request-id (c/generate-uuid)
         jaksot (filter
@@ -102,7 +107,9 @@
                               ":pvm"  [:s (str (c/local-date-now))]}}
             (:nippu-table env))))))
 
-(defn -handleNiputus [this event context]
+(defn -handleNiputus
+  "Käy niputtamattomien nippujen läpi ja niputtaa ne."
+  [this event context]
   (log-caller-details-scheduled "handleNiputus" event context)
   (loop [niputettavat
          (sort-by
@@ -113,7 +120,7 @@
                             {:index "niputusIndex"
                              :limit 10}
                             (:nippu-table env)))]
-    (log/info "Käsitellään " (count niputettavat) " niputusta.")
+    (log/info "Käsitellään" (count niputettavat) "niputusta.")
     (when (seq niputettavat)
       (doseq [nippu niputettavat]
         (niputa nippu))
