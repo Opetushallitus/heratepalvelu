@@ -457,122 +457,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       enabled: false
     });
 
-    // const dbChanger = new lambda.Function(this, "tepDBChanger", {
-    //   runtime: lambda.Runtime.JAVA_8_CORRETTO,
-    //   code: lambdaCode,
-    //   environment: {
-    //     table: nippuTable.tableName
-    //   },
-    //   handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
-    //   memorySize: 1024,
-    //   timeout: Duration.seconds(900),
-    //   tracing: lambda.Tracing.ACTIVE
-    // });
-    //
-    // nippuTable.grantReadWriteData(dbChanger);
-
-    const oppisopimuksenPerustatDBChanger = new lambda.Function(
-      this,
-      "oppisopimuksenPerustatDBChanger",
-      {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
-        code: lambdaCode,
-        environment: {
-          ...this.envVars,
-          table: jaksotunnusTable.tableName,
-          caller_id: `1.2.246.562.10.00000000001.${id}-OppisopimuksenPerustatDBChanger`
-        },
-        handler: "oph.heratepalvelu.util.dbChanger::handleDBGetPuuttuvatOppisopimuksenPerustat",
-        memorySize: 1024,
-        timeout: Duration.seconds(900),
-        tracing: lambda.Tracing.ACTIVE
-      }
-    );
-
-    jaksotunnusTable.grantReadWriteData(oppisopimuksenPerustatDBChanger);
-
-    const addTyopaikanNormalisoidutNimetDBChanger = new lambda.Function(
-      this,
-      "addTyopaikanNormalisoidutNimetDBChanger",
-      {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
-        code: lambdaCode,
-        environment: {
-          ...this.envVars,
-          table: jaksotunnusTable.tableName,
-          caller_id: `1.2.246.562.10.00000000001.${id}-addTyopaikanNormalisoidutNimetDBChanger`
-        },
-        handler: "oph.heratepalvelu.util.dbChanger::handleAddTyopaikanNormalisoidutNimet",
-        memorySize: 1024,
-        timeout: Duration.seconds(900),
-        tracing: lambda.Tracing.ACTIVE
-      }
-    );
-
-    jaksotunnusTable.grantReadWriteData(addTyopaikanNormalisoidutNimetDBChanger);
-
-    // Tietojen päivitys Arvoon PATCH-päätepisteen kautta
-
-    const patchArvoHandler = new lambda.Function(
-      this,
-      "patchArvoHandler",
-      {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
-        code: lambdaCode,
-        environment: {
-          ...this.envVars,
-          table: jaksotunnusTable.tableName,
-          caller_id: `1.2.246.562.10.00000000001.${id}-patchArvoHandler`
-        },
-        handler: "oph.heratepalvelu.util.patchArvoHandler::handlePatchArvo",
-        memorySize: 1024,
-        timeout: Duration.seconds(900),
-        tracing: lambda.Tracing.ACTIVE
-      }
-    );
-
-    jaksotunnusTable.grantReadWriteData(patchArvoHandler);
-
-    const addTpkNiputuspvmToTepDBChanger = new lambda.Function(
-      this,
-      "addTpkNiputuspvmToTepDBChanger",
-      {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
-        code: lambdaCode,
-        environment: {
-          ...this.envVars,
-          table: jaksotunnusTable.tableName,
-          caller_id: `1.2.246.562.10.00000000001.${id}-addTpkNiputuspvmToTepDBChanger`
-        },
-        handler: "oph.heratepalvelu.util.dbChanger::handleAddTpkNiputuspvmToTEP",
-        memorySize: 1024,
-        timeout: Duration.seconds(900),
-        tracing: lambda.Tracing.ACTIVE
-      }
-    );
-
-    jaksotunnusTable.grantReadWriteData(addTpkNiputuspvmToTepDBChanger);
-
-    const resetTpkNiputuspvmInTepDBChanger = new lambda.Function(
-      this,
-      "resetTpkNiputuspvmInTepDBChanger",
-      {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
-        code: lambdaCode,
-        environment: {
-          ...this.envVars,
-          table: jaksotunnusTable.tableName,
-          caller_id: `1.2.246.562.10.00000000001.${id}-resetTpkNiputuspvmInTepDBChanger`
-        },
-        handler: "oph.heratepalvelu.util.dbChanger::handleResetTpkNiputuspvmInTEP",
-        memorySize: 1024,
-        timeout: Duration.seconds(900),
-        tracing: lambda.Tracing.ACTIVE
-      }
-    );
-
-    jaksotunnusTable.grantReadWriteData(resetTpkNiputuspvmInTepDBChanger);
-
     // IAM
 
     [
@@ -584,11 +468,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tepSmsHandler,
       SmsMuistutusHandler,
       EmailMuistutusHandler,
-      oppisopimuksenPerustatDBChanger,
-      addTyopaikanNormalisoidutNimetDBChanger,
-      patchArvoHandler,
-      addTpkNiputuspvmToTepDBChanger,
-      resetTpkNiputuspvmInTepDBChanger,
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({

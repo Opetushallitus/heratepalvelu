@@ -435,36 +435,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     AMISherateArchive2019_2020Table.grantReadWriteData(dbArchiver);
     AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);*/
 
-   /* const dbChanger = new lambda.Function(this, "AMIS-DBChanger", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        table: AMISherateTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateHandler`,
-      },
-      handler: "oph.heratepalvelu.util.dbChanger::handleDBMarkIncorrectSuoritustyypit",
-      memorySize: 1024,
-      timeout: Duration.seconds(900),
-      tracing: lambda.Tracing.ACTIVE
-    });*/
-
-    const eh1269dbChanger = new lambda.Function(this, "EH1269dbChanger", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        table: AMISherateTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-EH1269dbChanger`
-      },
-      handler: "oph.heratepalvelu.util.dbChanger::handleEH1269",
-      memorySize: 1024,
-      timeout: Duration.seconds(900),
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    AMISherateTable.grantReadWriteData(eh1269dbChanger);
-
     [
       AMISHerateHandler,
       AMISherateEmailHandler,
@@ -474,9 +444,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISEmailStatusHandler,
       AMISDeleteTunnusHandler,
       AMISTimedOperationsHandler,
-      eh1269dbChanger,
-      //dbArchiver,
-      // dbChanger
+      //dbArchiver
     ].forEach(
       lambdaFunction => {
         AMISherateTable.grantReadWriteData(lambdaFunction);
