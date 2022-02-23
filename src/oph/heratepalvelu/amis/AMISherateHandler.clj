@@ -47,13 +47,13 @@
                        (str "oppija-oid " (:oppija-oid herate))
                        (str "kyselytyyppi " (:kyselytyyppi herate)))))
         (catch JsonParseException e
-          (log/error "Virhe viestin lukemisessa: " msg "\n" e))
+          (log/error "Virhe viestin lukemisessa:" msg "\n" e))
         (catch ExceptionInfo e
           (if (and
                 (:status (ex-data e))
                 (= 404 (:status (ex-data e))))
-            (log/error "404-virhe. Opiskeluoikeus: "
+            (log/error "404-virhe. Opiskeluoikeus:"
                        (:opiskeluoikeus-oid (parse-string (.getBody msg) true))
-                       " error: "
+                       "error:"
                        e)
             (do (log/error e))))))))

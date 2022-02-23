@@ -19,11 +19,11 @@
 (defn save-email-to-db
   "Tallentaa sähköpostin tiedot tietokantaan, kun sähköposti on lähetetty
   viestintäpalveluun."
-  [email id lahetyspvm]
+  [herate id lahetyspvm]
   (try
     (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija email)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+      {:toimija_oppija [:s (:toimija_oppija herate)]
+       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
       {:update-expr    (str "SET #lahetystila = :lahetystila, "
                             "#vpid = :vpid, "
                             "#lahetyspvm = :lahetyspvm, "
@@ -37,44 +37,44 @@
                          ":lahetyspvm" [:s lahetyspvm]
                          ":muistutukset" [:n 0]}})
     (catch AwsServiceException e
-      (log/error "Viesti" email "ei päivitetty kantaan")
+      (log/error "Tiedot herätteestä" herate "ei päivitetty kantaan")
       (log/error e))))
 
 (defn update-data-in-ehoks
   "Päivittää sähköpostin tiedot ehoks-palveluun, kun sähköposti on lähetetty
   viestintäpalveluun."
-  [email lahetyspvm]
+  [herate lahetyspvm]
   (try
     (c/send-lahetys-data-to-ehoks
-      (:toimija_oppija email)
-      (:tyyppi_kausi email)
-      {:kyselylinkki (:kyselylinkki email)
+      (:toimija_oppija herate)
+      (:tyyppi_kausi herate)
+      {:kyselylinkki (:kyselylinkki herate)
        :lahetyspvm lahetyspvm
-       :sahkoposti (:sahkoposti email)
+       :sahkoposti (:sahkoposti herate)
        :lahetystila (:viestintapalvelussa c/kasittelytilat)})
     (catch Exception e
-      (log/error "Virhe tietojen päivityksessä ehoksiin:" email)
+      (log/error "Virhe tietojen päivityksessä ehoksiin:" herate)
       (log/error e))))
 
 (defn send-feedback-email
   "Lähettää palautekyselyviestin viestintäpalveluun."
-  [email]
+  [herate]
   (try
     (vp/send-email {:subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
-                    :body (vp/amispalaute-html email)
-                    :address (:sahkoposti email)
+                    :body (vp/amispalaute-html herate)
+                    :address (:sahkoposti herate)
                     :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"})
     (catch Exception e
-      (log/error "Virhe palautesähköpostin lähetyksessä:" email)
+      (log/error "Virhe palautesähköpostin lähetyksessä:" herate)
       (log/error e))))
 
 (defn save-no-time-to-answer
   "Päivittää tietueen, jos herätteen vastausaika on umpeutunut."
-  [email]
+  [herate]
   (try
     (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija email)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+      {:toimija_oppija [:s (:toimija_oppija herate)]
+       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
       {:update-expr     (str "SET #lahetystila = :lahetystila, "
                              "#lahetyspvm = :lahetyspvm")
        :expr-attr-names {"#lahetystila" "lahetystila"
@@ -82,7 +82,9 @@
        :expr-attr-vals {":lahetystila" [:s (:vastausaika-loppunut c/kasittelytilat)]
                         ":lahetyspvm" [:s (str (c/local-date-now))]}})
     (catch Exception e
-      (log/error "Virhe lähetystilan päivityksessä herätteelle, jonka vastausaika umpeutunut" email)
+      (log/error "Virhe lähetystilan päivityksessä herätteelle,"
+                 "jonka vastausaika umpeutunut:"
+                 herate)
       (log/error e))))
 
 (defn do-query
@@ -99,15 +101,15 @@
   [this event context]
   (log-caller-details-scheduled "handleSendAMISEmails" event context)
   (loop [lahetettavat (do-query)]
-    (log/info "Käsitellään " (count lahetettavat) " lähetettävää viestiä.")
+    (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
-      (doseq [email lahetettavat]
-        (let [status (arvo/get-kyselylinkki-status (:kyselylinkki email))]
+      (doseq [herate lahetettavat]
+        (let [status (arvo/get-kyselylinkki-status (:kyselylinkki herate))]
           (if (c/has-time-to-answer? (:voimassa_loppupvm status))
-            (let [id (:id (send-feedback-email email))
+            (let [id (:id (send-feedback-email herate))
                   lahetyspvm (str (c/local-date-now))]
-              (save-email-to-db email id lahetyspvm)
-              (update-data-in-ehoks email lahetyspvm))
-            (save-no-time-to-answer email))))
+              (save-email-to-db herate id lahetyspvm)
+              (update-data-in-ehoks herate lahetyspvm))
+            (save-no-time-to-answer herate))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (do-query))))))

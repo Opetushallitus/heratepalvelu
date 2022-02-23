@@ -31,30 +31,32 @@
 (defn update-ehoks-if-not-muistutus
   "Päivittää sähköpostitiedot ehoksiin lähetyksen jälkeen, jos viesti ei ole
   muistutus."
-  [email status tila]
-  (let [full-email (ddb/get-item {:toimija_oppija [:s (:toimija_oppija email)]
-                                  :tyyppi_kausi [:s (:tyyppi_kausi email)]})]
-    (when-not (.contains [1 2] (:muistutukset full-email))
+  [herate status tila]
+  ;; Täytyy hakea kokonainen heräte tietokannasta, koska argumenttina annettu
+  ;; heräte on saatu indexin kautta, johon kaikkia kenttiä ei kuulu.
+  (let [full-herate (ddb/get-item {:toimija_oppija [:s (:toimija_oppija herate)]
+                                   :tyyppi_kausi [:s (:tyyppi_kausi herate)]})]
+    (when-not (.contains [1 2] (:muistutukset full-herate))
       (c/send-lahetys-data-to-ehoks
-        (:toimija_oppija email)
-        (:tyyppi_kausi email)
-        {:kyselylinkki (:kyselylinkki email)
+        (:toimija_oppija herate)
+        (:tyyppi_kausi herate)
+        {:kyselylinkki (:kyselylinkki herate)
          :lahetyspvm (first (str/split (:sendingEnded status) #"T"))
-         :sahkoposti (:sahkoposti email)
+         :sahkoposti (:sahkoposti herate)
          :lahetystila tila}))))
 
 (defn update-db
-  "Päivittää sähköpostin tiedot ja tilan tietokantaan."
-  [email tila]
+  "Päivittää sähköpostin tilan tietokantaan."
+  [herate tila]
   (try
     (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija email)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+      {:toimija_oppija [:s (:toimija_oppija herate)]
+       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
       {:update-expr    "SET #lahetystila = :lahetystila"
        :expr-attr-names {"#lahetystila" "lahetystila"}
        :expr-attr-vals  {":lahetystila" [:s tila]}})
     (catch AwsServiceException e
-      (log/error "Lähetystilan tallennus kantaan epäonnistui" email)
+      (log/error "Lähetystilan tallennus kantaan epäonnistui" herate)
       (log/error e))))
 
 (defn do-query
@@ -70,24 +72,24 @@
   "Päivittää viestintäpalvelussa olevien sähköpostien tilat tietokantaan."
   [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (loop [emails (do-query)]
-    (doseq [email emails]
-      (let [status (vp/get-email-status (:viestintapalvelu-id email))
+  (loop [heratteet (do-query)]
+    (doseq [herate heratteet]
+      (let [status (vp/get-email-status (:viestintapalvelu-id herate))
             tila (convert-vp-email-status status)]
         (if tila
           (do
             (when (not @new-changes?)
               (reset! new-changes? true))
             (try
-              (arvo/patch-kyselylinkki-metadata (:kyselylinkki email) tila)
-              (update-ehoks-if-not-muistutus email status tila)
-              (update-db email tila)
+              (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)
+              (update-ehoks-if-not-muistutus herate status tila)
+              (update-db herate tila)
               (catch Exception e
-                (log/error "Lähetystilan tallennus Arvoon epäonnistui" email)
+                (log/error "Lähetystilan tallennus Arvoon epäonnistui" herate)
                 (log/error e))))
           (do
             (log/info "Odottaa lähetystä viestintäpalvelussa")
-            (log/info email)
+            (log/info herate)
             (log/info status)))))
     (when (and @new-changes?
                (< 120000 (.getRemainingTimeInMillis context)))

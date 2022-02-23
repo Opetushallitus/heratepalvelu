@@ -20,11 +20,11 @@
 (defn update-after-send
   "Päivittää sähköposti- ja herätetiedot tietokantaan, kun muistutus on
   lähetetty viestintäpalveluun."
-  [email n id]
+  [herate n id]
   (try
     (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija email)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+      {:toimija_oppija [:s (:toimija_oppija herate)]
+       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
       {:update-expr    (str "SET #muistutukset = :muistutukset, "
                             "#vpid = :vpid, "
                             "#lahetystila = :lahetystila, "
@@ -39,18 +39,18 @@
                                               c/kasittelytilat)]
                          ":muistutuspvm" [:s (str (c/local-date-now))]}})
     (catch AwsServiceException e
-      (log/error "Muistutus"
-                 email
-                 "lähetty viestintäpalveluun, muttei päivitetty kantaan!")
+      (log/error "Muistutus herätteelle"
+                 herate
+                 "lähetetty viestintäpalveluun, muttei päivitetty kantaan!")
       (log/error e))))
 
 (defn update-when-not-sent
   "Päivittää herätteen tietokantaan, jos muistutusta ei lähetetty."
-  [email n status]
+  [herate n status]
   (try
     (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija email)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi email)]}
+      {:toimija_oppija [:s (:toimija_oppija herate)]
+       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
       {:update-expr     (str "SET #lahetystila = :lahetystila, "
                              "#muistutukset = :muistutukset")
        :expr-attr-names {"#lahetystila" "lahetystila"
@@ -63,17 +63,17 @@
     (catch Exception e
       (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on"
                  "vastattu tai jonka vastausaika umpeutunut"
-                 email)
+                 herate)
       (log/error e))))
 
 (defn send-reminder-email
   "Lähettää muistutusviestin viestintäpalveluun."
-  [email]
+  [herate]
   (vp/send-email
     {:subject (str "Muistutus-påminnelse-reminder: "
                    "Vastaa kyselyyn - svara på enkäten - answer the survey")
-     :body (vp/amismuistutus-html email)
-     :address (:sahkoposti email)
+     :body (vp/amismuistutus-html herate)
+     :address (:sahkoposti herate)
      :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}))
 
 (defn sendAMISMuistutus
@@ -82,17 +82,17 @@
   [muistutettavat n]
   (log/info (str "Käsitellään " (count muistutettavat)
                  " lähetettävää " n ". muistutusta."))
-  (doseq [email muistutettavat]
-    (let [status (arvo/get-kyselylinkki-status (:kyselylinkki email))]
+  (doseq [herate muistutettavat]
+    (let [status (arvo/get-kyselylinkki-status (:kyselylinkki herate))]
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (try
-          (let [id (:id (send-reminder-email email))]
-            (update-after-send email n id))
+          (let [id (:id (send-reminder-email herate))]
+            (update-after-send herate n id))
           (catch Exception e
-            (log/error "Virhe muistutuksen lähetyksessä!" email)
+            (log/error "Virhe muistutuksen lähetyksessä!" herate)
             (log/error e)))
-        (update-when-not-sent email n status)))))
+        (update-when-not-sent herate n status)))))
 
 (defn query-muistutukset
   "Hakee tietokannasta herätteet, joilla on lähetettäviä muistutusviestejä."
