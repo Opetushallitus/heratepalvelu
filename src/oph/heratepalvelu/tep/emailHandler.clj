@@ -5,7 +5,6 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
@@ -132,17 +131,6 @@
       (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" nippu)
       (log/error e))))
 
-(defn get-oppilaitokset
-  "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaitos-kenttien
-  perusteella."
-  [jaksot]
-  (try
-    (seq (into #{} (map #(:nimi (org/get-organisaatio (:oppilaitos %1)))
-                        jaksot)))
-    (catch Exception e
-      (log/error "Virhe kutsussa organisaatiopalveluun")
-      (log/error e))))
-
 (defn -handleSendTEPEmails
   "Hakee nippuja tietokannasta, joiden sähköpostit on aika lähettää, ja
   käsittelee näiden viestien lähettämisen viestinäpalveluun."
@@ -153,7 +141,7 @@
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
         (let [jaksot (tc/get-jaksot-for-nippu nippu)
-              oppilaitokset (get-oppilaitokset jaksot)
+              oppilaitokset (tc/get-oppilaitokset jaksot)
               osoite (lahetysosoite nippu jaksot)]
           (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
             (when (some? osoite)

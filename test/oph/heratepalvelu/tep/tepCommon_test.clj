@@ -58,3 +58,25 @@
       (is (= "asdf" (tc/reduce-common-value with-nil :field)))
       (is (= "asdf" (tc/reduce-common-value one-item :field)))
       (is (nil? (tc/reduce-common-value no-items :field))))))
+
+;; Testaa get-oppilaitokset
+(def test-get-oppilaitokset-result (atom []))
+
+(defn- mock-get-organisaatio [oppilaitos]
+  (reset! test-get-oppilaitokset-result
+          (cons oppilaitos @test-get-oppilaitokset-result))
+  {:nimi {:en "Test Institution"
+          :fi "Testilaitos"
+          :sv "Testanstalt"}})
+
+(deftest test-get-oppilaitokset
+  (testing "Varmista, että get-oppilaitokset kutsuu get-organisaatio oikein"
+    (with-redefs [oph.heratepalvelu.external.organisaatio/get-organisaatio
+                  mock-get-organisaatio]
+      (let [jaksot [{:oppilaitos "123.456.789"}]
+            expected (seq [{:en "Test Institution"
+                            :fi "Testilaitos"
+                            :sv "Testanstalt"}])
+            expected-call-log (seq ["123.456.789"])]
+        (is (= (tc/get-oppilaitokset jaksot) expected))
+        (is (= @test-get-oppilaitokset-result expected-call-log))))))

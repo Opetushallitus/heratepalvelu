@@ -6,7 +6,6 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
@@ -19,17 +18,6 @@
   :methods [[^:static handleSendEmailMuistutus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
-
-(defn get-oppilaitokset
-  "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaiton-kentän
-  perusteella."
-  [jaksot]
-  (try
-    (seq (into #{} (map #(:nimi (org/get-organisaatio (:oppilaitos %1)))
-                        jaksot)))
-    (catch Exception e
-      (log/error "Virhe kutsussa organisaatiopalveluun")
-      (log/error e))))
 
 (defn send-reminder-email
   "Lähettää muistutusviestin viestintäpalveluun. Parametrin oppilaitokset tulee
@@ -104,7 +92,7 @@
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (let [jaksot (tc/get-jaksot-for-nippu nippu)
-              oppilaitokset (get-oppilaitokset jaksot)
+              oppilaitokset (tc/get-oppilaitokset jaksot)
               id (:id (send-reminder-email nippu oppilaitokset))]
           (update-item-email-sent nippu id))
         (update-item-cannot-answer nippu status)))))

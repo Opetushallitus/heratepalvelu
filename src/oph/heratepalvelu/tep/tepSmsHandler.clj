@@ -5,7 +5,6 @@
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.elisa :as elisa]
-            [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (clojure.lang ExceptionInfo)
@@ -168,10 +167,7 @@
         (when-not (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
           (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
             (let [jaksot (tc/get-jaksot-for-nippu nippu)
-                  oppilaitokset (seq (into #{}
-                                           (map
-                                             #(:nimi (org/get-organisaatio (:oppilaitos %1)))
-                                             jaksot)))
+                  oppilaitokset (tc/get-oppilaitokset jaksot)
                   puhelinnumero (ohjaaja-puhnro nippu jaksot)
                   sms-kasittelytila (:sms_kasittelytila nippu)]
               (when (and (some? puhelinnumero)

@@ -8,27 +8,6 @@
 
 (use-fixtures :each tu/clear-logs-before-test)
 
-(def test-get-oppilaitokset-result (atom []))
-
-(defn- mock-get-organisaatio [oppilaitos]
-  (reset! test-get-oppilaitokset-result
-          (cons oppilaitos @test-get-oppilaitokset-result))
-  {:nimi {:en "Test Institution"
-          :fi "Testilaitos"
-          :sv "Testanstalt"}})
-
-(deftest test-get-oppilaitokset
-  (testing "Varmista, että get-oppilaitokset kutsuu get-organisaatio oikein"
-    (with-redefs [oph.heratepalvelu.external.organisaatio/get-organisaatio
-                  mock-get-organisaatio]
-      (let [jaksot [{:oppilaitos "123.456.789"}]
-            expected (seq [{:en "Test Institution"
-                            :fi "Testilaitos"
-                            :sv "Testanstalt"}])
-            expected-call-log (seq ["123.456.789"])]
-        (is (= (emh/get-oppilaitokset jaksot) expected))
-        (is (= @test-get-oppilaitokset-result expected-call-log))))))
-
 (def test-send-reminder-email-result (atom {}))
 
 (defn- mock-send-email [data] (reset! test-send-reminder-email-result data))
@@ -200,8 +179,6 @@
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
        oph.heratepalvelu.external.arvo/get-nippulinkki-status
        mock-get-nippulinkki-status
-       oph.heratepalvelu.tep.EmailMuistutusHandler/get-oppilaitokset
-       mock-get-oppilaitokset
        oph.heratepalvelu.tep.EmailMuistutusHandler/send-reminder-email
        mock-send-reminder-email
        oph.heratepalvelu.tep.EmailMuistutusHandler/update-item-email-sent
@@ -209,7 +186,9 @@
        oph.heratepalvelu.tep.EmailMuistutusHandler/update-item-cannot-answer
        mock-update-item-cannot-answer
        oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
-       mock-get-jaksot-for-nippu]
+       mock-get-jaksot-for-nippu
+       oph.heratepalvelu.tep.tepCommon/get-oppilaitokset
+       mock-get-oppilaitokset]
       (let [muistutettavat [{:kyselylinkki "kysely.linkki/vastattu_QWERTY"}
                             {:kyselylinkki "kysely.linkki/ei_vastattu_YUOIOP"}
                             {:kyselylinkki "kysely.linkki/xyz_GHKJJK"}]

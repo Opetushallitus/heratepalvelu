@@ -6,7 +6,6 @@
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.elisa :as elisa]
-            [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
@@ -35,10 +34,7 @@
         (try
           (let
             [jaksot (tc/get-jaksot-for-nippu nippu)
-             oppilaitokset (seq (into #{}
-                                      (map
-                                        #(:nimi (org/get-organisaatio (:oppilaitos %1)))
-                                        jaksot)))
+             oppilaitokset (tc/get-oppilaitokset jaksot)
              body (elisa/muistutus-msg-body (:kyselylinkki nippu) oppilaitokset)
              resp (elisa/send-tep-sms (:lahetettynumeroon nippu) body)
              status (get-in resp [:body :messages (keyword (:lahetettynumeroon nippu)) :status])]

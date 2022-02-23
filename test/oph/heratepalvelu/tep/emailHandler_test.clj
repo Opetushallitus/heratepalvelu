@@ -255,27 +255,6 @@
         (eh/no-time-to-answer-update-item email)
         (is (= @test-no-time-to-answer-update-item-results expected))))))
 
-(def test-get-oppilaitokset-results (atom ""))
-
-(defn- mock-get-organisaatio [oppilaitoksen-oid]
-  (reset! test-get-oppilaitokset-results
-          (str @test-get-oppilaitokset-results oppilaitoksen-oid " "))
-  {:nimi {:en "Test Institution"
-          :fi "Testilaitos"
-          :sv "Testanstalt"}})
-
-(deftest test-get-oppilaitokset
-  (testing "Varmista, että get-oppilaitokset toimii oikein"
-    (with-redefs [oph.heratepalvelu.external.organisaatio/get-organisaatio
-                  mock-get-organisaatio]
-      (let [jaksot [{:oppilaitos "123.456.789"}]
-            expected (seq #{{:en "Test Institution"
-                             :fi "Testilaitos"
-                             :sv "Testanstalt"}})
-            expected-call-log-results "123.456.789 "]
-        (is (= (eh/get-oppilaitokset jaksot) expected))
-        (is (= @test-get-oppilaitokset-results expected-call-log-results))))))
-
 (def test-handleSendTEPEmails-call-log (atom []))
 
 (defn- test-handleSendTEPEmails-add-to-call-log [item]
@@ -338,8 +317,6 @@
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 10 1))
        oph.heratepalvelu.tep.emailHandler/do-nippu-query mock-do-nippu-query
        oph.heratepalvelu.tep.emailHandler/lahetysosoite mock-lahetysosoite
-       oph.heratepalvelu.tep.emailHandler/get-oppilaitokset
-       mock-get-oppilaitokset
        oph.heratepalvelu.tep.emailHandler/send-survey-email
        mock-send-survey-email
        oph.heratepalvelu.tep.emailHandler/email-sent-update-item
@@ -347,7 +324,9 @@
        oph.heratepalvelu.tep.emailHandler/no-time-to-answer-update-item
        mock-no-time-to-answer-update-item
        oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
-       mock-get-jaksot-for-nippu]
+       mock-get-jaksot-for-nippu
+       oph.heratepalvelu.tep.tepCommon/get-oppilaitokset
+       mock-get-oppilaitokset]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
             expected-call-log ["do-nippu-query"

@@ -2,7 +2,8 @@
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.db.dynamodb :as ddb])
+            [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.organisaatio :as org])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (defn get-new-loppupvm
@@ -42,3 +43,14 @@
              (f %2))
           nil
           items))
+
+(defn get-oppilaitokset
+  "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaiton-kentän
+  perusteella."
+  [jaksot]
+  (try
+    (seq (into #{} (map #(:nimi (org/get-organisaatio (:oppilaitos %1)))
+                        jaksot)))
+    (catch Exception e
+      (log/error "Virhe kutsussa organisaatiopalveluun")
+      (log/error e))))
