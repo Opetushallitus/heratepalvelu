@@ -22,10 +22,20 @@
                           (.build)))
                     (.build)))
 
-(defn- create-get-queue-url-request-builder [] (GetQueueUrlRequest/builder))
-(defn- create-send-message-request-builder [] (SendMessageRequest/builder))
+(defn- create-get-queue-url-request-builder
+  "Abstraktio GetQueueUrlRequest/builderin ympäri, joka helpottaa testaamista."
+  []
+  (GetQueueUrlRequest/builder))
 
-(defn -handleDLQresend [this event context]
+(defn- create-send-message-request-builder
+  "Abstraktio SendMessageRequest/builderin ympäri, joka helpottaa testaamista."
+  []
+  (SendMessageRequest/builder))
+
+(defn -handleDLQresend
+  "Ottaa herätteitä vastaan AMISin dead letter queuesta ja lähettää ne
+  uudestaan."
+  [this event context]
   (let [messages (seq (.getRecords event))
         queue-url (.queueUrl
                     (.getQueueUrl
