@@ -27,22 +27,7 @@
       (is (dth/delete-one-item {:toimija_oppija "toimija-oppija"
                                 :tyyppi_kausi   "tyyppi-kausi"})))))
 
-
-(defn- mock-query-items [query-params index-data]
-  (when (and (:kyselylinkki query-params)
-             (= :eq (first (:kyselylinkki query-params)))
-             (= :s (first (second (:kyselylinkki query-params))))
-             (= "mock-kyselylinkki"
-                (second (second (:kyselylinkki query-params))))
-             (= "resendIndex" (:index index-data)))
-    [true]))
-
-(deftest test-get-item-by-kyselylinkki
-  (testing "get-item-by-kyselylinkki kutsuu query-items oikeilla parametreilla"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
-      (is (dth/get-item-by-kyselylinkki "mock-kyselylinkki")))))
-
-
+;; Testaa -handleDeleteTunnus
 (def store-full-call-results (atom ""))
 
 (defn- mock-delete-one-item [item]
@@ -59,10 +44,10 @@
   (testing "Call -handleDeleteTunnus with mocked DB and event"
     (with-redefs
       [clojure.tools.logging/error mock-error-logger
+       oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
+       mock-get-item-by-kyselylinkki
        oph.heratepalvelu.amis.AMISDeleteTunnusHandler/delete-one-item
-       mock-delete-one-item
-       oph.heratepalvelu.amis.AMISDeleteTunnusHandler/get-item-by-kyselylinkki
-       mock-get-item-by-kyselylinkki]
+       mock-delete-one-item]
       (let [context (tu/mock-handler-context)
             event (tu/mock-sqs-event {:kyselylinkki "https://a.com/tunnus"})
             bad-event (tu/mock-sqs-event {})]

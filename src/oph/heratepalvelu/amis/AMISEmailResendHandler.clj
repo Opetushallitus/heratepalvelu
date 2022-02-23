@@ -2,6 +2,7 @@
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
+            [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
@@ -24,16 +25,6 @@
 
 (def resend-checker
   (s/checker resend-schema))
-
-(defn get-one-item-by-kyselylinkki
-  "Hakee yhden tietueen tietokannasta kyselylinkin perusteella."
-  [kyselylinkki]
-  (try
-    (first (ddb/query-items {:kyselylinkki [:eq [:s kyselylinkki]]}
-                            {:index "resendIndex"}))
-    (catch AwsServiceException e
-      (log/error "Virhe kyselylinkin" kyselylinkki "hakemisessa" e)
-      (throw e))))
 
 (defn update-email-to-resend
   "Päivittää lähetettävän sähköpostin osoitteen ja lähetystilan tietokantaan."
@@ -63,18 +54,18 @@
               kyselylinkki (:kyselylinkki herate)]
           (if (some? (resend-checker herate))
             (log/error {:herate herate :msg (resend-checker herate)})
-            (let [item (get-one-item-by-kyselylinkki kyselylinkki)
+            (let [item (ac/get-item-by-kyselylinkki kyselylinkki)
                   sahkoposti (or (not-empty (:sahkoposti herate))
                                  (:sahkoposti item))]
               (if item
                 (do
                   (when (empty? (:sahkoposti herate))
-                    (log/warn "Ei sähköpostia herätteessä " herate
-                              ", käytetään dynamoon tallennettua " sahkoposti))
+                    (log/warn "Ei sähköpostia herätteessä" herate
+                              ", käytetään dynamoon tallennettua" sahkoposti))
                   (update-email-to-resend (:toimija_oppija item)
                                           (:tyyppi_kausi item)
                                           sahkoposti
                                           kyselylinkki))
-                (log/error "Ei kyselylinkkiä " kyselylinkki)))))
+                (log/error "Ei kyselylinkkiä" kyselylinkki)))))
         (catch JsonParseException e
-          (log/error "Virhe viestin lukemisessa: " msg "\n" e))))))
+          (log/error "Virhe viestin lukemisessa:" msg "\n" e))))))
