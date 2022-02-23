@@ -20,3 +20,23 @@
              (str (.plusDays date 40))))
       (is (= (tc/get-new-loppupvm not-sent (.plusDays date 45))
              (str (.plusDays date 60)))))))
+
+(defn- mock-get-jaksot-for-nippu-query-items [query-params options table]
+  (when (and (= :eq (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
+             (= :s (first (second (:ohjaaja_ytunnus_kj_tutkinto query-params))))
+             (= :eq (first (:niputuspvm query-params)))
+             (= :s (first (second (:niputuspvm query-params))))
+             (= "niputusIndex" (:index options))
+             (= "jaksotunnus-table-name" table))
+    {:ohjaaja_ytunnus_kj_tutkinto (second (second (:ohjaaja_ytunnus_kj_tutkinto
+                                                    query-params)))
+     :niputuspvm (second (second (:niputuspvm query-params)))}))
+
+(deftest test-get-jaksot-for-nippu
+  (testing "Varmista, että do-jakso-query kutsuu query-items oikein"
+    (with-redefs [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
+                  oph.heratepalvelu.db.dynamodb/query-items
+                  mock-get-jaksot-for-nippu-query-items]
+      (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
+                   :niputuspvm "2021-10-10"}]
+        (is (= (tc/get-jaksot-for-nippu nippu) nippu))))))

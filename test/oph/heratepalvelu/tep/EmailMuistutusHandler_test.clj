@@ -8,26 +8,6 @@
 
 (use-fixtures :each tu/clear-logs-before-test)
 
-(defn- mock-jakso-query-query-items [query-params options table]
-  (when (and (= :eq (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (second (:ohjaaja_ytunnus_kj_tutkinto query-params))))
-             (= :eq (first (:niputuspvm query-params)))
-             (= :s (first (second (:niputuspvm query-params))))
-             (= "niputusIndex" (:index options))
-             (= "jaksotunnus-table-name" table))
-    {:ohjaaja_ytunnus_kj_tutkinto (second (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                    query-params)))
-     :niputuspvm (second (second (:niputuspvm query-params)))}))
-
-(deftest test-do-jakso-query
-  (testing "Varmista, että do-jakso-query kutsuu query-items oikein"
-    (with-redefs [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
-                  oph.heratepalvelu.db.dynamodb/query-items
-                  mock-jakso-query-query-items]
-      (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                   :niputuspvm "2021-10-10"}]
-        (is (= (emh/do-jakso-query nippu) nippu))))))
-
 (def test-get-oppilaitokset-result (atom []))
 
 (defn- mock-get-organisaatio [oppilaitos]
@@ -186,8 +166,8 @@
   (add-to-test-sendEmailMuistutus-call-log (str "has-time-to-answer?: " pvm))
   (>= (compare pvm "2021-10-10") 0))
 
-(defn- mock-do-jakso-query [nippu]
-  (add-to-test-sendEmailMuistutus-call-log (str "do-jakso-query: " nippu))
+(defn- mock-get-jaksot-for-nippu [nippu]
+  (add-to-test-sendEmailMuistutus-call-log (str "get-jaksot-for-nippu: " nippu))
   [{:kyselylinkki (:kyselylinkki nippu)}])
 
 (defn- mock-get-oppilaitokset [jaksot]
@@ -220,8 +200,6 @@
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
        oph.heratepalvelu.external.arvo/get-nippulinkki-status
        mock-get-nippulinkki-status
-       oph.heratepalvelu.tep.EmailMuistutusHandler/do-jakso-query
-       mock-do-jakso-query
        oph.heratepalvelu.tep.EmailMuistutusHandler/get-oppilaitokset
        mock-get-oppilaitokset
        oph.heratepalvelu.tep.EmailMuistutusHandler/send-reminder-email
@@ -229,7 +207,9 @@
        oph.heratepalvelu.tep.EmailMuistutusHandler/update-item-email-sent
        mock-update-item-email-sent
        oph.heratepalvelu.tep.EmailMuistutusHandler/update-item-cannot-answer
-       mock-update-item-cannot-answer]
+       mock-update-item-cannot-answer
+       oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
+       mock-get-jaksot-for-nippu]
       (let [muistutettavat [{:kyselylinkki "kysely.linkki/vastattu_QWERTY"}
                             {:kyselylinkki "kysely.linkki/ei_vastattu_YUOIOP"}
                             {:kyselylinkki "kysely.linkki/xyz_GHKJJK"}]
@@ -241,7 +221,7 @@
                   "{:vastattu true, :voimassa_loppupvm \"2021-10-12\"}")
              "get-nippulinkki-status: kysely.linkki/ei_vastattu_YUOIOP"
              "has-time-to-answer?: 2021-10-12"
-             (str "do-jakso-query: "
+             (str "get-jaksot-for-nippu: "
                   "{:kyselylinkki \"kysely.linkki/ei_vastattu_YUOIOP\"}")
              (str "get-oppilaitokset: "
                   "[{:kyselylinkki \"kysely.linkki/ei_vastattu_YUOIOP\"}]")

@@ -266,26 +266,6 @@
         (eh/no-time-to-answer-update-item email)
         (is (= @test-no-time-to-answer-update-item-results expected))))))
 
-(defn- mock-jakso-query-query-items [query-params options table]
-  (when (and (= :eq (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (second (:ohjaaja_ytunnus_kj_tutkinto query-params))))
-             (= :eq (first (:niputuspvm query-params)))
-             (= :s (first (second (:niputuspvm query-params))))
-             (= "niputusIndex" (:index options))
-             (= "jaksotunnus-table-name" table))
-    {:ohjaaja_ytunnus_kj_tutkinto (second (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                    query-params)))
-     :niputuspvm (second (second (:niputuspvm query-params)))}))
-
-(deftest test-do-jakso-query
-  (testing "Varmista, että do-jakso-query kutsuu query-items oikein"
-    (with-redefs [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
-                  oph.heratepalvelu.db.dynamodb/query-items
-                  mock-jakso-query-query-items]
-      (let [email {:ohjaaja_ytunnus_kj_tutkinto "test-email-id"
-                   :niputuspvm "2021-10-10"}]
-        (is (= (eh/do-jakso-query email) email))))))
-
 (def test-get-oppilaitokset-results (atom ""))
 
 (defn- mock-get-organisaatio [oppilaitoksen-oid]
@@ -322,9 +302,9 @@
    {:id "email-3"
     :voimassaloppupvm "2021-10-09"}])
 
-(defn- mock-do-jakso-query [email]
+(defn- mock-get-jaksot-for-nippu [nippu]
   (test-handleSendTEPEmails-add-to-call-log
-    (str "do-jakso-query: " (:id email)))
+    (str "get-jaksot-for-nippu: " (:id nippu)))
   [{:oppilaitos "123.456.789"}])
 
 (defn- mock-get-oppilaitokset [jaksot]
@@ -368,7 +348,6 @@
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 10 1))
        oph.heratepalvelu.tep.emailHandler/do-nippu-query mock-do-nippu-query
-       oph.heratepalvelu.tep.emailHandler/do-jakso-query mock-do-jakso-query
        oph.heratepalvelu.tep.emailHandler/lahetysosoite mock-lahetysosoite
        oph.heratepalvelu.tep.emailHandler/get-oppilaitokset
        mock-get-oppilaitokset
@@ -377,21 +356,19 @@
        oph.heratepalvelu.tep.emailHandler/email-sent-update-item
        mock-email-sent-update-item
        oph.heratepalvelu.tep.emailHandler/no-time-to-answer-update-item
-       mock-no-time-to-answer-update-item]
+       mock-no-time-to-answer-update-item
+       oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
+       mock-get-jaksot-for-nippu]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
             expected-call-log ["do-nippu-query"
-                               ;{:id "email-1"
-                               ; :voimassaloppupvm "2021-10-11"}
-                               "do-jakso-query: email-1"
+                               "get-jaksot-for-nippu: email-1"
                                (str "get-oppilaitokset: "
                                     "[{:oppilaitos \"123.456.789\"}]")
                                (str "lahetysosoite: email-1 "
                                     "[{:oppilaitos \"123.456.789\"}]")
                                "no-time-to-answer-update-item: email-1"
-                              ; {:id "email-2"
-                               ; :voimassaloppupvm "2021-10-09"}
-                               "do-jakso-query: email-2"
+                               "get-jaksot-for-nippu: email-2"
                                (str "get-oppilaitokset: "
                                     "[{:oppilaitos \"123.456.789\"}]")
                                (str "lahetysosoite: email-2 "
@@ -402,9 +379,7 @@
                                     " a@b.com")
                                (str "email-sent-update-item: email-2 123 "
                                     "2021-10-01 a@b.com")
-                           ;    {:id "email-3"
-                            ;    :voimassaloppupvm "2021-10-09"}
-                               "do-jakso-query: email-3"
+                               "get-jaksot-for-nippu: email-3"
                                (str "get-oppilaitokset: "
                                     "[{:oppilaitos \"123.456.789\"}]")
                                (str "lahetysosoite: email-3 "

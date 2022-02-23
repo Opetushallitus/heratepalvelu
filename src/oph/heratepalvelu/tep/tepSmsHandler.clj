@@ -175,10 +175,7 @@
       (doseq [nippu lahetettavat]
         (when-not (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
           (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
-            (let [jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                                           :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                                          {:index "niputusIndex"}
-                                          (:jaksotunnus-table env))
+            (let [jaksot (tc/get-jaksot-for-nippu nippu)
                   oppilaitokset (seq (into #{}
                                            (map
                                              #(:nimi (org/get-organisaatio (:oppilaitos %1)))

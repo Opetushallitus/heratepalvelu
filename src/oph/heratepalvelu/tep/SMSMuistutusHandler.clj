@@ -7,7 +7,8 @@
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.elisa :as elisa]
             [oph.heratepalvelu.external.organisaatio :as org]
-            [oph.heratepalvelu.log.caller-log :refer :all])
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
            (java.time LocalDate)))
 
@@ -33,10 +34,7 @@
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (try
           (let
-            [jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                                      :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                                     {:index "niputusIndex"}
-                                     (:jaksotunnus-table env))
+            [jaksot (tc/get-jaksot-for-nippu nippu)
              oppilaitokset (seq (into #{}
                                       (map
                                         #(:nimi (org/get-organisaatio (:oppilaitos %1)))

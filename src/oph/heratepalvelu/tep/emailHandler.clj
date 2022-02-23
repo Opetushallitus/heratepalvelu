@@ -146,14 +146,6 @@
       (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" nippu)
       (log/error e))))
 
-(defn do-jakso-query
-  "Hakee jaksot, jotka kuuluvat ko. nippuun."
-  [nippu]
-  (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                    :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                   {:index "niputusIndex"}
-                   (:jaksotunnus-table env)))
-
 (defn get-oppilaitokset
   "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaitos-kenttien
   perusteella."
@@ -174,7 +166,7 @@
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
-        (let [jaksot (do-jakso-query nippu)
+        (let [jaksot (tc/get-jaksot-for-nippu nippu)
               oppilaitokset (get-oppilaitokset jaksot)
               osoite (lahetysosoite nippu jaksot)]
           (if (c/has-time-to-answer? (:voimassaloppupvm nippu))

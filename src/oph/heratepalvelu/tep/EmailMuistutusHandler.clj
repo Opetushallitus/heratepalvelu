@@ -8,7 +8,8 @@
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
-            [oph.heratepalvelu.log.caller-log :refer :all])
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 ;; Käsittelee ja lähettää TEP-sähköpostimuistutuksia
@@ -18,18 +19,6 @@
   :methods [[^:static handleSendEmailMuistutus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
-
-(defn do-jakso-query
-  "Hakee nippuun liittyvät jaksot tietokannasta."
-  [nippu]
-  (try
-    (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                      :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                     {:index "niputusIndex"}
-                     (:jaksotunnus-table env))
-    (catch AwsServiceException e
-      (log/error "Jakso-query epäonnistui nipulla" nippu)
-      (log/error e))))
 
 (defn get-oppilaitokset
   "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaiton-kentän
@@ -114,7 +103,7 @@
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
-        (let [jaksot (do-jakso-query nippu)
+        (let [jaksot (tc/get-jaksot-for-nippu nippu)
               oppilaitokset (get-oppilaitokset jaksot)
               id (:id (send-reminder-email nippu oppilaitokset))]
           (update-item-email-sent nippu id))

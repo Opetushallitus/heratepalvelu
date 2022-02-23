@@ -23,23 +23,10 @@
       {:vastattu true :voimassa_loppupvm "2021-12-30"}
       {:vastattu false :voimassa_loppupvm "2021-12-10"})))
 
-(defn- mock-query-items [query-params options table]
-  (when (and (= :eq (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (second (:ohjaaja_ytunnus_kj_tutkinto query-params))))
-             (= :eq (first (:niputuspvm query-params)))
-             (= :s (first (second (:niputuspvm query-params))))
-             (= "niputusIndex" (:index options))
-             (= "jaksotunnus-table-name" table))
-    (add-to-test-sendSmsMuistutus-results {:type "mock-query-items"
-                                           :ohjaaja_ytunnus_kj_tutkinto
-                                           (second
-                                             (second
-                                               (:ohjaaja_ytunnus_kj_tutkinto
-                                                 query-params)))
-                                           :niputuspvm
-                                           (second (second (:niputuspvm
-                                                             query-params)))})
-    [{:oppilaitos "1234"}]))
+(defn- mock-get-jaksot-for-nippu [nippu]
+  (add-to-test-sendSmsMuistutus-results {:type "mock-get-jaksot-for-nippu"
+                                         :nippu nippu})
+  [{:oppilaitos "1234"}])
 
 (defn- mock-get-organisaatio [oppilaitos]
   (add-to-test-sendSmsMuistutus-results {:type "mock-get-organisaatio"
@@ -82,20 +69,20 @@
 
 (deftest test-sendSmsMuistutus
   (testing "Varmista, että sendSmsMuistutus kutsuu oikeita funktioita"
-    (with-redefs [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"
-                                    :nippu-table "nippu-table-name"}
+    (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
                   oph.heratepalvelu.common/has-time-to-answer?
                   mock-has-time-to-answer?
                   oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2021 12 16))
-                  oph.heratepalvelu.db.dynamodb/query-items mock-query-items
                   oph.heratepalvelu.db.dynamodb/update-item mock-update-item
                   oph.heratepalvelu.external.arvo/get-nippulinkki-status
                   mock-get-nippulinkki-status
                   oph.heratepalvelu.external.elisa/send-tep-sms
                   mock-send-tep-sms
                   oph.heratepalvelu.external.organisaatio/get-organisaatio
-                  mock-get-organisaatio]
+                  mock-get-organisaatio
+                  oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
+                  mock-get-jaksot-for-nippu]
       (let [muistutettavat [{:kyselylinkki "kysely.linkki/1"
                              :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
                              :niputuspvm "2021-12-15"
@@ -110,9 +97,11 @@
                              :lahetettynumeroon "+358401234567"}]
             results [{:type "mock-get-nippulinkki-status"
                       :kyselylinkki "kysely.linkki/1"}
-                     {:type "mock-query-items"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
-                      :niputuspvm "2021-12-15"}
+                     {:type "mock-get-jaksot-for-nippu"
+                      :nippu {:kyselylinkki "kysely.linkki/1"
+                              :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
+                              :niputuspvm "2021-12-15"
+                              :lahetettynumeroon "+358401234567"}}
                      {:type "mock-get-organisaatio"
                       :oppilaitos "1234"}
                      {:type "mock-send-tep-sms"
