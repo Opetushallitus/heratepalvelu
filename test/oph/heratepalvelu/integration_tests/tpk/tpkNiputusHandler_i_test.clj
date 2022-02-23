@@ -46,7 +46,7 @@
     :voimassa-loppupvm [:s "2022-02-28"]
     :tiedonkeruu-alkupvm [:s "2021-07-01"]
     :tiedonkeruu-loppupvm [:s "2021-12-31"]
-    :vastaamisajan-alkupvm [:s "2022-01-15"]
+    :vastaamisajan-alkupvm [:s "2022-01-01"]
     :vastaamisajan-loppupvm [:s "2022-02-28"]
     :niputuspvm [:s "2021-07-25"]}])
 
@@ -59,7 +59,7 @@
                 {:content-type "application/json"
                  :body (str "{\"tyopaikka\":\"Työ Paikka\","
                             "\"tyopaikka_normalisoitu\":\"tyo_paikka\","
-                            "\"vastaamisajan_alkupvm\":\"2022-01-15\","
+                            "\"vastaamisajan_alkupvm\":\"2022-01-01\","
                             "\"tyonantaja\":\"123456-7\","
                             "\"koulutustoimija_oid\":\"test-kt\","
                             "\"tiedonkeruu_loppupvm\":\"2021-12-31\","
@@ -122,7 +122,7 @@
      :voimassa-loppupvm [:s "2022-02-28"]
      :tiedonkeruu-alkupvm [:s "2021-07-01"]
      :tiedonkeruu-loppupvm [:s "2021-12-31"]
-     :vastaamisajan-alkupvm [:s "2022-01-15"]
+     :vastaamisajan-alkupvm [:s "2022-01-01"]
      :vastaamisajan-loppupvm [:s "2022-02-28"]
      :niputuspvm [:s "2022-01-01"]}
     {:nippu-id [:s "aakkoset/333333-7/test-kt2/2021-07-01_2021-12-31"]
@@ -136,7 +136,7 @@
      :voimassa-loppupvm [:s "2022-02-28"]
      :tiedonkeruu-alkupvm [:s "2021-07-01"]
      :tiedonkeruu-loppupvm [:s "2021-12-31"]
-     :vastaamisajan-alkupvm [:s "2022-01-15"]
+     :vastaamisajan-alkupvm [:s "2022-01-01"]
      :vastaamisajan-loppupvm [:s "2022-02-28"]
      :niputuspvm [:s "2021-07-25"]}})
 
@@ -146,7 +146,7 @@
     :options {:content-type "application/json"
               :body (str "{\"tyopaikka\":\"Työ Paikka\","
                          "\"tyopaikka_normalisoitu\":\"tyo_paikka\","
-                         "\"vastaamisajan_alkupvm\":\"2022-01-15\","
+                         "\"vastaamisajan_alkupvm\":\"2022-01-01\","
                          "\"tyonantaja\":\"123456-7\","
                          "\"koulutustoimija_oid\":\"test-kt\","
                          "\"tiedonkeruu_loppupvm\":\"2021-12-31\","

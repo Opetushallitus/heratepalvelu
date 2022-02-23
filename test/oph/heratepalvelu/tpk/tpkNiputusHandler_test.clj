@@ -120,7 +120,7 @@
               "testi_tyopaikka/1234567-8/1.2.246.562.10.346830761110/2021-07-01_2021-12-31"
               :tyopaikan-nimi               "Testi työpaikka"
               :tyopaikan-nimi-normalisoitu  "testi_tyopaikka"
-              :vastaamisajan-alkupvm        "2022-01-15"
+              :vastaamisajan-alkupvm        "2022-01-01"
               :vastaamisajan-loppupvm       "2022-02-28"
               :tyopaikan-ytunnus            "1234567-8"
               :koulutustoimija-oid          "1.2.246.562.10.346830761110"
