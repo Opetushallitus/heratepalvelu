@@ -19,7 +19,9 @@
             takaraja (.plusDays (c/to-date (:niputuspvm nippu)) 60)]
         (str (if (.isBefore takaraja new-loppupvm) takaraja new-loppupvm))))))
 
-(defn get-jaksot-for-nippu [nippu]
+(defn get-jaksot-for-nippu
+  "Hakee nippuun liittyvät jaksot tietokannasta."
+  [nippu]
   (try
     (ddb/query-items
       {:ohjaaja_ytunnus_kj_tutkinto [:eq
@@ -30,3 +32,13 @@
     (catch AwsServiceException e
       (log/error "Jakso-query epäonnistui nipulla" nippu)
       (log/error e))))
+
+(defn reduce-common-value
+  "Jos kaikissa annetuissa objekteissa (items) on kentässä f sama arvo tai nil,
+  palauttaa yhteisen arvon. Muuten palauttaa nil."
+  [items f]
+  (reduce #(if (some? %1)
+             (if (and (some? (f %2)) (not= %1 (f %2))) (reduced nil) %1)
+             (f %2))
+          nil
+          items))

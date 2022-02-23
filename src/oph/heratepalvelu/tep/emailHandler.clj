@@ -41,27 +41,13 @@
                                               (:email-mismatch c/kasittelytilat))]}}
     (:nippu-table env)))
 
-(defn get-single-ohjaaja-email
-  "Jos jaksoissa on vain yksi ohjaajan sähköpostiosoite, palauttaa sen. Jos ei
-  ole sähköpostiosoitetta tai on useita, palauttaa nil."
-  [jaksot]
-  (when (not-empty jaksot)
-    (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
-                               (if (some? (:ohjaaja_email %2))
-                                 (if (= (:ohjaaja_email %1) (:ohjaaja_email %2))
-                                   %1
-                                   (reduced nil))
-                                  %1)
-                                %2)
-                              jaksot))))
-
 (defn lahetysosoite
   "Yrittää hakea yksittäisen sähköpostiosoitteen nippuun liittyvistä jaksoista.
   Jos löytyy, palauttaa sen. Jos sitä ei löydy, päivittää tiedot tietokantaan
   ja palauttaa nil. Jos yksittäistä sahköpostia ei löydy eikä kunnon
   puhelinnumeroa on olemassa, ilmoittaa Arvoon, että ei ole yhteistietoja."
   [nippu jaksot]
-  (let [ohjaaja-email (get-single-ohjaaja-email jaksot)]
+  (let [ohjaaja-email (tc/reduce-common-value jaksot :ohjaaja_email)]
     (if (some? ohjaaja-email)
       ohjaaja-email
       (let [osoitteet (reduce

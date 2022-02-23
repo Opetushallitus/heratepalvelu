@@ -56,17 +56,6 @@
         (eh/lahetysosoite-update-item nippu osoitteet-empty)
         (is (= @test-lahetysosoite-update-item-results expected-empty))))))
 
-(deftest test-get-single-ohjaaja-email
-  (testing (str "Varmista, että get-single-ohjaaja-email palauttaa yhteisen"
-                " sähköpostin, jos kaikissa jaksoissa on sama sähköposti;"
-                " muuten palauttaa nil.")
-    (let [jaksot-same-emails [{:ohjaaja_email "a@b.com"}
-                              {:ohjaaja_email "a@b.com"}]
-          jaksot-different-emails [{:ohjaaja_email "a@b.com"}
-                                   {:ohjaaja_email "x@y.com"}]]
-      (is (= "a@b.com" (eh/get-single-ohjaaja-email jaksot-same-emails)))
-      (is (nil? (eh/get-single-ohjaaja-email jaksot-different-emails))))))
-
 (def mock-lahetysosoite-update-item-result (atom {}))
 
 (defn- mock-lahetysosoite-update-item [nippu osoitteet]

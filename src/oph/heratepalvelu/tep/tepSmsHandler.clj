@@ -89,15 +89,7 @@
   nippuun on merkattu että hyväksyttävää sähköpostiosoitettakaan ei ole
   löytynyt, päivittää myös Arvoon sen, että nippulinkillä ei ole yhteystietoja."
   [nippu jaksot]
-  (let [number (when-not (empty? jaksot)
-                 (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
-                                                   (if (some? (:ohjaaja_puhelinnumero %2))
-                                                     (if (= (:ohjaaja_puhelinnumero %1) (:ohjaaja_puhelinnumero %2))
-                                                       %1
-                                                       (reduced nil))
-                                                     %1)
-                                                   %2)
-                                                jaksot)))]
+  (let [number (tc/reduce-common-value jaksot :ohjaaja_puhelinnumero)]
     (if (some? number)
       (if (valid-number? number)
         number

@@ -40,3 +40,21 @@
       (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
                    :niputuspvm "2021-10-10"}]
         (is (= (tc/get-jaksot-for-nippu nippu) nippu))))))
+
+(deftest test-reduce-common-value
+  (testing (str "Varmista, että reduce-common-value palauttaa yhteisen arvon, "
+                "jos kaikissa itemeissä on sama arvo tai nil; muuten nil.")
+    (let [same-emails [{:ohjaaja_email "a@b.com"}
+                       {:ohjaaja_email "a@b.com"}]
+          different-emails [{:ohjaaja_email "a@b.com"}
+                            {:ohjaaja_email "x@y.com"}]
+          with-nil [{:field "asdf"}
+                    {}
+                    {:field "asdf"}]
+          one-item [{:field "asdf"}]
+          no-items []]
+      (is (= "a@b.com" (tc/reduce-common-value same-emails :ohjaaja_email)))
+      (is (nil? (tc/reduce-common-value different-emails :ohjaaja_email)))
+      (is (= "asdf" (tc/reduce-common-value with-nil :field)))
+      (is (= "asdf" (tc/reduce-common-value one-item :field)))
+      (is (nil? (tc/reduce-common-value no-items :field))))))
