@@ -34,7 +34,7 @@
    :alkupvm            alkupvm})
 
 (defn get-vahvistus-pvm
-  "Palauttaa ensimmäisen hyväksyttävän suorituksen vahvistuspäivämäärä, jos
+  "Palauttaa ensimmäisen hyväksyttävän suorituksen vahvistuspäivämäärän, jos
   sellainen on olemassa."
   [opiskeluoikeus]
   (if-let [vahvistus-pvm

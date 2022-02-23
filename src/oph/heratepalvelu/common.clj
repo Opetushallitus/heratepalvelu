@@ -44,7 +44,7 @@
    :queued "queued"})
 
 (defn rand-str
-  "Luo stringin, jossa on len randomista valittuja isoja kirjaimia."
+  "Luo stringin, jossa on len randomisti valittua isoa kirjainta."
   [len]
   (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
 
@@ -146,7 +146,7 @@
     true))
 
 (defn get-suoritus
-  "Hakee tutkinnon tai tutkinnon osas suorituksen opiskeluoikeudesta."
+  "Hakee tutkinnon tai tutkinnon osan suorituksen opiskeluoikeudesta."
   [opiskeluoikeus]
   (reduce
     (fn [_ suoritus]

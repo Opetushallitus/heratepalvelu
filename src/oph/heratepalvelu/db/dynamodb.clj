@@ -38,7 +38,7 @@
    :nul "nul"})
 
 (defn- invoke-instance-method
-  "Kutsuu Java Objektin methodia nimensä perusteella."
+  "Kutsuu Java Objektin methodia nimeltään."
   [inst m params]
   (Reflector/invokeInstanceMethod
     inst m (to-array params)))
