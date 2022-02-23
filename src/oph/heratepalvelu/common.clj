@@ -153,34 +153,22 @@
   (str (normalize-string tyopaikan-nimi) "_" (local-date-now) "_" (rand-str 6)))
 
 (defn check-organisaatio-whitelist?
-  ([koulutustoimija]
-   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
-                            (:orgwhitelist-table env))]
-     (if (.isBefore (LocalDate/of 2021 6 30) (local-date-now))
-       true
-       (if
-         (and
-           (:kayttoonottopvm item)
-           (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-               (c/to-long (local-date-now))))
-         true
-         (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa")))))
-  ([koulutustoimija timestamp]
-   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
-                            (:orgwhitelist-table env))]
-     (if (.isBefore (LocalDate/of 2021 6 30) (LocalDate/ofEpochDay (/ timestamp 86400000)))
-       true
-       (if
-         (and
-           (:kayttoonottopvm item)
-           (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-               timestamp)
-           (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-               (c/to-long (local-date-now))))
-         true
-         (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa,"
-                   " tai herätepvm " (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
-                   " on ennen käyttöönotto päivämäärää"))))))
+  [koulutustoimija timestamp]
+  (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
+                           (:orgwhitelist-table env))]
+    (if (.isBefore (LocalDate/of 2021 6 30) (LocalDate/ofEpochDay (/ timestamp 86400000)))
+      true
+      (if
+        (and
+          (:kayttoonottopvm item)
+          (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
+              timestamp)
+          (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
+              (c/to-long (local-date-now))))
+        true
+        (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa,"
+                  " tai herätepvm " (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
+                  " on ennen käyttöönotto päivämäärää")))))
 
 (defn check-duplicate-herate? [oppija koulutustoimija laskentakausi kyselytyyppi]
   (if
