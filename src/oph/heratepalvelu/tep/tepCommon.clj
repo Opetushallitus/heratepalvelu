@@ -60,7 +60,9 @@
   (let [normalized (c/normalize-string (name item-key))]
     (str "#" normalized " = :" normalized)))
 
-(defn update-nippu [nippu updates]
+(defn update-nippu
+  "Wrapper update-itemin ympäri, joka yksinkertaistaa tietokantapäivitykset."
+  [nippu updates]
   (ddb/update-item
     {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
      :niputuspvm                  [:s (:niputuspvm nippu)]}
