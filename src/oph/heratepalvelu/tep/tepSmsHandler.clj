@@ -13,7 +13,7 @@
            (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
-;; Käsittelee SMS-viestien lähetystä nipuilta.
+;; Käsittelee nippuihin liittyvät SMS-lähetykset
 
 (gen-class
   :name "oph.heratepalvelu.tep.tepSmsHandler"
@@ -22,10 +22,10 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn valid-number?
-  "Sallii vain numeroita, jotka kirjasto voi luokitella mobiilin tai
-  mahdollisesti mobiilin (FIXED_LINE_OR_MOBILE) numeroiksi. Jos funktio ei
-  hyväksy numeroa, jonka tiedät olevan validi, tarkista, miten kirjasto
-  luokittelee sen: https://libphonenumber.appspot.com/."
+  "Sallii vain numeroita, jotka kirjasto luokittelee mobiilinumeroiksi tai
+  mahdollisiksi mobiilinumeroiksi (FIXED_LINE_OR_MOBILE). Jos funktio ei hyväksy
+  numeroa, jonka tiedät olevan validi, tarkista, miten kirjasto luokittelee sen:
+  https://libphonenumber.appspot.com/."
   [number]
   (try
     (let [utilobj (PhoneNumberUtil/getInstance)
@@ -86,8 +86,8 @@
   numero on olemassa ja on validi, se palautetaan. Jos numeroa ei ole, useita
   numeroita löytyy, tai numero on virheellinen, nämä tiedot tallennetaan
   tietokantaan ja funktio palauttaa nil. Jos yksittäistä numeroa ei löydy ja
-  nipussa on merkattu, että kunnon sähköpostiosoitettakaan ei löytynyt,
-  päivittää myös Arvoon sen, että nippulinkillä ei ole yhetystietoja."
+  nippuun on merkattu että hyväksyttävää sähköpostiosoitettakaan ei ole
+  löytynyt, päivittää myös Arvoon sen, että nippulinkillä ei ole yhteystietoja."
   [nippu jaksot]
   (let [number (when-not (empty? jaksot)
                  (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))

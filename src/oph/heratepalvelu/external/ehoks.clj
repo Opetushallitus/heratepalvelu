@@ -87,7 +87,7 @@
      :as :json}))
 
 (defn get-paattyneet-tyoelamajaksot
-  "Pyytää eHOKS-palvelulta lähettämään käsittelemättömät TEP-jaksot SQS:iin."
+  "Pyytää eHOKS-palvelua lähettämään käsittelemättömät TEP-jaksot SQS:iin."
   [start end limit]
   (client/get
     (str (:ehoks-url env) "heratepalvelu/tyoelamajaksot")
@@ -100,7 +100,7 @@
      :as :json}))
 
 (defn get-retry-kyselylinkit
-  "Pyytää eHOKS-palvelulta lähettämään käsittelemättömät AMIS-herätteet
+  "Pyytää eHOKS-palvelua lähettämään käsittelemättömät AMIS-herätteet
   SQS:iin."
   [start end limit]
   (client/get

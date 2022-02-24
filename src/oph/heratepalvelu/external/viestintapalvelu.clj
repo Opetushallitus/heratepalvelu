@@ -10,7 +10,7 @@
     [:td {:align "left" :valign "top" :width "600px" :height "1" :style "background-color: #f0f0f0; border-collapse:collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; mso-line-height-rule: exactly; line-height: 1px;"}]]])
 
 (defn- amispalaute-body-alkukysely
-  "Luo AMISin aloituskyselyviestin tekstisisällön."
+  "Luo AMIS-aloituskyselyviestin tekstisisällön."
   [link]
   [:div
    [:p "Hyvä opiskelija!"]
@@ -38,7 +38,7 @@
    [:p "With best regards, your educational institution"]])
 
 (defn- amispalaute-body-loppukysely
-  "Luo AMISin loppukyselyviestin tekstisisällön."
+  "Luo AMIS-loppukyselyviestin tekstisisällön."
   [link]
   [:div
    [:p "Hyvä valmistunut!"]
@@ -86,7 +86,7 @@
     (amispalaute-body-loppukysely (:kyselylinkki data))))
 
 (defn- amismuistutus-body
-  "Luo AMISin muistutusviestin tekstin."
+  "Luo AMIS-muistutusviestin tekstin."
   [link]
   [:div
    [:p (str "Olethan muistanut antaa palautetta oppilaitokselle!<br/>"

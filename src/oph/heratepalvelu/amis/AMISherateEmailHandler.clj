@@ -41,7 +41,7 @@
       (log/error e))))
 
 (defn update-data-in-ehoks
-  "Päivittää sähköpostin tiedot ehoks-palveluun, kun sähköposti on lähetetty
+  "Päivittää sähköpostin tiedot ehoksiin, kun sähköposti on lähetetty
   viestintäpalveluun."
   [herate lahetyspvm]
   (try

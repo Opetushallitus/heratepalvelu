@@ -108,7 +108,7 @@
             (:nippu-table env))))))
 
 (defn -handleNiputus
-  "Käy niputtamattomien nippujen läpi ja niputtaa ne."
+  "Hakee ja niputtaa niputtamattomat jaksot."
   [this event context]
   (log-caller-details-scheduled "handleNiputus" event context)
   (loop [niputettavat

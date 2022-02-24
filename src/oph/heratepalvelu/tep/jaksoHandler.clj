@@ -321,7 +321,8 @@
 
 (defn -handleJaksoHerate
   "Käsittelee jaksoherätteet, jotka eHOKS-palvelu lähettää SQS:in kautta. Tekee
-  joitakin tarkistaksia, ja tallentaa herätteen tietokantaan, jos se läpäisee."
+  joitakin tarkistaksia ja tallentaa herätteen tietokantaan, jos testit
+  läpäistään."
   [this event context]
   (log-caller-details-sqs "handleTPOherate" context)
   (let [messages (seq (.getRecords event))]

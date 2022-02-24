@@ -27,7 +27,7 @@
            (throw e)))))
 
 (defn get-updated-opiskeluoikeudet
-  "Hakee opiskeluoikeudet, joihin on tehnyt päivityksiä datetime-str:n jälkeen."
+  "Hakee opiskeluoikeudet, joihin on tehty päivityksiä datetime-str:n jälkeen."
   [datetime-str page]
   (let
     [resp

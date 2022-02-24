@@ -33,7 +33,7 @@
   muistutus."
   [herate status tila]
   ;; Täytyy hakea kokonainen heräte tietokannasta, koska argumenttina annettu
-  ;; heräte on saatu indexin kautta, johon kaikkia kenttiä ei kuulu.
+  ;; heräte on saatu indexin kautta, joka ei sisällä kaikkia kenttiä.
   (let [full-herate (ddb/get-item {:toimija_oppija [:s (:toimija_oppija herate)]
                                    :tyyppi_kausi [:s (:tyyppi_kausi herate)]})]
     (when-not (.contains [1 2] (:muistutukset full-herate))

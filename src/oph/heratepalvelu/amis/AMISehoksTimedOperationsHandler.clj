@@ -10,7 +10,7 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleAMISTimedOperations
-  "Pyytää ehoksilta lähettää käsittelemättömät herätteet uudestaan."
+  "Pyytää ehoksia lähettää käsittelemättömät herätteet uudestaan."
   [this event context]
   (log/info "Käynnistetään herätteiden lähetys")
   (let [resp (ehoks/get-retry-kyselylinkit "2021-07-01"

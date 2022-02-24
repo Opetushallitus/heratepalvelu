@@ -28,8 +28,8 @@
       (= (:phone-invalid c/kasittelytilat) (:sms_kasittelytila nippu))))
 
 (defn lahetysosoite-update-item
-  "Päivittää nipun käsittelytilan tietokantaan, kun ei ole yksi kunnon
-  sähköpostiosoite. Parametri osoitteet on lista sähköpostiosoitteista."
+  "Päivittää nipun käsittelytilan tietokantaan, kun osoitteista ei löydy selkeää
+  vaihtoehtoa. Parametri osoitteet on lista sähköpostiosoitteista."
   [nippu osoitteet]
   (ddb/update-item
     {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
@@ -167,7 +167,7 @@
 
 (defn -handleSendTEPEmails
   "Hakee nippuja tietokannasta, joiden sähköpostit on aika lähettää, ja
-  käsittelee näiden viestien lähettämistä viestinäpalveluun."
+  käsittelee näiden viestien lähettämisen viestinäpalveluun."
   [this event context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
   (loop [lahetettavat (do-nippu-query)]
