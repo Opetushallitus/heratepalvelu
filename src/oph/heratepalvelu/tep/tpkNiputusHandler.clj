@@ -4,8 +4,7 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as db]
             [oph.heratepalvelu.log.caller-log :refer :all])
-  (:import (clojure.lang ExceptionInfo)
-           (com.amazonaws.services.lambda.runtime Context)
+  (:import (com.amazonaws.services.lambda.runtime Context)
            (com.amazonaws.services.lambda.runtime.events ScheduledEvent)
            (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
