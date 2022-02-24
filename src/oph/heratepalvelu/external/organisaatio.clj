@@ -4,7 +4,9 @@
             [clojure.tools.logging :as log])
   (:import (clojure.lang ExceptionInfo)))
 
-(defn get-organisaatio [oid]
+(defn get-organisaatio
+  "Hakee organisaation OID:n perusteella."
+  [oid]
   (try
     (:body (client/get (str (:organisaatio-url env) oid) {:as :json}))
     (catch ExceptionInfo e

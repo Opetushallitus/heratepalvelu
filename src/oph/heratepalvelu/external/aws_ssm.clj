@@ -13,12 +13,17 @@
                       (.build)))
                 (.build)))
 
-(defn- create-get-parameter-request-builder [] (GetParameterRequest/builder))
+(defn- create-get-parameter-request-builder
+  "Abstraktio GetParameterRequest/builderin ympäri, joka helpottaa testaamista."
+  []
+  (GetParameterRequest/builder))
 
-(defn get-secret [name]
+(defn get-secret
+  "Hakee salaisen arvon SSMistä."
+  [secret-name]
   (.value
     (.parameter
       (.getParameter client (-> (create-get-parameter-request-builder)
-                                (.name name)
+                                (.name secret-name)
                                 (.withDecryption true)
                                 (.build))))))

@@ -8,9 +8,10 @@
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.organisaatio :as org]
             [schema.core :as s])
-  (:import (java.util UUID)
-           (clojure.lang ExceptionInfo)
-           (java.time LocalDate)))
+  (:import (clojure.lang ExceptionInfo)
+           (java.text Normalizer Normalizer$Form)
+           (java.time LocalDate)
+           (java.util UUID)))
 
 (s/defschema herate-schema
              {:ehoks-id           s/Num
@@ -42,26 +43,37 @@
    :phone-invalid "phone-invalid"
    :queued "queued"})
 
-(defn rand-str [len]
+(defn rand-str
+  "Luo stringin, jossa on len randomisti valittua isoa kirjainta."
+  [len]
   (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
 
-(defn generate-uuid []
+(defn generate-uuid
+  "Abstraktio UUID/randomUUID:n ympäri, joka helpottaa testaamista."
+  []
   (str (UUID/randomUUID)))
 
-(defn to-date [str-date]
+(defn to-date
+  "Parsii yyyy-MM-dd -muotoisen päivämäärän ja palauttaa LocalDate."
+  [str-date]
   (let [[year month day] (map #(Integer. %1) (str/split str-date #"-"))]
     (LocalDate/of year month day)))
 
-(defn local-date-now []
+(defn local-date-now
   "Abstraktio LocalDate/now:n ympäri, joka helpottaa testaamista."
+  []
   (LocalDate/now))
 
-(defn has-time-to-answer? [loppupvm]
+(defn has-time-to-answer?
+  "Tarkistaa, onko aikaa jäljellä ennen annettua päivämäärää."
+  [loppupvm]
   (when loppupvm
     (let [enddate (first (str/split loppupvm #"T"))]
       (not (.isBefore (to-date enddate) (local-date-now))))))
 
-(defn send-lahetys-data-to-ehoks [toimija-oppija tyyppi-kausi data]
+(defn send-lahetys-data-to-ehoks
+  "Lähettää lähetyksen tiedot ehoksiin."
+  [toimija-oppija tyyppi-kausi data]
   (try
     (ehoks/add-lahetys-info-to-kyselytunnus data)
     (catch ExceptionInfo e
@@ -81,13 +93,17 @@
         (throw e)))))
 
 (defn date-string-to-timestamp
+  "Muuttaa stringinä olevan päivämäärän timestampiksi (long)."
   ([date-str fmt]
    (c/to-long (f/parse (fmt f/formatters)
                        date-str)))
   ([date-str]
    (date-string-to-timestamp date-str :date)))
 
-(defn get-koulutustoimija-oid [opiskeluoikeus]
+(defn get-koulutustoimija-oid
+  "Hakee koulutustoimijan OID:n opiskeluoikeudesta, tai organisaatiopalvelusta
+  jos sitä ei löydy opiskeluoikeudesta."
+  [opiskeluoikeus]
   (if-let [koulutustoimija-oid (:oid (:koulutustoimija opiskeluoikeus))]
     koulutustoimija-oid
     (do
@@ -97,41 +113,59 @@
         (org/get-organisaatio
           (get-in opiskeluoikeus [:oppilaitos :oid]))))))
 
-(defn kausi [alkupvm]
+(defn kausi
+  "Palauttaa kauden, johon annettu päivämäärä kuuluu. Kausi kestää heinäkuusta
+  seuraavan vuoden kesäkuuhun."
+  [alkupvm]
   (let [[year month] (str/split alkupvm #"-")]
     (if (> (Integer/parseInt month) 6)
       (str year "-" (+ (Integer/parseInt year) 1))
       (str (- (Integer/parseInt year) 1) "-" year))))
 
-(defn check-suoritus-type? [suoritus]
+(defn check-suoritus-type?
+  "Varmistaa, että suorituksen tyyppi on joko ammatillinen tutkinto tai
+  osittainen ammatillinen tutkinto."
+  [suoritus]
   (or (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkinto")
       (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkintoosittainen")))
 
-(defn check-opiskeluoikeus-suoritus-types? [opiskeluoikeus]
+(defn check-opiskeluoikeus-suoritus-types?
+  "Varmistaa, että opiskeluoikeuden suorituksiin kuuluu vähintään yksi, jonka
+  tyyppi on ammatillinen tutkinto tai osittainen ammatillinen tutkinto."
+  [opiskeluoikeus]
   (if (some check-suoritus-type?
             (:suoritukset opiskeluoikeus))
     true
     (log/info "Väärä suoritustyyppi opiskeluoikeudessa " (:oid opiskeluoikeus))))
 
-(defn check-sisaltyy-opiskeluoikeuteen? [opiskeluoikeus]
+(defn check-sisaltyy-opiskeluoikeuteen?
+  "Palauttaa true, jos opiskeluoikeus EI sisälly toiseen opiskeluoikeuteen."
+  [opiskeluoikeus]
   (if (:sisältyyOpiskeluoikeuteen opiskeluoikeus)
     (log/warn "Opiskeluoikeus " (:oid opiskeluoikeus) " sisältyy toiseen opiskeluoikeuteen.")
     true))
 
-(defn get-suoritus [opiskeluoikeus]
-  "Haetaan tutkinto/tutkinnon osa suoritus"
+(defn get-suoritus
+  "Hakee tutkinnon tai tutkinnon osan suorituksen opiskeluoikeudesta."
+  [opiskeluoikeus]
   (reduce
     (fn [_ suoritus]
       (when (check-suoritus-type? suoritus)
         (reduced suoritus)))
     nil (:suoritukset opiskeluoikeus)))
 
-(defn has-nayttotutkintoonvalmistavakoulutus? [opiskeluoikeus]
+(defn has-nayttotutkintoonvalmistavakoulutus?
+  "Tarkistaa, onko opiskeluoikeudessa näyttötutkintoon valmistavan koulutuksen
+  suoritus."
+  [opiskeluoikeus]
   (some (fn [suoritus]
           (= (:koodiarvo (:tyyppi suoritus)) "nayttotutkintoonvalmistavakoulutus"))
         (:suoritukset opiskeluoikeus)))
 
-(defn next-niputus-date [pvm-str]
+(defn next-niputus-date
+  "Palauttaa seuraavan niputuspäivämäärän annetun päivämäärän jälkeen.
+  Niputuspäivämäärät ovat kuun ensimmäinen ja kuudestoista päivä."
+  [pvm-str]
   (let [[year month day] (map
                            #(Integer. %)
                            (str/split pvm-str #"-"))]
@@ -141,18 +175,25 @@
         (LocalDate/of (+ year 1) 1 1)
         (LocalDate/of year (+ month 1) 1)))))
 
-(defn- deaccent-string [str]
-  (let [normalized (java.text.Normalizer/normalize str java.text.Normalizer$Form/NFD)]
-    (str/replace normalized #"\p{InCombiningDiacriticalMarks}+" "")))
+(defn- deaccent-string
+  "Poistaa diakriittiset merkit stringistä ja palauttaa muokatun stringin."
+  [utf8-string]
+  (str/replace (Normalizer/normalize utf8-string Normalizer$Form/NFD)
+               #"\p{InCombiningDiacriticalMarks}+"
+               ""))
 
-(defn normalize-string [string]
+(defn normalize-string
+  "Muuttaa muut merkit kuin kirjaimet ja numerot alaviivaksi."
+  [string]
   (str/lower-case (str/replace (deaccent-string string) #"\W+" "_")))
 
-(defn create-nipputunniste [tyopaikan-nimi]
-  "Luo nipulle tunnisteen ilman erikoismerkkejä"
+(defn create-nipputunniste
+  "Luo nipulle tunnisteen ilman erikoismerkkejä."
+  [tyopaikan-nimi]
   (str (normalize-string tyopaikan-nimi) "_" (local-date-now) "_" (rand-str 6)))
 
 (defn check-organisaatio-whitelist?
+  "Tarkistaa, onko koulutustoimija mukana automaatiossa."
   [koulutustoimija timestamp]
   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                            (:orgwhitelist-table env))]
@@ -170,7 +211,10 @@
                   " tai herätepvm " (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
                   " on ennen käyttöönotto päivämäärää")))))
 
-(defn check-duplicate-herate? [oppija koulutustoimija laskentakausi kyselytyyppi]
+(defn check-duplicate-herate?
+  "Palauttaa true, jos ei ole vielä herätettä tallennettua tietokantaan samoilla
+  koulutustoimijalla, oppijalla, tyypillä ja laskentakaudella."
+  [oppija koulutustoimija laskentakausi kyselytyyppi]
   (if
     (let [check-db?
           (fn [tyyppi]
@@ -187,7 +231,9 @@
               oppija " koulutustoimijalla " koulutustoimija
               "(tyyppi '" kyselytyyppi "' kausi " laskentakausi ")")))
 
-(defn check-valid-herate-date [heratepvm]
+(defn check-valid-herate-date
+  "Varmistaa, että herätteen päivämäärä ei ole ennen 1.7.2021."
+  [heratepvm]
   (try
     (not (.isAfter (LocalDate/of 2021 7 1) (LocalDate/parse heratepvm)))
    (catch Exception e
@@ -196,12 +242,18 @@
 (def herate-checker
   (s/checker herate-schema))
 
-(defn alku [herate-date]
+(defn alku
+  "Laskee vastausajan alkupäivämäärän: annettu päivämäärä jos se on vielä
+  tulevaisuudessa; muuten tämä päivä."
+  [herate-date]
   (if (.isAfter herate-date (local-date-now))
     herate-date
     (local-date-now)))
 
-(defn loppu [herate alku]
+(defn loppu
+  "Laskee vastausajan loppupäivämäärän: 30 päivän päästä (inklusiivisesti),
+  mutta ei myöhempi kuin 60 päivää (inklusiivisesti) herätepäivän jälkeen."
+  [herate alku]
   (let [last (.plusDays herate 59)
         normal (.plusDays alku 29)]
     (if (.isBefore last normal)

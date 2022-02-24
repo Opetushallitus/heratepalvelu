@@ -12,9 +12,14 @@
         (.region (Region/EU_WEST_1))
         (.build)))
 
-(defn- create-send-message-request-builder [] (SendMessageRequest/builder))
+(defn- create-send-message-request-builder
+  "Abstraktio SendMessageRequest/builderin ympäri, joka helpotta testaamista."
+  []
+  (SendMessageRequest/builder))
 
-(defn send-tep-sms-sqs-message [msg]
+(defn send-tep-sms-sqs-message
+  "Lähettää SQS-viestin SMS-queueen."
+  [msg]
   (let [resp (.sendMessage sqs-client (-> (create-send-message-request-builder)
                                           (.queueUrl (:sms-queue env))
                                           (.messageBody (json/write-str msg))

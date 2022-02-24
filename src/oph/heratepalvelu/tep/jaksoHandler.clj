@@ -16,6 +16,9 @@
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (java.time LocalDate DayOfWeek)))
 
+;; Käsittelee työpaikkajaksoja, tallentaa niitä tietokantaan, ja valmistaa niitä
+;; niputukseen.
+
 (gen-class
   :name "oph.heratepalvelu.tep.jaksoHandler"
   :methods [[^:static handleJaksoHerate
@@ -51,13 +54,18 @@
 (def tep-herate-checker
   (s/checker tep-herate-schema))
 
-(defn check-duplicate-hankkimistapa [id]
+(defn check-duplicate-hankkimistapa
+  "Palauttaa true, jos ei ole vielä jaksoa tietokannassa annetulla ID:llä."
+  [id]
   (if (empty? (ddb/get-item {:hankkimistapa_id [:n id]}
                             (:jaksotunnus-table env)))
     true
     (log/warn "Osaamisenhankkimistapa id" id "on jo käsitelty.")))
 
-(defn check-duplicate-tunnus [tunnus]
+(defn check-duplicate-tunnus
+  "Palauttaa true, jos ei ole vielä jaksoa tietokannassa, jonka tunnus täsmää
+  annetun arvon kanssa."
+  [tunnus]
   (let [items (ddb/query-items {:tunnus [:eq [:s tunnus]]}
                                {:index "uniikkiusIndex"}
                                (:jaksotunnus-table env))]
@@ -65,7 +73,10 @@
       true
       (throw (ex-info (str "Tunnus " tunnus " on jo käytössä. ") {:items items})))))
 
-(defn check-opiskeluoikeus-tila [opiskeluoikeus loppupvm]
+(defn check-opiskeluoikeus-tila
+  "Palauttaa true, jos opiskeluoikeus ei ole terminaalitilassa (eronnut,
+  katsotaan eronneeksi, mitätöity, peruutettu, tai väliaikaisesti keskeytynyt)."
+  [opiskeluoikeus loppupvm]
   (let [tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
         voimassa (reduce
                    (fn [res next]
@@ -79,27 +90,39 @@
             (= tila "mitatoity")
             (= tila "peruutettu")
             (= tila "valiaikaisestikeskeytynyt"))
-      (log/warn "Opiskeluoikeus " (:oid opiskeluoikeus) " terminaalitilassa " tila)
+      (log/warn "Opiskeluoikeus" (:oid opiskeluoikeus) "terminaalitilassa" tila)
       true)))
 
-(defn sort-process-keskeytymisajanjaksot [herate]
+(defn sort-process-keskeytymisajanjaksot
+  "Järjestää TEP-jakso keskeytymisajanjaksot, parsii niiden alku- ja
+  loppupäivämäärät LocalDateiksi, ja palauttaa tuloslistan."
+  [herate]
   (map (fn [x] {:alku (LocalDate/parse (:alku x))
                 :loppu (if (:loppu x) (LocalDate/parse (:loppu x)) nil)})
        (sort-by :alku (:keskeytymisajanjaksot herate []))))
 
-(defn check-not-fully-keskeytynyt [herate]
+(defn check-not-fully-keskeytynyt
+  "Palauttaa true, jos TEP-jakso ei ole keskeytynyt sen loppupäivämäärällä."
+  [herate]
   (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
     (or (empty? kjaksot)
         (not (:loppu (last kjaksot)))
         (.isAfter (LocalDate/parse (:loppupvm herate))
                   (:loppu (last kjaksot))))))
 
-(defn check-open-keskeytymisajanjakso [herate]
+(defn check-open-keskeytymisajanjakso
+  "Palauttaa true, jos TEP-jakson viimeisellä keskeytymisajanjaksolla ei ole
+  loppupäivämäärää."
+  [herate]
   (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
     (and (seq kjaksot)
          (not (:loppu (last kjaksot))))))
 
-(defn kesto [herate oo-tilat]
+(defn kesto
+  "Laskee TEP-jakson keston, ottaen huomioon keskeytymisajanjaksot ja
+  osa-aikaisuustiedot. Parametri oo-tilat on opiskeluoikeuden tilan
+  opiskeluoikeusjaksot."
+  [herate oo-tilat]
   (let [alku-date (LocalDate/parse (:alkupvm herate))
         loppu-date (LocalDate/parse (:loppupvm herate))
         sorted-tilat (map #(assoc %1
@@ -153,14 +176,20 @@
           (int (Math/ceil (/ (* kesto (:osa-aikaisuus herate)) 100)))
           kesto)))))
 
-(defn save-to-tables [jaksotunnus-table-data nippu-table-data]
+(defn save-to-tables
+  "Tallentaa jakso ja nipun tietokantaan."
+  [jaksotunnus-table-data nippu-table-data]
   (do
     (ddb/put-item jaksotunnus-table-data
                   {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
                   (:jaksotunnus-table env))
     (ddb/put-item nippu-table-data {} (:nippu-table env))))
 
-(defn save-jaksotunnus [herate opiskeluoikeus koulutustoimija]
+(defn save-jaksotunnus
+  "Käsittelee herätteen, varmistaa, että se tulee tallentaa, hakee
+  jaksotunnuksen Arvosta, luo jakson ja alusatavan nipun, ja tallentaa ne
+  tietokantaan."
+  [herate opiskeluoikeus koulutustoimija]
   (let [tapa-id (:hankkimistapa-id herate)]
     (when (check-duplicate-hankkimistapa tapa-id)
       (try
@@ -290,7 +319,11 @@
           (log/error "Unknown error " e)
           (throw e))))))
 
-(defn -handleJaksoHerate [this event context]
+(defn -handleJaksoHerate
+  "Käsittelee jaksoherätteet, jotka eHOKS-palvelu lähettää SQS:in kautta. Tekee
+  joitakin tarkistaksia ja tallentaa herätteen tietokantaan, jos testit
+  läpäistään."
+  [this event context]
   (log-caller-details-sqs "handleTPOherate" context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]

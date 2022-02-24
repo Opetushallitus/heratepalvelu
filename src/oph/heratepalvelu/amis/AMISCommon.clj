@@ -9,7 +9,10 @@
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
 
-(defn save-herate [herate opiskeluoikeus koulutustoimija]
+(defn save-herate
+  "Luo kyselylinkin herätteelle, tallentaa herätteen, ja lähettää tietoja
+  kyselylinkistä ja herätteen tallentamisesta ehoksiin."
+  [herate opiskeluoikeus koulutustoimija]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
   (if (some? (c/herate-checker herate))
     (log/error {:herate herate :msg (c/herate-checker herate)})

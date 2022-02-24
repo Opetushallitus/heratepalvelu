@@ -9,7 +9,9 @@
    [:tr
     [:td {:align "left" :valign "top" :width "600px" :height "1" :style "background-color: #f0f0f0; border-collapse:collapse; mso-table-lspace: 0pt; mso-table-rspace: 0pt; mso-line-height-rule: exactly; line-height: 1px;"}]]])
 
-(defn- amispalaute-body-alkukysely [link]
+(defn- amispalaute-body-alkukysely
+  "Luo AMIS-aloituskyselyviestin tekstisisällön."
+  [link]
   [:div
    [:p "Hyvä opiskelija!"]
    [:p "Henkilökohtainen osaamisen kehittämissuunnitelmasi (HOKS) on nyt hyväksytty ja opinnot alkamassa. Onnistunut aloitus ja suunnitelma luovat hyvän pohjan tavoitteiden saavuttamiselle. Siksi kokemuksesi ovat tärkeitä. Kerro meille, missä olemme onnistuneet ja mitä voisimme tehdä vielä paremmin."]
@@ -35,7 +37,9 @@
    [:p "If you cannot open the link, copy (and paste) the link onto the address bar of your browser."]
    [:p "With best regards, your educational institution"]])
 
-(defn- amispalaute-body-loppukysely [link]
+(defn- amispalaute-body-loppukysely
+  "Luo AMIS-loppukyselyviestin tekstisisällön."
+  [link]
   [:div
    [:p "Hyvä valmistunut!"]
    [:p "Onneksi olkoon! Olet saanut päätökseen tavoitteesi mukaiset ammatilliset opinnot."]
@@ -67,7 +71,12 @@
    [:p "If you cannot open the link, copy (and paste) the link onto the address bar of your browser."]
    [:p "With best regards, your educational institution"]])
 
-(defn- amispalaute-body [data]
+(defn- amispalaute-body
+  "Luo AMIS-kyselyviestin tekstin. Data-objektiin kuuluvat seuraavat kentät:
+    :kyselytyyppi   - aloittaneet, tutkinnon_suorittaneet tai
+                      tutkinnon_osia_suorittaneet
+    :kyselylinkki   - kyselylinkki, joka lähetetään opiskelijalle"
+  [data]
   (cond
     (= (:kyselytyyppi data) "aloittaneet")
     (amispalaute-body-alkukysely (:kyselylinkki data))
@@ -76,7 +85,9 @@
     (= (:kyselytyyppi data) "tutkinnon_osia_suorittaneet")
     (amispalaute-body-loppukysely (:kyselylinkki data))))
 
-(defn- amismuistutus-body [link]
+(defn- amismuistutus-body
+  "Luo AMIS-muistutusviestin tekstin."
+  [link]
   [:div
    [:p (str "Olethan muistanut antaa palautetta oppilaitokselle!<br/>"
             "Kom ihåg att ge respons till läroanstalten!<br/>"
@@ -87,7 +98,13 @@
             "If you cannot open the link, copy (and paste) the link onto the address bar of your browser.<br/>")]
    horizontal-line])
 
-(defn amispalaute-html [data]
+(defn amispalaute-html
+  "Luo kokonaisen AMIS-kyselyviestin HTML-bodyn. Dataan kuuluvat nämä kentät:
+    :kyselytyyppi   - aloittaneet, tutkinnon_suorittaneet tai
+                      tutkinnon_osia_suorittaneet
+    :kyselylinkki   - kyselylinkki, joka lähetetään opiskelijalle
+    :suorituskieli  - tutkinnon kieli kahden kirjaimein koodina"
+  [data]
   (str "<!DOCTYPE html>"
        (html [:html {:lang (:suorituskieli data)}
               [:head
@@ -95,7 +112,11 @@
               [:body
                (amispalaute-body data)]])))
 
-(defn amismuistutus-html [data]
+(defn amismuistutus-html
+  "Luo kokonaisen AMIS-kyselyn muistutusviestin HTML-bodyn. Dataan kuuluvat:
+    :kyselylinkki   - kyselylinkki, joka lähetetään opiskelijalle
+    :suorituskieli  - tutkinnon kieli kahden kirjaimein koodina"
+  [data]
   (str "<!DOCTYPE html>"
        (html [:html {:lang (:suorituskieli data)}
               [:head
@@ -104,7 +125,12 @@
                (amismuistutus-body (:kyselylinkki data))
                (amispalaute-body data)]])))
 
-(defn- tyopaikkaohjaaja-body [data oppilaitokset]
+(defn- tyopaikkaohjaaja-body
+  "Luo työpaikkaohjaajan kyselyviestin tekstisisällön. Data-objektiin täytyy
+  kuulua vain kyselylinkki (:kyselylinkki -avaimen arvona), ja oppilaitokset
+  ovat lista objekteja, joista jokaisessa on oppilaitoksen nimi kolmeksi eri
+  kieleksi (avaimet :en, :fi, ja :sv)."
+  [data oppilaitokset]
   [:div
    [:p [:b "Hyvä työpaikkaohjaaja!"]]
    [:p "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! Tehdään yhdessä osaajia työelämään."]
@@ -136,7 +162,12 @@
    [:p (str/join ", " (map #(or (:en %1) (:fi %1)) oppilaitokset))]
    [:p "Address source: Opetushallituksen (OPH) eHOKS-register"]])
 
-(defn- tyopaikkaohjaaja-muistutus-body [data oppilaitokset]
+(defn- tyopaikkaohjaaja-muistutus-body
+  "Luo työpaikkaohjaajan muistutusviestin tekstisisällön. Data-objektiin täytyy
+  kuulua vain kyselylinkki (:kyselylinkki -avaimen arvona), ja oppilaitokset
+  ovat lista objekteja, joista jokaisessa on oppilaitoksen nimi kolmeksi eri
+  kieleksi (avaimet :en, :fi, ja :sv)."
+  [data oppilaitokset]
   [:div
    [:p (str "Olethan muistanut antaa palautetta oppilaitokselle!<br/>"
             "Kom ihåg att ge respons till läroanstalten!<br/>"
@@ -177,26 +208,38 @@
    [:p (str/join ", " (map #(or (:en %1) (:fi %1)) oppilaitokset))]
    [:p "Address source: Opetushallituksen (OPH) eHOKS-register"]])
 
-(defn tyopaikkaohjaaja-html [data oppilaitokset]
+(defn tyopaikkaohjaaja-html
+  "Luo kokonaisen työpaikkaohjaajan kyselyviestin HTML-bodyn. Data-objektiin
+  täytyy kuulua vain kyselylinkki (:kyselylinkki -avaimen arvona), ja
+  oppilaitokset ovat lista objekteja, joista jokaisessa on oppilaitoksen nimi
+  kolmeksi eri kieleksi (avaimet :en, :fi, ja :sv)."
+  [data oppilaitokset]
   (str "<!DOCTYPE html>"
        (html [:html {:lang "FI"}
               [:head
                [:meta {:charset "UTF-8"}]]
               [:body (tyopaikkaohjaaja-body data oppilaitokset)]])))
 
-(defn tyopaikkaohjaaja-muistutus-html [data oppilaitokset]
+(defn tyopaikkaohjaaja-muistutus-html
+  "Luo kokonaisen työpaikkaohjaajan muistutusviestin HTML-bodyn. Data-objektiin
+  täytyy kuulua vain kyselylinkki (:kyselylinkki -avaimen arvona), ja
+  oppilaitokset ovat lista objekteja, joista jokaisessa on oppilaitoksen nimi
+  kolmeksi eri kieleksi (avaimet :en, :fi, ja :sv)."
+  [data oppilaitokset]
   (str "<!DOCTYPE html>"
        (html [:html {:lang "FI"}
               [:head
                [:meta {:charset "UTF-8"}]]
               [:body (tyopaikkaohjaaja-muistutus-body data oppilaitokset)]])))
 
-(defn send-email [email]
-  "Send email to viestintäpalvelu, parameter 'email' is a map containing keys
-  :address (recipient email address)
-  :subject (email subject)
-  :sender (sender name)
-  :body (message body html)"
+(defn send-email
+  "Lähettää sähköpostin viestintäpalveluun. Parametri 'email' on map, johon
+  kuuluvat seuraavat kentät:
+    :address  - vastaanottajan sähköpostiosoite
+    :subject  - sähköpostin aihe
+    :sender   - viestin lähettäjä
+    :body     - viestin HTML-body"
+  [email]
   (let [resp (cas-authenticated-post
                (:viestintapalvelu-url env)
                {:recipient [{:email (:address email)}]
@@ -209,7 +252,9 @@
                {:as :json})]
     (:body resp)))
 
-(defn get-email-status [id]
+(defn get-email-status
+  "Hakee sähköpostilähetyksen tilan viestintäpalvelusta ID:n perusteella."
+  [id]
   (:body (cas-authenticated-post
            (str (:viestintapalvelu-url env) "/status")
            id

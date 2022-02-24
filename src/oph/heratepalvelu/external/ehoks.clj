@@ -5,7 +5,9 @@
             [oph.heratepalvelu.external.http-client :as client])
   (:import (clojure.lang ExceptionInfo)))
 
-(defn get-hoks-by-opiskeluoikeus [opiskeluoikeus-oid]
+(defn get-hoks-by-opiskeluoikeus
+  "Hakee HOKSin opiskeluoikeuden OID:n perusteella."
+  [opiskeluoikeus-oid]
   (:data
     (:body
       (client/get
@@ -15,8 +17,9 @@
                              "cas-security-check")}
          :as :json}))))
 
-(defn add-kyselytunnus-to-hoks [hoks-id data]
+(defn add-kyselytunnus-to-hoks
   "Lisää kyselytunnuksen HOKSiin. Tekee yhden retryn automaattiesti."
+  [hoks-id data]
   (let [action (fn [] (client/post
                         (str (:ehoks-url env) "hoks/" hoks-id "/kyselylinkki")
                         {:headers {:ticket (cas/get-service-ticket
@@ -28,7 +31,9 @@
     (try (action)
          (catch ExceptionInfo e (action)))))
 
-(defn get-osaamisen-hankkimistapa-by-id [oht-id]
+(defn get-osaamisen-hankkimistapa-by-id
+  "Hakee osaamisen hankkimistavan ID:n perusteella."
+  [oht-id]
   (:data
     (:body
       (client/get
@@ -38,7 +43,9 @@
                              "cas-security-check")}
          :as :json}))))
 
-(defn get-hankintakoulutus-oids [hoks-id]
+(defn get-hankintakoulutus-oids
+  "Hakee HOKSin hankintakoulutus-OID:t."
+  [hoks-id]
   (:body
     (client/get
       (str (:ehoks-url env) "hoks/" hoks-id "/hankintakoulutukset")
@@ -47,8 +54,10 @@
                            "cas-security-check")}
        :as :json})))
 
-(defn add-lahetys-info-to-kyselytunnus [data]
-  "Lisää lähetysinfo kyselytunnukseen. Tekee yhden retryn jos virhe ei ole 404."
+(defn add-lahetys-info-to-kyselytunnus
+  "Lisää lähetysinfon kyselytunnukseen. Tekee yhden retryn jos vastaus on virhe
+  ja status ei ole 404."
+  [data]
   (let [action (fn [] (client/patch
                         (str (:ehoks-url env) "hoks/kyselylinkki")
                         {:headers {:ticket (cas/get-service-ticket
@@ -63,16 +72,23 @@
              (action)
              (throw e))))))
 
-(defn patch-osaamisenhankkimistapa-tep-kasitelty [id]
+(defn patch-osaamisenhankkimistapa-tep-kasitelty
+  "Merkitsee osaamisen hankkimistavan käsitellyksi eHOKS-palvelussa."
+  [id]
   (client/patch
-    (str (:ehoks-url env) "heratepalvelu/osaamisenhankkimistavat/" id "/kasitelty")
+    (str (:ehoks-url env)
+         "heratepalvelu/osaamisenhankkimistavat/"
+         id
+         "/kasitelty")
     {:headers {:ticket (cas/get-service-ticket
                          "/ehoks-virkailija-backend"
                          "cas-security-check")}
      :content-type "application/json"
      :as :json}))
 
-(defn get-paattyneet-tyoelamajaksot [start end limit]
+(defn get-paattyneet-tyoelamajaksot
+  "Pyytää eHOKS-palvelua lähettämään käsittelemättömät TEP-jaksot SQS:iin."
+  [start end limit]
   (client/get
     (str (:ehoks-url env) "heratepalvelu/tyoelamajaksot")
     {:headers {:ticket (cas/get-service-ticket
@@ -83,7 +99,10 @@
                     :limit limit}
      :as :json}))
 
-(defn get-retry-kyselylinkit [start end limit]
+(defn get-retry-kyselylinkit
+  "Pyytää eHOKS-palvelua lähettämään käsittelemättömät AMIS-herätteet
+  SQS:iin."
+  [start end limit]
   (client/get
     (str (:ehoks-url env) "heratepalvelu/kasittelemattomat-heratteet")
     {:headers {:ticket (cas/get-service-ticket
@@ -94,7 +113,9 @@
                     :limit limit}
      :as :json}))
 
-(defn patch-amisherate-kasitelty [url-tyyppi-element id]
+(defn patch-amisherate-kasitelty
+  "Merkitsee HOKSin aloitus- tai päättöherätteen käsitellyksi."
+  [url-tyyppi-element id]
   (client/patch
     (str (:ehoks-url env) "heratepalvelu/hoksit/" id "/" url-tyyppi-element)
     {:headers {:ticket (cas/get-service-ticket
@@ -103,8 +124,12 @@
      :content-type "application/json"
      :as :json}))
 
-(defn patch-amis-aloitusherate-kasitelty [id]
+(defn patch-amis-aloitusherate-kasitelty
+  "Merkitsee HOKSin aloitusherätteen käsitellyksi."
+  [id]
   (patch-amisherate-kasitelty "aloitusherate-kasitelty" id))
 
-(defn patch-amis-paattoherate-kasitelty [id]
+(defn patch-amis-paattoherate-kasitelty
+  "Merkitsee HOKSin päättöherätteen käsitellyksi."
+  [id]
   (patch-amisherate-kasitelty "paattoherate-kasitelty" id))

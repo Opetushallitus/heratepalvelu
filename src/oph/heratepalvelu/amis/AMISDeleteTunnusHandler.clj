@@ -7,6 +7,8 @@
   (:import (com.fasterxml.jackson.core JsonParseException)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
+;; Ottaa viestejä vastaan AmisDeleteTunnusQueuesta ja hoitaa tunnuksen poiston.
+
 (gen-class
   :name "oph.heratepalvelu.amis.AMISDeleteTunnusHandler"
   :methods [[^:static handleDeleteTunnus
@@ -18,7 +20,9 @@
 
 (def delete-tunnus-checker (s/checker delete-tunnus-schema))
 
-(defn delete-one-item [item]
+(defn delete-one-item
+  "Poistaa yhden tietueen tietokannasta, jos item on olemassa."
+  [item]
   (when item
     (try
       (ddb/delete-item {:toimija_oppija [:s (:toimija_oppija item)]
@@ -27,7 +31,9 @@
         (log/error "Poistovirhe" (:kyselylinkki item) ":" e)
         (throw e)))))
 
-(defn get-item-by-kyselylinkki [kyselylinkki]
+(defn get-item-by-kyselylinkki
+  "Hakee yhden tietueen tietokannasta kyselylinkin perusteella."
+  [kyselylinkki]
   (try
     (first (ddb/query-items {:kyselylinkki [:eq [:s kyselylinkki]]}
                             {:index "resendIndex"}))
@@ -35,7 +41,9 @@
       (log/error "Hakuvirhe" kyselylinkki ":" e)
       (throw e))))
 
-(defn -handleDeleteTunnus [this event context]
+(defn -handleDeleteTunnus
+  "Käsittelee poistettavan tunnuksen ja poistaa sen tietokannasta."
+  [this event context]
   (log-caller-details-sqs "handleDeleteTunnus" context)
   (let [messages (seq (.getRecords event))]
     (doseq [msg messages]
