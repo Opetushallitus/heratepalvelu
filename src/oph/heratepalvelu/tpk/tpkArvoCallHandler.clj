@@ -1,21 +1,37 @@
-(ns oph.heratepalvelu.tep.tpkArvoCallHandler
+(ns oph.heratepalvelu.tpk.tpkArvoCallHandler
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.log.caller-log :refer :all])
-  (:import (clojure.lang ExceptionInfo)))
+  (:import (clojure.lang ExceptionInfo)
+           (com.amazonaws.services.lambda.runtime Context)
+           (com.amazonaws.services.lambda.runtime.events ScheduledEvent)))
 
-;; TODO class
+;; Hakee työpaikkakyselynipuille kyselylinkkejä Arvosta.
+
+(gen-class :name "oph.heratepalvelu.tpk.tpkArvoCallHandler"
+           :methods
+           [[^:static handleTpkArvoCalls [ScheduledEvent Context] void]])
 
 
 
 ;; TODO do-scan (with and without last-evaluated-key
 
-;; TODO make-arvo-request (takes nippu and request-id)
+(defn make-arvo-request
+  "Pyytää TPK-kyselylinkin Arvosta."
+  [nippu request-id]
+  (try
+    (arvo/create-tpk-kyselylinkki
+      (arvo/build-tpk-request-body (assoc nippu :request-id request-id)))
+    (catch ExceptionInfo e
+      (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
 
-(defn -handleTpkArvoCalls [this event context]
+(defn -handleTpkArvoCalls
+  "Hakee TPK-nipuille kyselylinkkejä Arvosta. Luo vain yhden kyselylinkin per
+  nippu, vaikka siihen kuuluisi useita jaksoja."
+  [this event context]
   (log-caller-details-scheduled "handleTpkArvoCalls" event context)
   (loop [scan-results (do-scan)]
     (doseq [nippu (:items scan-results)]
