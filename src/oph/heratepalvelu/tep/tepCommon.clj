@@ -56,7 +56,9 @@
       (log/error "Virhe kutsussa organisaatiopalveluun")
       (log/error e))))
 
-(defn- make-set-pair [item-key]
+(defn- make-set-pair
+  "Luo '#x = :x' -pareja update-expreja varten."
+  [item-key]
   (let [normalized (c/normalize-string (name item-key))]
     (str "#" normalized " = :" normalized)))
 
