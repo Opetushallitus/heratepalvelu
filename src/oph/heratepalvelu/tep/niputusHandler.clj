@@ -2,6 +2,7 @@
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.tep.tepCommon :as tc]
             [oph.heratepalvelu.common :as c]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
@@ -47,28 +48,17 @@
                           request-id))]
         (if (some? (:nippulinkki arvo-resp))
           (try
-            (ddb/update-item
-              {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-               :niputuspvm                  [:s (:niputuspvm nippu)]}
-              {:update-expr     (str "SET #tila = :tila, "
-                                     "#pvm = :pvm, "
-                                     "#linkki = :linkki, "
-                                     "#voimassa = :voimassa, "
-                                     "#req = :req")
-               :cond-expr (str "attribute_not_exists(kyselylinkki)")
-               :expr-attr-names {"#tila" "kasittelytila"
-                                 "#linkki" "kyselylinkki"
-                                 "#voimassa" "voimassaloppupvm"
-                                 "#req" "request_id"
-                                 "#pvm" "kasittelypvm"}
-               :expr-attr-vals {":tila"     [:s (:ei-lahetetty c/kasittelytilat)]
-                                ":linkki"   [:s (:nippulinkki arvo-resp)]
-                                ":voimassa" [:s (:voimassa_loppupvm arvo-resp)]
-                                ":req"      [:s request-id]
-                                ":pvm"      [:s (str (c/local-date-now))]}}
-              (:nippu-table env))
+            (tc/update-nippu
+              nippu
+              {:kasittelytila    [:s (:ei-lahetetty c/kasittelytilat)]
+               :kyselylinkki     [:s (:nippulinkki arvo-resp)]
+               :voimassaloppupvm [:s (:voimassa_loppupvm arvo-resp)]
+               :request_id       [:s request-id]
+               :kasittelypvm     [:s (str (c/local-date-now))]})
             (catch ConditionalCheckFailedException e
-              (log/warn "Nipulla " (:ohjaaja_ytunnus_kj_tutkinto nippu) " on jo kantaan tallennettu kyselylinkki.")
+              (log/warn "Nipulla"
+                        (:ohjaaja_ytunnus_kj_tutkinto nippu)
+                        "on jo kantaan tallennettu kyselylinkki.")
               (arvo/delete-nippukyselylinkki tunniste))
             (catch AwsServiceException e
               (log/error "Virhe DynamoDB tallennuksessa " e)
@@ -76,36 +66,20 @@
               (throw e)))
           (do (log/error "Virhe niputuksessa " nippu request-id)
               (log/error arvo-resp)
-              (ddb/update-item
-                {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-                 :niputuspvm                  [:s (:niputuspvm nippu)]}
-                {:update-expr     (str "SET #tila = :tila, "
-                                       "#pvm = :pvm, "
-                                       "#reason = :reason, "
-                                       "#req = :req")
-                 :expr-attr-names {"#tila" "kasittelytila"
-                                   "#reason" "reason"
-                                   "#req" "request_id"
-                                   "#pvm" "kasittelypvm"}
-                 :expr-attr-vals {":tila"   [:s (:niputusvirhe c/kasittelytilat)]
-                                  ":reason" [:s (str (or (:errors arvo-resp) "no reason in response"))]
-                                  ":req"    [:s request-id]
-                                  ":pvm"    [:s (str (c/local-date-now))]}}
-                (:nippu-table env)))))
-      (do (log/warn "Ei jaksoja, joissa vastausaikaa jäljellä " (:ohjaaja_ytunnus_kj_tutkinto nippu) (:niputuspvm nippu))
-          (ddb/update-item
-            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-             :niputuspvm                  [:s (:niputuspvm nippu)]}
-            {:update-expr     (str "SET #tila = :tila, "
-                                   "#pvm = :pvm, "
-                                   "#req = :req")
-             :expr-attr-names {"#tila" "kasittelytila"
-                               "#req" "request_id"
-                               "#pvm" "kasittelypvm"}
-             :expr-attr-vals {":tila" [:s (:ei-jaksoja c/kasittelytilat)]
-                              ":req"  [:s request-id]
-                              ":pvm"  [:s (str (c/local-date-now))]}}
-            (:nippu-table env))))))
+              (tc/update-nippu
+                nippu
+                {:kasittelytila [:s (:niputusvirhe c/kasittelytilat)]
+                 :reason        [:s (str (or (:errors arvo-resp)
+                                             "no reason in response"))]
+                 :request_id    [:s request-id]
+                 :kasittelypvm  [:s (str (c/local-date-now))]}))))
+      (do (log/warn "Ei jaksoja, joissa vastausaikaa jäljellä"
+                    (:ohjaaja_ytunnus_kj_tutkinto nippu)
+                    (:niputuspvm nippu))
+          (tc/update-nippu nippu
+                           {:kasittelytila [:s (:ei-jaksoja c/kasittelytilat)]
+                            :request_id    [:s request-id]
+                            :kasittelypvm  [:s (str (c/local-date-now))]})))))
 
 (defn -handleNiputus
   "Hakee ja niputtaa niputtamattomat jaksot."

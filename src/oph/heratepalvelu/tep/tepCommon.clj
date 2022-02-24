@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.tep.tepCommon
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as s]
+            [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -54,3 +55,21 @@
     (catch Exception e
       (log/error "Virhe kutsussa organisaatiopalveluun")
       (log/error e))))
+
+(defn- make-set-pair [item-key]
+  (let [normalized (c/normalize-string (name item-key))]
+    (str "#" normalized " = :" normalized)))
+
+(defn update-nippu [nippu updates]
+  (ddb/update-item
+    {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+     :niputuspvm                  [:s (:niputuspvm nippu)]}
+    {:update-expr (str "SET " (s/join ", " (map make-set-pair (keys updates))))
+     :expr-attr-names (reduce #(assoc %1 (str "#" (c/normalize-string %2)) %2)
+                              {}
+                              (map name (keys updates)))
+     :expr-attr-vals (reduce-kv
+                       #(assoc %1 (str ":" (c/normalize-string (name %2))) %3)
+                       {}
+                       updates)}
+    (:nippu-table env)))

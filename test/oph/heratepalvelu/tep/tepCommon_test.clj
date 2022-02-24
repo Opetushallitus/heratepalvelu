@@ -80,3 +80,25 @@
             expected-call-log (seq ["123.456.789"])]
         (is (= (tc/get-oppilaitokset jaksot) expected))
         (is (= @test-get-oppilaitokset-result expected-call-log))))))
+
+;; Testaa update-nippu
+(deftest test-update-nippu
+  (testing "Varmista, että update-nippu tekee oikein kutsun update-itemiin"
+    (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
+                  oph.heratepalvelu.db.dynamodb/update-item
+                  (fn [key-conds options table] {:key-conds key-conds
+                                                 :options   options
+                                                 :table     table})]
+      (is (= (tc/update-nippu {:ohjaaja_ytunnus_kj_tutkinto "oykt"
+                               :niputuspvm                  "2022-01-01"}
+                              {:field         [:n 123]
+                               :another-field [:s "asdf"]})
+             {:key-conds {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt"]
+                          :niputuspvm                  [:s "2022-01-01"]}
+              :options   {:update-expr (str "SET #field = :field, "
+                                            "#another_field = :another_field")
+                          :expr-attr-names {"#field"         "field"
+                                            "#another_field" "another-field"}
+                          :expr-attr-vals {":field"         [:n 123]
+                                           ":another_field" [:s "asdf"]}}
+              :table     "nippu-table-name"})))))
