@@ -64,16 +64,20 @@
 
 (defn update-nippu
   "Wrapper update-itemin ympäri, joka yksinkertaistaa tietokantapäivitykset."
-  [nippu updates]
-  (ddb/update-item
-    {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-     :niputuspvm                  [:s (:niputuspvm nippu)]}
-    {:update-expr (str "SET " (s/join ", " (map make-set-pair (keys updates))))
-     :expr-attr-names (reduce #(assoc %1 (str "#" (c/normalize-string %2)) %2)
-                              {}
-                              (map name (keys updates)))
-     :expr-attr-vals (reduce-kv
-                       #(assoc %1 (str ":" (c/normalize-string (name %2))) %3)
-                       {}
-                       updates)}
-    (:nippu-table env)))
+  ([nippu updates] (update-nippu nippu updates {}))
+  ([nippu updates options]
+    (ddb/update-item
+      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+       :niputuspvm                  [:s (:niputuspvm nippu)]}
+      (merge {:update-expr
+              (str "SET " (s/join ", " (map make-set-pair (keys updates))))
+              :expr-attr-names
+              (reduce #(assoc %1 (str "#" (c/normalize-string %2)) %2)
+                      {}
+                      (map name (keys updates)))
+              :expr-attr-vals
+              (reduce-kv #(assoc %1 (str ":" (c/normalize-string (name %2))) %3)
+                         {}
+                         updates)}
+             options)
+      (:nippu-table env))))

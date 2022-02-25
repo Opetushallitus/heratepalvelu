@@ -48,10 +48,13 @@
   (add-to-test-niputa-results {:type "mock-delete-nippukyselylinkki"
                                :tunniste tunniste}))
 
-(defn- mock-update-nippu [nippu updates]
-  (add-to-test-niputa-results {:type "mock-update-nippu"
-                               :nippu nippu
-                               :updates updates}))
+(defn- mock-update-nippu
+  ([nippu updates] (mock-update-nippu nippu updates {}))
+  ([nippu updates options]
+    (add-to-test-niputa-results {:type "mock-update-nippu"
+                                 :nippu nippu
+                                 :updates updates
+                                 :options options})))
 
 (deftest test-niputa
   (testing "Varmista, että niputa-funktio tekee oikeita kutsuja"
@@ -90,7 +93,8 @@
                       :updates
                       {:kasittelytila [:s (:ei-jaksoja c/kasittelytilat)]
                        :request_id [:s "test-uuid"]
-                       :kasittelypvm [:s "2021-12-31"]}}
+                       :kasittelypvm [:s "2021-12-31"]}
+                      :options {}}
                      {:type "mock-niputa-query-items"
                       :pvm "2021-12-31"
                       :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
@@ -117,7 +121,9 @@
                        :kyselylinkki [:s "kysely.linkki/132"]
                        :voimassaloppupvm [:s "2021-12-17"]
                        :request_id [:s "test-uuid"]
-                       :kasittelypvm [:s "2021-12-31"]}}
+                       :kasittelypvm [:s "2021-12-31"]}
+                      :options
+                      {:cond-expr "attribute_not_exists(kyselylinkki)"}}
                      {:type "mock-niputa-query-items"
                       :pvm "2021-12-31"
                       :ohjaaja_ytunnus_kj_tutkinto "test-id-2"
@@ -142,7 +148,8 @@
                       {:kasittelytila [:s (:niputusvirhe c/kasittelytilat)]
                        :kasittelypvm [:s "2021-12-31"]
                        :reason [:s "no reason in response"]
-                       :request_id [:s "test-uuid"]}}]]
+                       :request_id [:s "test-uuid"]}
+                      :options {}}]]
         (nh/niputa test-nippu-0)
         (nh/niputa test-nippu-1)
         (nh/niputa test-nippu-2)

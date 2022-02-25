@@ -41,27 +41,18 @@
               (reset! new-changes? true))
             (try
               (when-not
-                (or
-                  (str/includes? (:kyselylinkki nippu) ",")
-                  (str/includes? (:kyselylinkki nippu) ";"))
-                (arvo/patch-nippulinkki (:kyselylinkki nippu)
-                                        (if (and new-loppupvm
-                                                 (= tila (:success c/kasittelytilat)))
-                                          {:tila tila
-                                           :voimassa_loppupvm new-loppupvm}
-                                          {:tila tila})))
-              (ddb/update-item
-                {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-                 :niputuspvm                  [:s (:niputuspvm nippu)]}
-                {:update-expr    (str "SET #kasittelytila = :kasittelytila, "
-                                      "#loppupvm = :loppupvm")
-                 :expr-attr-names {"#kasittelytila" "kasittelytila"
-                                   "#loppupvm" "voimassaloppupvm"}
-                 :expr-attr-vals  {":kasittelytila" [:s tila]
-                                   ":loppupvm" [:s (if new-loppupvm
-                                                     new-loppupvm
-                                                     (:voimassaloppupvm nippu))]}}
-                (:nippu-table env))
+                (or (str/includes? (:kyselylinkki nippu) ",")
+                    (str/includes? (:kyselylinkki nippu) ";"))
+                (arvo/patch-nippulinkki
+                  (:kyselylinkki nippu)
+                  (if (and new-loppupvm (= tila (:success c/kasittelytilat)))
+                    {:tila tila :voimassa_loppupvm new-loppupvm}
+                    {:tila tila})))
+              (tc/update-nippu
+                nippu
+                {:kasittelytila [:s tila]
+                 :voimassaloppupvm [:s (or new-loppupvm
+                                           (:voimassaloppupvm nippu))]})
               (catch AwsServiceException e
                 (log/error "Lähetystilan tallennus kantaan epäonnistui" nippu)
                 (log/error e))

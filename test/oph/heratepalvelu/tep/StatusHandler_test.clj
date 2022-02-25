@@ -57,26 +57,10 @@
      {:ohjaaja_ytunnus_kj_tutkinto "test-id-4"
       :niputuspvm "2021-12-15"}]))
 
-(defn- mock-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= "2021-12-15" (second (:niputuspvm query-params)))
-             (= "SET #kasittelytila = :kasittelytila, #loppupvm = :loppupvm"
-                (:update-expr options))
-             (= "kasittelytila"
-                (get (:expr-attr-names options) "#kasittelytila"))
-             (= "voimassaloppupvm" (get (:expr-attr-names options) "#loppupvm"))
-             (= :s (first (get (:expr-attr-vals options) ":kasittelytila")))
-             (= :s (first (get (:expr-attr-vals options) ":loppupvm")))
-             (= "nippu-table-name" table))
-    (add-to-test-results
-      {:type "mock-update-item"
-       :values {:ohjaaja_ytunnus_kj_tutkinto
-                (second (:ohjaaja_ytunnus_kj_tutkinto query-params))
-                :kasittelytila (second (get (:expr-attr-vals options)
-                                            ":kasittelytila"))
-                :loppupvm (second (get (:expr-attr-vals options)
-                                       ":loppupvm"))}})))
+(defn- mock-update-nippu [nippu updates]
+  (add-to-test-results {:type "mock-update-nippu"
+                        :nippu nippu
+                        :updates updates}))
 
 (defn- mock-get-email-status [id]
   (add-to-test-results {:type "mock-get-email-status" :id id})
@@ -96,11 +80,12 @@
                   (fn [] (LocalDate/of 2022 1 10))
                   oph.heratepalvelu.db.dynamodb/get-item mock-get-item
                   oph.heratepalvelu.db.dynamodb/query-items mock-query-items
-                  oph.heratepalvelu.db.dynamodb/update-item mock-update-item
                   oph.heratepalvelu.external.viestintapalvelu/get-email-status
                   mock-get-email-status
                   oph.heratepalvelu.external.arvo/patch-nippulinkki
-                  mock-patch-nippulinkki]
+                  mock-patch-nippulinkki
+                  oph.heratepalvelu.tep.tepCommon/update-nippu
+                  mock-update-nippu]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
             results [{:type "mock-query-items"
@@ -108,27 +93,39 @@
                      {:type "mock-get-item"
                       :value "test-id-1"}
                      {:type "mock-get-email-status" :id 1}
-                     {:type "mock-update-item"
-                      :values {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
-                               :kasittelytila (:success c/kasittelytilat)
-                               :loppupvm "2022-02-09"}}
+                     {:type "mock-update-nippu"
+                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
+                              :niputuspvm "2021-12-15"
+                              :viestintapalvelu-id 1
+                              :kyselylinkki "kysely.linkki/123,890"
+                              :voimassaloppupvm "2021-11-11"}
+                      :updates {:kasittelytila [:s (:success c/kasittelytilat)]
+                                :voimassaloppupvm [:s "2022-02-09"]}}
                      {:type "mock-get-item"
                       :value "test-id-2"}
                      {:type "mock-get-email-status" :id 2}
-                     {:type "mock-update-item"
-                      :values {:ohjaaja_ytunnus_kj_tutkinto "test-id-2"
-                               :kasittelytila (:success c/kasittelytilat)
-                               :loppupvm "2022-02-09"}}
+                     {:type "mock-update-nippu"
+                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-2"
+                              :niputuspvm "2021-12-15"
+                              :viestintapalvelu-id 2
+                              :kyselylinkki "kysely.linkki/123;lkj"
+                              :voimassaloppupvm "2021-11-11"}
+                      :updates {:kasittelytila [:s (:success c/kasittelytilat)]
+                                :voimassaloppupvm [:s "2022-02-09"]}}
                      {:type "mock-get-item"
                       :value "test-id-3"}
                      {:type "mock-get-email-status" :id 3}
                      {:type "mock-patch-nippulinkki"
                       :kyselylinkki "kysely.linkki/asdf"
                       :data {:tila (:failed c/kasittelytilat)}}
-                     {:type "mock-update-item"
-                      :values {:ohjaaja_ytunnus_kj_tutkinto "test-id-3"
-                               :kasittelytila (:failed c/kasittelytilat)
-                               :loppupvm "2022-02-09"}}
+                     {:type "mock-update-nippu"
+                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-3"
+                              :niputuspvm "2021-12-15"
+                              :viestintapalvelu-id 3
+                              :kyselylinkki "kysely.linkki/asdf"
+                              :voimassaloppupvm "2021-11-11"}
+                      :updates {:kasittelytila [:s (:failed c/kasittelytilat)]
+                                :voimassaloppupvm [:s "2022-02-09"]}}
                      {:type "mock-get-item"
                       :value "test-id-4"}
                      {:type "mock-get-email-status" :id 4}
@@ -136,9 +133,13 @@
                       :kyselylinkki "kysely.linkki/hjkl"
                       :data {:tila (:success c/kasittelytilat)
                              :voimassa_loppupvm "2022-02-09"}}
-                     {:type "mock-update-item"
-                      :values {:ohjaaja_ytunnus_kj_tutkinto "test-id-4"
-                               :kasittelytila (:success c/kasittelytilat)
-                               :loppupvm "2022-02-09"}}]]
+                     {:type "mock-update-nippu"
+                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-4"
+                              :niputuspvm "2021-12-15"
+                              :viestintapalvelu-id 4
+                              :kyselylinkki "kysely.linkki/hjkl"
+                              :voimassaloppupvm "2021-11-11"}
+                      :updates {:kasittelytila [:s (:success c/kasittelytilat)]
+                                :voimassaloppupvm [:s "2022-02-09"]}}]]
         (sh/-handleEmailStatus {} event context)
         (is (= results (vec (reverse @test-results))))))))
