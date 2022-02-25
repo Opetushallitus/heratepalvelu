@@ -54,7 +54,8 @@
                :kyselylinkki     [:s (:nippulinkki arvo-resp)]
                :voimassaloppupvm [:s (:voimassa_loppupvm arvo-resp)]
                :request_id       [:s request-id]
-               :kasittelypvm     [:s (str (c/local-date-now))]})
+               :kasittelypvm     [:s (str (c/local-date-now))]}
+              {:cond-expr "attribute_not_exists(kyselylinkki)"})
             (catch ConditionalCheckFailedException e
               (log/warn "Nipulla"
                         (:ohjaaja_ytunnus_kj_tutkinto nippu)
