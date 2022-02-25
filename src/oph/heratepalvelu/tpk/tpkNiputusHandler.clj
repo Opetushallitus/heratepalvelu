@@ -2,15 +2,17 @@
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.db.dynamodb :as db]
-            [oph.heratepalvelu.log.caller-log :refer :all])
-  (:import (com.amazonaws.services.lambda.runtime Context)
-           (com.amazonaws.services.lambda.runtime.events ScheduledEvent)
-           (java.time LocalDate)
+            [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.tpk.tpkCommon :as tpkc])
+  (:import (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class :name "oph.heratepalvelu.tpk.tpkNiputusHandler"
-           :methods [[^:static handleTpkNiputus [ScheduledEvent Context] void]])
+           :methods
+           [[^:static handleTpkNiputus
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn check-jakso?
   "Varmistaa, että jaksossa on kaikki pakolliset kentät ja oppisopimuksen
@@ -23,16 +25,6 @@
        (or (not= (:hankkimistapa_tyyppi jakso) "oppisopimus")
            (not= (:oppisopimuksen_perusta jakso) "02"))))
 
-(defn get-kausi-alkupvm
-  "Laske alkupäivämäärän tiedonkeruukaudelle, johon päivämäärä kuuluu."
-  [pvm]
-  (str (.getYear pvm) (if (<= (.getMonthValue pvm) 6) "-01-01" "-07-01")))
-
-(defn get-kausi-loppupvm
-  "Laske loppupäivämäärän tiedonkeruukaudelle, johon päivämäärä kuuluu."
-  [pvm]
-  (str (.getYear pvm) (if (<= (.getMonthValue pvm) 6) "-06-30" "-12-31")))
-
 (defn create-nippu-id
   "Luo nipputunnisteen työpaikan normalisoidun nimen, työpaikan Y-tunnuksen,
   koulutustoimijan ja tiedonkeruukauden perustella."
@@ -40,8 +32,8 @@
   (str (c/normalize-string (:tyopaikan_nimi jakso)) "/"
        (:tyopaikan_ytunnus jakso) "/"
        (:koulutustoimija jakso) "/"
-       (get-kausi-alkupvm (c/to-date (:jakso_loppupvm jakso))) "_"
-       (get-kausi-loppupvm (c/to-date (:jakso_loppupvm jakso)))))
+       (tpkc/get-kausi-alkupvm (c/to-date (:jakso_loppupvm jakso))) "_"
+       (tpkc/get-kausi-loppupvm (c/to-date (:jakso_loppupvm jakso)))))
 
 (defn get-existing-nippu
   "Hakee nipun tietokannasta jakson tietojen perusteella, jos se on olemassa."
@@ -50,9 +42,10 @@
     (ddb/get-item {:nippu-id [:s (create-nippu-id jakso)]
                    ; Alla oleva sort key on turha, mutta sen poisto vaatisi
                    ; taulun poistoa ja uudelleenluomista. Ei kannata tehdä nyt.
-                   :tiedonkeruu-alkupvm [:s (get-kausi-alkupvm
-                                              (c/to-date
-                                                (:jakso_loppupvm jakso)))]}
+                   :tiedonkeruu-alkupvm [:s (str
+                                              (tpkc/get-kausi-alkupvm
+                                                (c/to-date
+                                                  (:jakso_loppupvm jakso))))]}
                   (:tpk-nippu-table env))
     (catch AwsServiceException e
       (log/error "Haku DynamoDB:stä epäonnistunut:" e)
@@ -72,8 +65,10 @@
   [jakso]
   (let [alkupvm (get-next-vastaamisajan-alkupvm-date jakso)
         loppupvm (.minusDays (.plusMonths alkupvm 2) 1)
-        kausi-alkupvm (get-kausi-alkupvm (c/to-date (:jakso_loppupvm jakso)))
-        kausi-loppupvm (get-kausi-loppupvm (c/to-date (:jakso_loppupvm jakso)))]
+        kausi-alkupvm (tpkc/get-kausi-alkupvm
+                        (c/to-date (:jakso_loppupvm jakso)))
+        kausi-loppupvm (tpkc/get-kausi-loppupvm
+                         (c/to-date (:jakso_loppupvm jakso)))]
     {:nippu-id                    (create-nippu-id jakso)
      :tyopaikan-nimi              (:tyopaikan_nimi jakso)
      :tyopaikan-nimi-normalisoitu (c/normalize-string (:tyopaikan_nimi jakso))
@@ -81,8 +76,8 @@
      :vastaamisajan-loppupvm      (str loppupvm)
      :tyopaikan-ytunnus           (:tyopaikan_ytunnus jakso)
      :koulutustoimija-oid         (:koulutustoimija jakso)
-     :tiedonkeruu-alkupvm         kausi-alkupvm
-     :tiedonkeruu-loppupvm        kausi-loppupvm
+     :tiedonkeruu-alkupvm         (str kausi-alkupvm)
+     :tiedonkeruu-loppupvm        (str kausi-loppupvm)
      :niputuspvm                  (str (c/local-date-now))}))
 
 (defn save-tpk-nippu
@@ -116,8 +111,8 @@
   kaudesta. Muuten niputtaa seuraavan kauden jaksot."
   [exclusive-start-key]
   (let [today (c/local-date-now)
-        start-date (get-kausi-alkupvm (.minusMonths today 2))
-        kausi-end-date (get-kausi-loppupvm (.minusMonths today 2))
+        start-date (str (tpkc/get-current-kausi-alkupvm))
+        kausi-end-date (tpkc/get-current-kausi-loppupvm)
         end-date (if (.isAfter today kausi-end-date)
                    (str kausi-end-date)
                    (str today))
@@ -130,7 +125,7 @@
                                          ":end"     [:s end-date]
                                          ":start"   [:s start-date]}}
                        (:jaksotunnus-table env))]
-    (log/info "TPK Funktion scan" (count (:items resp)))
+    (log/info "TPK-Niputusfunktion scan" (count (:items resp)))
     resp))
 
 (defn -handleTpkNiputus
@@ -150,8 +145,10 @@
                 (do (save-tpk-nippu nippu)
                     (swap! memoization assoc (create-nippu-id jakso) nippu)
                     (update-tpk-niputuspvm jakso (:niputuspvm nippu))))
-              (update-tpk-niputuspvm jakso (or memoized-nippu existing-nippu))))
+              (update-tpk-niputuspvm
+                jakso
+                (:niputuspvm (or memoized-nippu existing-nippu)))))
           (update-tpk-niputuspvm jakso "ei_niputeta")))
       (when (and (< 30000 (.getRemainingTimeInMillis context))
                  (:last-evaluated-key niputettavat))
-        (recur query-niputtamattomat (:last-evaluated-key niputettavat))))))
+        (recur (query-niputtamattomat (:last-evaluated-key niputettavat)))))))

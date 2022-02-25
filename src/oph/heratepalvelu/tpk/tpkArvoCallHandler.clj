@@ -4,20 +4,38 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.log.caller-log :refer :all])
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.tpk.tpkCommon :as tpkc])
   (:import (clojure.lang ExceptionInfo)
-           (com.amazonaws.services.lambda.runtime Context)
-           (com.amazonaws.services.lambda.runtime.events ScheduledEvent)))
+           (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 ;; Hakee työpaikkakyselynipuille kyselylinkkejä Arvosta.
 
 (gen-class :name "oph.heratepalvelu.tpk.tpkArvoCallHandler"
            :methods
-           [[^:static handleTpkArvoCalls [ScheduledEvent Context] void]])
+           [[^:static handleTpkArvoCalls
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]])
 
-
-
-;; TODO do-scan (with and without last-evaluated-key
+(defn do-scan
+  "Hakee TPK-nippuja tietokannasta, joissa ei ole vielä kyselylinkkiä ja jotka
+  tiedonkeruukauden alkupäivämäärän perusteella kuuluvat tähän kauteen.
+  
+  Jos edeltävän kauden vastausaika ei ole loppunut, käsittelee edeltävän kauden
+  niput. Muuten käsittelee seuraavan kauden niput."
+  ([] (do-scan nil))
+  ([exclusive-start-key]
+    (let [resp (ddb/scan {:filter-expression
+                          "attribute_not_exists(#linkki) AND #kausi = :kausi"
+                          :exclusive-start-key exclusive-start-key
+                          :expr-attr-names {"#kausi"  "tiedonkeruu-alkupvm"
+                                            "#linkki" "kyselylinkki"}
+                          :expr-attr-vals
+                          {":kausi" [:s (str
+                                          (tpkc/get-current-kausi-alkupvm))]}}
+                         (:tpk-nippu-table env))]
+      (log/info "TPK-Arvovälitysfunktion scan" (count (:items resp)))
+      resp)))
 
 (defn make-arvo-request
   "Pyytää TPK-kyselylinkin Arvosta."

@@ -6,11 +6,6 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
-;; query-niputtamattomat -funktiota ei tällä hetkellä testata, koska mockien
-;; kirjoittaminen Java-luokkiin näyttää olevan kohtuuttoman vaikea (ainakin
-;; ilman muita kirjastoja). Toivottavasti joskus faktoroidaan scan-logiikka
-;; pois, mikä sallii projektin sisäisen scan-funktion mockaamisen.
-
 (deftest test-check-jakso
   (testing "check-jakso? tarkistaa jaksot oikein"
     (let [good-jakso1 {:koulutustoimija        "1.2.246.562.10.346830761110"
@@ -64,23 +59,6 @@
       (is (not (tpk/check-jakso? bad-jakso4)))
       (is (not (tpk/check-jakso? bad-jakso5))))))
 
-(deftest test-get-kausi-alkupvm-loppupvm
-  (testing "get-kausi-alkupvm luo oikean alkupäivämäärän ja loppupäivämäärän"
-    (let [jakso1 {:koulutustoimija        "1.2.246.562.10.346830761110"
-                  :tyopaikan_nimi         "Testi työpaikka"
-                  :tyopaikan_ytunnus      "1234567-8"
-                  :jakso_loppupvm         "2021-11-20"
-                  :hankkimistapa_tyyppi   "koulutussopimus"}
-          jakso2 {:koulutustoimija        "1.2.246.562.10.346830761110"
-                  :tyopaikan_nimi         "Testi työpaikka"
-                  :tyopaikan_ytunnus      "1234567-8"
-                  :jakso_loppupvm         "2022-03-09"
-                  :hankkimistapa_tyyppi   "koulutussopimus"}]
-      (is (= "2021-07-01" (tpk/get-kausi-alkupvm jakso1)))
-      (is (= "2022-01-01" (tpk/get-kausi-alkupvm jakso2)))
-      (is (= "2021-12-31" (tpk/get-kausi-loppupvm jakso1)))
-      (is (= "2022-06-30" (tpk/get-kausi-loppupvm jakso2))))))
-
 (deftest test-create-nippu-id
   (testing "create-nippu-id luo nipun ID:n oikein"
     (let [jakso1 {:koulutustoimija        "1.2.246.562.10.346830761110"
@@ -108,14 +86,14 @@
       (is (= "2022-07-01"
              (str (tpk/get-next-vastaamisajan-alkupvm-date jakso2)))))))
 
-(deftest test-create-nippu
+(deftest test-create-tpk-nippu
   (testing "Varmistaa, että create-nippu luo niput oikein"
     (let [jakso {:koulutustoimija        "1.2.246.562.10.346830761110"
                  :tyopaikan_nimi         "Testi työpaikka"
                  :tyopaikan_ytunnus      "1234567-8"
                  :jakso_loppupvm         "2021-11-20"
                  :hankkimistapa_tyyppi   "koulutussopimus"}]
-      (is (= (tpk/create-nippu jakso "abcde")
+      (is (= (tpk/create-tpk-nippu jakso)
              {:nippu-id
               "testi_tyopaikka/1234567-8/1.2.246.562.10.346830761110/2021-07-01_2021-12-31"
               :tyopaikan-nimi               "Testi työpaikka"
@@ -126,37 +104,7 @@
               :koulutustoimija-oid          "1.2.246.562.10.346830761110"
               :tiedonkeruu-alkupvm          "2021-07-01"
               :tiedonkeruu-loppupvm         "2021-12-31"
-              :niputuspvm                   (str (t/today))
-              :request-id                   "abcde"})))))
-
-(deftest test-extend-nippu
-  (testing "Varmistaa, että extend-nippu lisää kenttiä nippuun oikein"
-    (let [nippu {:nippu-id "test-id"}
-          arvo-resp {:kysely_linkki "kysely.linkki/123"
-                     :tunnus "QWERTY"
-                     :voimassa_loppupvm "2021-12-12"}
-          expected {:nippu-id "test-id"
-                    :kyselylinkki "kysely.linkki/123"
-                    :tunnus "QWERTY"
-                    :voimassa-loppupvm "2021-12-12"}]
-      (is (= (tpk/extend-nippu nippu arvo-resp) expected)))))
-
-(deftest test-make-arvo-request
-  (testing "Varmistaa, että make-arvo-request tekee kutsuja oikein"
-    (with-redefs [oph.heratepalvelu.external.arvo/build-tpk-request-body
-                  (fn [nippu] {:test-field-body (:test-field-nippu nippu)})
-                  oph.heratepalvelu.external.arvo/create-tpk-kyselylinkki
-                  (fn [body] {:test-field (:test-field-body body)
-                              :kyselylinkki "kysely.linkki/123"
-                              :tunnus "QWERTY"
-                              :voimassa-loppupvm "2021-12-12"})]
-      (let [nippu {:test-field-nippu "test-field"
-                   :nippu-id "test-id"}
-            expected {:test-field "test-field"
-                      :kyselylinkki "kysely.linkki/123"
-                      :tunnus "QWERTY"
-                      :voimassa-loppupvm "2021-12-12"}]
-        (is (= (tpk/make-arvo-request nippu) expected))))))
+              :niputuspvm                   (str (t/today))})))))
 
 (deftest test-get-existing-nippu
   (testing "Varmistaa, että get-existing-nippu kutsuu get-item oikein"
@@ -192,10 +140,6 @@
              (= :s (first (:tiedonkeruu-alkupvm query-params)))
              (= :s (first (:tiedonkeruu-loppupvm query-params)))
              (= :s (first (:niputuspvm query-params)))
-             (= :s (first (:request-id query-params)))
-             (= :s (first (:kyselylinkki query-params)))
-             (= :s (first (:tunnus query-params)))
-             (= :s (first (:voimassa-loppupvm query-params)))
              (= {} options)
              (= "tpk-nippu-table-name" table))
     (reset! test-save-nippu-results
@@ -211,11 +155,7 @@
              :koulutustoimija-oid (second (:koulutustoimija-oid query-params))
              :tiedonkeruu-alkupvm (second (:tiedonkeruu-alkupvm query-params))
              :tiedonkeruu-loppupvm (second (:tiedonkeruu-loppupvm query-params))
-             :niputuspvm (second (:niputuspvm query-params))
-             :request-id (second (:request-id query-params))
-             :kyselylinkki (second (:kyselylinkki query-params))
-             :tunnus (second (:tunnus query-params))
-             :voimassa-loppupvm (second (:voimassa-loppupvm query-params))})))
+             :niputuspvm (second (:niputuspvm query-params))})))
 
 (deftest test-save-nippu
   (testing "Varmistaa, että save-nippu kutsuu put-item oikein"
@@ -230,12 +170,8 @@
                    :koulutustoimija-oid "test-id"
                    :tiedonkeruu-alkupvm "2021-07-01"
                    :tiedonkeruu-loppupvm "2021-12-31"
-                   :niputuspvm "2021-12-15"
-                   :request-id "1234567"
-                   :kyselylinkki "kysely.linkki/132"
-                   :tunnus "QWERTY"
-                   :voimassa-loppupvm "2022-03-01"}]
-        (tpk/save-nippu nippu)
+                   :niputuspvm "2021-12-15"}]
+        (tpk/save-tpk-nippu nippu)
         (is (= @test-save-nippu-results nippu))))))
 
 (def test-update-tpk-niputuspvm-results (atom {}))
@@ -264,6 +200,30 @@
                       :new-value "2021-12-15"}]
         (tpk/update-tpk-niputuspvm jakso new-value)
         (is (= @test-update-tpk-niputuspvm-results expected))))))
+
+(defn- results-with-end-date [end-date]
+  {:filter-expression "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :start AND :end"
+   :exclusive-start-key "asdf"
+   :expr-attr-names {"#tpkNpvm" "tpk-niputuspvm"
+                     "#jl"      "jakso_loppupvm"}
+   :expr-attr-vals {":tpkNpvm" [:s "ei_maaritelty"]
+                    ":end"     [:s end-date]
+                    ":start"   [:s "2021-07-01"]}
+   :table "jaksotunnus-table-name"})
+
+(deftest test-query-niputtamattomat
+  (testing "Varmistaa, etta query-niputtamattomat kutsuu scan oikein"
+    (with-redefs [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
+                  oph.heratepalvelu.db.dynamodb/scan
+                  (fn [options table] (assoc options :table table))]
+      (with-redefs [oph.heratepalvelu.common/local-date-now
+                    (fn [] (LocalDate/of 2021 12 25))]
+        (is (= (tpk/query-niputtamattomat "asdf")
+               (results-with-end-date "2021-12-25")))
+      (with-redefs [oph.heratepalvelu.common/local-date-now
+                    (fn [] (LocalDate/of 2022 2 2))]
+        (is (= (tpk/query-niputtamattomat "asdf")
+               (results-with-end-date "2021-12-31"))))))))
 
 (def mock-handleTpkNiputus-results (atom []))
 
@@ -320,15 +280,8 @@
                                             :jakso jakso})
   (when (= 1234 (:hankkimistapa_id jakso)) {:niputuspvm "2021-12-15"}))
 
-(defn- mock-make-arvo-request [nippu]
-  (append-to-mock-handleTpkNiputus-results {:type "mock-make-arvo-request"
-                                            :nippu (dissoc nippu :request-id)})
-  {:kysely_linkki "kysely.linkki/123"
-   :tunnus "ASDFGH"
-   :voimassa_loppupvm "2022-01-01"})
-
-(defn- mock-save-nippu [nippu]
-  (append-to-mock-handleTpkNiputus-results {:type "mock-save-nippu"
+(defn- mock-save-tpk-nippu [nippu]
+  (append-to-mock-handleTpkNiputus-results {:type "mock-save-tpk-nippu"
                                             :nippu (dissoc nippu :request-id)}))
 
 (defn- mock-update-tpk-niputuspvm [jakso new-value]
@@ -341,11 +294,10 @@
     (with-redefs
       [oph.heratepalvelu.tpk.tpkNiputusHandler/get-existing-nippu
        mock-get-existing-nippu
-       oph.heratepalvelu.tpk.tpkNiputusHandler/make-arvo-request
-       mock-make-arvo-request
        oph.heratepalvelu.tpk.tpkNiputusHandler/query-niputtamattomat
        mock-query-niputtamattomat
-       oph.heratepalvelu.tpk.tpkNiputusHandler/save-nippu mock-save-nippu
+       oph.heratepalvelu.tpk.tpkNiputusHandler/save-tpk-nippu
+       mock-save-tpk-nippu
        oph.heratepalvelu.tpk.tpkNiputusHandler/update-tpk-niputuspvm
        mock-update-tpk-niputuspvm]
       (let [event (tu/mock-handler-event :scheduledherate)
@@ -356,20 +308,9 @@
 
                      {:type "mock-get-existing-nippu"
                       :jakso (get-specific-niputtamaton 1)}
-                     {:type "mock-make-arvo-request"
-                      :nippu (dissoc
-                               (tpk/create-nippu (get-specific-niputtamaton 1)
-                                                 "asdf")
-                               :request-id)}
-                     {:type "mock-save-nippu"
-                      :nippu (assoc
-                               (dissoc
-                                 (tpk/create-nippu (get-specific-niputtamaton 1)
-                                                   "asdf")
-                                 :request-id)
-                               :kyselylinkki "kysely.linkki/123"
-                               :tunnus "ASDFGH"
-                               :voimassa-loppupvm "2022-01-01")}
+                     {:type "mock-save-tpk-nippu"
+                      :nippu (tpk/create-tpk-nippu
+                               (get-specific-niputtamaton 1))}
                      {:type "mock-update-tpk-niputuspvm"
                       :jakso-id 1
                       :new-value (str (LocalDate/now))}
