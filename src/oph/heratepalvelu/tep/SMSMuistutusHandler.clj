@@ -32,47 +32,36 @@
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (try
-          (let
-            [jaksot (tc/get-jaksot-for-nippu nippu)
-             oppilaitokset (tc/get-oppilaitokset jaksot)
-             body (elisa/muistutus-msg-body (:kyselylinkki nippu) oppilaitokset)
-             resp (elisa/send-tep-sms (:lahetettynumeroon nippu) body)
-             status (get-in resp [:body :messages (keyword (:lahetettynumeroon nippu)) :status])]
-            (ddb/update-item
-              {:ohjaaja_ytunnus_kj_tutkinto [:s ohjaaja_ytunnus_kj_tutkinto]
-               :niputuspvm                  [:s niputuspvm]}
-              {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                                     "#sms_muistutuspvm = :sms_muistutuspvm, "
-                                     "#sms_muistutukset = :sms_muistutukset")
-               :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"
-                                 "#sms_muistutuspvm"  "sms_muistutuspvm"
-                                 "#sms_muistutukset"  "sms_muistutukset"}
-               :expr-attr-vals  {":sms_kasittelytila" [:s status]
-                                 ":sms_muistutuspvm"  [:s (str (c/local-date-now))]
-                                 ":sms_muistutukset"  [:n 1]}}
-              (:nippu-table env)))
+          (let [jaksot (tc/get-jaksot-for-nippu nippu)
+                laitokset (tc/get-oppilaitokset jaksot)
+                body (elisa/muistutus-msg-body (:kyselylinkki nippu) laitokset)
+                resp (elisa/send-tep-sms (:lahetettynumeroon nippu) body)
+                tila (get-in resp [:body
+                                   :messages
+                                   (keyword (:lahetettynumeroon nippu))
+                                   :status])]
+            (tc/update-nippu nippu {:sms_kasittelytila [:s tila]
+                                    :sms_muistutuspvm [:s (str
+                                                            (c/local-date-now))]
+                                    :sms_muistutukset [:n 1]}))
           (catch AwsServiceException e
-            (log/error "Muistutus " nippu " lähetty viestintäpalveluun, muttei päivitetty kantaan!")
+            (log/error "Muistutus "
+                       nippu
+                       "lähetty viestintäpalveluun, muttei päivitetty kantaan!")
             (log/error e))
           (catch Exception e
             (log/error "Virhe muistutuksen lähetyksessä!" nippu)
             (log/error e)))
         (try
-          (ddb/update-item
-            {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-             :niputuspvm   [:s (:niputuspvm nippu)]}
-            {:update-expr     (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                                   "#sms_muistutukset = :sms_muistutukset")
-             :expr-attr-names {"#sms_kasittelytila" "sms_kasittelytila"
-                               "#sms_muistutukset" "sms_muistutukset"}
-             :expr-attr-vals {":sms_kasittelytila" [:s (if (:vastattu status)
-                                                   (:vastattu c/kasittelytilat)
-                                                   (:vastausaika-loppunut-m c/kasittelytilat))]
-                              ":sms_muistutukset" [:n 1]}}
-
-            (:nippu-table env))
+          (let [kasittely-status (if (:vastattu status)
+                                   (:vastattu c/kasittelytilat)
+                                   (:vastausaika-loppunut-m c/kasittelytilat))]
+            (tc/update-nippu nippu {:sms_kasittelytila [:s kasittely-status]
+                                    :sms_muistutukset  [:n 1]}))
           (catch Exception e
-            (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on vastattu tai jonka vastausaika umpeutunut" nippu)
+            (log/error "Virhe lähetystilan päivityksessä herätteelle,"
+                       "johon on vastattu tai jonka vastausaika umpeutunut"
+                       nippu)
             (log/error e)))))))
 
 (defn query-muistutukset
