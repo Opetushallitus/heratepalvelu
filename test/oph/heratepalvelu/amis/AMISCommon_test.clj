@@ -4,6 +4,23 @@
             [oph.heratepalvelu.common :as c])
   (:import (java.time LocalDate)))
 
+;; Testaa get-item-by-kyselylinkki
+(defn- mock-query-items [query-params index-data]
+  (when (and (= :eq (first (:kyselylinkki query-params)))
+             (= :s (first (second (:kyselylinkki query-params))))
+             (= "kysely.linkki/12"
+                (second (second (:kyselylinkki query-params))))
+             (= "resendIndex" (:index index-data)))
+    [{:kyselylinkki "kysely.linkki/12"}]))
+
+(deftest test-get-item-by-kyselylinkki
+  (testing
+    "Varmista, että get-one-item-by-kyselylinkki kutsuu query-items oikein"
+    (with-redefs [oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
+      (is (= {:kyselylinkki "kysely.linkki/12"}
+             (ac/get-item-by-kyselylinkki "kysely.linkki/12"))))))
+
+;; Testaa save-herate
 (def test-results (atom []))
 
 (defn- add-to-test-results [data]

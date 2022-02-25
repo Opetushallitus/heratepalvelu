@@ -322,25 +322,14 @@
   (reset! test-handleTepSmsSending-results
           (cons data @test-handleTepSmsSending-results)))
 
-(defn- mock-handleTepSmsSending-query-items [query-params options table]
-  (when (and (= :eq (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (second (:ohjaaja_ytunnus_kj_tutkinto query-params))))
-             (= :eq (first (:niputuspvm query-params)))
-             (= :s (first (second (:niputuspvm query-params))))
-             (= "niputusIndex" (:index options))
-             (= "jaksotunnus-table-name" table))
-    (add-to-test-handleTepSmsSending-results
-      {:type "mock-handleTepSmsSending-query-items"
-       :ohjaaja_ytunnus_kj_tutkinto
-       (second (second (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-       :niputuspvm (second (second (:niputuspvm query-params)))})
-    [{:oppilaitos "1234"
-      :ohjaaja_puhelinnumero (if (= "test-id-1"
-                                    (second
-                                      (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                query-params))))
-                               "+358401234567"
-                               "0401234567")}]))
+(defn- mock-get-jaksot-for-nippu [nippu]
+  (add-to-test-handleTepSmsSending-results {:type "mock-get-jaksot-for-nippu"
+                                            :nippu nippu})
+  [{:oppilaitos "1234"
+    :ohjaaja_puhelinnumero (if (= (:ohjaaja_ytunnus_kj_tutkinto nippu)
+                                  "test-id-1")
+                             "+358401234567"
+                             "0401234567")}])
 
 (defn- mock-handleTepSmsSending-get-organisaatio [oppilaitos]
   (add-to-test-handleTepSmsSending-results
@@ -410,14 +399,14 @@
       [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 20))
-       oph.heratepalvelu.db.dynamodb/query-items
-       mock-handleTepSmsSending-query-items
        oph.heratepalvelu.external.arvo/patch-nippulinkki
        mock-handleTepSmsSending-patch-nippulinkki
        oph.heratepalvelu.external.elisa/send-tep-sms
        mock-handleTepSmsSending-send-tep-sms
        oph.heratepalvelu.external.organisaatio/get-organisaatio
        mock-handleTepSmsSending-get-organisaatio
+       oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
+       mock-get-jaksot-for-nippu
        oph.heratepalvelu.tep.tepSmsHandler/query-lahetettavat
        mock-query-lahetettavat
        oph.heratepalvelu.tep.tepSmsHandler/update-status-to-db
@@ -433,11 +422,16 @@
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
                               :niputuspvm "2021-12-15"
                               :voimassaloppupvm "2021-12-20"
-                              :sms_kasittelytila (:ei-lahetetty c/kasittelytilat)
+                              :sms_kasittelytila (:ei-lahetetty
+                                                   c/kasittelytilat)
                               :kyselylinkki "kysely.linkki/0"}}
-                     {:type "mock-handleTepSmsSending-query-items"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
-                      :niputuspvm "2021-12-15"}
+                     {:type "mock-get-jaksot-for-nippu"
+                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
+                              :niputuspvm "2021-12-15"
+                              :voimassaloppupvm "2021-12-30"
+                              :sms_kasittelytila (:ei-lahetetty
+                                                   c/kasittelytilat)
+                              :kyselylinkki "kysely.linkki/1"}}
                      {:type "mock-handleTepSmsSending-get-organisaatio"
                       :oppilaitos "1234"}
                      {:type "mock-handleTepSmsSending-send-tep-sms"

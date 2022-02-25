@@ -1,8 +1,9 @@
 (ns oph.heratepalvelu.amis.AMISDeleteTunnusHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
+            [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [schema.core :as s])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
@@ -31,16 +32,6 @@
         (log/error "Poistovirhe" (:kyselylinkki item) ":" e)
         (throw e)))))
 
-(defn get-item-by-kyselylinkki
-  "Hakee yhden tietueen tietokannasta kyselylinkin perusteella."
-  [kyselylinkki]
-  (try
-    (first (ddb/query-items {:kyselylinkki [:eq [:s kyselylinkki]]}
-                            {:index "resendIndex"}))
-    (catch AwsServiceException e
-      (log/error "Hakuvirhe" kyselylinkki ":" e)
-      (throw e))))
-
 (defn -handleDeleteTunnus
   "Käsittelee poistettavan tunnuksen ja poistaa sen tietokannasta."
   [this event context]
@@ -53,6 +44,6 @@
           (if (some? tunnus-checked)
             (log/error {:herate herate :msg tunnus-checked})
             (delete-one-item
-              (get-item-by-kyselylinkki (:kyselylinkki herate)))))
+              (ac/get-item-by-kyselylinkki (:kyselylinkki herate)))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " msg "\n" e))))))

@@ -9,6 +9,16 @@
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
 
+(defn get-item-by-kyselylinkki
+  "Hakee yhden herätteen tietokannasta kyselylinkin perusteella."
+  [kyselylinkki]
+  (try
+    (first (ddb/query-items {:kyselylinkki [:eq [:s kyselylinkki]]}
+                            {:index "resendIndex"}))
+    (catch AwsServiceException e
+      (log/error "Hakuvirhe (get-item-by-kyselylinkki)" kyselylinkki ":" e)
+      (throw e))))
+
 (defn save-herate
   "Luo kyselylinkin herätteelle, tallentaa herätteen, ja lähettää tietoja
   kyselylinkistä ja herätteen tallentamisesta ehoksiin."

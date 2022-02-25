@@ -37,49 +37,6 @@
         :viimeinen_vastauspvm "2022-02-02"}]
       [])))
 
-(defn- mock-niputa-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= "kasittelytila" (get (:expr-attr-names options) "#tila"))
-             (= "request_id" (get (:expr-attr-names options) "#req"))
-             (= "kasittelypvm" (get (:expr-attr-names options) "#pvm"))
-             (or (= "reason" (get (:expr-attr-names options) "#reason"))
-                 (nil? (get (:expr-attr-names options) "#reason")))
-             (or (= "voimassaloppupvm"
-                    (get (:expr-attr-names options) "#voimassa"))
-                 (nil? (get (:expr-attr-names options) "#voimassa")))
-             (or (= "kyselylinkki" (get (:expr-attr-names options) "#linkki"))
-                 (nil? (get (:expr-attr-names options) "#linkki")))
-             (= :s (first (get (:expr-attr-vals options) ":tila")))
-             (= :s (first (get (:expr-attr-vals options) ":req")))
-             (or (= :s (first (get (:expr-attr-vals options) ":reason")))
-                 (nil? (get (:expr-attr-vals options) ":reason")))
-             (or (= :s (first (get (:expr-attr-vals options) ":voimassa")))
-                 (nil? (get (:expr-attr-vals options) ":voimassa")))
-             (or (= :s (first (get (:expr-attr-vals options) ":linkki")))
-                 (nil? (get (:expr-attr-vals options) ":linkki")))
-             (= :s (first (get (:expr-attr-vals options) ":pvm")))
-             (= "2021-12-31" (second (get (:expr-attr-vals options) ":pvm")))
-             (= "nippu-table-name" table))
-    (add-to-test-niputa-results {:type "mock-niputa-update-item"
-                                 :ohjaaja_ytunnus_kj_tutkinto
-                                 (second
-                                   (:ohjaaja_ytunnus_kj_tutkinto query-params))
-                                 :niputuspvm (second (:niputuspvm query-params))
-                                 :tila (second (get (:expr-attr-vals options)
-                                                    ":tila"))
-                                 :req (second (get (:expr-attr-vals options)
-                                                   ":req"))
-                                 :reason (second (get (:expr-attr-vals options)
-                                                      ":reason"))
-                                 :voimassa (second
-                                             (get (:expr-attr-vals options)
-                                                  ":voimassa"))
-                                 :linkki (second (get (:expr-attr-vals options)
-                                                      ":linkki"))
-                                 :update-expr (:update-expr options)
-                                 :cond-expr (:cond-expr options)})))
-
 (defn- mock-create-nippu-kyselylinkki [niputus-request-body]
   (add-to-test-niputa-results {:type "mock-create-nippu-kyselylinkki"
                                :niputus-request-body niputus-request-body})
@@ -91,6 +48,11 @@
   (add-to-test-niputa-results {:type "mock-delete-nippukyselylinkki"
                                :tunniste tunniste}))
 
+(defn- mock-update-nippu [nippu updates]
+  (add-to-test-niputa-results {:type "mock-update-nippu"
+                               :nippu nippu
+                               :updates updates}))
+
 (deftest test-niputa
   (testing "Varmista, että niputa-funktio tekee oikeita kutsuja"
     (with-redefs
@@ -100,11 +62,11 @@
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 31))
        oph.heratepalvelu.common/rand-str (fn [x] "abcdef")
        oph.heratepalvelu.db.dynamodb/query-items mock-niputa-query-items
-       oph.heratepalvelu.db.dynamodb/update-item mock-niputa-update-item
        oph.heratepalvelu.external.arvo/create-nippu-kyselylinkki
        mock-create-nippu-kyselylinkki
        oph.heratepalvelu.external.arvo/delete-nippukyselylinkki
-       mock-delete-nippukyselylinkki]
+       mock-delete-nippukyselylinkki
+       oph.heratepalvelu.tep.tepCommon/update-nippu mock-update-nippu]
       (let [test-nippu-0 {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
                           :niputuspvm "2021-12-15"}
             test-nippu-1 {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
@@ -122,16 +84,13 @@
                       :pvm "2021-12-31"
                       :ohjaaja_ytunnus_kj_tutkinto "test-id-0"
                       :niputuspvm "2021-12-15"}
-                     {:type "mock-niputa-update-item"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-0"
-                      :niputuspvm "2021-12-15"
-                      :update-expr "SET #tila = :tila, #pvm = :pvm, #req = :req"
-                      :cond-expr nil
-                      :tila "ei-jaksoja"
-                      :req "test-uuid"
-                      :reason nil
-                      :voimassa nil
-                      :linkki nil}
+                     {:type "mock-update-nippu"
+                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
+                              :niputuspvm "2021-12-15"}
+                      :updates
+                      {:kasittelytila [:s (:ei-jaksoja c/kasittelytilat)]
+                       :request_id [:s "test-uuid"]
+                       :kasittelypvm [:s "2021-12-31"]}}
                      {:type "mock-niputa-query-items"
                       :pvm "2021-12-31"
                       :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
@@ -146,18 +105,19 @@
                        :tunnukset (seq ["ABCDEF"])
                        :voimassa_alkupvm "2021-12-31"
                        :request_id "test-uuid"}}
-                     {:type "mock-niputa-update-item"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
-                      :niputuspvm "2021-12-15"
-                      :update-expr (str "SET #tila = :tila, #pvm = :pvm, "
-                                        "#linkki = :linkki, "
-                                        "#voimassa = :voimassa, #req = :req")
-                      :cond-expr "attribute_not_exists(kyselylinkki)"
-                      :tila (:ei-lahetetty c/kasittelytilat)
-                      :linkki "kysely.linkki/132"
-                      :voimassa "2021-12-17"
-                      :req "test-uuid"
-                      :reason nil}
+                     {:type "mock-update-nippu"
+                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
+                              :niputuspvm "2021-12-15"
+                              :tyopaikka "Testityöpaikka"
+                              :ytunnus "123456-7"
+                              :koulutuksenjarjestaja "12345"
+                              :tutkinto "asdf"}
+                      :updates
+                      {:kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
+                       :kyselylinkki [:s "kysely.linkki/132"]
+                       :voimassaloppupvm [:s "2021-12-17"]
+                       :request_id [:s "test-uuid"]
+                       :kasittelypvm [:s "2021-12-31"]}}
                      {:type "mock-niputa-query-items"
                       :pvm "2021-12-31"
                       :ohjaaja_ytunnus_kj_tutkinto "test-id-2"
@@ -172,17 +132,17 @@
                        :tunnukset (seq ["ABCDEF"])
                        :voimassa_alkupvm "2021-12-31"
                        :request_id "test-uuid"}}
-                     {:type "mock-niputa-update-item"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-2"
-                      :niputuspvm "2021-12-15"
-                      :update-expr (str "SET #tila = :tila, #pvm = :pvm, "
-                                        "#reason = :reason, #req = :req")
-                      :cond-expr nil
-                      :tila "niputusvirhe"
-                      :linkki nil
-                      :voimassa nil
-                      :req "test-uuid"
-                      :reason "no reason in response"}]]
+                     {:type "mock-update-nippu"
+                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-2"
+                              :niputuspvm "2021-12-15"
+                              :ytunnus "111111-1"
+                              :koulutuksenjarjestaja "12111"
+                              :tutkinto "aaaa"}
+                      :updates
+                      {:kasittelytila [:s (:niputusvirhe c/kasittelytilat)]
+                       :kasittelypvm [:s "2021-12-31"]
+                       :reason [:s "no reason in response"]
+                       :request_id [:s "test-uuid"]}}]]
         (nh/niputa test-nippu-0)
         (nh/niputa test-nippu-1)
         (nh/niputa test-nippu-2)

@@ -18,16 +18,6 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 (def ^:private new-changes? (atom false))
 
-(defn convert-vp-email-status
-  "Muuttaa viestintäpalvelusta palautetun statuksen käsittelytilaksi."
-  [status]
-  (if (= (:numberOfSuccessfulSendings status) 1)
-    (:success c/kasittelytilat)
-    (if (= (:numberOfBouncedSendings status) 1)
-      (:bounced c/kasittelytilat)
-      (when (= (:numberOfFailedSendings status) 1)
-        (:failed c/kasittelytilat)))))
-
 (defn update-ehoks-if-not-muistutus
   "Päivittää sähköpostitiedot ehoksiin lähetyksen jälkeen, jos viesti ei ole
   muistutus."
@@ -75,7 +65,7 @@
   (loop [heratteet (do-query)]
     (doseq [herate heratteet]
       (let [status (vp/get-email-status (:viestintapalvelu-id herate))
-            tila (convert-vp-email-status status)]
+            tila (vp/convert-email-status status)]
         (if tila
           (do
             (when (not @new-changes?)

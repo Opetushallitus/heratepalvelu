@@ -5,20 +5,6 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
-(deftest test-convert-email-status
-  (testing "Varmista, että convert-email-status palauttaa oikeat arvot"
-    (let [success-status {:numberOfSuccessfulSendings 1}
-          bounced-status {:numberOfBouncedSendings 1}
-          failed-status {:numberOfFailedSendings 1}
-          other-status {:somethingElse 5}]
-      (is (= (sh/convert-email-status success-status)
-             (:success c/kasittelytilat)))
-      (is (= (sh/convert-email-status bounced-status)
-             (:bounced c/kasittelytilat)))
-      (is (= (sh/convert-email-status failed-status)
-             (:failed c/kasittelytilat)))
-      (is (nil? (sh/convert-email-status other-status))))))
-
 (def test-results (atom []))
 
 (defn- add-to-test-results [data]

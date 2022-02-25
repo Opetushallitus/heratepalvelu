@@ -5,7 +5,6 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
@@ -41,27 +40,13 @@
                                               (:email-mismatch c/kasittelytilat))]}}
     (:nippu-table env)))
 
-(defn get-single-ohjaaja-email
-  "Jos jaksoissa on vain yksi ohjaajan sähköpostiosoite, palauttaa sen. Jos ei
-  ole sähköpostiosoitetta tai on useita, palauttaa nil."
-  [jaksot]
-  (when (not-empty jaksot)
-    (:ohjaaja_email (reduce #(if (some? (:ohjaaja_email %1))
-                               (if (some? (:ohjaaja_email %2))
-                                 (if (= (:ohjaaja_email %1) (:ohjaaja_email %2))
-                                   %1
-                                   (reduced nil))
-                                  %1)
-                                %2)
-                              jaksot))))
-
 (defn lahetysosoite
   "Yrittää hakea yksittäisen sähköpostiosoitteen nippuun liittyvistä jaksoista.
   Jos löytyy, palauttaa sen. Jos sitä ei löydy, päivittää tiedot tietokantaan
   ja palauttaa nil. Jos yksittäistä sahköpostia ei löydy eikä kunnon
   puhelinnumeroa on olemassa, ilmoittaa Arvoon, että ei ole yhteistietoja."
   [nippu jaksot]
-  (let [ohjaaja-email (get-single-ohjaaja-email jaksot)]
+  (let [ohjaaja-email (tc/reduce-common-value jaksot :ohjaaja_email)]
     (if (some? ohjaaja-email)
       ohjaaja-email
       (let [osoitteet (reduce
@@ -146,25 +131,6 @@
       (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" nippu)
       (log/error e))))
 
-(defn do-jakso-query
-  "Hakee jaksot, jotka kuuluvat ko. nippuun."
-  [nippu]
-  (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                    :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                   {:index "niputusIndex"}
-                   (:jaksotunnus-table env)))
-
-(defn get-oppilaitokset
-  "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaitos-kenttien
-  perusteella."
-  [jaksot]
-  (try
-    (seq (into #{} (map #(:nimi (org/get-organisaatio (:oppilaitos %1)))
-                        jaksot)))
-    (catch Exception e
-      (log/error "Virhe kutsussa organisaatiopalveluun")
-      (log/error e))))
-
 (defn -handleSendTEPEmails
   "Hakee nippuja tietokannasta, joiden sähköpostit on aika lähettää, ja
   käsittelee näiden viestien lähettämisen viestinäpalveluun."
@@ -174,8 +140,8 @@
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
-        (let [jaksot (do-jakso-query nippu)
-              oppilaitokset (get-oppilaitokset jaksot)
+        (let [jaksot (tc/get-jaksot-for-nippu nippu)
+              oppilaitokset (tc/get-oppilaitokset jaksot)
               osoite (lahetysosoite nippu jaksot)]
           (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
             (when (some? osoite)

@@ -1,7 +1,8 @@
 (ns oph.heratepalvelu.external.viestintapalvelu
-  (:require [oph.heratepalvelu.external.cas-client :refer [cas-authenticated-post]]
+  (:require [clojure.string :as str]
             [environ.core :refer [env]]
-            [clojure.string :as str])
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.external.cas-client :as cas-client])
   (:use hiccup.core))
 
 (def horizontal-line
@@ -240,7 +241,7 @@
     :sender   - viestin lähettäjä
     :body     - viestin HTML-body"
   [email]
-  (let [resp (cas-authenticated-post
+  (let [resp (cas-client/cas-authenticated-post
                (:viestintapalvelu-url env)
                {:recipient [{:email (:address email)}]
                 :email {:callingProcess "heratepalvelu"
@@ -255,7 +256,17 @@
 (defn get-email-status
   "Hakee sähköpostilähetyksen tilan viestintäpalvelusta ID:n perusteella."
   [id]
-  (:body (cas-authenticated-post
+  (:body (cas-client/cas-authenticated-post
            (str (:viestintapalvelu-url env) "/status")
            id
            {:as :json})))
+
+(defn convert-email-status
+  "Muuttaa viestintäpalvelusta palautetun statuksen käsittelytilaksi."
+  [status]
+  (if (= (:numberOfSuccessfulSendings status) 1)
+    (:success c/kasittelytilat)
+    (if (= (:numberOfBouncedSendings status) 1)
+      (:bounced c/kasittelytilat)
+      (when (= (:numberOfFailedSendings status) 1)
+        (:failed c/kasittelytilat)))))

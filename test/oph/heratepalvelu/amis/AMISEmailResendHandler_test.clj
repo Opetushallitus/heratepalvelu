@@ -17,21 +17,6 @@
       (is (some? (erh/resend-checker bad1)))
       (is (some? (erh/resend-checker bad2))))))
 
-(defn- mock-query-items [query-params index-data]
-  (when (and (= :eq (first (:kyselylinkki query-params)))
-             (= :s (first (second (:kyselylinkki query-params))))
-             (= "kysely.linkki/12"
-                (second (second (:kyselylinkki query-params))))
-             (= "resendIndex" (:index index-data)))
-    [{:kyselylinkki "kysely.linkki/12"}]))
-
-(deftest test-get-one-item-by-kyselylinkki
-  (testing
-    "Varmista, että get-one-item-by-kyselylinkki kutsuu query-items oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
-      (is (= {:kyselylinkki "kysely.linkki/12"}
-             (erh/get-one-item-by-kyselylinkki "kysely.linkki/12"))))))
-
 (def update-results (atom {}))
 
 (defn- mock-update-item [query-params options]
@@ -69,7 +54,7 @@
                                          :sahkoposti sahkoposti
                                          :kyselylinkki kyselylinkki}))
 
-(defn- mock-get-one-item-by-kyselylinkki [kyselylinkki]
+(defn- mock-get-item-by-kyselylinkki [kyselylinkki]
   {:kyselylinkki kyselylinkki
    :toimija_oppija "toimija-oppija"
    :tyyppi_kausi "tyyppi-kausi"
@@ -80,10 +65,10 @@
 (deftest test-handleEmailResend
   (testing "Varmista, että -handleEmailResend toimii oikein"
     (with-redefs
-      [oph.heratepalvelu.amis.AMISEmailResendHandler/update-email-to-resend
-       mock-update-email-to-resend
-       oph.heratepalvelu.amis.AMISEmailResendHandler/get-one-item-by-kyselylinkki
-       mock-get-one-item-by-kyselylinkki]
+      [oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
+       mock-get-item-by-kyselylinkki
+       oph.heratepalvelu.amis.AMISEmailResendHandler/update-email-to-resend
+       mock-update-email-to-resend]
       (let [context (tu/mock-handler-context)
             bad-event (tu/mock-sqs-event {:asdf "AMISEmailResendHandler xyz"})
             good-event (tu/mock-sqs-event {:kyselylinkki "https://linkki.fi/1"
@@ -101,7 +86,7 @@
                 :kyselylinkki "https://linkki.fi/1"}))
         (is (nil?
               (tu/did-log?
-                "Ei sähköpostia herätteessä  {:kyselylinkki https://linkki.fi/1"
+                "Ei sähköpostia herätteessä {:kyselylinkki https://linkki.fi/1"
                 "WARN")))
         (erh/-handleEmailResend {} good-event-no-email context)
         (is (= @update-email-to-resend-result
@@ -111,11 +96,11 @@
                 :kyselylinkki "https://linkki.fi/1"}))
         (is (true?
               (tu/did-log?
-                "Ei sähköpostia herätteessä  {:kyselylinkki https://linkki.fi/1"
+                "Ei sähköpostia herätteessä {:kyselylinkki https://linkki.fi/1"
                 "WARN")))
         (with-redefs
-          [oph.heratepalvelu.amis.AMISEmailResendHandler/get-one-item-by-kyselylinkki
+          [oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
            mock-return-nothing]
           (erh/-handleEmailResend {} good-event context)
-          (is (true? (tu/did-log? "Ei kyselylinkkiä  https://linkki.fi/1"
+          (is (true? (tu/did-log? "Ei kyselylinkkiä https://linkki.fi/1"
                                   "ERROR"))))))))

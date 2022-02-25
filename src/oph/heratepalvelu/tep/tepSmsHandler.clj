@@ -5,7 +5,6 @@
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.elisa :as elisa]
-            [oph.heratepalvelu.external.organisaatio :as org]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (clojure.lang ExceptionInfo)
@@ -89,15 +88,7 @@
   nippuun on merkattu että hyväksyttävää sähköpostiosoitettakaan ei ole
   löytynyt, päivittää myös Arvoon sen, että nippulinkillä ei ole yhteystietoja."
   [nippu jaksot]
-  (let [number (when-not (empty? jaksot)
-                 (:ohjaaja_puhelinnumero (reduce #(if (some? (:ohjaaja_puhelinnumero %1))
-                                                   (if (some? (:ohjaaja_puhelinnumero %2))
-                                                     (if (= (:ohjaaja_puhelinnumero %1) (:ohjaaja_puhelinnumero %2))
-                                                       %1
-                                                       (reduced nil))
-                                                     %1)
-                                                   %2)
-                                                jaksot)))]
+  (let [number (tc/reduce-common-value jaksot :ohjaaja_puhelinnumero)]
     (if (some? number)
       (if (valid-number? number)
         number
@@ -175,14 +166,8 @@
       (doseq [nippu lahetettavat]
         (when-not (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
           (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
-            (let [jaksot (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                                           :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                                          {:index "niputusIndex"}
-                                          (:jaksotunnus-table env))
-                  oppilaitokset (seq (into #{}
-                                           (map
-                                             #(:nimi (org/get-organisaatio (:oppilaitos %1)))
-                                             jaksot)))
+            (let [jaksot (tc/get-jaksot-for-nippu nippu)
+                  oppilaitokset (tc/get-oppilaitokset jaksot)
                   puhelinnumero (ohjaaja-puhnro nippu jaksot)
                   sms-kasittelytila (:sms_kasittelytila nippu)]
               (when (and (some? puhelinnumero)

@@ -18,16 +18,6 @@
 
 (def ^:private new-changes? (atom false))
 
-(defn convert-email-status
-  "Muuttaa viestintäpalvelun palauttaman statuksen käsittelytilaksi."
-  [status]
-  (if (= (:numberOfSuccessfulSendings status) 1)
-    (:success c/kasittelytilat)
-    (if (= (:numberOfBouncedSendings status) 1)
-      (:bounced c/kasittelytilat)
-      (when (= (:numberOfFailedSendings status) 1)
-        (:failed c/kasittelytilat)))))
-
 (defn -handleEmailStatus
   "Hakee nippuja, joilla on sähköpostiviestejä viestintäpalvelussa, ja päivittää
   niiden tiedot tietokantaan ja Arvoon. Laskee uuden loppupäivämäärän nipulle,
@@ -43,7 +33,7 @@
                                  :niputuspvm                  [:s (:niputuspvm email)]}
                                 (:nippu-table env))
             status (vp/get-email-status (:viestintapalvelu-id nippu))
-            tila (convert-email-status status)
+            tila (vp/convert-email-status status)
             new-loppupvm (tc/get-new-loppupvm nippu)]
         (if tila
           (do
