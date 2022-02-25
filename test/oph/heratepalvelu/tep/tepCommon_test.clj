@@ -92,11 +92,13 @@
       (is (= (tc/update-nippu {:ohjaaja_ytunnus_kj_tutkinto "oykt"
                                :niputuspvm                  "2022-01-01"}
                               {:field         [:n 123]
-                               :another-field [:s "asdf"]})
+                               :another-field [:s "asdf"]}
+                              {:cond-expr "attribute_not_exists(field)"})
              {:key-conds {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt"]
                           :niputuspvm                  [:s "2022-01-01"]}
               :options   {:update-expr (str "SET #field = :field, "
                                             "#another_field = :another_field")
+                          :cond-expr "attribute_not_exists(field)"
                           :expr-attr-names {"#field"         "field"
                                             "#another_field" "another-field"}
                           :expr-attr-vals {":field"         [:n 123]
