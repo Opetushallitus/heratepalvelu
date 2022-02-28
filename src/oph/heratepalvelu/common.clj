@@ -266,7 +266,9 @@
   (let [normalized (normalize-string (name item-key))]
     (str "#" normalized " = :" normalized)))
 
-(defn create-update-item-options [updates]
+(defn create-update-item-options
+  "Luo options-objekti update-item -kutsulle."
+  [updates]
   {:update-expr (str "SET " (str/join ", " (map make-set-pair (keys updates))))
    :expr-attr-names (reduce #(assoc %1 (str "#" (normalize-string %2)) %2)
                             {}

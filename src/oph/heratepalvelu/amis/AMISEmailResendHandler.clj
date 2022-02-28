@@ -26,22 +26,6 @@
 (def resend-checker
   (s/checker resend-schema))
 
-(defn update-email-to-resend
-  "Päivittää lähetettävän sähköpostin osoitteen ja lähetystilan tietokantaan."
-  [toimija-oppija tyyppi-kausi sahkoposti kyselylinkki]
-  (try
-    (ddb/update-item
-      {:toimija_oppija [:s toimija-oppija]
-       :tyyppi_kausi   [:s tyyppi-kausi]}
-      {:update-expr    "SET #lahetystila = :lahetystila, #sposti = :sposti"
-       :expr-attr-names {"#lahetystila" "lahetystila"
-                         "#sposti" "sahkoposti"}
-       :expr-attr-vals  {":lahetystila" [:s (:ei-lahetetty c/kasittelytilat)]
-                         ":sposti" [:s sahkoposti]}})
-    (catch AwsServiceException e
-      (log/error "Virhe kyselylinkin" kyselylinkki "päivityksessä" e)
-      (throw e))))
-
 (defn -handleEmailResend
   "Merkistee sähköpostin lähetettäväksi uudestaan, jos osoite löytyy
   SQS-viestistä tai tietokannasta."
@@ -62,10 +46,17 @@
                   (when (empty? (:sahkoposti herate))
                     (log/warn "Ei sähköpostia herätteessä" herate
                               ", käytetään dynamoon tallennettua" sahkoposti))
-                  (update-email-to-resend (:toimija_oppija item)
-                                          (:tyyppi_kausi item)
-                                          sahkoposti
-                                          kyselylinkki))
+                  (try
+                    (ac/update-herate
+                      item
+                      {:lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+                       :sahkoposti  [:s sahkoposti]})
+                    (catch AwsServiceException e
+                      (log/error "Virhe kyselylinkin"
+                                 kyselylinkki
+                                 "päivityksessä"
+                                 e)
+                      (throw e))))
                 (log/error "Ei kyselylinkkiä" kyselylinkki)))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa:" msg "\n" e))))))

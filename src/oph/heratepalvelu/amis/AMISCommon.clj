@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.amis.AMISCommon
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
+            [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
@@ -128,3 +129,13 @@
           (if (= kyselytyyppi "aloittaneet")
             (ehoks/patch-amis-aloitusherate-kasitelty (:ehoks-id herate))
             (ehoks/patch-amis-paattoherate-kasitelty (:ehoks-id herate))))))))
+
+(defn update-herate
+  "Wrapper update-itemin ympäri, joka yksinkertaistaa herätteen päivitykset
+  tietokantaan."
+  [herate updates]
+  (ddb/update-item
+    {:toimija_oppija [:s (:toimija_oppija herate)]
+     :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
+    (c/create-update-item-options updates)
+    (:herate-table env)))
