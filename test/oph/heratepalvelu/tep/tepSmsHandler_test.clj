@@ -291,6 +291,11 @@
     :sms_kasittelytila (:ei-lahetetty c/kasittelytilat)
     :kyselylinkki "kysely.linkki/2"}])
 
+(defn- mock-update-nippu [nippu updates]
+  (add-to-test-handleTepSmsSending-results {:type "mock-update-nippu"
+                                            :nippu nippu
+                                            :updates updates}))
+
 (defn- mock-has-time-to-answer? [voimassaloppupvm]
   (< 0 (compare voimassaloppupvm "2021-12-20")))
 
@@ -308,6 +313,8 @@
        mock-handleTepSmsSending-get-organisaatio
        oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
        mock-get-jaksot-for-nippu
+       oph.heratepalvelu.tep.tepCommon/update-nippu
+       mock-update-nippu
        oph.heratepalvelu.tep.tepSmsHandler/query-lahetettavat
        mock-query-lahetettavat
        oph.heratepalvelu.tep.tepSmsHandler/update-status-to-db
