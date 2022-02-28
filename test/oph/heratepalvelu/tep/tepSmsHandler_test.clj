@@ -38,68 +38,35 @@
 
 (def test-update-status-to-db-results (atom {}))
 
-(defn- mock-update-status-to-db-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= (:update-expr options)
-                (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                     "#sms_lahetyspvm = :sms_lahetyspvm, "
-                     "#sms_muistutukset = :sms_muistutukset, "
-                     "#lahetettynumeroon = :lahetettynumeroon, "
-                     "#loppupvm = :loppupvm"))
-             (= "sms_kasittelytila"
-                (get (:expr-attr-names options) "#sms_kasittelytila"))
-             (= "sms_lahetyspvm"
-                (get (:expr-attr-names options) "#sms_lahetyspvm"))
-             (= "sms_muistutukset"
-                (get (:expr-attr-names options) "#sms_muistutukset"))
-             (= "lahetettynumeroon"
-                (get (:expr-attr-names options) "#lahetettynumeroon"))
-             (= "voimassaloppupvm" (get (:expr-attr-names options) "#loppupvm"))
-             (= :s (first (get (:expr-attr-vals options) ":sms_kasittelytila")))
-             (= :s (first (get (:expr-attr-vals options) ":sms_lahetyspvm")))
-             (= :n (first (get (:expr-attr-vals options) ":sms_muistutukset")))
-             (= 0 (second (get (:expr-attr-vals options) ":sms_muistutukset")))
-             (= :s (first (get (:expr-attr-vals options) ":lahetettynumeroon")))
-             (= :s (first (get (:expr-attr-vals options) ":loppupvm")))
-             (= table "nippu-table-name"))
-    (reset! test-update-status-to-db-results
-            {:ohjaaja_ytunnus_kj_tutkinto
-             (second (:ohjaaja_ytunnus_kj_tutkinto query-params))
-             :niputuspvm (second (:niputuspvm query-params))
-             :sms_kasittelytila
-             (second (get (:expr-attr-vals options) ":sms_kasittelytila"))
-             :sms_lahetyspvm
-             (second (get (:expr-attr-vals options) ":sms_lahetyspvm"))
-             :lahetettynumeroon
-             (second (get (:expr-attr-vals options) ":lahetettynumeroon"))
-             :loppupvm (second (get (:expr-attr-vals options) ":loppupvm"))})))
+(defn- mock-update-status-to-db-update-nippu [nippu updates]
+  (reset! test-update-status-to-db-results {:nippu nippu :updates updates}))
 
 (deftest test-update-status-to-db
   (testing "Varmista, että update-status-to-db kutsuu update-item oikein"
     (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
                   oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2021 12 20))
-                  oph.heratepalvelu.db.dynamodb/update-item
-                  mock-update-status-to-db-update-item]
+                  oph.heratepalvelu.tep.tepCommon/update-nippu
+                  mock-update-status-to-db-update-nippu]
       (let [status (:success c/kasittelytilat)
             puhelinnumero "+358 12 345 6789"
             nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
                    :niputuspvm "2021-12-15"
                    :voimassaloppupvm "2021-12-30"}
             new-loppupvm "2022-03-04"
-            results1 {:ohjaaja_ytunnus_kj_tutkinto "test-id"
-                      :niputuspvm "2021-12-15"
-                      :sms_kasittelytila (:success c/kasittelytilat)
-                      :sms_lahetyspvm "2021-12-20"
-                      :lahetettynumeroon "+358 12 345 6789"
-                      :loppupvm "2022-03-04"}
-            results2 {:ohjaaja_ytunnus_kj_tutkinto "test-id"
-                      :niputuspvm "2021-12-15"
-                      :sms_kasittelytila (:success c/kasittelytilat)
-                      :sms_lahetyspvm "2021-12-20"
-                      :lahetettynumeroon "+358 12 345 6789"
-                      :loppupvm "2021-12-30"}]
+            results1 {:nippu nippu
+                      :updates {:sms_kasittelytila
+                                [:s (:success c/kasittelytilat)]
+                                :sms_lahetyspvm [:s "2021-12-20"]
+                                :lahetettynumeroon [:s "+358 12 345 6789"]
+                                :voimassaloppupvm [:s "2022-03-04"]
+                                :sms_muistutukset [:n 0]}}
+            results2 {:nippu nippu
+                      :updates {:sms_kasittelytila
+                                [:s (:success c/kasittelytilat)]
+                                :sms_lahetyspvm [:s "2021-12-20"]
+                                :lahetettynumeroon [:s "+358 12 345 6789"]
+                                :sms_muistutukset [:n 0]}}]
         (sh/update-status-to-db status puhelinnumero nippu new-loppupvm)
         (is (= results1 @test-update-status-to-db-results))
         (sh/update-status-to-db status puhelinnumero nippu nil)
@@ -113,28 +80,10 @@
 (defn- reset-test-ohjaaja-puhnro-results []
   (reset! test-ohjaaja-puhnro-results []))
 
-(defn- mock-ohjaaja-puhnro-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= "sms_kasittelytila" (get (:expr-attr-names options)
-                                         "#sms_kasittelytila"))
-             (= :s (first (get (:expr-attr-vals options) ":sms_kasittelytila")))
-             (or (= :s (first (get (:expr-attr-vals options)
-                                   ":lahetettynumeroon")))
-                 (nil? (get (:expr-attr-vals options) ":lahetettynumeroon")))
-             (= "nippu-table-name" table))
-    (add-to-test-ohjaaja-puhnro-results
-      {:type "mock-ohjaaja-puhnro-update-item"
-       :ohjaaja_ytunnus_kj_tutkinto
-       (second (:ohjaaja_ytunnus_kj_tutkinto query-params))
-       :niputuspvm (second (:niputuspvm query-params))
-       :update-expr (:update-expr options)
-       :lahetettynumeroon-attr-name
-       (get (:expr-attr-names options) "#lahetettynumeroon")
-       :sms_kasittelytila
-       (second (get (:expr-attr-vals options) ":sms_kasittelytila"))
-       :lahetettynumeroon
-       (second (get (:expr-attr-vals options) ":lahetettynumeroon"))})))
+(defn- mock-ohjaaja-puhnro-update-nippu [nippu updates]
+  (add-to-test-ohjaaja-puhnro-results {:type "mock-ohjaaja-puhnro-update-nippu"
+                                       :nippu nippu
+                                       :updates updates}))
 
 (defn- mock-ohjaaja-puhnro-patch-nippulinkki [kyselylinkki data]
   (add-to-test-ohjaaja-puhnro-results
@@ -145,10 +94,10 @@
 (deftest test-ohjaaja-puhnro
   (testing "Ohjaaja-puhnro kutsuu update-item ja patch-nippulinkki oikein"
     (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
-                  oph.heratepalvelu.db.dynamodb/update-item
-                  mock-ohjaaja-puhnro-update-item
                   oph.heratepalvelu.external.arvo/patch-nippulinkki
-                  mock-ohjaaja-puhnro-patch-nippulinkki]
+                  mock-ohjaaja-puhnro-patch-nippulinkki
+                  oph.heratepalvelu.tep.tepCommon/update-nippu
+                  mock-ohjaaja-puhnro-update-nippu]
       (let [jaksot-one-valid-number [{:ohjaaja_puhelinnumero "+358401234567"}
                                      {:ohjaaja_puhelinnumero "+358401234567"}]
             jaksot-one-invalid-number [{:ohjaaja_puhelinnumero "1234"}
@@ -172,66 +121,63 @@
         (is (nil? (sh/ohjaaja-puhnro nippu-good-email
                                      jaksot-one-invalid-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
-               [{:type "mock-ohjaaja-puhnro-update-item"
-                 :ohjaaja_ytunnus_kj_tutkinto "test-id"
-                 :niputuspvm "2021-12-15"
-                 :update-expr
-                 (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                      "#lahetettynumeroon = :lahetettynumeroon")
-                 :lahetettynumeroon-attr-name "lahetettynumeroon"
-                 :sms_kasittelytila (:phone-invalid c/kasittelytilat)
-                 :lahetettynumeroon "1234"}]))
+               [{:type "mock-ohjaaja-puhnro-update-nippu"
+                 :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
+                         :niputuspvm "2021-12-15"
+                         :kasittelytila (:ei-lahetetty c/kasittelytilat)
+                         :kyselylinkki "kysely.linkki/123"}
+                 :updates {:sms_kasittelytila
+                           [:s (:phone-invalid c/kasittelytilat)]
+                           :lahetettynumeroon [:s "1234"]}}]))
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-email-mismatch
                                      jaksot-one-invalid-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
-               [{:type "mock-ohjaaja-puhnro-update-item"
-                 :ohjaaja_ytunnus_kj_tutkinto "test-id"
-                 :niputuspvm "2021-12-15"
-                 :update-expr
-                 (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                      "#lahetettynumeroon = :lahetettynumeroon")
-                 :lahetettynumeroon-attr-name "lahetettynumeroon"
-                 :sms_kasittelytila (:phone-invalid c/kasittelytilat)
-                 :lahetettynumeroon "1234"}
+               [{:type "mock-ohjaaja-puhnro-update-nippu"
+                 :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
+                         :niputuspvm "2021-12-15"
+                         :kasittelytila (:email-mismatch c/kasittelytilat)
+                         :kyselylinkki "kysely.linkki/123"}
+                 :updates {:sms_kasittelytila
+                           [:s (:phone-invalid c/kasittelytilat)]
+                           :lahetettynumeroon [:s "1234"]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
                  :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}]))
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-no-email jaksot-one-invalid-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
-               [{:type "mock-ohjaaja-puhnro-update-item"
-                 :ohjaaja_ytunnus_kj_tutkinto "test-id"
-                 :niputuspvm "2021-12-15"
-                 :update-expr
-                 (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                      "#lahetettynumeroon = :lahetettynumeroon")
-                 :lahetettynumeroon-attr-name "lahetettynumeroon"
-                 :sms_kasittelytila (:phone-invalid c/kasittelytilat)
-                 :lahetettynumeroon "1234"}
+               [{:type "mock-ohjaaja-puhnro-update-nippu"
+                 :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
+                         :niputuspvm "2021-12-15"
+                         :kasittelytila (:no-email c/kasittelytilat)
+                         :kyselylinkki "kysely.linkki/123"}
+                 :updates {:sms_kasittelytila
+                           [:s (:phone-invalid c/kasittelytilat)]
+                           :lahetettynumeroon [:s "1234"]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
                  :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}]))
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-good-email jaksot-no-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
-               [{:type "mock-ohjaaja-puhnro-update-item"
-                 :ohjaaja_ytunnus_kj_tutkinto "test-id"
-                 :niputuspvm "2021-12-15"
-                 :update-expr "SET #sms_kasittelytila = :sms_kasittelytila"
-                 :lahetettynumeroon-attr-name nil
-                 :sms_kasittelytila (:no-phone c/kasittelytilat)
-                 :lahetettynumeroon nil}]))
+               [{:type "mock-ohjaaja-puhnro-update-nippu"
+                 :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
+                         :niputuspvm "2021-12-15"
+                         :kasittelytila (:ei-lahetetty c/kasittelytilat)
+                         :kyselylinkki "kysely.linkki/123"}
+                 :updates {:sms_kasittelytila
+                           [:s (:no-phone c/kasittelytilat)]}}]))
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-email-mismatch jaksot-mismatch)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
-               [{:type "mock-ohjaaja-puhnro-update-item"
-                 :ohjaaja_ytunnus_kj_tutkinto "test-id"
-                 :niputuspvm "2021-12-15"
-                 :update-expr "SET #sms_kasittelytila = :sms_kasittelytila"
-                 :lahetettynumeroon-attr-name nil
-                 :sms_kasittelytila (:phone-mismatch c/kasittelytilat)
-                 :lahetettynumeroon nil}
+               [{:type "mock-ohjaaja-puhnro-update-nippu"
+                 :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
+                         :niputuspvm "2021-12-15"
+                         :kasittelytila (:email-mismatch c/kasittelytilat)
+                         :kyselylinkki "kysely.linkki/123"}
+                 :updates {:sms_kasittelytila
+                           [:s (:phone-mismatch c/kasittelytilat)]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
                  :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}
@@ -239,56 +185,16 @@
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-no-email jaksot-no-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
-               [{:type "mock-ohjaaja-puhnro-update-item"
-                 :ohjaaja_ytunnus_kj_tutkinto "test-id"
-                 :niputuspvm "2021-12-15"
-                 :update-expr "SET #sms_kasittelytila = :sms_kasittelytila"
-                 :lahetettynumeroon-attr-name nil
-                 :sms_kasittelytila (:no-phone c/kasittelytilat)
-                 :lahetettynumeroon nil}
+               [{:type "mock-ohjaaja-puhnro-update-nippu"
+                 :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
+                         :niputuspvm "2021-12-15"
+                         :kasittelytila (:no-email c/kasittelytilat)
+                         :kyselylinkki "kysely.linkki/123"}
+                 :updates {:sms_kasittelytila
+                           [:s (:no-phone c/kasittelytilat)]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
                  :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}]))))))
-
-(def test-update-vastausaika-loppunut-to-db-results (atom {}))
-
-(defn- mock-update-vastausaika-loppunut-to-db-update-item [query-params
-                                                           options
-                                                           table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                     "#sms_lahetyspvm = :sms_lahetyspvm")
-                (:update-expr options))
-             (= "sms_kasittelytila" (get (:expr-attr-names options)
-                                         "#sms_kasittelytila"))
-             (= "sms_lahetyspvm" (get (:expr-attr-names options)
-                                      "#sms_lahetyspvm"))
-             (= :s (first (get (:expr-attr-vals options) ":sms_kasittelytila")))
-             (= (:vastausaika-loppunut c/kasittelytilat)
-                (second (get (:expr-attr-vals options) ":sms_kasittelytila")))
-             (= :s (first (get (:expr-attr-vals options) ":sms_lahetyspvm")))
-             (= "2021-12-15"
-                (second (get (:expr-attr-vals options) ":sms_lahetyspvm")))
-             (= "nippu-table-name" table))
-    (reset! test-update-vastausaika-loppunut-to-db-results
-            {:ohjaaja_ytunnus_kj_tutkinto
-             (second (:ohjaaja_ytunnus_kj_tutkinto query-params))
-             :niputuspvm (second (:niputuspvm query-params))})))
-
-(deftest test-update-vastausaika-loppunut-to-db
-  (testing "Varmista, että update-vastausaika-loppunut-to-db toimii oikein"
-    (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
-                  oph.heratepalvelu.common/local-date-now
-                  (fn [] (LocalDate/of 2021 12 15))
-                  oph.heratepalvelu.db.dynamodb/update-item
-                  mock-update-vastausaika-loppunut-to-db-update-item]
-      (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
-                   :niputuspvm "2021-12-10"}
-            results {:ohjaaja_ytunnus_kj_tutkinto "test-id"
-                     :niputuspvm "2021-12-10"}]
-        (sh/update-vastausaika-loppunut-to-db nippu)
-        (is (= results @test-update-vastausaika-loppunut-to-db-results))))))
 
 (def test-query-lahetettavat-results (atom {}))
 
@@ -366,11 +272,6 @@
      :kyselylinkki kyselylinkki
      :data data}))
 
-(defn- mock-handleTepSmsSending-update-vastausaika-loppunut-to-db [nippu]
-  (add-to-test-handleTepSmsSending-results
-    {:type "mock-handleTepSmsSending-update-vastausaika-loppunut-to-db"
-     :nippu nippu}))
-
 (defn- mock-query-lahetettavat [limit]
   (add-to-test-handleTepSmsSending-results {:type "mock-query-lahetettavat"
                                             :limit limit})
@@ -410,9 +311,7 @@
        oph.heratepalvelu.tep.tepSmsHandler/query-lahetettavat
        mock-query-lahetettavat
        oph.heratepalvelu.tep.tepSmsHandler/update-status-to-db
-       mock-handleTepSmsSending-update-status-to-db
-       oph.heratepalvelu.tep.tepSmsHandler/update-vastausaika-loppunut-to-db
-       mock-handleTepSmsSending-update-vastausaika-loppunut-to-db]
+       mock-handleTepSmsSending-update-status-to-db]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
             results [{:type "mock-query-lahetettavat"
