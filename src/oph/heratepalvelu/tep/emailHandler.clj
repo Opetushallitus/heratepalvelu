@@ -26,20 +26,6 @@
       (= (:no-phone c/kasittelytilat) (:sms_kasittelytila nippu))
       (= (:phone-invalid c/kasittelytilat) (:sms_kasittelytila nippu))))
 
-(defn lahetysosoite-update-item
-  "Päivittää nipun käsittelytilan tietokantaan, kun osoitteista ei löydy selkeää
-  vaihtoehtoa. Parametri osoitteet on lista sähköpostiosoitteista."
-  [nippu osoitteet]
-  (ddb/update-item
-    {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-     :niputuspvm                  [:s (:niputuspvm nippu)]}
-    {:update-expr      "SET #kasittelytila = :kasittelytila"
-     :expr-attr-names {"#kasittelytila" "kasittelytila"}
-     :expr-attr-vals  {":kasittelytila" [:s (if (empty? osoitteet)
-                                              (:no-email c/kasittelytilat)
-                                              (:email-mismatch c/kasittelytilat))]}}
-    (:nippu-table env)))
-
 (defn lahetysosoite
   "Yrittää hakea yksittäisen sähköpostiosoitteen nippuun liittyvistä jaksoista.
   Jos löytyy, palauttaa sen. Jos sitä ei löydy, päivittää tiedot tietokantaan
@@ -49,17 +35,21 @@
   (let [ohjaaja-email (tc/reduce-common-value jaksot :ohjaaja_email)]
     (if (some? ohjaaja-email)
       ohjaaja-email
-      (let [osoitteet (reduce
-                        #(if (some? (:ohjaaja_email %2))
-                          (conj %1 (:ohjaaja_email %2))
-                          %1)
-                        #{} jaksot)]
+      (let [osoitteet (reduce #(if (some? (:ohjaaja_email %2))
+                                 (conj %1 (:ohjaaja_email %2))
+                                 %1)
+                              #{}
+                              jaksot)]
         (log/warn "Ei yksiselitteistä ohjaajan sähköpostia "
                     (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
                     (:niputuspvm nippu) "," osoitteet)
-        (lahetysosoite-update-item nippu osoitteet)
+        (let [kasittelytila (if (empty? osoitteet)
+                              (:no-email c/kasittelytilat)
+                              (:email-mismatch c/kasittelytilat))]
+          (tc/update-nippu nippu {:kasittelytila [:s kasittelytila]}))
         (when (bad-phone? nippu)
-          (arvo/patch-nippulinkki (:kyselylinkki nippu) {:tila (:ei-yhteystietoja c/kasittelytilat)}))
+          (arvo/patch-nippulinkki (:kyselylinkki nippu)
+                                  {:tila (:ei-yhteystietoja c/kasittelytilat)}))
         nil))))
 
 (defn do-nippu-query
@@ -76,25 +66,13 @@
   viestintäpalveluun. Parametri id on lähetyksen ID viestintäpalvelussa."
   [nippu id lahetyspvm osoite]
   (try
-    (ddb/update-item
-      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-       :niputuspvm                  [:s (:niputuspvm nippu)]}
-      {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
-                             "#vpid = :vpid, "
-                             "#lahetyspvm = :lahetyspvm, "
-                             "#muistutukset = :muistutukset, "
-                             "#lahetysosoite = :lahetysosoite")
-       :expr-attr-names {"#kasittelytila" "kasittelytila"
-                         "#vpid" "viestintapalvelu-id"
-                         "#lahetyspvm" "lahetyspvm"
-                         "#muistutukset" "muistutukset"
-                         "#lahetysosoite" "lahetysosoite"}
-       :expr-attr-vals  {":kasittelytila" [:s (:viestintapalvelussa c/kasittelytilat)]
-                         ":vpid" [:n id]
-                         ":lahetyspvm" [:s lahetyspvm]
-                         ":muistutukset" [:n 0]
-                         ":lahetysosoite" [:s osoite]}}
-      (:nippu-table env))
+    (tc/update-nippu
+      nippu
+      {:kasittelytila       [:s (:viestintapalvelussa c/kasittelytilat)]
+       :viestintapalvelu-id [:n id]
+       :lahetyspvm          [:s lahetyspvm]
+       :muistutukset        [:n 0]
+       :lahetysosoite       [:s osoite]})
     (catch AwsServiceException e
       (log/error "Viestitiedot nipusta" nippu "ei päivitetty kantaan!")
       (log/error e))))
@@ -117,18 +95,14 @@
   "Päivittää tietokantaan tiedot, että vastausaika on loppunut."
   [nippu]
   (try
-    (ddb/update-item
-      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-       :niputuspvm                  [:s (:niputuspvm nippu)]}
-      {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
-                             "#lahetyspvm = :lahetyspvm")
-       :expr-attr-names {"#kasittelytila" "kasittelytila"
-                         "#lahetyspvm" "lahetyspvm"}
-       :expr-attr-vals {":kasittelytila" [:s (:vastausaika-loppunut c/kasittelytilat)]
-                        ":lahetyspvm" [:s (str (c/local-date-now))]}}
-      (:nippu-table env))
+    (tc/update-nippu
+      nippu
+      {:kasittelytila [:s (:vastausaika-loppunut c/kasittelytilat)]
+       :lahetyspvm    [:s (str (c/local-date-now))]})
     (catch Exception e
-      (log/error "Virhe lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut" nippu)
+      (log/error "Virhe lähetystilan päivityksessä nipulle,"
+                 "jonka vastausaika umpeutunut"
+                 nippu)
       (log/error e))))
 
 (defn -handleSendTEPEmails

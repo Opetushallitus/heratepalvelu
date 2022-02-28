@@ -19,48 +19,11 @@
       (is (true? (eh/bad-phone? nippu3)))
       (is (false? (eh/bad-phone? nippu4))))))
 
-(def test-lahetysosoite-update-item-results (atom {}))
+(def mock-lahetysosoite-update-nippu-result (atom {}))
 
-(defn- mock-lahetysosoite-update-item-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= "SET #kasittelytila = :kasittelytila" (:update-expr options))
-             (= "kasittelytila" (get (:expr-attr-names options)
-                                     "#kasittelytila"))
-             (= :s (first (get (:expr-attr-vals options) ":kasittelytila")))
-             (= "nippu-table-name" table))
-    (reset! test-lahetysosoite-update-item-results
-            {:ohjaaja_ytunnus_kj_tutkinto (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                    query-params))
-             :niputuspvm (second (:niputuspvm query-params))
-             :kasittelytila (second (get (:expr-attr-vals options)
-                                         ":kasittelytila"))})))
-
-(deftest test-lahetysosoite-update-item
-  (testing "Varmista, että lahetysosoite-update-item kutsuu update-item oikein"
-    (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
-                  oph.heratepalvelu.db.dynamodb/update-item
-                  mock-lahetysosoite-update-item-update-item]
-      (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                   :niputuspvm "2021-10-10"}
-            osoitteet ["a@b.com"]
-            osoitteet-empty []
-            expected {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                      :niputuspvm "2021-10-10"
-                      :kasittelytila (:email-mismatch c/kasittelytilat)}
-            expected-empty {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                            :niputuspvm "2021-10-10"
-                            :kasittelytila (:no-email c/kasittelytilat)}]
-        (eh/lahetysosoite-update-item nippu osoitteet)
-        (is (= @test-lahetysosoite-update-item-results expected))
-        (eh/lahetysosoite-update-item nippu osoitteet-empty)
-        (is (= @test-lahetysosoite-update-item-results expected-empty))))))
-
-(def mock-lahetysosoite-update-item-result (atom {}))
-
-(defn- mock-lahetysosoite-update-item [nippu osoitteet]
-  (reset! mock-lahetysosoite-update-item-result {:nippu nippu
-                                                 :osoitteet osoitteet}))
+(defn- mock-lahetysosoite-update-nippu [nippu updates]
+  (reset! mock-lahetysosoite-update-nippu-result {:nippu nippu
+                                                  :updates updates}))
 
 (def mock-patch-nippulinkki-result (atom {}))
 
@@ -68,7 +31,7 @@
   (reset! mock-patch-nippulinkki-result {:kyselylinkki linkki :data data}))
 
 (defn- reset-lahetysosoite-result-variables []
-  (reset! mock-lahetysosoite-update-item-result {})
+  (reset! mock-lahetysosoite-update-nippu-result {})
   (reset! mock-patch-nippulinkki-result {}))
 
 (deftest test-lahetysosoite
@@ -76,8 +39,8 @@
     (with-redefs [clojure.tools.logging/log* tu/mock-log*
                   oph.heratepalvelu.external.arvo/patch-nippulinkki
                   mock-patch-nippulinkki
-                  oph.heratepalvelu.tep.emailHandler/lahetysosoite-update-item
-                  mock-lahetysosoite-update-item]
+                  oph.heratepalvelu.tep.tepCommon/update-nippu
+                  mock-lahetysosoite-update-nippu]
       (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
                    :niputuspvm "2021-10-10"
                    :sms_kasittelytila (:success c/kasittelytilat)
@@ -94,9 +57,10 @@
         (is (= (eh/lahetysosoite nippu jaksot-same-emails) "a@b.com"))
         (reset-lahetysosoite-result-variables)
         (is (nil? (eh/lahetysosoite nippu jaksot-different-emails)))
-        (is (= @mock-lahetysosoite-update-item-result
+        (is (= @mock-lahetysosoite-update-nippu-result
                {:nippu nippu
-                :osoitteet #{"a@b.com" "x@y.com"}}))
+                :updates
+                {:kasittelytila [:s (:email-mismatch c/kasittelytilat)]}}))
         (is (= @mock-patch-nippulinkki-result {}))
         (is (true? (tu/logs-contain?
                      {:level :warn
@@ -105,9 +69,10 @@
                                     "#{a@b.com x@y.com}")})))
         (reset-lahetysosoite-result-variables)
         (is (nil? (eh/lahetysosoite nippu-bad-phone jaksot-different-emails)))
-        (is (= @mock-lahetysosoite-update-item-result
+        (is (= @mock-lahetysosoite-update-nippu-result
                {:nippu nippu-bad-phone
-                :osoitteet #{"a@b.com" "x@y.com"}}))
+                :updates
+                {:kasittelytila [:s (:email-mismatch c/kasittelytilat)]}}))
         (is (= @mock-patch-nippulinkki-result
                {:kyselylinkki "kysely.linkki/1234"
                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}))
@@ -142,60 +107,31 @@
       (eh/do-nippu-query)
       (is (= @test-do-nippu-query-results "2021-10-10")))))
 
-(def test-email-sent-update-item-results (atom {}))
+(def test-email-sent-update-nippu-results (atom {}))
 
-(defn- mock-esui-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= (str "SET #kasittelytila = :kasittelytila, #vpid = :vpid, "
-                     "#lahetyspvm = :lahetyspvm, #muistutukset = :muistutukset,"
-                     " #lahetysosoite = :lahetysosoite")
-                (:update-expr options))
-             (= "kasittelytila" (get (:expr-attr-names options)
-                                     "#kasittelytila"))
-             (= "viestintapalvelu-id" (get (:expr-attr-names options) "#vpid"))
-             (= "lahetyspvm" (get (:expr-attr-names options) "#lahetyspvm"))
-             (= "muistutukset" (get (:expr-attr-names options) "#muistutukset"))
-             (= "lahetysosoite" (get (:expr-attr-names options)
-                                     "#lahetysosoite"))
-             (= :s (first (get (:expr-attr-vals options) ":kasittelytila")))
-             (= :n (first (get (:expr-attr-vals options) ":vpid")))
-             (= :s (first (get (:expr-attr-vals options) ":lahetyspvm")))
-             (= :n (first (get (:expr-attr-vals options) ":muistutukset")))
-             (= :s (first (get (:expr-attr-vals options) ":lahetysosoite")))
-             (= "nippu-table-name" table))
-    (reset! test-email-sent-update-item-results
-            {:ohjaaja_ytunnus_kj_tutkinto (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                    query-params))
-             :niputuspvm (second (:niputuspvm query-params))
-             :kasittelytila (second (get (:expr-attr-vals options)
-                                         ":kasittelytila"))
-             :vpid (second (get (:expr-attr-vals options) ":vpid"))
-             :lahetyspvm (second (get (:expr-attr-vals options) ":lahetyspvm"))
-             :muistutukset (second (get (:expr-attr-vals options)
-                                        ":muistutukset"))
-             :lahetysosoite (second (get (:expr-attr-vals options)
-                                         ":lahetysosoite"))})))
+(defn- mock-esui-update-nippu [nippu updates]
+  (reset! test-email-sent-update-nippu-results {:nippu nippu :updates updates}))
 
 (deftest test-email-sent-update-item
   (testing "Varmista, että email-sent-update-item kutsuu update-item oikein"
     (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
-                  oph.heratepalvelu.db.dynamodb/update-item
-                  mock-esui-update-item]
-      (let [email {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
+                  oph.heratepalvelu.tep.tepCommon/update-nippu
+                  mock-esui-update-nippu]
+      (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
                    :niputuspvm "2021-10-08"}
             id 123
             lahetyspvm "2021-10-10"
             osoite "a@b.com"
-            expected {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                      :niputuspvm "2021-10-08"
-                      :kasittelytila (:viestintapalvelussa c/kasittelytilat)
-                      :vpid 123
-                      :lahetyspvm "2021-10-10"
-                      :muistutukset 0
-                      :lahetysosoite "a@b.com"}]
-        (eh/email-sent-update-item email id lahetyspvm osoite)
-        (is (= @test-email-sent-update-item-results expected))))))
+            expected {:nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
+                              :niputuspvm "2021-10-08"}
+                      :updates {:kasittelytila
+                                [:s (:viestintapalvelussa c/kasittelytilat)]
+                                :viestintapalvelu-id [:n 123]
+                                :lahetyspvm [:s "2021-10-10"]
+                                :muistutukset [:n 0]
+                                :lahetysosoite [:s "a@b.com"]}}]
+        (eh/email-sent-update-item nippu id lahetyspvm osoite)
+        (is (= @test-email-sent-update-nippu-results expected))))))
 
 (def test-send-survey-email-results (atom {}))
 
@@ -219,39 +155,23 @@
 
 (def test-no-time-to-answer-update-item-results (atom {}))
 
-(defn- mock-nttaui-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= "SET #kasittelytila = :kasittelytila, #lahetyspvm = :lahetyspvm"
-                (:update-expr options))
-             (= "kasittelytila" (get (:expr-attr-names options)
-                                     "#kasittelytila"))
-             (= "lahetyspvm" (get (:expr-attr-names options) "#lahetyspvm"))
-             (= :s (first (get (:expr-attr-vals options) ":kasittelytila")))
-             (= :s (first (get (:expr-attr-vals options) ":lahetyspvm")))
-             (= "nippu-table-name" table))
-    (reset! test-no-time-to-answer-update-item-results
-            {:ohjaaja_ytunnus_kj_tutkinto (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                    query-params))
-             :niputuspvm (second (:niputuspvm query-params))
-             :kasittelytila (second (get (:expr-attr-vals options)
-                                         ":kasittelytila"))
-             :lahetyspvm (second (get (:expr-attr-vals options)
-                                      ":lahetyspvm"))})))
+(defn- mock-nttaui-update-nippu [nippu updates]
+  (reset! test-no-time-to-answer-update-item-results {:nippu nippu
+                                                      :updates updates}))
 
 (deftest test-no-time-to-answer-update-item
   (testing "Varmista, että no-time-to-answer-update-item kutsuu update-item"
-    (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
-                  oph.heratepalvelu.common/local-date-now
+    (with-redefs [oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2021 10 10))
-                  oph.heratepalvelu.db.dynamodb/update-item
-                  mock-nttaui-update-item]
+                  oph.heratepalvelu.tep.tepCommon/update-nippu
+                  mock-nttaui-update-nippu]
       (let [email {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
                    :niputuspvm "2021-09-09"}
-            expected {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                      :niputuspvm "2021-09-09"
-                      :kasittelytila (:vastausaika-loppunut c/kasittelytilat)
-                      :lahetyspvm "2021-10-10"}]
+            expected {:nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
+                              :niputuspvm "2021-09-09"}
+                      :updates {:kasittelytila [:s (:vastausaika-loppunut
+                                                     c/kasittelytilat)]
+                                :lahetyspvm    [:s "2021-10-10"]}}]
         (eh/no-time-to-answer-update-item email)
         (is (= @test-no-time-to-answer-update-item-results expected))))))
 
