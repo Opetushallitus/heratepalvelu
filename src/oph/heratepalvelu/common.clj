@@ -259,3 +259,19 @@
     (if (.isBefore last normal)
       last
       normal)))
+
+(defn- make-set-pair
+  "Luo '#x = :x' -pareja update-expreja varten."
+  [item-key]
+  (let [normalized (normalize-string (name item-key))]
+    (str "#" normalized " = :" normalized)))
+
+(defn create-update-item-options [updates]
+  {:update-expr (str "SET " (str/join ", " (map make-set-pair (keys updates))))
+   :expr-attr-names (reduce #(assoc %1 (str "#" (normalize-string %2)) %2)
+                            {}
+                            (map name (keys updates)))
+   :expr-attr-vals
+   (reduce-kv #(assoc %1 (str ":" (normalize-string (name %2))) %3)
+              {}
+              updates)})
