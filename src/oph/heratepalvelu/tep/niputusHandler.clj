@@ -82,6 +82,15 @@
                             :request_id    [:s request-id]
                             :kasittelypvm  [:s (str (c/local-date-now))]})))))
 
+(defn do-query
+  "Hakee käsiteltäviä nippuja tietokannasta."
+  []
+  (ddb/query-items {:kasittelytila [:eq [:s (:ei-niputettu c/kasittelytilat)]]
+                    :niputuspvm    [:le [:s (str (c/local-date-now))]]}
+                   {:index "niputusIndex"
+                    :limit 10}
+                   (:nippu-table env)))
+
 (defn -handleNiputus
   "Hakee ja niputtaa niputtamattomat jaksot."
   [this event context]
@@ -90,18 +99,10 @@
          (sort-by
            :niputuspvm
            #(* -1 (compare %1 %2))
-           (ddb/query-items {:kasittelytila [:eq [:s (:ei-niputettu c/kasittelytilat)]]
-                             :niputuspvm    [:le [:s (str (c/local-date-now))]]}
-                            {:index "niputusIndex"
-                             :limit 10}
-                            (:nippu-table env)))]
+           (do-query))]
     (log/info "Käsitellään" (count niputettavat) "niputusta.")
     (when (seq niputettavat)
       (doseq [nippu niputettavat]
         (niputa nippu))
       (when (< 120000 (.getRemainingTimeInMillis context))
-        (recur (ddb/query-items {:kasittelytila [:eq [:s (:ei-niputettu c/kasittelytilat)]]
-                                 :niputuspvm    [:le [:s (str (c/local-date-now))]]}
-                                {:index "niputusIndex"
-                                 :limit 10}
-                                (:nippu-table env)))))))
+        (recur (do-query))))))

@@ -25,7 +25,8 @@
   [muistutettavat]
   (log/info (str "Käsitellään" (count muistutettavat) "muistutusta."))
   (doseq [nippu muistutettavat]
-    (log/info "Kyselylinkin tunnusosa:" (last (str/split (:kyselylinkki nippu) #"_")))
+    (log/info "Kyselylinkin tunnusosa:"
+              (last (str/split (:kyselylinkki nippu) #"_")))
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))
           ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
           niputuspvm (:niputuspvm nippu)]
