@@ -30,7 +30,7 @@ tekstit luodaan ja viestit lähetetään palvelun kautta.
 
 ## Koski
 
-Koksi käsittelee muun muassa opiskeluoikeuksia. Tiedostosta
+Koski käsittelee muun muassa opiskeluoikeuksia. Tiedostosta
 `src/oph/heratepalvelu/external/koski.clj` löytyy funktioita, joilla
 opiskeluoikeuksia haetaan eräiden kriteerien perusteella.
 
@@ -38,7 +38,7 @@ opiskeluoikeuksia haetaan eräiden kriteerien perusteella.
 ## Organisaatio
 
 Organisaatiopalvelu tarjoaa tietoja organisaatioista (esim. korkeakouluista).
-Tiedosta `src/oph/heratepalvelu/external/organisaatio.clj` löytyy funktioita,
+Tiedostosta `src/oph/heratepalvelu/external/organisaatio.clj` löytyy funktioita,
 joilla nämä tiedot haetaan.
 
 

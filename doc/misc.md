@@ -4,7 +4,7 @@
 
 Jokaisen rahoituskauden jälkeen arkistoidaan AMIS-taulun tietueet, jotka
 kuuluvat edeltävään rahoituskauteen. Tähän käytetään funktiota, joka on
-määritelty tiedossa `src/oph/heratepalvelu/util/dbArchiver.clj`. Kun lisäät
+määritelty tiedostossa `src/oph/heratepalvelu/util/dbArchiver.clj`. Kun lisäät
 uuden rahoituskauden arkistointiin, lisää uusi rivi `-handleDBArchiving`:in
 bodyyn, määrittele uusi arkistotaulu `cdk/lib/amis.ts`-tiedostossa, ja anna
 referenssi tähän tauluun AMIS-DBArchiver -lambdafunktioon. Funktion määritelmä
