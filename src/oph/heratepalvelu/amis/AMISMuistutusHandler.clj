@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.amis.AMISMuistutusHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
+            [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
@@ -22,22 +23,12 @@
   lähetetty viestintäpalveluun."
   [herate n id]
   (try
-    (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija herate)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
-      {:update-expr    (str "SET #muistutukset = :muistutukset, "
-                            "#vpid = :vpid, "
-                            "#lahetystila = :lahetystila, "
-                            "#muistutuspvm = :muistutuspvm")
-       :expr-attr-names {"#muistutukset" "muistutukset"
-                         "#vpid" "viestintapalvelu-id"
-                         "#lahetystila" "lahetystila"
-                         "#muistutuspvm" (str n ".-muistutus-lahetetty")}
-       :expr-attr-vals  {":muistutukset" [:n n]
-                         ":vpid" [:n id]
-                         ":lahetystila" [:s (:viestintapalvelussa
-                                              c/kasittelytilat)]
-                         ":muistutuspvm" [:s (str (c/local-date-now))]}})
+    (ac/update-herate
+      herate
+      {:muistutukset [:n n]
+       :viestintapalvelu-id [:n id]
+       :lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]
+       (keyword (str n ".-muistutus-lahetetty")) [:s (str (c/local-date-now))]})
     (catch AwsServiceException e
       (log/error "Muistutus herätteelle"
                  herate
@@ -48,18 +39,10 @@
   "Päivittää herätteen tietokantaan, jos muistutusta ei lähetetty."
   [herate n status]
   (try
-    (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija herate)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
-      {:update-expr     (str "SET #lahetystila = :lahetystila, "
-                             "#muistutukset = :muistutukset")
-       :expr-attr-names {"#lahetystila" "lahetystila"
-                         "#muistutukset" "muistutukset"}
-       :expr-attr-vals {":lahetystila" [:s (if (:vastattu status)
-                                             (:vastattu c/kasittelytilat)
-                                             (:vastausaika-loppunut-m
-                                               c/kasittelytilat))]
-                        ":muistutukset" [:n n]}})
+    (let [tila (if (:vastattu status)
+                 (:vastattu c/kasittelytilat)
+                 (:vastausaika-loppunut-m c/kasittelytilat))]
+      (ac/update-herate herate {:lahetystila [:s tila] :muistutukset [:n n]}))
     (catch Exception e
       (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on"
                  "vastattu tai jonka vastausaika umpeutunut"

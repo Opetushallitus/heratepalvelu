@@ -52,29 +52,22 @@
         (esh/update-ehoks-if-not-muistutus email2 status tila)
         (is (= @mock-send-lahetys-data-to-ehoks-results expected2))))))
 
-(def mock-update-item-results (atom {}))
+(def mock-update-herate-results (atom {}))
 
-(defn- mock-update-item [query-params options]
-  (when (and (= :s (first (:toimija_oppija query-params)))
-             (= :s (first (:tyyppi_kausi query-params)))
-             (= :s (first (get (:expr-attr-vals options) ":lahetystila"))))
-    (reset! mock-update-item-results
-            {:toimija-oppija (second (:toimija_oppija query-params))
-             :tyyppi-kausi (second (:tyyppi_kausi query-params))
-             :lahetystila (second (get (:expr-attr-vals options)
-                                       ":lahetystila"))})))
+(defn- mock-update-herate [herate updates]
+  (reset! mock-update-herate-results {:herate herate :updates updates}))
 
 (deftest test-update-db
   (testing "Varmista, että update-db kutsuu update-item oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/update-item mock-update-item]
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/update-herate
+                  mock-update-herate]
       (let [email {:toimija_oppija "toimija-oppija"
                    :tyyppi_kausi "tyyppi-kausi"}
             tila (:success c/kasittelytilat)
-            expected {:toimija-oppija "toimija-oppija"
-                      :tyyppi-kausi "tyyppi-kausi"
-                      :lahetystila (:success c/kasittelytilat)}]
+            expected {:herate email
+                      :updates {:lahetystila [:s (:success c/kasittelytilat)]}}]
         (esh/update-db email tila)
-        (is (= @mock-update-item-results expected))))))
+        (is (= @mock-update-herate-results expected))))))
 
 (def mock-query-items-results (atom {}))
 

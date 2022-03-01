@@ -1,11 +1,12 @@
 (ns oph.heratepalvelu.amis.EmailStatusHandler
-  (:require [oph.heratepalvelu.db.dynamodb :as ddb]
+  (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
+            [oph.heratepalvelu.amis.AMISCommon :as ac]
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [clojure.tools.logging :as log]
-            [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.common :as c]
-            [clojure.string :as str])
+            [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 ;; Hakee viestintäpalvelussa olevian sähköpostien tilat viestintäpalvelusta ja
@@ -39,12 +40,7 @@
   "Päivittää sähköpostin tilan tietokantaan."
   [herate tila]
   (try
-    (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija herate)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
-      {:update-expr    "SET #lahetystila = :lahetystila"
-       :expr-attr-names {"#lahetystila" "lahetystila"}
-       :expr-attr-vals  {":lahetystila" [:s tila]}})
+    (ac/update-herate herate {:lahetystila [:s tila]})
     (catch AwsServiceException e
       (log/error "Lähetystilan tallennus kantaan epäonnistui" herate)
       (log/error e))))
