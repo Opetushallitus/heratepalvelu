@@ -24,13 +24,15 @@
   jos kyselyyn ei ole vielä vastattu ja kyselyä ei ole vielä lähetetty."
   [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (loop [emails (ddb/query-items {:kasittelytila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
+  (loop [emails (ddb/query-items {:kasittelytila [:eq [:s (:viestintapalvelussa
+                                                            c/kasittelytilat)]]}
                                  {:index "niputusIndex"
                                   :limit 100}
                                  (:nippu-table env))]
     (doseq [email emails]
-      (let [nippu (ddb/get-item {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
-                                 :niputuspvm                  [:s (:niputuspvm email)]}
+      (let [nippu (ddb/get-item {:ohjaaja_ytunnus_kj_tutkinto
+                                 [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
+                                 :niputuspvm [:s (:niputuspvm email)]}
                                 (:nippu-table env))
             status (vp/get-email-status (:viestintapalvelu-id nippu))
             tila (vp/convert-email-status status)
@@ -66,7 +68,8 @@
     (when (and @new-changes?
                (< 60000 (.getRemainingTimeInMillis context)))
       (reset! new-changes? false)
-      (recur (ddb/query-items {:kasittelytila [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
+      (recur (ddb/query-items {:kasittelytila [:eq [:s (:viestintapalvelussa
+                                                         c/kasittelytilat)]]}
                               {:index "niputusIndex"
                                :limit 10}
                               (:nippu-table env))))))

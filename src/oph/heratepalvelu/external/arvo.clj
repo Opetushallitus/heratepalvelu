@@ -56,13 +56,15 @@
   (let [oids (ehoks/get-hankintakoulutus-oids ehoks-id)]
     (when (not-empty oids)
       (if (> (count oids) 1)
-        (log/warn "Enemmän kuin yksi linkitetty opiskeluoikeus! HOKS-id: " ehoks-id)
+        (log/warn "Enemmän kuin yksi linkitetty opiskeluoikeus! HOKS-id:"
+                  ehoks-id)
         (let [opiskeluoikeus (koski/get-opiskeluoikeus (first oids))
               toteuttaja-oid
               (get-in
                 opiskeluoikeus
                 [:koulutustoimija :oid])]
-          (log/info "Hoks " ehoks-id ", hankintakoulutuksen toteuttaja:" toteuttaja-oid)
+          (log/info "Hoks" ehoks-id ", hankintakoulutuksen toteuttaja:"
+                    toteuttaja-oid)
           toteuttaja-oid)))))
 
 (defn build-arvo-request-body
@@ -77,7 +79,8 @@
                                                      :koodiarvo])
    :tutkinnon_suorituskieli        (str/lower-case
                                      (:koodiarvo (:suorituskieli suoritus)))
-   :osaamisala                     (get-osaamisalat suoritus (:oid opiskeluoikeus))
+   :osaamisala                     (get-osaamisalat suoritus
+                                                    (:oid opiskeluoikeus))
    :koulutustoimija_oid            koulutustoimija
    :oppilaitos_oid                 (:oid (:oppilaitos opiskeluoikeus))
    :request_id                     request-id
@@ -130,9 +133,10 @@
   "Hakee TEP-kyselylinkin tilan."
   [linkki]
   (let [tunniste (last (str/split linkki #"/"))]
-    (:body (client/get (str (:arvo-url env) "tyoelamapalaute/v1/status/" tunniste)
-                       {:basic-auth [(:arvo-user env) @pwd]
-                        :as         :json}))))
+    (:body (client/get
+             (str (:arvo-url env) "tyoelamapalaute/v1/status/" tunniste)
+             {:basic-auth [(:arvo-user env) @pwd]
+              :as         :json}))))
 
 (defn patch-kyselylinkki-metadata
   "Päivittää AMIS-kyselinkin tilan Arvoon."
@@ -263,7 +267,9 @@
   (try
     (let [tunniste (last (str/split linkki #"/"))]
       (:body (client/patch
-               (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (util/url-encode tunniste))
+               (str (:arvo-url env)
+                    "tyoelamapalaute/v1/nippu/"
+                    (util/url-encode tunniste))
                {:basic-auth   [(:arvo-user env) @pwd]
                 :content-type "application/json"
                 :body         (generate-string data)

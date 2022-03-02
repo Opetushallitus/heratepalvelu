@@ -2,7 +2,8 @@
   (:import (software.amazon.awssdk.services.ssm SsmClient)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.services.ssm.model GetParameterRequest)
-           (software.amazon.awssdk.core.client.config ClientOverrideConfiguration)
+           (software.amazon.awssdk.core.client.config
+             ClientOverrideConfiguration)
            (com.amazonaws.xray.interceptors TracingInterceptor)))
 
 (def client (-> (SsmClient/builder)

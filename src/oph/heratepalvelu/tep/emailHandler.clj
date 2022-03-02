@@ -83,7 +83,9 @@
   (avaimet :en, :fi, ja :sv); parametri osoite on sähköpostiosoite stringinä."
   [nippu oppilaitokset osoite]
   (try
-    (vp/send-email {:subject "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
+    (vp/send-email {:subject (str "Työpaikkaohjaajakysely - "
+                                  "Enkät till arbetsplatshandledaren - "
+                                  "Survey to workplace instructors")
                     :body (vp/tyopaikkaohjaaja-html nippu oppilaitokset)
                     :address osoite
                     :sender "OPH – UBS – EDUFI"})

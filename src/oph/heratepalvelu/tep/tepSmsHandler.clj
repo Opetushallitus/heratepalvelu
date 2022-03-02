@@ -112,11 +112,12 @@
   "Hakee enintään limit nippua tietokannasta, joilta SMS-viesti ei ole vielä
   lähetetty ja niputuspäivämäärä on jo mennyt."
   [limit]
-  (ddb/query-items {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-                    :niputuspvm    [:le [:s (str (c/local-date-now))]]}
-                   {:index "smsIndex"
-                    :limit limit}
-                   (:nippu-table env)))
+  (ddb/query-items
+    {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
+     :niputuspvm    [:le [:s (str (c/local-date-now))]]}
+    {:index "smsIndex"
+     :limit limit}
+    (:nippu-table env)))
 
 (defn -handleTepSmsSending
   "Hakee nippuja tietokannasta, joilta ei ole lähetetty SMS-viestejä, ja
@@ -135,18 +136,31 @@
                   sms-kasittelytila (:sms_kasittelytila nippu)]
               (when (and (some? puhelinnumero)
                          (or (nil? sms-kasittelytila)
-                             (= sms-kasittelytila (:ei-lahetetty c/kasittelytilat))))
+                             (= sms-kasittelytila
+                                (:ei-lahetetty c/kasittelytilat))))
                 (try
-                  (let [body (elisa/msg-body (:kyselylinkki nippu) oppilaitokset)
+                  (let [body (elisa/msg-body (:kyselylinkki nippu)
+                                             oppilaitokset)
                         resp (elisa/send-tep-sms puhelinnumero body)
-                        status (get-in resp [:body :messages (keyword puhelinnumero) :status])
-                        converted (get-in resp [:body :messages (keyword puhelinnumero) :converted])
+                        status (get-in resp [:body
+                                             :messages
+                                             (keyword puhelinnumero)
+                                             :status])
+                        converted (get-in resp [:body
+                                                :messages
+                                                (keyword puhelinnumero)
+                                                :converted])
                         new-loppupvm (tc/get-new-loppupvm nippu)]
-                    (update-status-to-db status (or converted puhelinnumero) nippu new-loppupvm)
+                    (update-status-to-db status
+                                         (or converted puhelinnumero)
+                                         nippu
+                                         new-loppupvm)
                     (arvo/patch-nippulinkki (:kyselylinkki nippu)
-                                            (update-arvo-obj-sms status new-loppupvm)))
+                                            (update-arvo-obj-sms status
+                                                                 new-loppupvm)))
                   (catch AwsServiceException e
-                    (log/error (str "SMS-viestin lähetysvaiheen kantapäivityksessä tapahtui virhe!"))
+                    (log/error "SMS-viestin lähetysvaiheen kantapäivityksessä"
+                               "tapahtui virhe!")
                     (log/error e))
                   (catch ExceptionInfo e
                     (if (client-error? e)
@@ -164,7 +178,8 @@
                                                          c/kasittelytilat)]
                                 :sms_lahetyspvm [:s (str (c/local-date-now))]})
               (catch Exception e
-                (log/error "Virhe sms-lähetystilan päivityksessä nipulle, jonka vastausaika umpeutunut")
+                (log/error "Virhe sms-lähetystilan päivityksessä nipulle,"
+                           "jonka vastausaika umpeutunut")
                 (log/error e))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (query-lahetettavat 10))))))
