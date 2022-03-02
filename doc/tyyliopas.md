@@ -5,23 +5,21 @@ Yleisimmät tyylisuositukset ja ohjeet kehittäjille.
 
 ## Docstringit
 
-Pyritään lisätä docstringeja kaikkiin projektin funktioihin. Testeissä ne eivät
-ole aina %100 tarpeen, mutta ne eivät olisi haitallisia. Pyritään lisätä
-jonkinlainen string ainakin `testing`-macron kutsuihin testeissä.
+Pyritään siihen, että kaikilla funktioilla on docstring. Testeissä ne eivät ole
+aina 100% tarpeen, mutta ei niistä haittaakaan ole. Pyritään lisäämään
+jonkinlainen string aina `testing`-macron kutsuihin testeissä.
 
 Muista, että docstringit täytyy lisätä ennen funktion argumentteja — muuten ne
-tulkitaan osana funktion kehosta, evaluoidaan, ja heitetään pois. Jos docstring
+tulkitaan osana funktion koodia, evaluoidaan, ja heitetään pois. Jos docstring
 ulottuu seuraavalle riville, tarvittavien rivikatkoksien ja indentaation pitäisi
 olla stringin sisällä (katso esimerkkejä koodista).
 
 
 ## Rivien pituus
 
-Rivien pitäisi olla eniten 80 merkkiä pitkiä. Voi joskus syntyä tapauksia,
-joissa tämä on mahdoton toteuttaa, mutta ne ovat harvinaisia.
-
-Projektissa on tällä hetkellä vielä monia rivejä, jotka ovat liian pitkiä, mutta
-ne lyhennetään pikkuhiljaa.
+Rivien tulee olla enintään 80 merkkiä pitkiä. Harvinaisissa poikkeustapauksissa
+tätä voi olla mahdotonta toteuttaa. Niissä tapauksissa ylipitkä rivi on
+sallittu.
 
 
 ## Kielten käyttö projektissa

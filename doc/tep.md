@@ -14,7 +14,7 @@ pyytää palvelua lähettämään SQS:iin tietoja noista osaamisen hankkimistavo
 jotka ovat päättyneet. Nämä työpaikkajaksot otetaan vastaan jaksoHandlerissa,
 joka tarkistaa niiden tietojen oikeamuotoisuutta ja varmistaa, että
 duplikaatteja tai muuten väärin muodostettuja jaksoja ei tallenneta
-tietokantaan. Jos kaikki testi läpäistään, jakso tallennetaan sekä
+tietokantaan. Jos kaikki testit läpäistään, jakso tallennetaan sekä
 jaksotunnustauluun että nipputauluun. Jakson kesto lasketaan, ja se merkataan
 niputettavaksi, jos se ei ole keskeytynyt eikä ole terminaalitilassa. Funktiossa
 niputusHandler käydään sitten niputtamattomat niput läpi ja luodaan jokaiselle

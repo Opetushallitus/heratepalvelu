@@ -6,8 +6,8 @@ että ne kattaisivat koko järjestelmän. Kaikki testit ovat automaattisia.
 
 Automaattisten testien olemassaolo ei tarkoita, että muutoksia tai uusia osioita
 voi lähettää suoraan tuotantoon ilman manuaalista testaamista QA:lla, mutta ne
-lisäävät varmuuteen, että kevyesti testattu muutos tulee toimimaan oikein.
-Testit ajetaan automaattisesti ennen asennusta, ja ne voidaan ajaa myös käsin
+lisäävät varmuutta, että kevyesti testattu muutos tulee toimimaan oikein. Testit
+ajetaan automaattisesti ennen asennusta, ja ne voidaan ajaa myös käsin
 komennolla `lein test` projektin juuresta.
 
 
