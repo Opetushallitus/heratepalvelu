@@ -1,9 +1,9 @@
-# AMIS-palvelu
+# AMIS-osio
 
-AMIS-palvelu käsittelee noiden kyselyjen lähettämistä, jotka lähetetään
-opiskelijan opiskelu-uran alussa ja lopussa. Kyselyn lähettämisen jälkeen
-opiskelijalla on tietty määrä aikaa vastata (yleensä kaksi kuukautta), jonka
-jälkeen kysely suljetaan ja vastauksia ei enää oteta vastaan.
+AMIS-osio käsittelee noiden kyselyjen lähettämistä, jotka lähetetään opiskelijan
+opiskelu-uran alussa ja lopussa. Kyselyn lähettämisen jälkeen opiskelijalla on
+tietty määrä aikaa vastata (yleensä kaksi kuukautta), jonka jälkeen kysely
+suljetaan ja vastauksia ei enää oteta vastaan.
 
 ## Rakenne
 
@@ -31,4 +31,4 @@ aikaa vastata. AMISEmailResendHandler puolestaan lähettää ensimmäisen
 sähköpostin uudestaan, kun eHOKS-palvelu lähettää sille uudelleenlähetysviestin
 SQS:n kautta.
 
-
+Päättökyselyt, jotka luodaan kun opiskelija valmistuu, käsitellään samoin.
