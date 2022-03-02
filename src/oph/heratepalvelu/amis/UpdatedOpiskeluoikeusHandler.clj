@@ -100,12 +100,8 @@
   (let [tila (get-tila opiskeluoikeus vahvistus-pvm)]
     (if (or (= tila "valmistunut") (= tila "lasna"))
       true
-      (do (log/info "Opiskeluoikeuden"
-                    (:oid opiskeluoikeus)
-                    "(vahvistuspäivämäärä: "
-                    vahvistus-pvm
-                    ") tila on"
-                    tila
+      (do (log/info "Opiskeluoikeuden" (:oid opiskeluoikeus)
+                    "(vahvistuspäivämäärä:" vahvistus-pvm ") tila on" tila
                     ". Odotettu arvo on 'valmistunut' tai 'läsnä'.")
           false))))
 
@@ -144,11 +140,10 @@
                              (get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))
                              (catch ExceptionInfo e
                                (if (= 404 (:status (ex-data e)))
-                                 (log/warn "Opiskeluoikeudella"
-                                           (:oid opiskeluoikeus)
-                                           "ei HOKSia. "
-                                           "Koulutustoimija: "
-                                           koulutustoimija)
+                                 (log/warn
+                                   "Opiskeluoikeudella" (:oid opiskeluoikeus)
+                                   "ei HOKSia. Koulutustoimija:"
+                                    koulutustoimija)
                                  (throw e))))]
                     (if (:osaamisen-hankkimisen-tarve hoks)
                       (ac/save-herate
@@ -158,10 +153,10 @@
                           vahvistus-pvm)
                         opiskeluoikeus
                         koulutustoimija)
-                      (log/info
-                        "Ei osaamisen hankkimisen tarvetta hoksissa " (:id hoks)))))))
-            (log/info (str "Käsitelty " (count opiskeluoikeudet)
-                           " opiskeluoikeutta, sivu " (- next-page 1)))
+                      (log/info "Ei osaamisen hankkimisen tarvetta hoksissa"
+                                (:id hoks)))))))
+            (log/info "Käsitelty" (count opiskeluoikeudet)
+                      "opiskeluoikeutta, sivu" (- next-page 1))
             (update-last-page next-page)
             (when (< 120000 (.getRemainingTimeInMillis context))
               (recur

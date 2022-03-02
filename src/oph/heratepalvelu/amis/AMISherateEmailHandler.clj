@@ -51,7 +51,9 @@
   "Lähettää palautekyselyviestin viestintäpalveluun."
   [herate]
   (try
-    (vp/send-email {:subject "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
+    (vp/send-email {:subject (str "Palautetta oppilaitokselle - "
+                                  "Respons till läroanstalten - "
+                                  "Feedback to educational institution")
                     :body (vp/amispalaute-html herate)
                     :address (:sahkoposti herate)
                     :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"})

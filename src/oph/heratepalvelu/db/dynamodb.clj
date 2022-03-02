@@ -12,8 +12,10 @@
                                                            ScanRequest
                                                            UpdateItemRequest)
            (software.amazon.awssdk.regions Region)
-           (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap DefaultSdkAutoConstructList)
-           (software.amazon.awssdk.core.client.config ClientOverrideConfiguration)
+           (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap
+                                             DefaultSdkAutoConstructList)
+           (software.amazon.awssdk.core.client.config
+             ClientOverrideConfiguration)
            (com.amazonaws.xray.interceptors TracingInterceptor)))
 
 (def ddb-client (-> (DynamoDbClient/builder)
@@ -172,13 +174,15 @@
                                            (:limit options)
                                            (.limit (int (:limit options)))
                                            (:filter-expression options)
-                                           (.filterExpression (:filter-expression options))
+                                           (.filterExpression
+                                             (:filter-expression options))
                                            (:expr-attr-names options)
                                            (.expressionAttributeNames
                                              (:expr-attr-names options))
                                            (:expr-attr-vals options)
                                            (.expressionAttributeValues
-                                             (map-vals-to-attribute-values (:expr-attr-vals options))))
+                                             (map-vals-to-attribute-values
+                                               (:expr-attr-vals options))))
                                          (.build)))
          items (.items response)]
      (into [] (map

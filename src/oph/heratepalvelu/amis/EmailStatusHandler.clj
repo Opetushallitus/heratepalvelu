@@ -48,9 +48,8 @@
 (defn do-query
   "Hakee viestintäpalvelussa olevien herätteiden tiedot tietokannasta."
   []
-  (ddb/query-items {:lahetystila [:eq
-                                  [:s
-                                   (:viestintapalvelussa c/kasittelytilat)]]}
+  (ddb/query-items {:lahetystila
+                    [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                    {:index "lahetysIndex"
                     :limit 10}))
 

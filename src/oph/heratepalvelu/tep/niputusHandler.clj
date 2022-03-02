@@ -10,7 +10,8 @@
             [clj-http.util :as util])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
            (clojure.lang ExceptionInfo)
-           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
+           (software.amazon.awssdk.services.dynamodb.model
+             ConditionalCheckFailedException)))
 
 ;; Käsittelee alustavia nippuja ja luo niille kyselylinkeille.
 
@@ -30,13 +31,15 @@
                  #(>= (compare (:viimeinen_vastauspvm %1)
                                (str (c/local-date-now)))
                       0)
-                 (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                                   :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                                  {:index "niputusIndex"
-                                   :filter-expression "#pvm >= :pvm"
-                                   :expr-attr-names {"#pvm" "viimeinen_vastauspvm"}
-                                   :expr-attr-vals {":pvm" [:s (str (c/local-date-now))]}}
-                                  (:jaksotunnus-table env)))
+                 (ddb/query-items
+                   {:ohjaaja_ytunnus_kj_tutkinto
+                    [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
+                    :niputuspvm [:eq [:s (:niputuspvm nippu)]]}
+                   {:index "niputusIndex"
+                    :filter-expression "#pvm >= :pvm"
+                    :expr-attr-names {"#pvm" "viimeinen_vastauspvm"}
+                    :expr-attr-vals {":pvm" [:s (str (c/local-date-now))]}}
+                   (:jaksotunnus-table env)))
         tunnukset (map :tunnus jaksot)]
     (if (not-empty tunnukset)
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))

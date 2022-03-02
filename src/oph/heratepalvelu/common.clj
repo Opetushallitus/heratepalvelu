@@ -136,13 +136,15 @@
   (if (some check-suoritus-type?
             (:suoritukset opiskeluoikeus))
     true
-    (log/info "Väärä suoritustyyppi opiskeluoikeudessa " (:oid opiskeluoikeus))))
+    (log/info "Väärä suoritustyyppi opiskeluoikeudessa" (:oid opiskeluoikeus))))
 
 (defn check-sisaltyy-opiskeluoikeuteen?
   "Palauttaa true, jos opiskeluoikeus EI sisälly toiseen opiskeluoikeuteen."
   [opiskeluoikeus]
   (if (:sisältyyOpiskeluoikeuteen opiskeluoikeus)
-    (log/warn "Opiskeluoikeus " (:oid opiskeluoikeus) " sisältyy toiseen opiskeluoikeuteen.")
+    (log/warn "Opiskeluoikeus"
+              (:oid opiskeluoikeus)
+              "sisältyy toiseen opiskeluoikeuteen.")
     true))
 
 (defn get-suoritus
@@ -159,7 +161,8 @@
   suoritus."
   [opiskeluoikeus]
   (some (fn [suoritus]
-          (= (:koodiarvo (:tyyppi suoritus)) "nayttotutkintoonvalmistavakoulutus"))
+          (= (:koodiarvo (:tyyppi suoritus))
+             "nayttotutkintoonvalmistavakoulutus"))
         (:suoritukset opiskeluoikeus)))
 
 (defn next-niputus-date
@@ -197,7 +200,8 @@
   [koulutustoimija timestamp]
   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                            (:orgwhitelist-table env))]
-    (if (.isBefore (LocalDate/of 2021 6 30) (LocalDate/ofEpochDay (/ timestamp 86400000)))
+    (if (.isBefore (LocalDate/of 2021 6 30)
+                   (LocalDate/ofEpochDay (/ timestamp 86400000)))
       true
       (if
         (and
@@ -207,9 +211,10 @@
           (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
               (c/to-long (local-date-now))))
         true
-        (log/info "Koulutustoimija " koulutustoimija " ei ole mukana automaatiossa,"
-                  " tai herätepvm " (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
-                  " on ennen käyttöönotto päivämäärää")))))
+        (log/info "Koulutustoimija" koulutustoimija
+                  "ei ole mukana automaatiossa, tai herätepvm"
+                  (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
+                  "on ennen käyttöönotto päivämäärää")))))
 
 (defn check-duplicate-herate?
   "Palauttaa true, jos ei ole vielä herätettä tallennettua tietokantaan samoilla

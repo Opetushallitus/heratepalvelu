@@ -5,7 +5,8 @@
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.services.sqs.model SendMessageRequest
                                                       GetQueueUrlRequest)
-           (software.amazon.awssdk.core.client.config ClientOverrideConfiguration)
+           (software.amazon.awssdk.core.client.config
+             ClientOverrideConfiguration)
            (com.amazonaws.xray.interceptors TracingInterceptor)))
 
 (gen-class

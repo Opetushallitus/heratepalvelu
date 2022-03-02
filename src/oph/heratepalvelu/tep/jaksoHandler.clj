@@ -12,7 +12,8 @@
             [schema.core :as s])
   (:import (com.fasterxml.jackson.core JsonParseException)
            (clojure.lang ExceptionInfo)
-           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)
+           (software.amazon.awssdk.services.dynamodb.model
+             ConditionalCheckFailedException)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (java.time LocalDate DayOfWeek)))
 
@@ -71,7 +72,8 @@
                                (:jaksotunnus-table env))]
     (if (empty? items)
       true
-      (throw (ex-info (str "Tunnus " tunnus " on jo käytössä. ") {:items items})))))
+      (throw (ex-info (str "Tunnus " tunnus " on jo käytössä.")
+                      {:items items})))))
 
 (defn check-opiskeluoikeus-tila
   "Palauttaa true, jos opiskeluoikeus ei ole terminaalitilassa (eronnut,
@@ -80,7 +82,8 @@
   (let [tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
         voimassa (reduce
                    (fn [res next]
-                     (if (.isBefore (LocalDate/parse (:alku next)) (LocalDate/parse loppupvm))
+                     (if (.isBefore (LocalDate/parse (:alku next))
+                                    (LocalDate/parse loppupvm))
                        next
                        (reduced res)))
                    (sort-by :alku tilat))
@@ -139,7 +142,8 @@
                        (reduced res)))
                    sorted-tilat
                    (rest sorted-tilat))
-        sorted-keskeytymisajanjaksot (sort-process-keskeytymisajanjaksot herate)]
+        sorted-keskeytymisajanjaksot (sort-process-keskeytymisajanjaksot
+                                       herate)]
     (loop [kesto 0
            pvm alku-date
            tilat voimassa
@@ -149,7 +153,8 @@
           [first-kjakso (first keskeytymisajanjaksot)
            new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
                              (= (.getDayOfWeek pvm) DayOfWeek/SUNDAY)
-                             (= "valiaikaisestikeskeytynyt" (:tila (first tilat)))
+                             (= "valiaikaisestikeskeytynyt"
+                                (:tila (first tilat)))
                              (= "loma" (:tila (first tilat)))
                              (and
                                (some? first-kjakso)
@@ -197,26 +202,26 @@
               niputuspvm (c/next-niputus-date (str (c/local-date-now)))
               alkupvm    (c/next-niputus-date (:loppupvm herate))
               suoritus   (c/get-suoritus opiskeluoikeus)
-              kesto      (kesto herate (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))
-              tutkinto   (get-in
-                           suoritus
-                           [:koulutusmoduuli
-                            :tunniste
-                            :koodiarvo])
+              kesto      (kesto herate
+                                (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))
+              tutkinto   (get-in suoritus [:koulutusmoduuli
+                                           :tunniste
+                                           :koodiarvo])
               db-data {:hankkimistapa_id     [:n tapa-id]
-                       :hankkimistapa_tyyppi [:s (last
-                                                   (str/split
-                                                     (:hankkimistapa-tyyppi herate)
-                                                     #"_"))]
+                       :hankkimistapa_tyyppi
+                       [:s (last (str/split (:hankkimistapa-tyyppi herate)
+                                            #"_"))]
                        :tyopaikan_nimi       [:s (:tyopaikan-nimi herate)]
                        :tyopaikan_ytunnus    [:s (:tyopaikan-ytunnus herate)]
-                       :ohjaaja_nimi         [:s (:tyopaikkaohjaaja-nimi herate)]
+                       :ohjaaja_nimi         [:s (:tyopaikkaohjaaja-nimi
+                                                   herate)]
                        :jakso_alkupvm        [:s (:alkupvm herate)]
                        :jakso_loppupvm       [:s (:loppupvm herate)]
                        :kesto                [:n kesto]
                        :request_id           [:s request-id]
                        :tutkinto             [:s tutkinto]
-                       :oppilaitos           [:s (:oid (:oppilaitos opiskeluoikeus))]
+                       :oppilaitos           [:s (:oid (:oppilaitos
+                                                         opiskeluoikeus))]
                        :hoks_id              [:n (:hoks-id herate)]
                        :opiskeluoikeus_oid   [:s (:oid opiskeluoikeus)]
                        :oppija_oid           [:s (:oppija-oid herate)]
@@ -229,31 +234,27 @@
                        :tallennuspvm         [:s (str (c/local-date-now))]
                        :tutkinnonosa_tyyppi  [:s (:tyyppi herate)]
                        :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]
-                       :tutkintonimike       [:s (str
-                                                   (seq
-                                                     (map :koodiarvo
-                                                          (:tutkintonimike suoritus))))]
-                       :osaamisala           [:s (str
-                                                   (seq
-                                                     (arvo/get-osaamisalat
-                                                       suoritus
-                                                       (:oid opiskeluoikeus))))]
-                       :toimipiste_oid       [:s (str (arvo/get-toimipiste suoritus))]
+                       :tutkintonimike
+                       [:s (str (seq (map :koodiarvo
+                                          (:tutkintonimike suoritus))))]
+                       :osaamisala
+                       [:s (str (seq (arvo/get-osaamisalat
+                                       suoritus
+                                       (:oid opiskeluoikeus))))]
+                       :toimipiste_oid [:s (str (arvo/get-toimipiste suoritus))]
                        :ohjaaja_ytunnus_kj_tutkinto
-                                             [:s (str
-                                                   (:tyopaikkaohjaaja-nimi herate) "/"
-                                                   (:tyopaikan-ytunnus herate) "/"
-                                                   koulutustoimija "/"
-                                                   tutkinto)]
+                       [:s (str (:tyopaikkaohjaaja-nimi herate) "/"
+                                (:tyopaikan-ytunnus herate) "/"
+                                koulutustoimija "/" tutkinto)]
                        :tyopaikan_normalisoitu_nimi
-                                             [:s (c/normalize-string
-                                                   (:tyopaikan-nimi herate))]}
+                       [:s (c/normalize-string (:tyopaikan-nimi herate))]}
                 jaksotunnus-table-data
                 (cond-> db-data
                   (not-empty (:tyopaikkaohjaaja-email herate))
                   (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
                   (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
-                  (assoc :ohjaaja_puhelinnumero [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
+                  (assoc :ohjaaja_puhelinnumero
+                         [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
                   (not-empty (:tutkinnonosa-koodi herate))
                   (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
                   (not-empty (:tutkinnonosa-nimi herate))
@@ -267,19 +268,18 @@
                                  (:oppisopimuksen-perusta herate)
                                  #"_"))]))
                 nippu-table-data
-                {:ohjaaja_ytunnus_kj_tutkinto [:s (str
-                                                    (:tyopaikkaohjaaja-nimi herate) "/"
-                                                    (:tyopaikan-ytunnus herate) "/"
-                                                    koulutustoimija "/"
-                                                    tutkinto)]
-                 :ohjaaja                     [:s (:tyopaikkaohjaaja-nimi herate)]
-                 :ytunnus                     [:s (:tyopaikan-ytunnus herate)]
-                 :tyopaikka                   [:s (:tyopaikan-nimi herate)]
-                 :koulutuksenjarjestaja       [:s koulutustoimija]
-                 :tutkinto                    [:s tutkinto]
-                 :kasittelytila               [:s (:ei-niputettu c/kasittelytilat)]
-                 :sms_kasittelytila           [:s (:ei-lahetetty c/kasittelytilat)]
-                 :niputuspvm                  [:s (str niputuspvm)]}]
+                {:ohjaaja_ytunnus_kj_tutkinto
+                 [:s (str (:tyopaikkaohjaaja-nimi herate) "/"
+                          (:tyopaikan-ytunnus herate) "/"
+                          koulutustoimija "/" tutkinto)]
+                 :ohjaaja               [:s (:tyopaikkaohjaaja-nimi herate)]
+                 :ytunnus               [:s (:tyopaikan-ytunnus herate)]
+                 :tyopaikka             [:s (:tyopaikan-nimi herate)]
+                 :koulutuksenjarjestaja [:s koulutustoimija]
+                 :tutkinto              [:s tutkinto]
+                 :kasittelytila         [:s (:ei-niputettu c/kasittelytilat)]
+                 :sms_kasittelytila     [:s (:ei-lahetetty c/kasittelytilat)]
+                 :niputuspvm            [:s (str niputuspvm)]}]
           (if (check-open-keskeytymisajanjakso herate)
             (try
               (save-to-tables
@@ -288,9 +288,12 @@
                        :kasittelytila     [:s (:ei-niputeta c/kasittelytilat)]
                        :sms_kasittelytila [:s (:ei-niputeta c/kasittelytilat)]))
               (catch ConditionalCheckFailedException e
-                (log/warn "Osaamisenhankkimistapa id:llä " tapa-id "on jo käsitelty."))
+                (log/warn "Osaamisenhankkimistapa id:llä"
+                          tapa-id
+                          "on jo käsitelty."))
               (catch AwsServiceException e
-                (log/error "Virhe tietokantaan tallennettaessa, request-id " request-id)
+                (log/error "Virhe tietokantaan tallennettaessa, request-id"
+                           request-id)
                 (throw e)))
             (let [arvo-resp (arvo/create-jaksotunnus
                               (arvo/build-jaksotunnus-request-body
@@ -309,14 +312,18 @@
                     (assoc jaksotunnus-table-data :tunnus [:s tunnus])
                     nippu-table-data))
                 (catch ConditionalCheckFailedException e
-                  (log/warn "Osaamisenhankkimistapa id:llä " tapa-id "on jo käsitelty.")
+                  (log/warn "Osaamisenhankkimistapa id:llä"
+                            tapa-id
+                            "on jo käsitelty.")
                   (arvo/delete-jaksotunnus tunnus))
                 (catch AwsServiceException e
-                  (log/error "Virhe tietokantaan tallennettaessa " tunnus " " request-id)
+                  (log/error "Virhe tietokantaan tallennettaessa"
+                             tunnus
+                             request-id)
                   (arvo/delete-jaksotunnus tunnus)
                   (throw e))))))
         (catch Exception e
-          (log/error "Unknown error " e)
+          (log/error "Unknown error" e)
           (throw e))))))
 
 (defn -handleJaksoHerate
@@ -337,7 +344,8 @@
                 (log/error {:herate herate :msg (tep-herate-checker herate)})
                 (when
                   (and
-                    (check-opiskeluoikeus-tila opiskeluoikeus (:loppupvm herate))
+                    (check-opiskeluoikeus-tila opiskeluoikeus
+                                               (:loppupvm herate))
                     (check-not-fully-keskeytynyt herate)
                     (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
                     (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
@@ -345,14 +353,15 @@
           (ehoks/patch-osaamisenhankkimistapa-tep-kasitelty
             (:hankkimistapa-id herate)))
         (catch JsonParseException e
-          (log/error "Virhe viestin lukemisessa: " e))
+          (log/error "Virhe viestin lukemisessa:" e))
         (catch ExceptionInfo e
           (if (and
                 (:status (ex-data e))
                 (= 404 (:status (ex-data e))))
             (do
-              (log/error "Ei opiskeluoikeutta "
-                         (:opiskeluoikeus-oid (parse-string (.getBody msg) true)))
-              (log/error "Virhe: " e))
+              (log/error "Ei opiskeluoikeutta"
+                         (:opiskeluoikeus-oid (parse-string (.getBody msg)
+                                                            true)))
+              (log/error "Virhe:" e))
             (do (log/error e)
                 (throw e))))))))
