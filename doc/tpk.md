@@ -1,6 +1,8 @@
 # Työpaikkakysely
 
-TODO
+Niputtaa työpaikkajaksot yhteen työpaikan, koulutustoimijan ja jakson
+loppupäivämäärän perusteella, ja luo työpaikkakyselylinkin jokaiselle nipulle
+Arvon kautta.
 
 
 ## Rakenne

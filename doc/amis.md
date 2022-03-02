@@ -31,4 +31,4 @@ aikaa vastata. AMISEmailResendHandler puolestaan lähettää ensimmäisen
 sähköpostin uudestaan, kun eHOKS-palvelu lähettää sille uudelleenlähetysviestin
 SQS:n kautta.
 
-TODO: loppukyselyt
+Päättökyselyt, jotka luodaan kun opiskelija valmistuu, käsitellään samoin.
