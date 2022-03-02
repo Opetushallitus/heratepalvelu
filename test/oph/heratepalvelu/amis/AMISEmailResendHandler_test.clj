@@ -17,42 +17,10 @@
       (is (some? (erh/resend-checker bad1)))
       (is (some? (erh/resend-checker bad2))))))
 
-(def update-results (atom {}))
+(def results (atom {}))
 
-(defn- mock-update-item [query-params options]
-  (when (and (= :s (first (:toimija_oppija query-params)))
-             (= :s (first (:tyyppi_kausi query-params)))
-             (:update-expr options)
-             (:expr-attr-names options)
-             (:expr-attr-vals options))
-    (reset! update-results
-            {:toimija-oppija (second (:toimija_oppija query-params))
-             :tyyppi-kausi (second (:tyyppi_kausi query-params))
-             :sahkoposti (second (get (:expr-attr-vals options) ":sposti"))
-             :tila (second (get (:expr-attr-vals options) ":lahetystila"))})))
-
-(deftest test-update-email-to-resend
-  (testing "Varmista, että update-email-to-resend kutsuu update-item oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/update-item mock-update-item]
-      (erh/update-email-to-resend "toimija-oppija"
-                                  "tyyppi-kausi"
-                                  "sähköposti"
-                                  "kysely.linkki/123")
-      (is (= @update-results {:toimija-oppija "toimija-oppija"
-                              :tyyppi-kausi "tyyppi-kausi"
-                              :sahkoposti "sähköposti"
-                              :tila (:ei-lahetetty c/kasittelytilat)})))))
-
-(def update-email-to-resend-result (atom {}))
-
-(defn- mock-update-email-to-resend [toimija-oppija
-                                    tyyppi-kausi
-                                    sahkoposti
-                                    kyselylinkki]
-  (reset! update-email-to-resend-result {:toimija-oppija toimija-oppija
-                                         :tyyppi-kausi tyyppi-kausi
-                                         :sahkoposti sahkoposti
-                                         :kyselylinkki kyselylinkki}))
+(defn- mock-update-herate [herate updates]
+  (reset! results {:herate herate :updates updates}))
 
 (defn- mock-get-item-by-kyselylinkki [kyselylinkki]
   {:kyselylinkki kyselylinkki
@@ -64,11 +32,10 @@
 
 (deftest test-handleEmailResend
   (testing "Varmista, että -handleEmailResend toimii oikein"
-    (with-redefs
-      [oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
-       mock-get-item-by-kyselylinkki
-       oph.heratepalvelu.amis.AMISEmailResendHandler/update-email-to-resend
-       mock-update-email-to-resend]
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
+                  mock-get-item-by-kyselylinkki
+                  oph.heratepalvelu.amis.AMISCommon/update-herate
+                  mock-update-herate]
       (let [context (tu/mock-handler-context)
             bad-event (tu/mock-sqs-event {:asdf "AMISEmailResendHandler xyz"})
             good-event (tu/mock-sqs-event {:kyselylinkki "https://linkki.fi/1"
@@ -79,21 +46,25 @@
         (is (true? (tu/did-log? ":herate {:asdf AMISEmailResendHandler xyz},"
                                 "ERROR")))
         (erh/-handleEmailResend {} good-event context)
-        (is (= @update-email-to-resend-result
-               {:toimija-oppija "toimija-oppija"
-                :tyyppi-kausi "tyyppi-kausi"
-                :sahkoposti "x@y.com"
-                :kyselylinkki "https://linkki.fi/1"}))
+        (is (= @results {:herate {:kyselylinkki "https://linkki.fi/1"
+                                  :toimija_oppija "toimija-oppija"
+                                  :tyyppi_kausi "tyyppi-kausi"
+                                  :sahkoposti "a@b.com"}
+                         :updates {:sahkoposti [:s "x@y.com"]
+                                   :lahetystila
+                                   [:s (:ei-lahetetty c/kasittelytilat)]}}))
         (is (nil?
               (tu/did-log?
                 "Ei sähköpostia herätteessä {:kyselylinkki https://linkki.fi/1"
                 "WARN")))
         (erh/-handleEmailResend {} good-event-no-email context)
-        (is (= @update-email-to-resend-result
-               {:toimija-oppija "toimija-oppija"
-                :tyyppi-kausi "tyyppi-kausi"
-                :sahkoposti "a@b.com"
-                :kyselylinkki "https://linkki.fi/1"}))
+        (is (= @results
+               {:herate {:kyselylinkki "https://linkki.fi/1"
+                         :toimija_oppija "toimija-oppija"
+                         :tyyppi_kausi "tyyppi-kausi"
+                         :sahkoposti "a@b.com"}
+                :updates {:sahkoposti [:s "a@b.com"]
+                          :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]}}))
         (is (true?
               (tu/did-log?
                 "Ei sähköpostia herätteessä {:kyselylinkki https://linkki.fi/1"

@@ -7,39 +7,28 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
-(def mock-update-item-result (atom {}))
+(def mock-update-herate-result (atom {}))
 
-(defn- mock-update-item [query-params options]
-  (when (and (= :s (first (:toimija_oppija query-params)))
-             (= :s (first (:tyyppi_kausi query-params)))
-             (= :s (first (get (:expr-attr-vals options) ":lahetystila")))
-             (= :n (first (get (:expr-attr-vals options) ":vpid")))
-             (= :s (first (get (:expr-attr-vals options) ":lahetyspvm")))
-             (= :n (first (get (:expr-attr-vals options) ":muistutukset"))))
-    (reset!
-      mock-update-item-result
-      {:toimija-oppija (second (:toimija_oppija query-params))
-       :tyyppi-kausi (second (:tyyppi_kausi query-params))
-       :lahetystila (second (get (:expr-attr-vals options) ":lahetystila"))
-       :lahetyspvm (second (get (:expr-attr-vals options) ":lahetyspvm"))
-       :muistutukset (second (get (:expr-attr-vals options) ":muistutukset"))
-       :vpid (second (get (:expr-attr-vals options) ":vpid"))})))
+(defn- mock-update-herate [herate updates]
+  (reset! mock-update-herate-result {:herate herate :updates updates}))
 
 (deftest test-save-email-to-db
-  (testing "Varmista, että same-email-to-db kutsuu update-item oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/update-item mock-update-item]
+  (testing "Varmista, että same-email-to-db kutsuu update-herate oikein"
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/update-herate
+                  mock-update-herate]
       (let [email {:toimija_oppija "toimija-oppija"
                    :tyyppi_kausi "tyyppi-kausi"}
             id "asdfasfasfd"
             lahetyspvm "2021-04-04"
-            expected {:toimija-oppija "toimija-oppija"
-                      :tyyppi-kausi "tyyppi-kausi"
-                      :lahetystila (:viestintapalvelussa c/kasittelytilat)
-                      :vpid id
-                      :lahetyspvm lahetyspvm
-                      :muistutukset 0}]
+            expected {:herate {:toimija_oppija "toimija-oppija"
+                               :tyyppi_kausi "tyyppi-kausi"}
+                      :updates {:lahetystila
+                                [:s (:viestintapalvelussa c/kasittelytilat)]
+                                :viestintapalvelu-id [:n id]
+                                :lahetyspvm [:s lahetyspvm]
+                                :muistutukset [:n 0]}}]
         (heh/save-email-to-db email id lahetyspvm)
-        (is (= @mock-update-item-result expected))))))
+        (is (= @mock-update-herate-result expected))))))
 
 (def mock-send-lahetys-data-to-ehoks-result (atom {}))
 
@@ -95,34 +84,26 @@
                       :sender "Opetushallitus – Utbildningsstyrelsen – EDUFI"}]
         (is (= expected (heh/send-feedback-email email)))))))
 
-(def mock-no-time-to-answer-update-item-result (atom {}))
+(def mock-no-time-to-answer-update-herate-result (atom {}))
 
-(defn- mock-no-time-to-answer-update-item [query-params options]
-  (when (and (= :s (first (:toimija_oppija query-params)))
-             (= :s (first (:tyyppi_kausi query-params)))
-             (= :s (first (get (:expr-attr-vals options) ":lahetystila")))
-             (= :s (first (get (:expr-attr-vals options) ":lahetyspvm"))))
-    (reset!
-      mock-no-time-to-answer-update-item-result
-      {:toimija-oppija (second (:toimija_oppija query-params))
-       :tyyppi-kausi (second (:tyyppi_kausi query-params))
-       :lahetystila (second (get (:expr-attr-vals options) ":lahetystila"))
-       :lahetyspvm (second (get (:expr-attr-vals options) ":lahetyspvm"))})))
+(defn- mock-no-time-to-answer-update-herate [herate updates]
+  (reset! mock-no-time-to-answer-update-herate-result {:herate herate
+                                                       :updates updates}))
 
 (deftest test-save-no-time-to-answer
-  (testing "Varmista, että save-no-time-to-answer kutsuu update-item oikein"
-    (with-redefs [oph.heratepalvelu.common/local-date-now
-                  (fn [] (LocalDate/parse "2021-10-10"))
-                  oph.heratepalvelu.db.dynamodb/update-item
-                  mock-no-time-to-answer-update-item]
+  (testing "Varmista, että save-no-time-to-answer kutsuu update-herate oikein"
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/update-herate
+                  mock-no-time-to-answer-update-herate
+                  oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/parse "2021-10-10"))]
       (let [email {:toimija_oppija "toimija-oppija"
                    :tyyppi_kausi "tyyppi-kausi"}
-            expected {:toimija-oppija "toimija-oppija"
-                      :tyyppi-kausi "tyyppi-kausi"
-                      :lahetystila (:vastausaika-loppunut c/kasittelytilat)
-                      :lahetyspvm "2021-10-10"}]
+            expected {:herate email
+                      :updates {:lahetystila
+                                [:s (:vastausaika-loppunut c/kasittelytilat)]
+                                :lahetyspvm [:s "2021-10-10"]}}]
         (heh/save-no-time-to-answer email)
-        (is (= @mock-no-time-to-answer-update-item-result expected))))))
+        (is (= @mock-no-time-to-answer-update-herate-result expected))))))
 
 (defn- mock-query-items [query-params options]
   (and (= :eq (first (:lahetystila query-params)))

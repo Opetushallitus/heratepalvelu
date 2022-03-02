@@ -95,3 +95,13 @@
     (is (= (LocalDate/of 2021 12 16) (next-niputus-date "2021-12-03")))
     (is (= (LocalDate/of 2022 1 1) (next-niputus-date "2021-12-27")))
     (is (= (LocalDate/of 2021 5 1) (next-niputus-date "2021-04-25")))))
+
+(deftest test-create-update-item-options
+  (testing "Create update item options"
+    (is (create-update-item-options {:field-1 [:s "value"]
+                                     :field-2 [:n 123]})
+        {:update-expr "SET #field_1 = :field_1, #field_2 = :field_2"
+         :expr-attr-names {"#field_1" "field-1"
+                           "#field_2" "field-2"}
+         :expr-attr-vals {":field_1" [:s "value"]
+                          ":field_2" [:n 123]}})))

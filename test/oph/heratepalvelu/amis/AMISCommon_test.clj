@@ -283,3 +283,25 @@
         (ac/save-herate herate-1 opiskeluoikeus koulutustoimija)
         (ac/save-herate herate-2 opiskeluoikeus koulutustoimija)
         (is (= results (vec (reverse @test-results))))))))
+
+;; Testaa update-herate
+(deftest test-update-herate
+  (testing "Varmistaa, että update-herate tekee oikein kutsun update-itemiin"
+    (with-redefs [environ.core/env {:herate-table "herate-table-name"}
+                  oph.heratepalvelu.db.dynamodb/update-item
+                  (fn [key-conds options table] {:key-conds key-conds
+                                                 :options   options
+                                                 :table     table})]
+      (is (= (ac/update-herate {:toimija_oppija "test-id"
+                                :tyyppi_kausi   "test-id-part-2"}
+                               {:field         [:n 123]
+                                :another-field [:s "asdf"]})
+             {:key-conds {:toimija_oppija [:s "test-id"]
+                          :tyyppi_kausi   [:s "test-id-part-2"]}
+              :options   {:update-expr (str "SET #field = :field, "
+                                            "#another_field = :another_field")
+                          :expr-attr-names {"#field"         "field"
+                                            "#another_field" "another-field"}
+                          :expr-attr-vals {":field"         [:n 123]
+                                           ":another_field" [:s "asdf"]}}
+              :table     "herate-table-name"})))))

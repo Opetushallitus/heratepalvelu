@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.amis.AMISherateEmailHandler
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
+            [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
@@ -21,21 +22,11 @@
   viestintäpalveluun."
   [herate id lahetyspvm]
   (try
-    (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija herate)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
-      {:update-expr    (str "SET #lahetystila = :lahetystila, "
-                            "#vpid = :vpid, "
-                            "#lahetyspvm = :lahetyspvm, "
-                            "#muistutukset = :muistutukset")
-       :expr-attr-names {"#lahetystila" "lahetystila"
-                         "#vpid" "viestintapalvelu-id"
-                         "#lahetyspvm" "lahetyspvm"
-                         "#muistutukset" "muistutukset"}
-       :expr-attr-vals  {":lahetystila" [:s (:viestintapalvelussa c/kasittelytilat)]
-                         ":vpid" [:n id]
-                         ":lahetyspvm" [:s lahetyspvm]
-                         ":muistutukset" [:n 0]}})
+    (ac/update-herate herate
+                      {:lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]
+                       :viestintapalvelu-id [:n id]
+                       :lahetyspvm [:s lahetyspvm]
+                       :muistutukset [:n 0]})
     (catch AwsServiceException e
       (log/error "Tiedot herätteestä" herate "ei päivitetty kantaan")
       (log/error e))))
@@ -72,15 +63,10 @@
   "Päivittää tietueen, jos herätteen vastausaika on umpeutunut."
   [herate]
   (try
-    (ddb/update-item
-      {:toimija_oppija [:s (:toimija_oppija herate)]
-       :tyyppi_kausi   [:s (:tyyppi_kausi herate)]}
-      {:update-expr     (str "SET #lahetystila = :lahetystila, "
-                             "#lahetyspvm = :lahetyspvm")
-       :expr-attr-names {"#lahetystila" "lahetystila"
-                         "#lahetyspvm" "lahetyspvm"}
-       :expr-attr-vals {":lahetystila" [:s (:vastausaika-loppunut c/kasittelytilat)]
-                        ":lahetyspvm" [:s (str (c/local-date-now))]}})
+    (ac/update-herate
+      herate
+      {:lahetystila [:s (:vastausaika-loppunut c/kasittelytilat)]
+       :lahetyspvm  [:s (str (c/local-date-now))]})
     (catch Exception e
       (log/error "Virhe lähetystilan päivityksessä herätteelle,"
                  "jonka vastausaika umpeutunut:"

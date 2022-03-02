@@ -25,8 +25,12 @@
   (avaimet :en, :fi ja :sv)."
   [nippu oppilaitokset]
   (try
-    (vp/send-email {:subject "Muistutus-påminnelse-reminder: Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - Survey to workplace instructors"
-                    :body (vp/tyopaikkaohjaaja-muistutus-html nippu oppilaitokset)
+    (vp/send-email {:subject (str "Muistutus-påminnelse-reminder: "
+                                  "Työpaikkaohjaajakysely - "
+                                  "Enkät till arbetsplatshandledaren - "
+                                  "Survey to workplace instructors")
+                    :body (vp/tyopaikkaohjaaja-muistutus-html nippu
+                                                              oppilaitokset)
                     :address (:lahetysosoite nippu)
                     :sender "OPH – UBS – EDUFI"})
     (catch Exception e
@@ -38,22 +42,12 @@
   on lähetyksen ID viestintäpalvelussa."
   [nippu id]
   (try
-    (ddb/update-item
-      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-       :niputuspvm                  [:s (:niputuspvm nippu)]}
-      {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
-                             "#vpid = :vpid, "
-                             "#muistutuspvm = :muistutuspvm, "
-                             "#muistutukset = :muistutukset")
-       :expr-attr-names {"#kasittelytila" "kasittelytila"
-                         "#vpid" "viestintapalvelu-id"
-                         "#muistutuspvm" "email_muistutuspvm"
-                         "#muistutukset" "muistutukset"}
-       :expr-attr-vals  {":kasittelytila" [:s (:viestintapalvelussa c/kasittelytilat)]
-                         ":vpid" [:n id]
-                         ":muistutuspvm" [:s (str (c/local-date-now))]
-                         ":muistutukset" [:n 1]}}
-      (:nippu-table env))
+    (tc/update-nippu
+      nippu
+      {:kasittelytila       [:s (:viestintapalvelussa c/kasittelytilat)]
+       :viestintapalvelu-id [:n id]
+       :email_muistutuspvm  [:s (str (c/local-date-now))]
+       :muistutukset        [:n 1]})
     (catch AwsServiceException e
       (log/error "Muistutus" nippu "ei päivitetty kantaan!")
       (log/error e))))
@@ -64,20 +58,15 @@
   jossa pitää olla boolean-arvo avaimella :vastattu."
   [nippu status]
   (try
-    (ddb/update-item
-      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-       :niputuspvm                  [:s (:niputuspvm nippu)]}
-      {:update-expr     (str "SET #kasittelytila = :kasittelytila, "
-                             "#muistutukset = :muistutukset")
-       :expr-attr-names {"#kasittelytila" "kasittelytila"
-                         "#muistutukset" "muistutukset"}
-       :expr-attr-vals  {":kasittelytila" [:s (if (:vastattu status)
-                                                (:vastattu c/kasittelytilat)
-                                                (:vastausaika-loppunut-m c/kasittelytilat))]
-                         ":muistutukset" [:n 1]}}
-      (:nippu-table env))
+    (let [kasittelytila (if (:vastattu status)
+                          (:vastattu c/kasittelytilat)
+                          (:vastausaika-loppunut-m c/kasittelytilat))]
+      (tc/update-nippu nippu {:kasittelytila [:s kasittelytila]
+                              :muistutukset  [:n 1]}))
     (catch Exception e
-      (log/error "Virhe lähetystilan päivityksessä nippulinkille, johon on vastattu tai jonka vastausaika umpeutunut" nippu)
+      (log/error "Virhe lähetystilan päivityksessä nippulinkille,"
+                 "johon on vastattu tai jonka vastausaika umpeutunut"
+                 nippu)
       (log/error status)
       (log/error e))))
 
@@ -87,7 +76,8 @@
   [muistutettavat]
   (log/info "Käsitellään" (count muistutettavat) "lähetettävää muistutusta.")
   (doseq [nippu muistutettavat]
-    (log/info "Kyselylinkin tunnusosa:" (last (str/split (:kyselylinkki nippu) #"_")))
+    (log/info "Kyselylinkin tunnusosa:"
+              (last (str/split (:kyselylinkki nippu) #"_")))
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
@@ -100,13 +90,13 @@
 (defn query-muistutukset
   "Hakee tietokannasta nippuja, joista on aika lähettää muistutus."
   []
-  (ddb/query-items {:muistutukset [:eq [:n 0]]
-                    :lahetyspvm   [:between
-                                   [[:s (str (.minusDays (c/local-date-now) 10))]
-                                    [:s (str (.minusDays (c/local-date-now) 5))]]]}
-                   {:index "emailMuistutusIndex"
-                    :limit 10}
-                   (:nippu-table env)))
+  (ddb/query-items
+    {:muistutukset [:eq [:n 0]]
+     :lahetyspvm   [:between [[:s (str (.minusDays (c/local-date-now) 10))]
+                              [:s (str (.minusDays (c/local-date-now) 5))]]]}
+    {:index "emailMuistutusIndex"
+     :limit 10}
+    (:nippu-table env)))
 
 (defn -handleSendEmailMuistutus
   "Käsittelee muistettavia nippuja."
@@ -114,7 +104,6 @@
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
   (loop [muistutettavat (query-muistutukset)]
     (sendEmailMuistutus muistutettavat)
-    (when (and
-            (seq muistutettavat)
-            (< 60000 (.getRemainingTimeInMillis context)))
+    (when (and (seq muistutettavat)
+               (< 60000 (.getRemainingTimeInMillis context)))
       (recur (query-muistutukset)))))

@@ -9,76 +9,51 @@
 
 (def mock-update-after-send-results (atom {}))
 
-(defn- mock-update-item-for-update-after-send [query-params options]
-  (when (and (= :s (first (:toimija_oppija query-params)))
-             (= :s (first (:tyyppi_kausi query-params)))
-             (= :n (first (get (:expr-attr-vals options) ":muistutukset")))
-             (= :n (first (get (:expr-attr-vals options) ":vpid")))
-             (= :s (first (get (:expr-attr-vals options) ":lahetystila")))
-             (= :s (first (get (:expr-attr-vals options) ":muistutuspvm"))))
-    (reset! mock-update-after-send-results
-            {:toimija-oppija (second (:toimija_oppija query-params))
-             :tyyppi-kausi (second (:tyyppi_kausi query-params))
-             :muistutukset (second (get (:expr-attr-vals options)
-                                        ":muistutukset"))
-             :vpid (second (get (:expr-attr-vals options) ":vpid"))
-             :lahetystila (second (get (:expr-attr-vals options)
-                                       ":lahetystila"))
-             :muistutuspvm (second (get (:expr-attr-vals options)
-                                        ":muistutuspvm"))})))
+(defn- mock-update-herate-for-update-after-send [herate updates]
+  (reset! mock-update-after-send-results {:herate herate :updates updates}))
 
 (deftest test-update-after-send
   (testing "Varmista, että update-after-send kutsuu update-item oikein"
-    (with-redefs [oph.heratepalvelu.common/local-date-now
-                  (fn [] (LocalDate/of 2021 10 10))
-                  oph.heratepalvelu.db.dynamodb/update-item
-                  mock-update-item-for-update-after-send]
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/update-herate
+                  mock-update-herate-for-update-after-send
+                  oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/of 2021 10 10))]
       (let [email {:toimija_oppija "toimija-oppija"
                    :tyyppi_kausi "tyyppi-kausi"}
-            expected {:toimija-oppija "toimija-oppija"
-                      :tyyppi-kausi "tyyppi-kausi"
-                      :muistutukset 1
-                      :vpid "testid"
-                      :lahetystila (:viestintapalvelussa c/kasittelytilat)
-                      :muistutuspvm "2021-10-10"}]
-        (mh/update-after-send email 1 "testid")
+            expected {:herate email
+                      :updates {:muistutukset [:n 1]
+                                :viestintapalvelu-id [:n 123]
+                                :1.-muistutus-lahetetty [:s "2021-10-10"]
+                                :lahetystila
+                                [:s (:viestintapalvelussa c/kasittelytilat)]}}]
+        (mh/update-after-send email 1 123)
         (is (= @mock-update-after-send-results expected))))))
 
 (def mock-update-when-not-sent-results (atom {}))
 
-(defn- mock-update-item-for-update-when-not-sent [query-params options]
-  (when (and (= :s (first (:toimija_oppija query-params)))
-             (= :s (first (:tyyppi_kausi query-params)))
-             (= :s (first (get (:expr-attr-vals options) ":lahetystila")))
-             (= :n (first (get (:expr-attr-vals options) ":muistutukset"))))
-    (reset! mock-update-when-not-sent-results
-            {:toimija-oppija (second (:toimija_oppija query-params))
-             :tyyppi-kausi (second (:tyyppi_kausi query-params))
-             :lahetystila (second (get (:expr-attr-vals options)
-                                       ":lahetystila"))
-             :muistutukset (second (get (:expr-attr-vals options)
-                                        ":muistutukset"))})))
+(defn- mock-update-herate-for-update-when-not-sent [herate updates]
+  (reset! mock-update-when-not-sent-results {:herate herate :updates updates}))
 
 (deftest test-update-when-not-sent
   (testing "Varmista, että update-when-not-sent kutsuu update-item oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/update-item
-                  mock-update-item-for-update-when-not-sent]
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/update-herate
+                  mock-update-herate-for-update-when-not-sent]
       (let [email {:toimija_oppija "toimija-oppija"
                    :tyyppi_kausi "tyyppi-kausi"}
-            expected {:toimija-oppija "toimija-oppija"
-                      :tyyppi-kausi "tyyppi-kausi"
-                      :muistutukset 1}
+            expected {:muistutukset [:n 1]}
             expected-vastattu (assoc expected
                                      :lahetystila
-                                     (:vastattu c/kasittelytilat))
+                                     [:s (:vastattu c/kasittelytilat)])
             expected-aika-loppunut (assoc expected
                                           :lahetystila
-                                          (:vastausaika-loppunut-m
-                                            c/kasittelytilat))]
+                                          [:s (:vastausaika-loppunut-m
+                                                c/kasittelytilat)])]
         (mh/update-when-not-sent email 1 {:vastattu true})
-        (is (= @mock-update-when-not-sent-results expected-vastattu))
+        (is (= @mock-update-when-not-sent-results {:herate email
+                                                   :updates expected-vastattu}))
         (mh/update-when-not-sent email 1 {:vastattu false})
-        (is (= @mock-update-when-not-sent-results expected-aika-loppunut))))))
+        (is (= @mock-update-when-not-sent-results
+               {:herate email :updates expected-aika-loppunut}))))))
 
 (def mock-send-email-results (atom {}))
 

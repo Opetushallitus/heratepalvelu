@@ -34,89 +34,51 @@
 
 (def test-update-item-email-sent-result (atom {}))
 
-(defn- mock-uies-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= (str "SET #kasittelytila = :kasittelytila, #vpid = :vpid, "
-                     "#muistutuspvm = :muistutuspvm, "
-                     "#muistutukset = :muistutukset")
-                (:update-expr options))
-             (= "kasittelytila" (get (:expr-attr-names options)
-                                     "#kasittelytila"))
-             (= "viestintapalvelu-id" (get (:expr-attr-names options) "#vpid"))
-             (= "email_muistutuspvm" (get (:expr-attr-names options)
-                                          "#muistutuspvm"))
-             (= "muistutukset" (get (:expr-attr-names options) "#muistutukset"))
-             (= :s (first (get (:expr-attr-vals options) ":kasittelytila")))
-             (= :n (first (get (:expr-attr-vals options) ":vpid")))
-             (= :s (first (get (:expr-attr-vals options) ":muistutuspvm")))
-             (= :n (first (get (:expr-attr-vals options) ":muistutukset")))
-             (= 1 (second (get (:expr-attr-vals options) ":muistutukset")))
-             (= "nippu-table-name" table))
-    (reset! test-update-item-email-sent-result
-            {:ohjaaja_ytunnus_kj_tutkinto (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                    query-params))
-             :niputuspvm (second (:niputuspvm query-params))
-             :kasittelytila (second (get (:expr-attr-vals options)
-                                         ":kasittelytila"))
-             :vpid (second (get (:expr-attr-vals options) ":vpid"))
-             :muistutuspvm (second (get (:expr-attr-vals options)
-                                        ":muistutuspvm"))})))
+(defn- mock-uies-update-nippu [nippu updates]
+  (reset! test-update-item-email-sent-result {:nippu nippu :updates updates}))
 
 (deftest test-update-item-email-sent
   (testing "Varmista, että update-item-email-sent kutsuu update-item oikein"
     (with-redefs
       [environ.core/env {:nippu-table "nippu-table-name"}
-       oph.heratepalvelu.db.dynamodb/update-item mock-uies-update-item]
+       oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2022 2 2))
+       oph.heratepalvelu.tep.tepCommon/update-nippu mock-uies-update-nippu]
       (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
                    :niputuspvm "2021-10-05"}
             id 123
-            expected {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                      :niputuspvm "2021-10-05"
-                      :kasittelytila (:viestintapalvelussa c/kasittelytilat)
-                      :vpid 123
-                      :muistutuspvm (str (LocalDate/now))}]
+            expected {:nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
+                              :niputuspvm "2021-10-05"}
+                      :updates {:kasittelytila
+                                [:s (:viestintapalvelussa c/kasittelytilat)]
+                                :viestintapalvelu-id [:n 123]
+                                :email_muistutuspvm  [:s "2022-02-02"]
+                                :muistutukset        [:n 1]}}]
         (emh/update-item-email-sent nippu id)
         (is (= @test-update-item-email-sent-result expected))))))
 
 (def test-update-item-cannot-answer-result (atom {}))
 
-(defn- mock-uica-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= (str "SET #kasittelytila = :kasittelytila, "
-                     "#muistutukset = :muistutukset")
-                (:update-expr options))
-             (= "kasittelytila" (get (:expr-attr-names options)
-                                     "#kasittelytila"))
-             (= "muistutukset" (get (:expr-attr-names options) "#muistutukset"))
-             (= :s (first (get (:expr-attr-vals options) ":kasittelytila")))
-             (= :n (first (get (:expr-attr-vals options) ":muistutukset")))
-             (= 1 (second (get (:expr-attr-vals options) ":muistutukset")))
-             (= "nippu-table-name" table))
-    (reset! test-update-item-cannot-answer-result
-            {:ohjaaja_ytunnus_kj_tutkinto (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                    query-params))
-             :niputuspvm (second (:niputuspvm query-params))
-             :kasittelytila (second (get (:expr-attr-vals options)
-                                         ":kasittelytila"))})))
+(defn- mock-uica-update-nippu [nippu updates]
+  (reset! test-update-item-cannot-answer-result
+          {:nippu nippu :updates updates}))
 
 (deftest test-update-item-cannot-answer
   (testing "Varmista, että update-item-cannot-answer kutsuu update-item oikein"
     (with-redefs
       [environ.core/env {:nippu-table "nippu-table-name"}
-       oph.heratepalvelu.db.dynamodb/update-item mock-uica-update-item]
+       oph.heratepalvelu.tep.tepCommon/update-nippu mock-uica-update-nippu]
       (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
                    :niputuspvm "2021-10-10"}
             status1 {:vastattu true}
             status2 {:vastattu false}
-            expected1 {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                       :niputuspvm "2021-10-10"
-                       :kasittelytila (:vastattu c/kasittelytilat)}
-            expected2 {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                       :niputuspvm "2021-10-10"
-                       :kasittelytila (:vastausaika-loppunut-m
-                                        c/kasittelytilat)}]
+            expected1 {:nippu nippu
+                       :updates {:kasittelytila
+                                 [:s (:vastattu c/kasittelytilat)]
+                                 :muistutukset [:n 1]}}
+            expected2 {:nippu nippu
+                       :updates {:kasittelytila
+                                 [:s (:vastausaika-loppunut-m c/kasittelytilat)]
+                                 :muistutukset [:n 1]}}]
         (emh/update-item-cannot-answer nippu status1)
         (is (= @test-update-item-cannot-answer-result expected1))
         (reset! test-update-item-cannot-answer-result {})

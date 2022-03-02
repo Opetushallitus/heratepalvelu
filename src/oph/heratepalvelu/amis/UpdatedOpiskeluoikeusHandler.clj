@@ -59,9 +59,7 @@
                  (t/minutes 5))]
     (ddb/update-item
       {:key [:s "opiskeluoikeus-last-checked"]}
-      {:update-expr     "SET #value = :value"
-       :expr-attr-names {"#value" "value"}
-       :expr-attr-vals {":value" [:s (str time-with-buffer)]}}
+      (create-update-item-options {:value [:s (str time-with-buffer)]})
       (:metadata-table env))))
 
 (defn update-last-page
@@ -69,9 +67,7 @@
   [page]
   (ddb/update-item
     {:key [:s "opiskeluoikeus-last-page"]}
-    {:update-expr     "SET #value = :value"
-     :expr-attr-names {"#value" "value"}
-     :expr-attr-vals {":value" [:s (str page)]}}
+    (create-update-item-options {:value [:s (str page)]})
     (:metadata-table env)))
 
 (defn get-kysely-type

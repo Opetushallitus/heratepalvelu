@@ -39,33 +39,10 @@
                                          :body body})
   {:body {:messages {(keyword numero) {:status "mock-lahetys"}}}})
 
-(defn- mock-update-item [query-params options table]
-  (when (and (= :s (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (:niputuspvm query-params)))
-             (= "sms_kasittelytila"
-                (get (:expr-attr-names options) "#sms_kasittelytila"))
-             (or (= "sms_muistutuspvm"
-                    (get (:expr-attr-names options) "#sms_muistutuspvm"))
-                 (nil? (get (:expr-attr-names options) "#sms_muistutuspvm")))
-             (= "sms_muistutukset"
-                (get (:expr-attr-names options) "#sms_muistutukset"))
-             (= :s (first (get (:expr-attr-vals options) ":sms_kasittelytila")))
-             (or (= :s (first (get (:expr-attr-vals options)
-                                   ":sms_muistutuspvm")))
-                 (nil? (get (:expr-attr-vals options) ":sms_muistutuspvm")))
-             (= :n (first (get (:expr-attr-vals options) ":sms_muistutukset")))
-             (= 1 (second (get (:expr-attr-vals options) ":sms_muistutukset")))
-             (= "nippu-table-name" table))
-    (add-to-test-sendSmsMuistutus-results
-      {:type "mock-update-item"
-       :ohjaaja_ytunnus_kj_tutkinto
-       (second (:ohjaaja_ytunnus_kj_tutkinto query-params))
-       :niputuspvm (second (:niputuspvm query-params))
-       :update-expr (:update-expr options)
-       :sms_kasittelytila
-       (second (get (:expr-attr-vals options) ":sms_kasittelytila"))
-       :sms_muistutuspvm
-       (second (get (:expr-attr-vals options) ":sms_muistutuspvm"))})))
+(defn- mock-update-nippu [nippu updates]
+  (add-to-test-sendSmsMuistutus-results {:type "mock-update-nippu"
+                                         :nippu nippu
+                                         :updates updates}))
 
 (deftest test-sendSmsMuistutus
   (testing "Varmista, että sendSmsMuistutus kutsuu oikeita funktioita"
@@ -74,7 +51,6 @@
                   mock-has-time-to-answer?
                   oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2021 12 16))
-                  oph.heratepalvelu.db.dynamodb/update-item mock-update-item
                   oph.heratepalvelu.external.arvo/get-nippulinkki-status
                   mock-get-nippulinkki-status
                   oph.heratepalvelu.external.elisa/send-tep-sms
@@ -82,7 +58,9 @@
                   oph.heratepalvelu.external.organisaatio/get-organisaatio
                   mock-get-organisaatio
                   oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
-                  mock-get-jaksot-for-nippu]
+                  mock-get-jaksot-for-nippu
+                  oph.heratepalvelu.tep.tepCommon/update-nippu
+                  mock-update-nippu]
       (let [muistutettavat [{:kyselylinkki "kysely.linkki/1"
                              :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
                              :niputuspvm "2021-12-15"
@@ -110,36 +88,34 @@
                                                       [{:fi "Testilaitos"
                                                         :en "Test Dept."
                                                         :sv "Testanstalt"}])}
-                     {:type "mock-update-item"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
-                      :niputuspvm "2021-12-15"
-                      :update-expr
-                      (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                           "#sms_muistutuspvm = :sms_muistutuspvm, "
-                           "#sms_muistutukset = :sms_muistutukset")
-                      :sms_kasittelytila "mock-lahetys"
-                      :sms_muistutuspvm "2021-12-16"}
+                     {:type "mock-update-nippu"
+                      :nippu {:kyselylinkki "kysely.linkki/1"
+                              :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
+                              :niputuspvm "2021-12-15"
+                              :lahetettynumeroon "+358401234567"}
+                      :updates {:sms_kasittelytila [:s "mock-lahetys"]
+                                :sms_muistutuspvm [:s "2021-12-16"]
+                                :sms_muistutukset [:n 1]}}
                      {:type "mock-get-nippulinkki-status"
                       :kyselylinkki "kysely.linkki/2"}
-                     {:type "mock-update-item"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-2"
-                      :niputuspvm "2021-12-15"
-                      :update-expr
-                      (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                           "#sms_muistutukset = :sms_muistutukset")
-                      :sms_kasittelytila (:vastattu c/kasittelytilat)
-                      :sms_muistutuspvm nil}
+                     {:type "mock-update-nippu"
+                      :nippu {:kyselylinkki "kysely.linkki/2"
+                              :ohjaaja_ytunnus_kj_tutkinto "test-id-2"
+                              :niputuspvm "2021-12-15"
+                              :lahetettynumeroon "+358401234567"}
+                      :updates {:sms_kasittelytila
+                                [:s (:vastattu c/kasittelytilat)]
+                                :sms_muistutukset [:n 1]}}
                      {:type "mock-get-nippulinkki-status"
                       :kyselylinkki "kysely.linkki/3"}
-                     {:type "mock-update-item"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-3"
-                      :niputuspvm "2021-12-15"
-                      :update-expr
-                      (str "SET #sms_kasittelytila = :sms_kasittelytila, "
-                           "#sms_muistutukset = :sms_muistutukset")
-                      :sms_kasittelytila
-                      (:vastausaika-loppunut-m c/kasittelytilat)
-                      :sms_muistutuspvm nil}]]
+                     {:type "mock-update-nippu"
+                      :nippu {:kyselylinkki "kysely.linkki/3"
+                              :ohjaaja_ytunnus_kj_tutkinto "test-id-3"
+                              :niputuspvm "2021-12-15"
+                              :lahetettynumeroon "+358401234567"}
+                      :updates {:sms_kasittelytila
+                                [:s (:vastausaika-loppunut-m c/kasittelytilat)]
+                                :sms_muistutukset [:n 1]}}]]
         (smh/sendSmsMuistutus muistutettavat)
         (is (= results (vec (reverse @test-sendSmsMuistutus-results))))))))
 
