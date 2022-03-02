@@ -2,6 +2,7 @@
 
 Herätepalvelu Arvo-kyselylinkkien lähetyksen automatisointiin.
 
+
 ## Toiminta
 
 ### Aloituskyselyt
@@ -11,6 +12,7 @@ eHOKS lähettää herätteen SQS-jonoon, joka laukaisee eHOKSherateHandlerin.
 Kyselyn vastausajan aloituspäivänä käytetään HOKSin ensikertaisen hyväksymisen
 päivämäärää. Käsitelty heräte tallennetaan herateTable DynamoDB-tauluun.
 
+
 ### Lopetuskyselyt
 
 Lopetuskyselyt käsitellään hakemalla ajastetusti Koski-palvelusta muuttuneet
@@ -18,16 +20,19 @@ opiskeluoikeudet. Kyselyn vastausajan aloituspäivänä käytetään opiskeluoik
 päätason suorituksen vahvistus päivämäärää. Käsitelty heräte tallennetaan
 herateTable DynamoDB-tauluun.
 
+
 ### Sähköpostien lähettäminen
 
 Sähköpostit lähetetään hakemalla ajastetusti uudet tietueet
 herateTable-taulusta, jotka lähetetään Viestintäpalveluun. Lähetettyjen
 viestien tila ja seuranta-id tallennetaan herateTable-tauluun.
 
+
 ### Organisaatioden käyttöönoton ylläpitäminen
 
 Organisaatioiden käyttöönoton ajankohdat tallennetaan käsin
 organisaatioWhitelist-tauluun. Katso esimerkkiä olemassa olevista tietueista.
+
 
 ## Kehittäminen
 
@@ -65,65 +70,7 @@ Yksikkötestit voit ajaa komennolla
 Ympäristömuuttujat löytyvät SSM Parameter Storesta ja Lambda ajojen välistä
 tilaa voi tarvittaessa tallentaa key-value pareina metadata-tauluun.
 
-### Testaaminen AWS-työkaluilla
 
-AWS-selainkäyttöliittymän Lambda-työkalujen kautta pääsee tarkastelemaan
-funktioiden lokeja, XRay-profilointia ja käynnistämään lambdan testidatalla.
-Testidatalla lambdojen käynnistäminen onnistuu myös komentorivillä
-sls-komennoilla.
+## Dokumentaatio
 
-Resurssit (Lambdat, DynamoDB-taulut ja SQS-jonot) on nimetty kaavalla 
-`<stage>-heratepalvelu-<resurssin nimi>`
-
-Testidatassa kannattaa kiinnittää huomiota seuraaviin tekijöihin
-* Onko organisaatio lisätty organisaatioWhitelist-tauluun?
-* Onko opiskeluoikeuteen liitetty HOKS?
-* Onko oppija-oid, organisaatio-oid, kyselytyyppi & laskentakausi
-yhdistelmäavain uniikki?
-* Onko organisaatiolle kyselyä Arvon testiympäristössä?
-* Onko opiskeluoikeus oikeaa tyyppiä? (ammatillinentutkinto tai
-ammatillinentutkintoosittainen)
-* Joskus voi olla myös tarpeen muuttaa edellisen opiskeluoikeuksien
-muutostarkistuksen aikaa aikaisemmaksi (metadata-taulusta key
-"opiskeluoikeus-last-checked")
-
-Testaaminen onnistuu myös luomalla uuden HOKSin QA:lla eHoks-palveluun
-(alkukysely) tai käymällä Koski-käyttöliittymästä lisäämässä vahvistuspäivämäärä
-jollekin opiskeluoikeudelle, jolle on luotu HOKS (loppukysely). Lähetettävät
-sähköpostit ovat tarkasteltavissa Viestintäpalvelun fakemailerissa.
-
-### Virhetilanteet
-
-Virhetilanteista löytää lisätietoa muutamasta eri paikasta. Pitkäaikaisempaa
-dataa löytyy lambdan "Monitoring" -välilehdeltä, kuten myös linkki Cloudwatch
-log-grouppiin. Yksittäisten lambda-ajojen tietoja voi tarkastella X-Ray
--traceista (linkki löytyy "Configuration" -välilehden alaosasta).
-
-Suurin osa virheistä johtaa lambdan uudelleen ajoon, ja useimmissa tapauksissa
-ongelma ratkeaa itsekseen. Jos jokin näyttää menevän pahasti pieleen, eikä näytä
-tokenevan omin avuin, voi lambdan automaattiset ajot estää disabloimalla
-lambda-ajon käynnistävän eventin. Disablointi nappula löytyy "Configuration"
--välilehdeltä "Designer" -laatikosta eventin lähdettä klikkaamalla (esim. SQS
-eHOKSHerateHandlerissa tai CloudWatch Events ajastetuilla lambdoilla). Eventin
-lähteen klikkaamisen jälkeen paljastuu lähteen tarkempi konfiguraatio, jonka
-oikeassa reunassa "Enabled/Disabled" valinta. Vaihda tila sopivaan ja tallenna
-muutokset.
-
-HUOM!! Lambdan disablointi on aina viimeinen keino ja sopii vain tilanteisiin,
-joissa se on ehdoton pakko!
-
-### Kielten käyttö projektissa
-
-Tämä on suomenkielinen projekti, ja ainakin tähän saakka kaikki kehittäjät ovat
-osanneet suomea. Käytämme siis suomea kaikessa dokumentaatiossa, koodin
-kommenteissa, ja docstringeissa. Käytämme suomea myös logiviesteissä, mutta tämä
-voi muuttua tulevaisuudessa, jos todetaan, että suomenkielisiä viestejä on
-vaikea lukea automaattisesti generoidun englanninkielisen logituksen seasta.
-
-_Koodia_ kuitenkin pitäisi kirjoittaa englanniksi paitsi sanat, jotka liittyvät
-suoraan projektiin ja on määritelty alun perin suomeksi, esim. _nippu_ tai
-_jakso_. Nimeä siis funktiot "create-nippu" ja "get-jakso", ei "luo-nippu" tai
-"hae-jakso". Sellaisia tapauksia, joissa tätä sääntöä rikotaan, löytyy edelleen
-koodista, mutta pyrimme poistamaan niitä vähitellen. Näin vältämme tapaukset,
-joissa ä:t ja ö:t täytyy korvata a:lla tai o:lla, ja pidämme koodin siistinä ja
-tavanmukaisena.
+Enemmän dokumentaatiota löytyy kansiosta `doc/`.
