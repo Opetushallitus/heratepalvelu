@@ -67,4 +67,5 @@
       (is (= (mdb/get-table-values (:to-table-2020-2021 mock-env))
              expected-2020-2021-table))
       (is (= (mdb/get-table-values (:to-table-2021-2022 mock-env))
-             expected-2021-2022-table)))))
+             expected-2021-2022-table))
+      (mdb/clear-mock-db))))

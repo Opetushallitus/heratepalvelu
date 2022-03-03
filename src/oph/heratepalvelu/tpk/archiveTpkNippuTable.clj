@@ -26,7 +26,7 @@
   "Arkistoi yhden tiedonkeruukauden niput."
   [kausi-alkupvm to-table]
   (loop [resp (do-query kausi-alkupvm nil)]
-    (doseq [item (:item resp)]
+    (doseq [item (:items resp)]
       (try
         (ddb/put-item (ddb/map-raw-vals-to-typed-vals item) {} to-table)
         (ddb/delete-item {:nippu-id            [:s (:nippu-id item)]
