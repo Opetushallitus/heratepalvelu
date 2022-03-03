@@ -9,7 +9,6 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-;; TODO tämä täytyy muokata näin, että kentän nimi on mahdollista muuttaa
 (defn do-herate-table-archiving
   "Arkistoi tietueet toiseen tauluun, jos niiden rahoituskaudet täsmäävät
   kausi-parametrin arvon kanssa. Arkistoidut tietueet poistetaan alkuperäisestä
