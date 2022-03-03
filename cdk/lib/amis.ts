@@ -432,7 +432,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(AMISTimedOperationsHandler)]
     });
 
-    /*const dbArchiver = new lambda.Function(this, "AMIS-DBArchiver", {
+    /*const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code:lambdaCode,
       environment: {
@@ -443,7 +443,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         to_table_2021_2022: AMISherateArchive2021_2022Table.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISDBArchiver`,
       },
-      handler: "oph.heratepalvelu.util.dbArchiver::handleDBArchiving",
+      handler: "oph.heratepalvelu.amis.archiveHerateTable::archiveHerateTable",
       memorySize: 1024,
       timeout: Duration.seconds(900),
       tracing: lambda.Tracing.ACTIVE,
