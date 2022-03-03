@@ -167,6 +167,36 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         }
     );
 
+    const jaksotunnusArchive2021_2022Table = new dynamodb.Table(
+      this,
+      "jaksotunnusArchive2021to2022Table",
+      {
+        partitionKey: {
+          name: "hankkimistapa_id",
+          type: dynamodb.AttributeType.NUMBER
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        serverSideEncryption: true
+      }
+    );
+
+    const nippuArchive2021_2022Table = new dynamodb.Table(
+      this,
+      "nippuArchive2021to2022Table",
+      {
+        partitionKey: {
+          name: "ohjaaja_ytunnus_kj_tutkinto",
+          type: dynamodb.AttributeType.STRING
+        },
+        sortKey: {
+          name: "niputuspvm",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        serverSideEncryption: true
+      }
+    );
+
     // SQS
 
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDLQ", {
@@ -457,6 +487,45 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       enabled: false
     });
 
+    // Arkistointifunktiot
+    const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        jaksotunnus_table: jaksotunnusTable.tableName,
+        archive_table_2021_2022: jaksotunnusArchive2021_2022Table.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-archiveJaksoTable`,
+      },
+      memorySize: Token.asNumber(1024),
+      reservedConcurrentExecutions: 1,
+      timeout: Duration.seconds(900),
+      handler: "oph.heratepalvelu.tep.archiveJaksoTable::archiveJaksoTable",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    jaksotunnusTable.grantReadWriteData(archiveJaksoTable);
+    jaksotunnusArchive2021_2022Table.grantReadWriteData(archiveJaksoTable);
+
+    const archiveNippuTable = new lambda.Function(this, "archiveNippuTable", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        nippu_table: nippuTable.tableName,
+        archive_table_2021_2022: nippuArchive2021_2022Table.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-archiveJaksoTable`,
+      },
+      memorySize: Token.asNumber(1024),
+      reservedConcurrentExecutions: 1,
+      timeout: Duration.seconds(900),
+      handler: "oph.heratepalvelu.tep.archiveNippuTable::archiveNippuTable",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    nippuTable.grantReadWriteData(archiveNippuTable);
+    nippuArchive2021_2022Table.grantReadWriteData(archiveNippuTable);
+
     // IAM
 
     [
@@ -468,6 +537,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tepSmsHandler,
       SmsMuistutusHandler,
       EmailMuistutusHandler,
+      archiveJaksoTable,
+      archiveNippuTable,
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({

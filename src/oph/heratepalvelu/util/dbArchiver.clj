@@ -9,6 +9,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
+;; TODO tämä täytyy muokata näin, että kentän nimi on mahdollista muuttaa
 (defn doArchiving
   "Arkistoi tietueet toiseen tauluun, jos niiden rahoituskaudet täsmäävät
   kausi-parametrin arvon kanssa. Arkistoidut tietueet poistetaan alkuperäisestä
@@ -19,22 +20,7 @@
                         (:from-table env))]
     (doseq [item (:items resp)]
       (try
-        (ddb/put-item (reduce
-                        #(assoc %1
-                                (first %2)
-                                (cond (or (= (type (second %2))
-                                             java.lang.Long)
-                                          (= (type (second %2))
-                                             java.lang.Integer))
-                                      [:n (second %2)]
-                                      (= (type (second %2)) java.lang.Boolean)
-                                      [:bool (second %2)]
-                                      :else
-                                      [:s (second %2)]))
-                        {}
-                        (seq item))
-                      {}
-                      to-table)
+        (ddb/put-item (ddb/map-raw-vals-to-typed-vals item) {} to-table)
         (ddb/delete-item {:toimija_oppija [:s (:toimija_oppija item)]
                           :tyyppi_kausi   [:s (:tyyppi_kausi item)]}
                          (:from-table env))
@@ -52,4 +38,5 @@
   "Tekee arkistointia niille rahoituskausille, jotka ovat jo päättyneet."
   [this event context]
   (doArchiving "2019-2020" (:to-table env))
-  (doArchiving "2020-2021" (:to-table-2020-2021 env)))
+  (doArchiving "2020-2021" (:to-table-2020-2021 env))
+  (doArchiving "2021-2022" (:to-table-2021-2022 env)))

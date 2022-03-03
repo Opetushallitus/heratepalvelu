@@ -391,6 +391,23 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       }
     );
 
+    const AMISherateArchive2021_2022Table = new dynamodb.Table(
+      this,
+      "AMISHerateArchive2021to2022Table",
+      {
+        partitionKey: {
+          name: "toimija_oppija",
+          type: dynamodb.AttributeType.STRING
+        },
+        sortKey: {
+          name: "tyyppi_kausi",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        serverSideEncryption: true
+      }
+    );
+
     const AMISTimedOperationsHandler = new lambda.Function(
       this,
       "AMISTimedOperationsHandler",
@@ -423,6 +440,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         from_table: AMISherateTable.tableName,
         to_table: AMISherateArchive2019_2020Table.tableName,
         to_table_2020_2021: AMISherateArchive2020_2021Table.tableName,
+        to_table_2021_2022: AMISherateArchive2021_2022Table.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISDBArchiver`,
       },
       handler: "oph.heratepalvelu.util.dbArchiver::handleDBArchiving",
@@ -433,7 +451,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     AMISherateTable.grantReadWriteData(dbArchiver);
     AMISherateArchive2019_2020Table.grantReadWriteData(dbArchiver);
-    AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);*/
+    AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);
+    AMISherateArchive2021_2022Table.grantReadWriteData(dbArchiver);*/
 
     [
       AMISHerateHandler,
