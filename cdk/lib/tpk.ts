@@ -119,6 +119,9 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       }
     );
 
+    tpkNippuTable.grantReadWriteData(archiveTpkNippuTable);
+    tpkNippuArchive2021FallTable.grantReadWriteData(archiveTpkNippuTable);
+
     [
       tpkNiputusHandler,
       tpkArvoCallHandler,
