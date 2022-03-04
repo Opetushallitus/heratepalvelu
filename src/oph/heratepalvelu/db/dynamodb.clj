@@ -117,6 +117,22 @@
   (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
              {} (into {} item)))
 
+(defn map-raw-vals-to-typed-vals
+  "Muuttaa key value mapin muodosta {\"key\" <Clojure-arvo>} muodoksi
+  {\"key\" [:<tyyppi> <arvo>]}."
+  [item]
+  (reduce #(assoc %1 (first %2) (cond (or (= (type (second %2))
+                                             java.lang.Long)
+                                          (= (type (second %2))
+                                             java.lang.Integer))
+                                      [:n (second %2)]
+                                      (= (type (second %2)) java.lang.Boolean)
+                                      [:bool (second %2)]
+                                      :else
+                                      [:s (second %2)]))
+                        {}
+                        (seq item)))
+
 (defn- create-put-item-request-builder
   "Abstraktio PutItemRequest/builderin ympäri, joka helpottaa testaamista."
   []

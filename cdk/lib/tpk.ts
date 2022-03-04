@@ -34,6 +34,19 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       serverSideEncryption: true,
     });
 
+    const tpkNippuArchive2021FallTable = new dynamodb.Table(
+      this,
+      "tpkNippuArchive2021FallTable",
+      {
+        partitionKey: {
+          name: "nippu-id",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        serverSideEncryption: true,
+      }
+    );
+
     // S3
 
     const ehoksHerateTPKAsset = new s3assets.Asset(
@@ -87,7 +100,33 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
 
     tpkNippuTable.grantReadWriteData(tpkArvoCallHandler);
 
-    [tpkNiputusHandler, tpkArvoCallHandler].forEach(
+    const archiveTpkNippuTable = new lambda.Function(
+      this,
+      "archiveTpkNippuTable",
+      {
+        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        code: lambdaCode,
+        environment: {
+          ...this.envVars,
+          tpk_nippu_table: tpkNippuTable.tableName,
+          archive_table_2021_fall: tpkNippuArchive2021FallTable.tableName,
+          caller_id: `1.2.246.562.10.00000000001.${id}-archiveTpkNippuTable`,
+        },
+        memorySize: Token.asNumber(1024),
+        timeout: Duration.seconds(900),
+        handler: "oph.heratepalvelu.tpk.archiveTpkNippuTable::archiveTpkNippuTable",
+        tracing: lambda.Tracing.ACTIVE,
+      }
+    );
+
+    tpkNippuTable.grantReadWriteData(archiveTpkNippuTable);
+    tpkNippuArchive2021FallTable.grantReadWriteData(archiveTpkNippuTable);
+
+    [
+      tpkNiputusHandler,
+      tpkArvoCallHandler,
+      archiveTpkNippuTable,
+    ].forEach(
       lambdaFunction => lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],

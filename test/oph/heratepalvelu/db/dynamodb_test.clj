@@ -39,6 +39,16 @@
                      :key-two {:gotten-value 42}}]
         (is (= (ddb/map-attribute-values-to-vals test-values) results))))))
 
+(deftest test-map-raw-vals-to-typed-vals
+  (testing "Varmista, että map-raw-vals-to-typed-vals toimii oikein"
+    (let [test-item {:bool-field   false
+                     :int-field    10
+                     :string-field "asdf"}
+          results {:bool-field   [:bool false]
+                   :int-field    [:n 10]
+                   :string-field [:s "asdf"]}]
+      (is (= (ddb/map-raw-vals-to-typed-vals test-item) results)))))
+
 
 (definterface IMockAttributeValueBuilder
   (build [])
