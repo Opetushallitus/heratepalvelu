@@ -100,7 +100,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
 
     tpkNippuTable.grantReadWriteData(tpkArvoCallHandler);
 
-    const archiveTpkNippuTable = new lambda.Function(
+ /*   const archiveTpkNippuTable = new lambda.Function(
       this,
       "archiveTpkNippuTable",
       {
@@ -120,12 +120,12 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
     );
 
     tpkNippuTable.grantReadWriteData(archiveTpkNippuTable);
-    tpkNippuArchive2021FallTable.grantReadWriteData(archiveTpkNippuTable);
+    tpkNippuArchive2021FallTable.grantReadWriteData(archiveTpkNippuTable);*/
 
     [
       tpkNiputusHandler,
       tpkArvoCallHandler,
-      archiveTpkNippuTable,
+      //archiveTpkNippuTable,
     ].forEach(
       lambdaFunction => lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
