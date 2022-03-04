@@ -166,7 +166,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
           serverSideEncryption: true
         }
     );
-
+/*
     const jaksotunnusArchive2021_2022Table = new dynamodb.Table(
       this,
       "jaksotunnusArchive2021to2022Table",
@@ -195,7 +195,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         serverSideEncryption: true
       }
-    );
+    );*/
 
     // SQS
 
@@ -487,7 +487,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       enabled: false
     });
 
-    // Arkistointifunktiot
+ /*   // Arkistointifunktiot
     const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
@@ -524,7 +524,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     });
 
     nippuTable.grantReadWriteData(archiveNippuTable);
-    nippuArchive2021_2022Table.grantReadWriteData(archiveNippuTable);
+    nippuArchive2021_2022Table.grantReadWriteData(archiveNippuTable);*/
 
     // IAM
 
@@ -537,8 +537,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tepSmsHandler,
       SmsMuistutusHandler,
       EmailMuistutusHandler,
-      archiveJaksoTable,
-      archiveNippuTable,
+  //    archiveJaksoTable,
+  //    archiveNippuTable,
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
