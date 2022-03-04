@@ -29,6 +29,6 @@ Test-välilehdestä. Jos ajat tpkNiputusHandlerin, muista aina ajaa myös
 tpkArvoCallHandler sen jälkeen, jotta kyselylinkkejä luodaan kaikille jaksoille.
 Sovi Arvon ja OPH:n edustajien kanssa sopiva aika ajaa nämä funktiot — Arvo
 ottaa vastaan kyselylinkkipyyntöjä vain tiettyihin aikoihin, ja funktiota on
-turhaa ajaa ennen teidonkeruukauden viimeistä kuukautta, mutta linkkien pitäisi
+turhaa ajaa ennen tiedonkeruukauden viimeistä kuukautta, mutta linkkien pitäisi
 toisaalta olla olemassa ennen vastausajan alkua, ja kaikki jaksot täytyy
 käsitellä, vaikka ne saapuisivat vasta tiedonkeruukauden viimeisenä päivänä.
