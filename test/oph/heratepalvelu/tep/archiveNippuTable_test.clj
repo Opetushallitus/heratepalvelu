@@ -9,15 +9,15 @@
   (testing "Varmista, että do-query kutsuu funktioita oikein"
     (with-redefs [environ.core/env {:nippu-table "nippu-table-name"}
                   oph.heratepalvelu.db.dynamodb/scan mock-scan]
-      (is (= (ant/do-query "2021-07-01" "2022-06-30" nil)
+      (is (= (ant/do-query "2021-07-02" "2022-07-01" nil)
              {:options {:filter-expression "niputuspvm BETWEEN :start AND :end"
-                        :expr-attr-vals    {":start" [:s "2021-07-01"]
-                                            ":end"   [:s "2022-06-30"]}}
+                        :expr-attr-vals    {":start" [:s "2021-07-02"]
+                                            ":end"   [:s "2022-07-01"]}}
               :table   "nippu-table-name"}))
-      (is (= (ant/do-query "2021-07-01" "2022-06-30" "asdf")
+      (is (= (ant/do-query "2021-07-02" "2022-07-01" "asdf")
              {:options {:filter-expression "niputuspvm BETWEEN :start AND :end"
-                        :expr-attr-vals      {":start" [:s "2021-07-01"]
-                                              ":end"   [:s "2022-06-30"]}
+                        :expr-attr-vals      {":start" [:s "2021-07-02"]
+                                              ":end"   [:s "2022-07-01"]}
                         :exclusive-start-key "asdf"}
               :table   "nippu-table-name"})))))
 
@@ -54,11 +54,11 @@
                   oph.heratepalvelu.db.dynamodb/put-item mock-put-item
                   oph.heratepalvelu.tep.archiveNippuTable/do-query
                   mock-do-query]
-      (ant/do-nippu-table-archiving "2021-07-01" "2022-06-30" "to-table-name")
+      (ant/do-nippu-table-archiving "2021-07-02" "2022-07-01" "to-table-name")
       (is (= (vec (reverse @results))
              [{:type               "mock-do-query"
-               :kausi-start        "2021-07-01"
-               :kausi-end          "2022-06-30"
+               :kausi-start        "2021-07-02"
+               :kausi-end          "2022-07-01"
                :last-evaluated-key nil}
               {:type      "mock-put-item"
                :key-conds {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt"]
@@ -91,6 +91,6 @@
                               (tu/mock-handler-event :scheduledherate)
                               (tu/mock-handler-context))
       (is (= (vec (reverse @test-archiveNippuTable-results))
-             [{:kausi-start "2021-07-01"
-               :kausi-end "2022-06-30"
+             [{:kausi-start "2021-07-02"
+               :kausi-end "2022-07-01"
                :to-table "archive"}])))))
