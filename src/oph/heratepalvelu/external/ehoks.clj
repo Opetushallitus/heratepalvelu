@@ -133,3 +133,25 @@
   "Merkitsee HOKSin päättöherätteen käsitellyksi."
   [id]
   (patch-amisherate-kasitelty "paattoherate-kasitelty" id))
+
+(defn resend-aloitusheratteet
+  "Pyytää eHOKS-palvelua lähettämään aloitusherätteet uudelleen tietylle
+  aikavälille."
+  [start end]
+  (client/post
+    (str (:ehoks-url env) "hoks/resend-aloitusherate")
+    {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
+                                               "cas-security-check")}
+     :query-params {:from start :to end}
+     :as :json}))
+
+(defn resend-paattoheratteet
+  "Pyytää eHOKS-palvelua lähettämään päättöherätteet uudelleen tietylle
+  aikavälille."
+  [start end]
+  (client/post
+    (str (:ehoks-url env) "hoks/resend-paattoherate")
+    {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
+                                               "cas-security-check")}
+     :query-params {:from start :to end}
+     :as :json}))
