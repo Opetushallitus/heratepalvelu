@@ -20,4 +20,15 @@ Molemmat funktiot laskee kyseessä olevan tiedonkeruukauden nykyisen päivämä�
 perusteella. Jos edeltävän kauden kyselyvastausaika ei ole loppunut (eli
 käytännössä jos edeltävästä kaudesta ei ole kulunut vähintään kaksi kuukautta),
 niputus ja kyselylinkkien luominen tehdään edeltävälle tiedonkeruukaudelle;
-muuten ne tehdään nykyiselle kaudelle.
+muuten ne tehdään nykyiselle kaudelle. Tiedonkeruukaudet kestävät tammikuusta
+kesäkuuhun ja heinäkuusta joulukuuhun; vastausaika on kaksi kuukautta edeltävän
+tiedonkeruukauden lopun jälkeen.
+
+Funktiot täytyy ajaa manuaalisesti AWS Consolessa funktion sivun
+Test-välilehdestä. Jos ajat tpkNiputusHandlerin, muista aina ajaa myös
+tpkArvoCallHandler sen jälkeen, jotta kyselylinkkejä luodaan kaikille jaksoille.
+Sovi Arvon ja OPH:n edustajien kanssa sopiva aika ajaa nämä funktiot — Arvo
+ottaa vastaan kyselylinkkipyyntöjä vain tiettyihin aikoihin, ja funktiota on
+turhaa ajaa ennen tiedonkeruukauden viimeistä kuukautta, mutta linkkien pitäisi
+toisaalta olla olemassa ennen vastausajan alkua, ja kaikki jaksot täytyy
+käsitellä, vaikka ne saapuisivat vasta tiedonkeruukauden viimeisenä päivänä.
