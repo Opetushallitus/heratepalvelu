@@ -28,3 +28,8 @@ tammikuusta kesäkuuhun ja heinäkuusta joulukuuhun, mutta arkistoinnin voi tehd
 vasta silloin, kun kyselyjen vastausaika on päättynyt), tai jos uskot, että on
 aika poistaa yksi tai useampia arkistotauluista. Älä tee arkistointia äläkä
 poista arkistoitua taulua ilman OPH:n edustajien suostumusta.
+
+Kaikki arkistointifunktiot täytyy ajaa käsin: mene Test-välilehteen funktion
+sivulla AWS Consolessa ja paina "Test"-nappain. Arkistoitavien tietueiden
+määrästä riippuen voi joutua ajamaan joka funktion useita kertoja. Ei ole väliä,
+missä järjestyksessä funktiot ajetaan, kunhan niitä ei ajeta liian aikaisin.
