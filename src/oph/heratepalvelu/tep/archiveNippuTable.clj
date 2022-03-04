@@ -45,6 +45,6 @@
   "Arkistoi kaikki vanhoihin kausiin kuuluvat niput. Jos funktion sallittu
   ajoaika loppuu kesken ajon, voi joutua ajamaan funktion monta kertaa."
   [this event context]
-  (do-nippu-table-archiving "2021-07-02"
-                            "2022-07-01"
+  (do-nippu-table-archiving "2021-07-01"
+                            "2022-06-30"
                             (:archive-table-2021-2022 env)))

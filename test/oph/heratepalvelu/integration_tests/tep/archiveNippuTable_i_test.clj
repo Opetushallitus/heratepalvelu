@@ -26,13 +26,13 @@
   (mdb/set-table-contents (:archive-table-2021-2022 mock-env) []))
 
 (def expected-table #{{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
-                       :niputuspvm                  [:s "2022-08-16"]}})
+                       :niputuspvm                  [:s "2022-08-16"]}
+                      {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
+                       :niputuspvm                  [:s "2022-07-01"]}})
 
 (def expected-archive-2021-2022
   #{{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
-     :niputuspvm                  [:s "2021-07-16"]}
-    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
-     :niputuspvm                  [:s "2022-07-01"]}})
+     :niputuspvm                  [:s "2021-07-16"]}})
 
 (deftest test-archiveNippuTable-integration
   (testing "archiveNippuTable integraatiotesti"
