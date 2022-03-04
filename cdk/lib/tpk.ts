@@ -51,7 +51,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       ehoksHerateTPKAsset.s3ObjectKey
     );
 
-    // tpkNiputusHandler
+    // Handlers
 
     const tpkNiputusHandler = new lambda.Function(this, "TPKNiputusHandler", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
@@ -71,7 +71,23 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
     tepJaksotunnusTable.grantReadWriteData(tpkNiputusHandler);
     tpkNippuTable.grantReadWriteData(tpkNiputusHandler);
 
-    [tpkNiputusHandler].forEach(
+    const tpkArvoCallHandler = new lambda.Function(this, "TPKArvoCallHandler", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        tpk_nippu_table: tpkNippuTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-TPKArvoCallHandler`,
+      },
+      memorySize: Token.asNumber(1024),
+      timeout: Duration.seconds(900),
+      handler: "oph.heratepalvelu.tpk.tpkArvoCallHandler::handleTpkArvoCalls",
+      tracing: lambda.Tracing.ACTIVE,
+    });
+
+    tpkNippuTable.grantReadWriteData(tpkArvoCallHandler);
+
+    [tpkNiputusHandler, tpkArvoCallHandler].forEach(
       lambdaFunction => lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
         resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],
