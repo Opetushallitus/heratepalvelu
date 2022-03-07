@@ -39,13 +39,7 @@
   "Hakee nipun tietokannasta jakson tietojen perusteella, jos se on olemassa."
   [jakso]
   (try
-    (ddb/get-item {:nippu-id [:s (create-nippu-id jakso)]
-                   ; Alla oleva sort key on turha, mutta sen poisto vaatisi
-                   ; taulun poistoa ja uudelleenluomista. Ei kannata tehdä nyt.
-                   :tiedonkeruu-alkupvm [:s (str
-                                              (tpkc/get-kausi-alkupvm
-                                                (c/to-date
-                                                  (:jakso_loppupvm jakso))))]}
+    (ddb/get-item {:nippu-id [:s (create-nippu-id jakso)]}
                   (:tpk-nippu-table env))
     (catch AwsServiceException e
       (log/error "Haku DynamoDB:stä epäonnistunut:" e)

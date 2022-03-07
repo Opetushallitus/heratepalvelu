@@ -112,19 +112,14 @@
                   oph.heratepalvelu.db.dynamodb/get-item
                   (fn [query-params table]
                     (when (and (= :s (first (:nippu-id query-params)))
-                               (= :s (first
-                                       (:tiedonkeruu-alkupvm query-params)))
                                (= table "tpk-nippu-table-name"))
-                      {:nippu-id (second (:nippu-id query-params))
-                       :tiedonkeruu-alkupvm (second (:tiedonkeruu-alkupvm
-                                                      query-params))}))]
+                      {:nippu-id (second (:nippu-id query-params))}))]
       (let [jakso {:tyopaikan_nimi "Ääkköset Által"
                    :tyopaikan_ytunnus "123456-7"
                    :koulutustoimija "test-kt-id"
                    :jakso_loppupvm "2021-10-10"}
             expected {:nippu-id (str "aakkoset_altal/123456-7/test-kt-id/"
-                                     "2021-07-01_2021-12-31")
-                      :tiedonkeruu-alkupvm "2021-07-01"}]
+                                     "2021-07-01_2021-12-31")}]
         (is (= (tpk/get-existing-nippu jakso) expected))))))
 
 (def test-save-nippu-results (atom {}))

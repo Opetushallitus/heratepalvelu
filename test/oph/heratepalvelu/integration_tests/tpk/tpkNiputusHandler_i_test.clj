@@ -49,9 +49,7 @@
                     {:primary-key :hankkimistapa_id})
   (mdb/set-table-contents (:jaksotunnus-table mock-env)
                           starting-jaksotunnus-table)
-  (mdb/create-table (:tpk-nippu-table mock-env)
-                    {:primary-key :nippu-id
-                     :sort-key :tiedonkeruu-alkupvm})
+  (mdb/create-table (:tpk-nippu-table mock-env) {:primary-key :nippu-id})
   (mdb/set-table-contents (:tpk-nippu-table mock-env)
                           starting-tpk-nippu-table))
 
