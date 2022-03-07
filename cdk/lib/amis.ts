@@ -432,6 +432,30 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(AMISTimedOperationsHandler)]
     });
 
+    const AMISMassHerateResendHandler = new lambda.Function(
+      this,
+      "AMISMassHerateResendHandler",
+      {
+        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        code: lambdaCode,
+        environment: {
+          ...this.envVars,
+          caller_id: `1.2.246.562.10.00000000001.${id}-AMISMassHerateResendHandler`,
+        },
+        memorySize: Token.asNumber(1024),
+        timeout: Duration.seconds(900),
+        handler: "oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler::handleMassHerateResend",
+        tracing: lambda.Tracing.ACTIVE
+      }
+    );
+
+    new events.Rule(this, "AMISMassHerateResendScheduleRule", {
+      schedule: events.Schedule.expression(
+        `rate(7 days)`
+      ),
+      targets: [new targets.LambdaFunction(AMISMassHerateResendHandler)]
+    });
+
  /*   const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code:lambdaCode,
