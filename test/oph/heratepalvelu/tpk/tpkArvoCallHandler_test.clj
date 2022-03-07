@@ -71,8 +71,7 @@
                [{:nippu-id "test-nippu-id-1"
                  :tiedonkeruu-alkupvm "2021-07-01"
                  :request-id "test-uuid"}
-                {:key-conds {:nippu-id [:s "test-nippu-id-1"]
-                             :tiedonkeruu-alkupvm [:s "2021-07-01"]}
+                {:key-conds {:nippu-id [:s "test-nippu-id-1"]}
                  :options {:update-expr (str "SET #linkki = :linkki, "
                                              "#tunnus = :tunnus, #pvm = :pvm, "
                                              "#req = :req")

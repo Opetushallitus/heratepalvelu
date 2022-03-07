@@ -14,9 +14,7 @@
 
 (defn- setup-test []
   (mdb/clear-mock-db)
-  (mdb/create-table (:tpk-nippu-table mock-env)
-                    {:primary-key :nippu-id
-                     :sort-key    :tiedonkeruu-alkupvm})
+  (mdb/create-table (:tpk-nippu-table mock-env) {:primary-key :nippu-id})
   (mdb/set-table-contents (:tpk-nippu-table mock-env) starting-table)
   (mdb/create-table (:archive-table-2021-fall mock-env)
                     {:primary-key :nippu-id})

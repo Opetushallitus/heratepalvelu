@@ -59,8 +59,7 @@
           (if (some? (:kysely_linkki arvo-resp))
             (try
               (ddb/update-item
-                {:nippu-id            [:s (:nippu-id nippu)]
-                 :tiedonkeruu-alkupvm [:s (:tiedonkeruu-alkupvm nippu)]}
+                {:nippu-id            [:s (:nippu-id nippu)]}
                 {:update-expr (str "SET #linkki = :linkki, #tunnus = :tunnus, "
                                    "#pvm = :pvm, #req = :req")
                  :expr-attr-names {"#linkki" "kyselylinkki"

@@ -62,8 +62,7 @@
                :options {}
                :table   "to-table-name"}
               {:type      "mock-delete-item"
-               :key-conds {:nippu-id            [:s "test-nippu-id"]
-                           :tiedonkeruu-alkupvm [:s "2021-07-01"]}
+               :key-conds {:nippu-id            [:s "test-nippu-id"]}
                :table     "tpk-nippu-table-name"}])))))
 
 

@@ -44,9 +44,7 @@
                         :tunnus "ABC"
                         :voimassa_loppupvm "2022-02-28"}})
   (mdb/clear-mock-db)
-  (mdb/create-table (:tpk-nippu-table mock-env)
-                    {:primary-key :nippu-id
-                     :sort-key :tiedonkeruu-alkupvm})
+  (mdb/create-table (:tpk-nippu-table mock-env) {:primary-key :nippu-id})
   (mdb/set-table-contents (:tpk-nippu-table mock-env) starting-table))
 
 (defn- teardown-test []

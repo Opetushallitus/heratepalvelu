@@ -26,10 +26,6 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
         name: "nippu-id",
         type: dynamodb.AttributeType.STRING
       },
-      sortKey: {
-        name: "tiedonkeruu-alkupvm",
-        type: dynamodb.AttributeType.STRING
-      },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
       serverSideEncryption: true,
     });

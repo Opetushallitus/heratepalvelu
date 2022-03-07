@@ -29,8 +29,7 @@
     (doseq [item (:items resp)]
       (try
         (ddb/put-item (ddb/map-raw-vals-to-typed-vals item) {} to-table)
-        (ddb/delete-item {:nippu-id            [:s (:nippu-id item)]
-                          :tiedonkeruu-alkupvm [:s (:tiedonkeruu-alkupvm item)]}
+        (ddb/delete-item {:nippu-id [:s (:nippu-id item)]}
                          (:tpk-nippu-table env))
         (catch Exception e
           (log/error "TPK-nipun arkistointi epäonnistui:" (:nippu-id item) e))))
