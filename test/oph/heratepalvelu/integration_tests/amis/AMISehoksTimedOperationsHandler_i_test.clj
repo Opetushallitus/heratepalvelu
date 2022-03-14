@@ -17,7 +17,7 @@
     (str (:ehoks-url mock-env) "heratepalvelu/kasittelemattomat-heratteet")
     {:query-params {:start "2021-07-01"
                     :end "2022-02-02"
-                    :limit 100}
+                    :limit 1000}
      :as :json
      :headers {:ticket
                "service-ticket/ehoks-virkailija-backend/cas-security-check"}}
@@ -36,7 +36,7 @@
                "service-ticket/ehoks-virkailija-backend/cas-security-check"}
      :query-params {:start "2021-07-01"
                     :end "2022-02-02"
-                    :limit 100}
+                    :limit 1000}
      :as :json}}])
 
 (def expected-cas-client-results [{:type :get-service-ticket

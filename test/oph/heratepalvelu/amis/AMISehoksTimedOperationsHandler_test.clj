@@ -29,7 +29,7 @@
                       :message "Käynnistetään herätteiden lähetys"})))
         (is (true? (tu/logs-contain?
                      {:level :info
-                      :message "Lähetetty 100 viestiä"})))))))
+                      :message "Lähetetty 1000 viestiä"})))))))
 
 
 (def mass-resend-results (atom []))

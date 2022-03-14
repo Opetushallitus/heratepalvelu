@@ -18,7 +18,7 @@
   (log/info "Käynnistetään herätteiden lähetys")
   (let [resp (ehoks/get-retry-kyselylinkit "2021-07-01"
                                            (str (c/local-date-now))
-                                           100)]
+                                           1000)]
     (log/info "Lähetetty" (:data (:body resp)) "viestiä")))
 
 (defn -handleMassHerateResend

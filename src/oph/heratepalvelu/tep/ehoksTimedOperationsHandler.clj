@@ -15,5 +15,5 @@
   (log/info "Käynnistetään jaksojen lähetys")
   (let [resp (ehoks/get-paattyneet-tyoelamajaksot "2021-07-01"
                                                   (str (c/local-date-now))
-                                                  100)]
+                                                  1000)]
     (log/info "Lähetetty" (:data (:body resp)) "viestiä")))
