@@ -31,6 +31,12 @@
                          [org.apache.logging.log4j/log4j-api "2.17.0"]
                          [org.apache.logging.log4j/log4j-core "2.17.0"]
                          [org.apache.logging.log4j/log4j-slf4j-impl "2.17.0"]]
+  :plugins [[lein-cljfmt "0.8.0"]]
+  :cljfmt {:indents {definterface [[:inner 0]]
+                     with-redefs  [[:inner 0]]
+                     #"^:.*"      [[:inner 0]]
+                     #":*"        [[:block 0]]
+                     }}
   :aot :all
   :source-paths ["src"]
   :java-source-paths ["src/java"]

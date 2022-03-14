@@ -42,8 +42,8 @@
                  {:suoritukset [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}
                                 {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]})))
     (is (nil? (check-opiskeluoikeus-suoritus-types?
-                 {:suoritukset [{:tyyppi {:koodiarvo "valma"}}
-                                {:tyyppi {:koodiarvo "telma"}}]})))))
+                {:suoritukset [{:tyyppi {:koodiarvo "valma"}}
+                               {:tyyppi {:koodiarvo "telma"}}]})))))
 
 (deftest test-date-string-to-timestamp
   (testing "Transforming date-string to timestamp"

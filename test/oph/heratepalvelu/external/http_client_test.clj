@@ -31,13 +31,10 @@
                   clj-http.client/get (generate-mock-client-method :get)
                   clj-http.client/patch (generate-mock-client-method :patch)
                   clj-http.client/post (generate-mock-client-method :post)
-
                   oph.heratepalvelu.external.aws-xray/wrap-aws-xray
                   mock-wrap-aws-xray
                   oph.heratepalvelu.external.http-client/client-options
-                  mock-client-options
-
-                  ]
+                  mock-client-options]
       (let [test-url "https://example.com"
             test-options (assoc mock-client-options :option-field "option-val")
             delete-results {:url test-url

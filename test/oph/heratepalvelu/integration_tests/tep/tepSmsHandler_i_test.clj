@@ -163,13 +163,13 @@
      :kasittelytila [:s (:email-mismatch c/kasittelytilat)]
      :sms_kasittelytila [:s (:phone-mismatch c/kasittelytilat)]
      :voimassaloppupvm [:s "2022-02-28"]}
-   {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-6"]
-    :niputuspvm [:s "2022-01-27"]
-    :kyselylinkki [:s "kysely.linkki/6"]
-    :kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
-    :sms_kasittelytila [:s (:vastausaika-loppunut c/kasittelytilat)]
-    :voimassaloppupvm [:s "2022-02-01"]
-    :sms_lahetyspvm [:s "2022-02-02"]}})
+    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-6"]
+     :niputuspvm [:s "2022-01-27"]
+     :kyselylinkki [:s "kysely.linkki/6"]
+     :kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
+     :sms_kasittelytila [:s (:vastausaika-loppunut c/kasittelytilat)]
+     :voimassaloppupvm [:s "2022-02-01"]
+     :sms_lahetyspvm [:s "2022-02-02"]}})
 
 (def expected-http-results
   [{:method :get
@@ -202,10 +202,10 @@
     :options {:as :json}}
    {:method :patch
     :url (str (:arvo-url mock-env) "tyoelamapalaute/v1/nippu/3")
-              :options {:basic-auth ["arvo-user" "arvo-pwd"]
-                        :content-type "application/json"
-                        :body "{\"tila\":\"ei_kelvollisia_yhteystietoja\"}"
-                        :as :json}}
+    :options {:basic-auth ["arvo-user" "arvo-pwd"]
+              :content-type "application/json"
+              :body "{\"tila\":\"ei_kelvollisia_yhteystietoja\"}"
+              :as :json}}
    {:method :get
     :url "testilaitos"
     :options {:as :json}}

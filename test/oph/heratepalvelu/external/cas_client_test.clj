@@ -46,13 +46,13 @@
                           :body    "{\"field\":\"value\"}"
                           :redirect-strategy :none}
             results-no-body {:headers {"Caller-Id"           "asdf"
-                                         "clientSubSystemCode" "asdf"
-                                         "CSRF"                "asdf"}
-                               :cookies {"CSRF"       {:value "asdf"
-                                                       :path  "/"}
-                                         "JSESSIONID" {:value "session-id"
-                                                       :path  "/"}}
-                               :redirect-strategy :none}]
+                                       "clientSubSystemCode" "asdf"
+                                       "CSRF"                "asdf"}
+                             :cookies {"CSRF"       {:value "asdf"
+                                                     :path  "/"}
+                                       "JSESSIONID" {:value "session-id"
+                                                     :path  "/"}}
+                             :redirect-strategy :none}]
         (is (= (cas/create-params cas-session-id body) results-body))
         (is (= (cas/create-params cas-session-id nil) results-no-body))))))
 

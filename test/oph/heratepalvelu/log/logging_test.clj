@@ -11,15 +11,15 @@
 (deftest test-caller-log-herate-ehoks
   (testing "caller-log logs request info for eHOKSherateHandler"
     (log-caller-details-sqs "handleAMISherate"
-                        (mock-handler-context))
+                            (mock-handler-context))
     (is (true? (did-log? "Lambdaa handleAMISherate kutsuttiin" "INFO")))
     (is (true? (did-log? (str "RequestId: " dummy-request-id) "INFO")))))
 
 (deftest test-caller-log-herate-email
   (testing "caller-log logs request info for herateEmailHandler"
     (log-caller-details-scheduled "handleSendEmails"
-                        (mock-handler-event :scheduledherate)
-                        (mock-handler-context))
+                                  (mock-handler-event :scheduledherate)
+                                  (mock-handler-context))
     (is (true? (did-log? "Lambdaa handleSendEmails kutsuttiin" "INFO")))
     (is (true? (did-log? dummy-scheduled-resources "INFO")))
     (is (true? (did-log? (str "RequestId: " dummy-request-id) "INFO")))))
@@ -27,8 +27,8 @@
 (deftest test-caller-log-herate-updatedopiskeluoikeus
   (testing "caller-log logs request info for herateEmailHandler"
     (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus"
-                        (mock-handler-event :scheduledherate)
-                        (mock-handler-context))
+                                  (mock-handler-event :scheduledherate)
+                                  (mock-handler-context))
     (is (true? (did-log? "Lambdaa handleUpdatedOpiskeluoikeus kutsuttiin" "INFO")))
     (is (true? (did-log? dummy-scheduled-resources "INFO")))
     (is (true? (did-log? (str "RequestId: " dummy-request-id) "INFO")))))
