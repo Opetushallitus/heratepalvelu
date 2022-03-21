@@ -155,3 +155,12 @@
                                                "cas-security-check")}
      :query-params {:from start :to end}
      :as :json}))
+
+(defn update-ehoks-opiskeluoikeudet
+  "Pyytää eHOKS-palvelua lähettämään päättöherätteet uudelleen tietylle
+  aikavälille."
+  []
+  (client/post
+    (str (:ehoks-url env) "hoks/opiskeluoikeus-update")
+    {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
+                                               "cas-security-check")}}))

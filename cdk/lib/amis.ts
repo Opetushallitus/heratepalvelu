@@ -456,6 +456,30 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(AMISMassHerateResendHandler)]
     });
 
+    const EhoksOpiskeluoikeusUpdateHandler = new lambda.Function(
+        this,
+        "EhoksOpiskeluoikeusUpdateHandler",
+        {
+          runtime: lambda.Runtime.JAVA_8_CORRETTO,
+          code: lambdaCode,
+          environment: {
+            ...this.envVars,
+            caller_id: `1.2.246.562.10.00000000001.${id}-EhoksOpiskeluoikeusUpdateHandler`,
+          },
+          memorySize: Token.asNumber(1024),
+          timeout: Duration.seconds(900),
+          handler: "oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler::handleEhoksOpiskeluoikeusUpdate",
+          tracing: lambda.Tracing.ACTIVE
+        }
+    );
+
+    new events.Rule(this, "EhoksOpiskeluoikeusUpdateHandler", {
+      schedule: events.Schedule.expression(
+          `rate(7 days)`
+      ),
+      targets: [new targets.LambdaFunction(EhoksOpiskeluoikeusUpdateHandler)]
+    });
+
  /*   const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code:lambdaCode,

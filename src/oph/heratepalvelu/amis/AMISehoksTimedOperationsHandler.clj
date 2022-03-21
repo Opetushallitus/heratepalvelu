@@ -10,6 +10,9 @@
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleMassHerateResend
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]
+            [^:static handleEhoksOpiskeluoikeusUpdate
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn -handleAMISTimedOperations
@@ -35,3 +38,10 @@
               "aloitusviestiä ja"
               (:count (:data (:body paatto-resp)))
               "päättöviestiä")))
+
+(defn -handleEhoksOpiskeluoikeusUpdate
+  "Pyytää ehoksia päivittämään opiskeluoikeuksien hankintakoulutukset."
+  [this event context]
+  (log/info "Käynnistetään ehoksin opiskeluoikeuksien päivitys")
+  (ehoks/update-ehoks-opiskeluoikeudet)
+  (log/info "Päivitetään ehoksin opiskeluoikeudet."))
