@@ -473,7 +473,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         }
     );
 
-    new events.Rule(this, "EhoksOpiskeluoikeusUpdateHandler", {
+    new events.Rule(this, "EhoksOpiskeluoikeusUpdateRule", {
       schedule: events.Schedule.expression(
           `rate(7 days)`
       ),
