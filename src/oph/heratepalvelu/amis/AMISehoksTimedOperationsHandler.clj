@@ -43,5 +43,4 @@
   "Pyytää ehoksia päivittämään opiskeluoikeuksien hankintakoulutukset."
   [this event context]
   (log/info "Käynnistetään ehoksin opiskeluoikeuksien päivitys")
-  (ehoks/update-ehoks-opiskeluoikeudet)
-  (log/info "Päivitetään ehoksin opiskeluoikeudet."))
+  (ehoks/update-ehoks-opiskeluoikeudet))

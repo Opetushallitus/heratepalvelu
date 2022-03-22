@@ -159,10 +159,8 @@
 (defn update-ehoks-opiskeluoikeudet
   "Päivittää aktiivisten hoksien opiskeluoikeudet Koskesta"
   []
-  (do
-    (println (str (:ehoks-url env) "hoks/opiskeluoikeus-update"))
-    (client/post
-      (str (:ehoks-url env) "hoks/opiskeluoikeus-update")
-      {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
-                                                 "cas-security-check")}
-       :as :json})))
+  (client/post
+    (str (:ehoks-url env) "hoks/opiskeluoikeus-update")
+    {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
+                                               "cas-security-check")}
+     :as :json}))
