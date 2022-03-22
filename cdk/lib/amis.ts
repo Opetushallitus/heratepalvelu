@@ -455,7 +455,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       ),
       targets: [new targets.LambdaFunction(AMISMassHerateResendHandler)]
     });
-/*
+
     const EhoksOpiskeluoikeusUpdateHandler = new lambda.Function(
         this,
         "EhoksOpiskeluoikeusUpdateHandler",
@@ -479,7 +479,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       ),
       targets: [new targets.LambdaFunction(EhoksOpiskeluoikeusUpdateHandler)]
     });
-*/
+
  /*   const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code:lambdaCode,
@@ -511,7 +511,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISEmailStatusHandler,
       AMISDeleteTunnusHandler,
       AMISTimedOperationsHandler,
-      AMISMassHerateResendHandler
+      AMISMassHerateResendHandler,
+      EhoksOpiskeluoikeusUpdateHandler
      // dbArchiver,
     ].forEach(
       lambdaFunction => {
