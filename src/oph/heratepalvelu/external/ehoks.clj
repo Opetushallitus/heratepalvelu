@@ -160,7 +160,7 @@
   "Päivittää aktiivisten hoksien opiskeluoikeudet Koskesta"
   []
   (client/post
-    (str (:ehoks-url env) "hoks/opiskeluoikeus-update")
+    (str (:ehoks-url env) "heratepalvelu/opiskeluoikeus-update")
     {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
                                                "cas-security-check")}
      :as :json}))
