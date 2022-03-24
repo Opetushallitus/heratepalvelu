@@ -139,7 +139,7 @@
   aikavälille."
   [start end]
   (client/post
-    (str (:ehoks-url env) "hoks/resend-aloitusherate")
+    (str (:ehoks-url env) "heratepalvelu/hoksit/resend-aloitusherate")
     {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
                                                "cas-security-check")}
      :query-params {:from start :to end}
@@ -150,7 +150,7 @@
   aikavälille."
   [start end]
   (client/post
-    (str (:ehoks-url env) "hoks/resend-paattoherate")
+    (str (:ehoks-url env) "heratepalvelu/hoksit/resend-paattoherate")
     {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
                                                "cas-security-check")}
      :query-params {:from start :to end}

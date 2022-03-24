@@ -74,7 +74,7 @@
   (mhc/clear-url-bindings)
   (mhc/bind-url
     :post
-    (str (:ehoks-url mock-env) "hoks/resend-aloitusherate")
+    (str (:ehoks-url mock-env) "heratepalvelu/hoksit/resend-aloitusherate")
     {:query-params {:from "2022-01-19" :to "2022-02-02"}
      :as :json
      :headers {:ticket
@@ -82,7 +82,7 @@
     {:body {:data {:count 2}}})
   (mhc/bind-url
     :post
-    (str (:ehoks-url mock-env) "hoks/resend-paattoherate")
+    (str (:ehoks-url mock-env) "heratepalvelu/hoksit/resend-paattoherate")
     {:query-params {:from "2022-01-19" :to "2022-02-02"}
      :as :json
      :headers {:ticket
@@ -96,14 +96,14 @@
 
 (def expected-mass-http-results
   [{:method :post
-    :url "https://oph-ehoks.com/hoks/resend-aloitusherate"
+    :url "https://oph-ehoks.com/heratepalvelu/hoksit/resend-aloitusherate"
     :options
     {:headers {:ticket
                "service-ticket/ehoks-virkailija-backend/cas-security-check"}
      :query-params {:from "2022-01-19" :to "2022-02-02"}
      :as :json}}
    {:method :post
-    :url "https://oph-ehoks.com/hoks/resend-paattoherate"
+    :url "https://oph-ehoks.com/heratepalvelu/hoksit/resend-paattoherate"
     :options
     {:headers {:ticket
                "service-ticket/ehoks-virkailija-backend/cas-security-check"}
