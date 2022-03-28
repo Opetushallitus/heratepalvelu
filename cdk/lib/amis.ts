@@ -512,7 +512,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISDeleteTunnusHandler,
       AMISTimedOperationsHandler,
       AMISMassHerateResendHandler,
-      EhoksOpiskeluoikeusUpdateHandler
+      EhoksOpiskeluoikeusUpdateHandler,
      // dbArchiver,
     ].forEach(
       lambdaFunction => {
