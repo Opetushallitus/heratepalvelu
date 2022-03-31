@@ -93,12 +93,12 @@
   (testing "Varmista, että save-herate kutsuu funktioita oikein"
     (with-redefs
       [oph.heratepalvelu.common/check-duplicate-herate?
-       mock-check-duplicate-herate? 
-       oph.heratepalvelu.common/generate-uuid mock-generate-uuid 
+       mock-check-duplicate-herate?
+       oph.heratepalvelu.common/generate-uuid mock-generate-uuid
        oph.heratepalvelu.common/has-nayttotutkintoonvalmistavakoulutus?
        mock-has-nayttotutkintoonvalmistavakoulutus?
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 17))
-       oph.heratepalvelu.db.dynamodb/put-item mock-put-item 
+       oph.heratepalvelu.db.dynamodb/put-item mock-put-item
        oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
        mock-create-amis-kyselylinkki
        oph.heratepalvelu.external.arvo/create-amis-kyselylinkki-catch-404

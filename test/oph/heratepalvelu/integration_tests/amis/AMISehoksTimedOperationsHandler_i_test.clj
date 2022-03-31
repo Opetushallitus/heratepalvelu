@@ -65,7 +65,6 @@
                                     :message "Lähetetty 2 viestiä"})))
       (teardown-test))))
 
-
 ;; -handleMassHerateResend testi
 
 (defn- setup-mass-test []

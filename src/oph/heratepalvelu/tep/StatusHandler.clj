@@ -24,11 +24,12 @@
   jos kyselyyn ei ole vielä vastattu ja kyselyä ei ole vielä lähetetty."
   [this event context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (loop [emails (ddb/query-items {:kasittelytila [:eq [:s (:viestintapalvelussa
-                                                            c/kasittelytilat)]]}
-                                 {:index "niputusIndex"
-                                  :limit 100}
-                                 (:nippu-table env))]
+  (loop [emails (ddb/query-items
+                  {:kasittelytila
+                   [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
+                  {:index "niputusIndex"
+                   :limit 100}
+                  (:nippu-table env))]
     (doseq [email emails]
       (let [nippu (ddb/get-item {:ohjaaja_ytunnus_kj_tutkinto
                                  [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
@@ -42,9 +43,8 @@
             (when (not @new-changes?)
               (reset! new-changes? true))
             (try
-              (when-not
-                (or (str/includes? (:kyselylinkki nippu) ",")
-                    (str/includes? (:kyselylinkki nippu) ";"))
+              (when-not (or (str/includes? (:kyselylinkki nippu) ",")
+                            (str/includes? (:kyselylinkki nippu) ";"))
                 (arvo/patch-nippulinkki
                   (:kyselylinkki nippu)
                   (if (and new-loppupvm (= tila (:success c/kasittelytilat)))
@@ -68,8 +68,9 @@
     (when (and @new-changes?
                (< 60000 (.getRemainingTimeInMillis context)))
       (reset! new-changes? false)
-      (recur (ddb/query-items {:kasittelytila [:eq [:s (:viestintapalvelussa
-                                                         c/kasittelytilat)]]}
-                              {:index "niputusIndex"
-                               :limit 10}
-                              (:nippu-table env))))))
+      (recur (ddb/query-items
+               {:kasittelytila
+                [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
+               {:index "niputusIndex"
+                :limit 10}
+               (:nippu-table env))))))

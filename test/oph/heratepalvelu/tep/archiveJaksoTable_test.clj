@@ -19,7 +19,6 @@
                         :exclusive-start-key "asdf"}
               :table   "jaksotunnus-table-name"})))))
 
-
 (def results (atom []))
 
 (defn- mock-do-query [kausi last-evaluated-key]
@@ -60,7 +59,6 @@
               {:type "mock-delete-item"
                :key-conds {:hankkimistapa_id [:n 123]}
                :table "jaksotunnus-table-name"}])))))
-
 
 (def test-archiveJaksoTable-results (atom []))
 

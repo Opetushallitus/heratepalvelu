@@ -22,14 +22,12 @@
              (= "viimeinen_vastauspvm" (get (:expr-attr-names options) "#pvm"))
              (= :s (first (get (:expr-attr-vals options) ":pvm")))
              (= "jaksotunnus-table-name" table))
-    (add-to-test-niputa-results {:type "mock-niputa-query-items"
-                                 :pvm (second
-                                        (get (:expr-attr-vals options) ":pvm"))
-                                 :ohjaaja_ytunnus_kj_tutkinto
-                                 (second (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                   query-params)))
-                                 :niputuspvm
-                                 (second (second (:niputuspvm query-params)))})
+    (add-to-test-niputa-results
+      {:type "mock-niputa-query-items"
+       :pvm (second (get (:expr-attr-vals options) ":pvm"))
+       :niputuspvm (second (second (:niputuspvm query-params)))
+       :ohjaaja_ytunnus_kj_tutkinto
+       (second (second (:ohjaaja_ytunnus_kj_tutkinto query-params)))})
     (if (not= (second (second (:ohjaaja_ytunnus_kj_tutkinto query-params)))
               "test-id-0")
       [{:tunnus "ABCDEF"
@@ -51,10 +49,10 @@
 (defn- mock-update-nippu
   ([nippu updates] (mock-update-nippu nippu updates {}))
   ([nippu updates options]
-    (add-to-test-niputa-results {:type "mock-update-nippu"
-                                 :nippu nippu
-                                 :updates updates
-                                 :options options})))
+   (add-to-test-niputa-results {:type "mock-update-nippu"
+                                :nippu nippu
+                                :updates updates
+                                :options options})))
 
 (deftest test-niputa
   (testing "Varmista, että niputa-funktio tekee oikeita kutsuja"

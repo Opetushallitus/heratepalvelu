@@ -28,9 +28,9 @@
              (= :s (first (second (:niputuspvm query-params))))
              (= "niputusIndex" (:index options))
              (= "jaksotunnus-table-name" table))
-    {:ohjaaja_ytunnus_kj_tutkinto (second (second (:ohjaaja_ytunnus_kj_tutkinto
-                                                    query-params)))
-     :niputuspvm (second (second (:niputuspvm query-params)))}))
+    {:niputuspvm (second (second (:niputuspvm query-params)))
+     :ohjaaja_ytunnus_kj_tutkinto
+     (second (second (:ohjaaja_ytunnus_kj_tutkinto query-params)))}))
 
 (deftest test-get-jaksot-for-nippu
   (testing "Varmista, että do-jakso-query kutsuu query-items oikein"

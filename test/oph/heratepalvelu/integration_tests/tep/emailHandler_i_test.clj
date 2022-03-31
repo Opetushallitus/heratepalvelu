@@ -37,26 +37,25 @@
                                   :ohjaaja_email [:s "ohjaaja3@esimerkki.fi"]
                                   :oppilaitos [:s "test-laitos"]}])
 
-(def starting-nippu-table [{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
-                            :niputuspvm [:s "2022-01-05"]
-                            :kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
-                            :kyselylinkki [:s "kysely.linkki/1"]
-                            :sms_kasittelytila [:s (:ei-lahetetty
-                                                     c/kasittelytilat)]
-                            :voimassaloppupvm [:s "2022-03-01"]}
-                           {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
-                            :niputuspvm [:s "2022-01-05"]
-                            :kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
-                            :kyselylinkki [:s "kysely.linkki/2"]
-                            :sms_kasittelytila [:s (:no-phone c/kasittelytilat)]
-                            :voimassaloppupvm [:s "2022-03-01"]}
-                           {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
-                            :niputuspvm [:s "2022-01-05"]
-                            :kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
-                            :kyselylinkki [:s "kysely.linkki/3"]
-                            :sms_kasittelytila [:s (:ei-lahetetty
-                                                     c/kasittelytilat)]
-                            :voimassaloppupvm [:s "2022-01-01"]}])
+(def starting-nippu-table
+  [{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+    :niputuspvm [:s "2022-01-05"]
+    :kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
+    :kyselylinkki [:s "kysely.linkki/1"]
+    :sms_kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
+    :voimassaloppupvm [:s "2022-03-01"]}
+   {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
+    :niputuspvm [:s "2022-01-05"]
+    :kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
+    :kyselylinkki [:s "kysely.linkki/2"]
+    :sms_kasittelytila [:s (:no-phone c/kasittelytilat)]
+    :voimassaloppupvm [:s "2022-03-01"]}
+   {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
+    :niputuspvm [:s "2022-01-05"]
+    :kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
+    :kyselylinkki [:s "kysely.linkki/3"]
+    :sms_kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
+    :voimassaloppupvm [:s "2022-01-01"]}])
 
 (defn- setup-test []
   (mcc/clear-results)
@@ -131,35 +130,30 @@
                                    :ohjaaja_email [:s "ohjaaja3@esimerkki.fi"]
                                    :oppilaitos [:s "test-laitos"]}})
 
-(def expected-nippu-table #{{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
-                             :niputuspvm [:s "2022-01-05"]
-                             :lahetysosoite [:s "ohjaaja11@esimerkki.fi"]
-                             :kyselylinkki [:s "kysely.linkki/1"]
-                             :lahetyspvm [:s "2022-02-02"]
-                             :muistutukset [:n 0]
-                             :voimassaloppupvm [:s "2022-03-01"]
-                             :viestintapalvelu-id [:n 1]
-                             :sms_kasittelytila [:s (:ei-lahetetty
-                                                      c/kasittelytilat)]
-                             :kasittelytila [:s (:viestintapalvelussa
-                                                  c/kasittelytilat)]}
-                            {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
-                             :niputuspvm [:s "2022-01-05"]
-                             :kasittelytila [:s (:email-mismatch
-                                                  c/kasittelytilat)]
-                             :kyselylinkki [:s "kysely.linkki/2"]
-                             :sms_kasittelytila [:s (:no-phone
-                                                      c/kasittelytilat)]
-                             :voimassaloppupvm [:s "2022-03-01"]}
-                            {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
-                             :niputuspvm [:s "2022-01-05"]
-                             :kasittelytila [:s (:vastausaika-loppunut
-                                                  c/kasittelytilat)]
-                             :kyselylinkki [:s "kysely.linkki/3"]
-                             :sms_kasittelytila [:s (:ei-lahetetty
-                                                      c/kasittelytilat)]
-                             :voimassaloppupvm [:s "2022-01-01"]
-                             :lahetyspvm [:s "2022-02-02"]}})
+(def expected-nippu-table
+  #{{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+     :niputuspvm [:s "2022-01-05"]
+     :lahetysosoite [:s "ohjaaja11@esimerkki.fi"]
+     :kyselylinkki [:s "kysely.linkki/1"]
+     :lahetyspvm [:s "2022-02-02"]
+     :muistutukset [:n 0]
+     :voimassaloppupvm [:s "2022-03-01"]
+     :viestintapalvelu-id [:n 1]
+     :sms_kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
+     :kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]}
+    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
+     :niputuspvm [:s "2022-01-05"]
+     :kasittelytila [:s (:email-mismatch c/kasittelytilat)]
+     :kyselylinkki [:s "kysely.linkki/2"]
+     :sms_kasittelytila [:s (:no-phone c/kasittelytilat)]
+     :voimassaloppupvm [:s "2022-03-01"]}
+    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
+     :niputuspvm [:s "2022-01-05"]
+     :kasittelytila [:s (:vastausaika-loppunut c/kasittelytilat)]
+     :kyselylinkki [:s "kysely.linkki/3"]
+     :sms_kasittelytila [:s (:ei-lahetetty c/kasittelytilat)]
+     :voimassaloppupvm [:s "2022-01-01"]
+     :lahetyspvm [:s "2022-02-02"]}})
 
 (def expected-http-results [{:method :get
                              :url "https://oph-organisaatio.com/test-laitos"

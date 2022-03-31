@@ -8,9 +8,9 @@
              SendMessageRequest)))
 
 (def ^:private sqs-client
-    (-> (SqsClient/builder)
-        (.region (Region/EU_WEST_1))
-        (.build)))
+  (-> (SqsClient/builder)
+      (.region (Region/EU_WEST_1))
+      (.build)))
 
 (defn- create-send-message-request-builder
   "Abstraktio SendMessageRequest/builderin ympäri, joka helpotta testaamista."

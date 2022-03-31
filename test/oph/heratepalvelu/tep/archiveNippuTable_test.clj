@@ -21,7 +21,6 @@
                         :exclusive-start-key "asdf"}
               :table   "nippu-table-name"})))))
 
-
 (def results (atom []))
 
 (defn- mock-do-query [kausi-start kausi-end last-evaluated-key]
@@ -70,7 +69,6 @@
                :key-conds {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt"]
                            :niputuspvm                  [:s "2021-12-20"]}
                :table     "nippu-table-name"}])))))
-
 
 (def test-archiveNippuTable-results (atom []))
 

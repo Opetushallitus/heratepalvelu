@@ -21,7 +21,6 @@
                         :exclusive-start-key "asdf"}
               :table   "tpk-nippu-table-name"})))))
 
-
 (def results (atom []))
 
 (defn- mock-do-query [kausi-alkupvm last-evaluated-key]
@@ -64,7 +63,6 @@
               {:type      "mock-delete-item"
                :key-conds {:nippu-id            [:s "test-nippu-id"]}
                :table     "tpk-nippu-table-name"}])))))
-
 
 (def test-archiveTpkNippuTable-results (atom []))
 

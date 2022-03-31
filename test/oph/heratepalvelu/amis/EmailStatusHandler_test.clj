@@ -8,8 +8,9 @@
 
 (defn- mock-send-lahetys-data-to-ehoks [toimija-oppija tyyppi-kausi data]
   (reset! mock-send-lahetys-data-to-ehoks-results
-          (assoc data :toimija-oppija toimija-oppija
-                      :tyyppi-kausi tyyppi-kausi)))
+          (assoc data
+                 :toimija-oppija toimija-oppija
+                 :tyyppi-kausi tyyppi-kausi)))
 
 (defn- mock-get-item [query-params]
   (when (and (= :s (first (:toimija_oppija query-params)))
@@ -127,7 +128,7 @@
                  (str "kysely.linkki/123 lahetetty "
                       "{:viestintapalvelu-id \"12345\", "
                       ":kyselylinkki \"kysely.linkki/123\"} "
-                      "{:numberOfSuccessfulSendings 1} lahetetty " 
+                      "{:numberOfSuccessfulSendings 1} lahetetty "
                       "update-db {:viestintapalvelu-id \"12345\", "
                       ":kyselylinkki \"kysely.linkki/123\"} lahetetty"))))
         (reset! test-handleEmailStatus-results "")

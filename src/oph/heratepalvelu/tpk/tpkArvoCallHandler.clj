@@ -25,17 +25,17 @@
   niput. Muuten käsittelee seuraavan kauden niput."
   ([] (do-scan nil))
   ([exclusive-start-key]
-    (let [resp (ddb/scan {:filter-expression
-                          "attribute_not_exists(#linkki) AND #kausi = :kausi"
-                          :exclusive-start-key exclusive-start-key
-                          :expr-attr-names {"#kausi"  "tiedonkeruu-alkupvm"
-                                            "#linkki" "kyselylinkki"}
-                          :expr-attr-vals
-                          {":kausi" [:s (str
-                                          (tpkc/get-current-kausi-alkupvm))]}}
-                         (:tpk-nippu-table env))]
-      (log/info "TPK-Arvovälitysfunktion scan" (count (:items resp)))
-      resp)))
+   (let [resp (ddb/scan {:filter-expression
+                         "attribute_not_exists(#linkki) AND #kausi = :kausi"
+                         :exclusive-start-key exclusive-start-key
+                         :expr-attr-names {"#kausi"  "tiedonkeruu-alkupvm"
+                                           "#linkki" "kyselylinkki"}
+                         :expr-attr-vals
+                         {":kausi" [:s (str
+                                         (tpkc/get-current-kausi-alkupvm))]}}
+                        (:tpk-nippu-table env))]
+     (log/info "TPK-Arvovälitysfunktion scan" (count (:items resp)))
+     resp)))
 
 (defn make-arvo-request
   "Pyytää TPK-kyselylinkin Arvosta."

@@ -49,10 +49,10 @@
            :cookies          {"CSRF" {:value (:caller-id env)
                                       :path "/"}
                               "JSESSIONID" {:value (str @cas-session-id)
-                                             :path "/"}}
+                                            :path "/"}}
            :redirect-strategy :none}
-          (some? body)
-          (request-with-json-body body)))
+    (some? body)
+    (request-with-json-body body)))
 
 (defn cas-http
   "Tekee Cas-autentikoidun requestin."

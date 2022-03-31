@@ -118,51 +118,49 @@
   (mhc/clear-url-bindings)
   (mdb/clear-mock-db))
 
-(def expected-table-contents #{{:toimija_oppija [:s "abc/123"]
-                                :tyyppi_kausi [:s "aloittaneet/2021-2022"]
-                                :muistutukset [:n 1]
-                                :kyselylinkki [:s "kysely.linkki/123"]
-                                :kyselytyyppi [:s "aloittaneet"]
-                                :sahkoposti [:s "sahko.posti@esimerkki.fi"]
-                                :lahetystila [:s (:viestintapalvelussa
-                                                   c/kasittelytilat)]
-                                :lahetyspvm [:s "2022-01-25"]
-                                :suorituskieli [:s "fi"]
-                                :viestintapalvelu-id [:n 111]
-                                :1.-muistutus-lahetetty [:s "2022-02-02"]}
-                               {:toimija_oppija [:s "lkj/245"]
-                                :tyyppi_kausi [:s "aloittaneet/2022-2023"]
-                                :muistutukset [:n 2]
-                                :kyselylinkki [:s "kysely.linkki/245"]
-                                :kyselytyyppi [:s "aloittaneet"]
-                                :sahkoposti [:s "asdf@esimerkki.fi"]
-                                :lahetystila [:s (:viestintapalvelussa
-                                                   c/kasittelytilat)]
-                                :lahetyspvm [:s "2022-01-20"]
-                                :suorituskieli [:s "fi"]
-                                :viestintapalvelu-id [:n 222]
-                                :2.-muistutus-lahetetty [:s "2022-02-02"]}
-                               {:toimija_oppija [:s "abc/333"]
-                                :tyyppi_kausi [:s "aloittaneet/2021-2022"]
-                                :muistutukset [:n 1]
-                                :kyselylinkki [:s "kysely.linkki/333"]
-                                :kyselytyyppi [:s "aloittaneet"]
-                                :sahkoposti [:s "joku@esimerkki.fi"]
-                                :lahetystila [:s (:vastausaika-loppunut-m
-                                                   c/kasittelytilat)]
-                                :lahetyspvm [:s "2022-01-25"]
-                                :suorituskieli [:s "fi"]
-                                :viestintapalvelu-id [:n 333]}
-                               {:toimija_oppija [:s "lkj/444"]
-                                :tyyppi_kausi [:s "paattyneet/2022-2023"]
-                                :muistutukset [:n 2]
-                                :kyselylinkki [:s "kysely.linkki/444"]
-                                :kyselytyyppi [:s "tutkinnon_suorittaneet"]
-                                :sahkoposti [:s "aaa@esimerkki.fi"]
-                                :lahetystila [:s (:vastattu c/kasittelytilat)]
-                                :suorituskieli [:s "fi"]
-                                :lahetyspvm [:s "2022-01-20"]
-                                :viestintapalvelu-id [:n 444]}})
+(def expected-table-contents
+  #{{:toimija_oppija [:s "abc/123"]
+     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+     :muistutukset [:n 1]
+     :kyselylinkki [:s "kysely.linkki/123"]
+     :kyselytyyppi [:s "aloittaneet"]
+     :sahkoposti [:s "sahko.posti@esimerkki.fi"]
+     :lahetyspvm [:s "2022-01-25"]
+     :suorituskieli [:s "fi"]
+     :viestintapalvelu-id [:n 111]
+     :1.-muistutus-lahetetty [:s "2022-02-02"]
+     :lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]}
+    {:toimija_oppija [:s "lkj/245"]
+     :tyyppi_kausi [:s "aloittaneet/2022-2023"]
+     :muistutukset [:n 2]
+     :kyselylinkki [:s "kysely.linkki/245"]
+     :kyselytyyppi [:s "aloittaneet"]
+     :sahkoposti [:s "asdf@esimerkki.fi"]
+     :lahetyspvm [:s "2022-01-20"]
+     :suorituskieli [:s "fi"]
+     :viestintapalvelu-id [:n 222]
+     :2.-muistutus-lahetetty [:s "2022-02-02"]
+     :lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]}
+    {:toimija_oppija [:s "abc/333"]
+     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+     :muistutukset [:n 1]
+     :kyselylinkki [:s "kysely.linkki/333"]
+     :kyselytyyppi [:s "aloittaneet"]
+     :sahkoposti [:s "joku@esimerkki.fi"]
+     :lahetyspvm [:s "2022-01-25"]
+     :suorituskieli [:s "fi"]
+     :viestintapalvelu-id [:n 333]
+     :lahetystila [:s (:vastausaika-loppunut-m c/kasittelytilat)]}
+    {:toimija_oppija [:s "lkj/444"]
+     :tyyppi_kausi [:s "paattyneet/2022-2023"]
+     :muistutukset [:n 2]
+     :kyselylinkki [:s "kysely.linkki/444"]
+     :kyselytyyppi [:s "tutkinnon_suorittaneet"]
+     :sahkoposti [:s "aaa@esimerkki.fi"]
+     :lahetystila [:s (:vastattu c/kasittelytilat)]
+     :suorituskieli [:s "fi"]
+     :lahetyspvm [:s "2022-01-20"]
+     :viestintapalvelu-id [:n 444]}})
 
 (def expected-cas-client-results
   [{:method :post

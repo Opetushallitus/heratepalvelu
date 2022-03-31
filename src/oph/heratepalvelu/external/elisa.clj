@@ -7,13 +7,11 @@
             [oph.heratepalvelu.external.http-client :as client])
   (:import (clojure.lang ExceptionInfo)))
 
-(def ^:private
-     apikey
-     (delay (ssm/get-secret
-              (str "/"
-                   (:stage env)
-                   "/services/heratepalvelu/elisa-sms-dialogi-key"))))
-
+(def ^:private apikey
+  (delay (ssm/get-secret
+           (str "/"
+                (:stage env)
+                "/services/heratepalvelu/elisa-sms-dialogi-key"))))
 
 (defn msg-body
   "Luo työpaikkaohjaajakyselyn viestin tekstin."
@@ -41,7 +39,7 @@
        (str/join ", " (map :fi oppilaitokset)) "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
-(defn muistutus-msg-body 
+(defn muistutus-msg-body
   "Luo työpaikkaohjaajakyselyn muistutuksen viestin tekstin."
   [linkki oppilaitokset]
   (str "Muistutus-påminnelse-reminder: Työpaikkaohjaajakysely - "

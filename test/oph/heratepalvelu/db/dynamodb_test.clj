@@ -14,7 +14,6 @@
                      "another-option" {:key :n :value 42}}]
         (is (= (ddb/map-vals-to-attribute-values test-values) results))))))
 
-
 (defn- mock-build-condition [op-vals] {:op-vals op-vals})
 
 (deftest test-map-vals-to-conditions
@@ -26,7 +25,6 @@
             results {"condition-1" {:op-vals [:eq [:s "asdf"]]}
                      "condition-2" {:op-vals [:between [[:s "a"] [:s "b"]]]}}]
         (is (= (ddb/map-vals-to-conditions test-values) results))))))
-
 
 (defn- mock-get-value [av] {:gotten-value av})
 
@@ -49,7 +47,6 @@
                    :string-field [:s "asdf"]}]
       (is (= (ddb/map-raw-vals-to-typed-vals test-item) results)))))
 
-
 (definterface IMockAttributeValueBuilder
   (build [])
   (n [number])
@@ -70,7 +67,6 @@
                   mock-create-attribute-value-builder]
       (is (= (ddb/to-attribute-value :s "asdf") {:type "string" :value "asdf"}))
       (is (= (ddb/to-attribute-value :n 12) {:type "number" :value "12"})))))
-
 
 (definterface IMockConditionBuilder
   (build [])
@@ -107,7 +103,6 @@
         (is (= (ddb/build-condition test-values-2) results-2))
         (is (= (ddb/build-condition test-values-3) results-3))))))
 
-
 (definterface IMockAttributeValue
   (b [])
   (bool [])
@@ -137,7 +132,6 @@
   (testing "Varmista, että get-value toimii oikein"
     (is (= (ddb/get-value (MockAttributeValue. "n" 123)) 123))
     (is (= (ddb/get-value (MockAttributeValue. "s" "asdf")) "asdf"))))
-
 
 (definterface IMockQueryResponse (items []))
 
@@ -183,7 +177,6 @@
   (updateItem [this req]
     (reset! mock-ddb-client-request-results {:updateItem req})))
 
-
 (definterface IMockPutItemRequestBuilder
   (build [])
   (tableName [table])
@@ -222,7 +215,6 @@
         (is (= {:putItem results-1} @mock-ddb-client-request-results))
         (ddb/put-item test-item {})
         (is (= {:putItem results-2} @mock-ddb-client-request-results))))))
-
 
 (definterface IMockQueryRequestBuilder
   (append [field value])
@@ -287,7 +279,6 @@
                        {":a" (ddb/to-attribute-value [:s "aaa"])}}}]]
         (is (= (ddb/query-items test-key-conds test-options) results))))))
 
-
 (definterface IMockUpdateItemRequestBuilder
   (append [field value])
   (build [])
@@ -338,7 +329,6 @@
         (ddb/update-item test-key-conds test-options)
         (is (= results @mock-ddb-client-request-results))))))
 
-
 (definterface IMockGetItemRequestBuilder
   (build [])
   (tableName [table])
@@ -367,7 +357,6 @@
                                            [:s "asdf"])}}}]
         (is (= (ddb/get-item test-key-conds) results))))))
 
-
 (definterface IMockDeleteItemRequestBuilder
   (build [])
   (tableName [table])
@@ -394,7 +383,6 @@
                       :key {"test-field" (ddb/to-attribute-value [:n 1234])}}}]
         (ddb/delete-item test-key-conds)
         (is (= results @mock-ddb-client-request-results))))))
-
 
 (definterface IMockScanRequestBuilder
   (build [])

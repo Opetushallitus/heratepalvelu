@@ -214,11 +214,11 @@
       (with-redefs [oph.heratepalvelu.common/local-date-now
                     (fn [] (LocalDate/of 2021 12 25))]
         (is (= (tpk/query-niputtamattomat "asdf")
-               (results-with-end-date "2021-12-25")))
+               (results-with-end-date "2021-12-25"))))
       (with-redefs [oph.heratepalvelu.common/local-date-now
                     (fn [] (LocalDate/of 2022 2 2))]
         (is (= (tpk/query-niputtamattomat "asdf")
-               (results-with-end-date "2021-12-31"))))))))
+               (results-with-end-date "2021-12-31")))))))
 
 (def mock-handleTpkNiputus-results (atom []))
 

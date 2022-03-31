@@ -14,19 +14,17 @@
     (.endsWith url "/opiskeluoikeus/1.2.246.562.15.43634207518")
     {:status 200
      :body {:oid "1.2.246.562.15.43634207518"
-            :suoritukset
-                 [{:tyyppi {:koodiarvo "ammattitutkinto"}
-                   :suorituskieli {:koodiarvo "FI"}
-                   :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
+            :suoritukset [{:tyyppi {:koodiarvo "ammattitutkinto"}
+                           :suorituskieli {:koodiarvo "FI"}
+                           :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
             :koulutustoimija {:oid "1.2.246.562.10.346830761110"}
             :oppilaitos {:oid "1.2.246.562.10.52251087186"}}}
     (.endsWith url "/opiskeluoikeus/1.2.246.562.15.43634207512")
     {:status 200
      :body {:oid "1.2.246.562.15.43634207512"
-            :suoritukset
-                 [{:tyyppi {:koodiarvo "ammattitutkinto"}
-                   :suorituskieli {:koodiarvo "FI"}
-                   :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
+            :suoritukset [{:tyyppi {:koodiarvo "ammattitutkinto"}
+                           :suorituskieli {:koodiarvo "FI"}
+                           :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
             :oppilaitos {:oid "1.2.246.562.10.52251087186"}}}))
 
 (defn mock-get-organisaatio [oid]
@@ -97,11 +95,9 @@
 (defn reify-context
   ([] (reify-context 100))
   ([milliseconds]
-    (reify com.amazonaws.services.lambda.runtime.Context
-      (getAwsRequestId [this]
-        dummy-request-id)
-      (getRemainingTimeInMillis [this]
-        milliseconds))))
+   (reify com.amazonaws.services.lambda.runtime.Context
+     (getAwsRequestId [this] dummy-request-id)
+     (getRemainingTimeInMillis [this] milliseconds))))
 
 (defn mock-handler-context
   ([] (reify-context))
@@ -116,10 +112,9 @@
 
 (defn mock-get-opiskeluoikeus [_]
   {:oid "1.2.246.562.24.10442483592"
-   :suoritukset [
-                 {:tyyppi {:koodiarvo "ammatillinentutkinto"}
-                 :suorituskieli {:koodiarvo "FI"}
-                 :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
+   :suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
+                  :suorituskieli {:koodiarvo "FI"}
+                  :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
    :koulutustoimija {:oid "1.2.246.562.10.346830761110"}
    :oppilaitos {:oid "1.2.246.562.10.52251087186"}})
 
@@ -153,10 +148,10 @@
 
 (defn did-log? [msg lvl]
   (let [logs (map #(parse-string % true)
-       (line-seq (clojure.java.io/reader
-                   (str (System/getProperty "java.io.tmpdir") "herate/herate-test.log"))))]
-    (some #(log-row-has-message-and-level % msg lvl) logs)
-    ))
+                  (line-seq (clojure.java.io/reader
+                              (str (System/getProperty "java.io.tmpdir")
+                                   "herate/herate-test.log"))))]
+    (some #(log-row-has-message-and-level % msg lvl) logs)))
 
 (defn delete-test-log-file []
   (io/delete-file (str (System/getProperty "java.io.tmpdir") "herate/herate-test.log") true))
@@ -164,7 +159,6 @@
 (defn clean-logs [f]
   (f)
   (delete-test-log-file))
-
 
 (def mock-log-file (atom []))
 

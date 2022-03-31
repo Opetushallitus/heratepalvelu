@@ -29,16 +29,14 @@
 (defn get-updated-opiskeluoikeudet
   "Hakee opiskeluoikeudet, joihin on tehty päivityksiä datetime-str:n jälkeen."
   [datetime-str page]
-  (let
-    [resp
-     (client/get
-       (str (:koski-url env) "/oppija/")
-       {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
-                       "muuttunutJälkeen" datetime-str
-                       "pageSize" 100
-                       "pageNumber" page}
-        :basic-auth [(:koski-user env) @pwd]
-        :as :json-strict})]
+  (let [resp (client/get
+               (str (:koski-url env) "/oppija/")
+               {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
+                               "muuttunutJälkeen"       datetime-str
+                               "pageSize"               100
+                               "pageNumber"             page}
+                :basic-auth   [(:koski-user env) @pwd]
+                :as           :json-strict})]
     (sort-by :aikaleima
              (reduce
                #(into %1 (:opiskeluoikeudet %2))

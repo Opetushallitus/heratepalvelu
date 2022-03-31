@@ -180,8 +180,7 @@
                            [:s (:phone-mismatch c/kasittelytilat)]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
-                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}
-                ]))
+                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}]))
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-no-email jaksot-no-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
@@ -301,7 +300,7 @@
 
 (deftest test-handleTepSmsSending
   (testing "Varmista, että -handleTepSmsSending kutsuu funktioita oikein"
-    (with-redefs 
+    (with-redefs
       [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 20))
@@ -328,16 +327,16 @@
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
                               :niputuspvm "2021-12-15"
                               :voimassaloppupvm "2021-12-20"
-                              :sms_kasittelytila (:ei-lahetetty
-                                                   c/kasittelytilat)
-                              :kyselylinkki "kysely.linkki/0"}}
+                              :kyselylinkki "kysely.linkki/0"
+                              :sms_kasittelytila
+                              (:ei-lahetetty c/kasittelytilat)}}
                      {:type "mock-get-jaksot-for-nippu"
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
                               :niputuspvm "2021-12-15"
                               :voimassaloppupvm "2021-12-30"
-                              :sms_kasittelytila (:ei-lahetetty
-                                                   c/kasittelytilat)
-                              :kyselylinkki "kysely.linkki/1"}}
+                              :kyselylinkki "kysely.linkki/1"
+                              :sms_kasittelytila
+                              (:ei-lahetetty c/kasittelytilat)}}
                      {:type "mock-handleTepSmsSending-get-organisaatio"
                       :oppilaitos "1234"}
                      {:type "mock-handleTepSmsSending-send-tep-sms"
@@ -352,9 +351,9 @@
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
                               :niputuspvm "2021-12-15"
                               :voimassaloppupvm "2021-12-30"
+                              :kyselylinkki "kysely.linkki/1"
                               :sms_kasittelytila
-                              (:ei-lahetetty c/kasittelytilat)
-                              :kyselylinkki "kysely.linkki/1"}
+                              (:ei-lahetetty c/kasittelytilat)}
                       :new-loppupvm "2022-01-19"}
                      {:type "mock-handleTepSmsSending-patch-nippulinkki"
                       :kyselylinkki "kysely.linkki/1"

@@ -27,30 +27,30 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (s/defschema tep-herate-keskeytymisajanjakso-schema
-             {:alku                   (s/conditional not-empty s/Str)
-              (s/optional-key :loppu) (s/maybe s/Str)})
+  {:alku                   (s/conditional not-empty s/Str)
+   (s/optional-key :loppu) (s/maybe s/Str)})
 
 (s/defschema tep-herate-schema
-             {:tyyppi                 (s/conditional not-empty s/Str)
-              :alkupvm                (s/conditional not-empty s/Str)
-              :loppupvm               (s/conditional not-empty s/Str)
-              :hoks-id                s/Num
-              :opiskeluoikeus-oid     (s/conditional not-empty s/Str)
-              :oppija-oid             (s/conditional not-empty s/Str)
-              :hankkimistapa-id       s/Num
-              :hankkimistapa-tyyppi   (s/conditional not-empty s/Str)
-              :tutkinnonosa-id        s/Num
-              :tutkinnonosa-koodi     (s/maybe s/Str)
-              :tutkinnonosa-nimi      (s/maybe s/Str)
-              :tyopaikan-nimi         (s/conditional not-empty s/Str)
-              :tyopaikan-ytunnus      (s/conditional not-empty s/Str)
-              :tyopaikkaohjaaja-email (s/maybe s/Str)
-              :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)
-              (s/optional-key :osa-aikaisuus)                  (s/maybe s/Num)
-              (s/optional-key :oppisopimuksen-perusta)         (s/maybe s/Str)
-              (s/optional-key :tyopaikkaohjaaja-puhelinnumero) (s/maybe s/Str)
-              (s/optional-key :keskeytymisajanjaksot)
-              (s/maybe [tep-herate-keskeytymisajanjakso-schema])})
+  {:tyyppi                 (s/conditional not-empty s/Str)
+   :alkupvm                (s/conditional not-empty s/Str)
+   :loppupvm               (s/conditional not-empty s/Str)
+   :hoks-id                s/Num
+   :opiskeluoikeus-oid     (s/conditional not-empty s/Str)
+   :oppija-oid             (s/conditional not-empty s/Str)
+   :hankkimistapa-id       s/Num
+   :hankkimistapa-tyyppi   (s/conditional not-empty s/Str)
+   :tutkinnonosa-id        s/Num
+   :tutkinnonosa-koodi     (s/maybe s/Str)
+   :tutkinnonosa-nimi      (s/maybe s/Str)
+   :tyopaikan-nimi         (s/conditional not-empty s/Str)
+   :tyopaikan-ytunnus      (s/conditional not-empty s/Str)
+   :tyopaikkaohjaaja-email (s/maybe s/Str)
+   :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)
+   (s/optional-key :osa-aikaisuus)                  (s/maybe s/Num)
+   (s/optional-key :oppisopimuksen-perusta)         (s/maybe s/Str)
+   (s/optional-key :tyopaikkaohjaaja-puhelinnumero) (s/maybe s/Str)
+   (s/optional-key :keskeytymisajanjaksot)
+   (s/maybe [tep-herate-keskeytymisajanjakso-schema])})
 
 (def tep-herate-checker
   (s/checker tep-herate-schema))
@@ -129,10 +129,8 @@
   (let [alku-date (LocalDate/parse (:alkupvm herate))
         loppu-date (LocalDate/parse (:loppupvm herate))
         sorted-tilat (map #(assoc %1
-                             :alku
-                             (LocalDate/parse (:alku %1))
-                             :tila
-                             (:koodiarvo (:tila %1)))
+                                  :alku (LocalDate/parse (:alku %1))
+                                  :tila (:koodiarvo (:tila %1)))
                           (sort-by :alku oo-tilat))
         voimassa (reduce
                    (fn [res next]
@@ -149,21 +147,21 @@
            tilat voimassa
            keskeytymisajanjaksot sorted-keskeytymisajanjaksot]
       (if (not (.isAfter pvm loppu-date))
-        (let
-          [first-kjakso (first keskeytymisajanjaksot)
-           new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
-                             (= (.getDayOfWeek pvm) DayOfWeek/SUNDAY)
-                             (= "valiaikaisestikeskeytynyt"
-                                (:tila (first tilat)))
-                             (= "loma" (:tila (first tilat)))
-                             (and
-                               (some? first-kjakso)
-                               (not (.isBefore pvm (:alku first-kjakso)))
-                               (or (nil? (:loppu first-kjakso))
-                                  (not (.isAfter pvm (:loppu first-kjakso))))))
-                       kesto
-                       (+ 1 kesto))
-           new-pvm (.plusDays pvm 1)]
+        (let [first-kjakso (first keskeytymisajanjaksot)
+              new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
+                                (= (.getDayOfWeek pvm) DayOfWeek/SUNDAY)
+                                (= "valiaikaisestikeskeytynyt"
+                                   (:tila (first tilat)))
+                                (= "loma" (:tila (first tilat)))
+                                (and
+                                  (some? first-kjakso)
+                                  (not (.isBefore pvm (:alku first-kjakso)))
+                                  (or (nil? (:loppu first-kjakso))
+                                      (not (.isAfter pvm
+                                                     (:loppu first-kjakso))))))
+                          kesto
+                          (+ 1 kesto))
+              new-pvm (.plusDays pvm 1)]
           (recur new-kesto
                  new-pvm
                  (if (and (some? (second tilat))
@@ -213,15 +211,13 @@
                                             #"_"))]
                        :tyopaikan_nimi       [:s (:tyopaikan-nimi herate)]
                        :tyopaikan_ytunnus    [:s (:tyopaikan-ytunnus herate)]
-                       :ohjaaja_nimi         [:s (:tyopaikkaohjaaja-nimi
-                                                   herate)]
+                       :ohjaaja_nimi      [:s (:tyopaikkaohjaaja-nimi herate)]
                        :jakso_alkupvm        [:s (:alkupvm herate)]
                        :jakso_loppupvm       [:s (:loppupvm herate)]
                        :kesto                [:n kesto]
                        :request_id           [:s request-id]
                        :tutkinto             [:s tutkinto]
-                       :oppilaitos           [:s (:oid (:oppilaitos
-                                                         opiskeluoikeus))]
+                       :oppilaitos    [:s (:oid (:oppilaitos opiskeluoikeus))]
                        :hoks_id              [:n (:hoks-id herate)]
                        :opiskeluoikeus_oid   [:s (:oid opiskeluoikeus)]
                        :oppija_oid           [:s (:oppija-oid herate)]
@@ -248,38 +244,38 @@
                                 koulutustoimija "/" tutkinto)]
                        :tyopaikan_normalisoitu_nimi
                        [:s (c/normalize-string (:tyopaikan-nimi herate))]}
-                jaksotunnus-table-data
-                (cond-> db-data
-                  (not-empty (:tyopaikkaohjaaja-email herate))
-                  (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
-                  (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
-                  (assoc :ohjaaja_puhelinnumero
-                         [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
-                  (not-empty (:tutkinnonosa-koodi herate))
-                  (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
-                  (not-empty (:tutkinnonosa-nimi herate))
-                  (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
-                  (some? (:osa-aikaisuus herate))
-                  (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)])
-                  (some? (:oppisopimuksen-perusta herate))
-                  (assoc :oppisopimuksen_perusta
-                         [:s (last
-                               (str/split
-                                 (:oppisopimuksen-perusta herate)
-                                 #"_"))]))
-                nippu-table-data
-                {:ohjaaja_ytunnus_kj_tutkinto
-                 [:s (str (:tyopaikkaohjaaja-nimi herate) "/"
-                          (:tyopaikan-ytunnus herate) "/"
-                          koulutustoimija "/" tutkinto)]
-                 :ohjaaja               [:s (:tyopaikkaohjaaja-nimi herate)]
-                 :ytunnus               [:s (:tyopaikan-ytunnus herate)]
-                 :tyopaikka             [:s (:tyopaikan-nimi herate)]
-                 :koulutuksenjarjestaja [:s koulutustoimija]
-                 :tutkinto              [:s tutkinto]
-                 :kasittelytila         [:s (:ei-niputettu c/kasittelytilat)]
-                 :sms_kasittelytila     [:s (:ei-lahetetty c/kasittelytilat)]
-                 :niputuspvm            [:s (str niputuspvm)]}]
+              jaksotunnus-table-data
+              (cond-> db-data
+                (not-empty (:tyopaikkaohjaaja-email herate))
+                (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
+                (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
+                (assoc :ohjaaja_puhelinnumero
+                       [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
+                (not-empty (:tutkinnonosa-koodi herate))
+                (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
+                (not-empty (:tutkinnonosa-nimi herate))
+                (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
+                (some? (:osa-aikaisuus herate))
+                (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)])
+                (some? (:oppisopimuksen-perusta herate))
+                (assoc :oppisopimuksen_perusta
+                       [:s (last
+                             (str/split
+                               (:oppisopimuksen-perusta herate)
+                               #"_"))]))
+              nippu-table-data
+              {:ohjaaja_ytunnus_kj_tutkinto
+               [:s (str (:tyopaikkaohjaaja-nimi herate) "/"
+                        (:tyopaikan-ytunnus herate) "/"
+                        koulutustoimija "/" tutkinto)]
+               :ohjaaja               [:s (:tyopaikkaohjaaja-nimi herate)]
+               :ytunnus               [:s (:tyopaikan-ytunnus herate)]
+               :tyopaikka             [:s (:tyopaikan-nimi herate)]
+               :koulutuksenjarjestaja [:s koulutustoimija]
+               :tutkinto              [:s tutkinto]
+               :kasittelytila         [:s (:ei-niputettu c/kasittelytilat)]
+               :sms_kasittelytila     [:s (:ei-lahetetty c/kasittelytilat)]
+               :niputuspvm            [:s (str niputuspvm)]}]
           (if (check-open-keskeytymisajanjakso herate)
             (try
               (save-to-tables
@@ -342,22 +338,20 @@
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
               (if (some? (tep-herate-checker herate))
                 (log/error {:herate herate :msg (tep-herate-checker herate)})
-                (when
-                  (and
-                    (check-opiskeluoikeus-tila opiskeluoikeus
-                                               (:loppupvm herate))
-                    (check-not-fully-keskeytynyt herate)
-                    (c/check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
-                    (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
+                (when (and (check-opiskeluoikeus-tila opiskeluoikeus
+                                                      (:loppupvm herate))
+                           (check-not-fully-keskeytynyt herate)
+                           (c/check-opiskeluoikeus-suoritus-types?
+                             opiskeluoikeus)
+                           (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
                   (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))))
           (ehoks/patch-osaamisenhankkimistapa-tep-kasitelty
             (:hankkimistapa-id herate)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa:" e))
         (catch ExceptionInfo e
-          (if (and
-                (:status (ex-data e))
-                (= 404 (:status (ex-data e))))
+          (if (and (:status (ex-data e))
+                   (= 404 (:status (ex-data e))))
             (do
               (log/error "Ei opiskeluoikeutta"
                          (:opiskeluoikeus-oid (parse-string (.getBody msg)

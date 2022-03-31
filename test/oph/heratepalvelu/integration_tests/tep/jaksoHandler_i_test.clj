@@ -125,8 +125,7 @@
   (mdb/clear-mock-db))
 
 (def expected-jaksotunnus-table
-  #{{
-     :ohjaaja_ytunnus_kj_tutkinto
+  #{{:ohjaaja_ytunnus_kj_tutkinto
      [:s "Olli Ohjaaja/123456-7/koulutustoimija-oid/testitutkinto"]
      :niputuspvm [:s "2022-02-16"]
      :osa_aikaisuus [:n 50]

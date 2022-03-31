@@ -47,9 +47,9 @@
                    :kyselylinkki "kysely.linkki/123"}
             nippu-bad-phone {:ohjaaja_ytunnus_kj_tutkinto "test-bad-phone-id"
                              :niputuspvm "2021-10-10"
-                             :sms_kasittelytila (:phone-mismatch
-                                                  c/kasittelytilat)
-                             :kyselylinkki "kysely.linkki/1234"}
+                             :kyselylinkki "kysely.linkki/1234"
+                             :sms_kasittelytila
+                             (:phone-mismatch c/kasittelytilat)}
             jaksot-same-emails [{:ohjaaja_email "a@b.com"}
                                 {:ohjaaja_email "a@b.com"}]
             jaksot-different-emails [{:ohjaaja_email "a@b.com"}
@@ -167,11 +167,12 @@
                   mock-nttaui-update-nippu]
       (let [email {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
                    :niputuspvm "2021-09-09"}
-            expected {:nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
-                              :niputuspvm "2021-09-09"}
-                      :updates {:kasittelytila [:s (:vastausaika-loppunut
-                                                     c/kasittelytilat)]
-                                :lahetyspvm    [:s "2021-10-10"]}}]
+            expected
+            {:nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
+                     :niputuspvm "2021-09-09"}
+             :updates {:lahetyspvm [:s "2021-10-10"]
+                       :kasittelytila
+                       [:s (:vastausaika-loppunut c/kasittelytilat)]}}]
         (eh/no-time-to-answer-update-item email)
         (is (= @test-no-time-to-answer-update-item-results expected))))))
 

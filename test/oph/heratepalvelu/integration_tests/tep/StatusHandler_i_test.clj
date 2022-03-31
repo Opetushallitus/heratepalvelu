@@ -13,48 +13,44 @@
                :arvo-user "arvo-user"
                :viestintapalvelu-url "https://oph-viestintapalvelu.com"})
 
-(def starting-nippu-table [{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
-                            :niputuspvm [:s "2022-01-16"]
-                            :kasittelytila [:s (:viestintapalvelussa
-                                                 c/kasittelytilat)]
-                            :viestintapalvelu-id [:n 11]
-                            :voimassaloppupvm [:s "2022-02-28"]
-                            :kyselylinkki [:s "kysely.linkki/asdf"]}
-                           {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1a"]
-                            :niputuspvm [:s "2022-01-16"]
-                            :kasittelytila [:s (:viestintapalvelussa
-                                                 c/kasittelytilat)]
-                            :viestintapalvelu-id [:n 12]
-                            :voimassaloppupvm [:s "2022-02-28"]
-                            :sms_kasittelytila [:s (:success c/kasittelytilat)]
-                            :kyselylinkki [:s "kysely.linkki/asdf_a"]}
-                           {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1b"]
-                            :niputuspvm [:s "2022-01-16"]
-                            :kasittelytila [:s (:viestintapalvelussa
-                                                 c/kasittelytilat)]
-                            :viestintapalvelu-id [:n 13]
-                            :voimassaloppupvm [:s "2022-02-28"]
-                            :kyselylinkki [:s "kysely.linkki/asdf_b"]}
-                           {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
-                            :niputuspvm [:s "2022-01-16"]
-                            :kasittelytila [:s (:viestintapalvelussa
-                                                 c/kasittelytilat)]
-                            :viestintapalvelu-id [:n 21]
-                            :voimassaloppupvm [:s "2022-02-28"]
-                            :kyselylinkki [:s "kysely.linkki/asdf,lkj"]}
-                           {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
-                            :niputuspvm [:s "2022-01-16"]
-                            :kasittelytila [:s (:viestintapalvelussa
-                                                 c/kasittelytilat)]
-                            :viestintapalvelu-id [:n 31]
-                            :voimassaloppupvm [:s "2022-02-28"]
-                            :kyselylinkki [:s "kysely.linkki/asdf;lkj"]}
-                           {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-4"]
-                            :niputuspvm [:s "2022-01-16"]
-                            :kasittelytila [:s (:no-email c/kasittelytilat)]
-                            :viestintapalvelu-id [:n 41]
-                            :voimassaloppupvm [:s "2022-02-28"]
-                            :kyselylinkki [:s "kysely.linkki/oiuoiu"]}])
+(def starting-nippu-table
+  [{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+    :niputuspvm [:s "2022-01-16"]
+    :kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
+    :viestintapalvelu-id [:n 11]
+    :voimassaloppupvm [:s "2022-02-28"]
+    :kyselylinkki [:s "kysely.linkki/asdf"]}
+   {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1a"]
+    :niputuspvm [:s "2022-01-16"]
+    :kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
+    :viestintapalvelu-id [:n 12]
+    :voimassaloppupvm [:s "2022-02-28"]
+    :sms_kasittelytila [:s (:success c/kasittelytilat)]
+    :kyselylinkki [:s "kysely.linkki/asdf_a"]}
+   {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1b"]
+    :niputuspvm [:s "2022-01-16"]
+    :kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
+    :viestintapalvelu-id [:n 13]
+    :voimassaloppupvm [:s "2022-02-28"]
+    :kyselylinkki [:s "kysely.linkki/asdf_b"]}
+   {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
+    :niputuspvm [:s "2022-01-16"]
+    :kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
+    :viestintapalvelu-id [:n 21]
+    :voimassaloppupvm [:s "2022-02-28"]
+    :kyselylinkki [:s "kysely.linkki/asdf,lkj"]}
+   {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
+    :niputuspvm [:s "2022-01-16"]
+    :kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
+    :viestintapalvelu-id [:n 31]
+    :voimassaloppupvm [:s "2022-02-28"]
+    :kyselylinkki [:s "kysely.linkki/asdf;lkj"]}
+   {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-4"]
+    :niputuspvm [:s "2022-01-16"]
+    :kasittelytila [:s (:no-email c/kasittelytilat)]
+    :viestintapalvelu-id [:n 41]
+    :voimassaloppupvm [:s "2022-02-28"]
+    :kyselylinkki [:s "kysely.linkki/oiuoiu"]}])
 
 (defn- setup-test []
   (mcc/clear-results)

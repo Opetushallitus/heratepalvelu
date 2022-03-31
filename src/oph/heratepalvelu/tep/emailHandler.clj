@@ -41,8 +41,8 @@
                               #{}
                               jaksot)]
         (log/warn "Ei yksiselitteistä ohjaajan sähköpostia "
-                    (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
-                    (:niputuspvm nippu) "," osoitteet)
+                  (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
+                  (:niputuspvm nippu) "," osoitteet)
         (let [kasittelytila (if (empty? osoitteet)
                               (:no-email c/kasittelytilat)
                               (:email-mismatch c/kasittelytilat))]

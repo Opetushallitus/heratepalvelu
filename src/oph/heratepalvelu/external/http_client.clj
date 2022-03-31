@@ -6,7 +6,7 @@
 
 (def client-options
   {:headers {"Caller-Id" (:caller-id env)
-             "CSRF" (:caller-id env)}
+             "CSRF"      (:caller-id env)}
    :cookies {"CSRF" {:value (:caller-id env)
                      :path "/"}}})
 
@@ -14,9 +14,8 @@
   "Muuttaa headersit default optioiden headers-kenttään ja yhdistää default
   optiot ja kutsujan antamat optiot."
   [options]
-  (merge (assoc client-options :headers
-                               (merge (:headers client-options)
-                                      (:headers options)))
+  (merge (assoc client-options :headers (merge (:headers client-options)
+                                               (:headers options)))
          (dissoc options :headers)))
 
 (defn get

@@ -18,7 +18,7 @@
         (.putHttp segment "response"
                   {"status" (:status resp)
                    "content_length"
-                            (get-in resp [:headers "Content-Length"] 0)})
+                   (get-in resp [:headers "Content-Length"] 0)})
         resp)
       (catch Exception e
         (.addException segment e)

@@ -97,9 +97,8 @@
                                         (:phone-mismatch c/kasittelytilat))]})))
         (when (or (= (:email-mismatch c/kasittelytilat) (:kasittelytila nippu))
                   (= (:no-email c/kasittelytilat) (:kasittelytila nippu)))
-            (arvo/patch-nippulinkki
-              (:kyselylinkki nippu)
-              {:tila (:ei-yhteystietoja c/kasittelytilat)}))
+          (arvo/patch-nippulinkki (:kyselylinkki nippu)
+                                  {:tila (:ei-yhteystietoja c/kasittelytilat)}))
         nil))))
 
 (defn client-error?
@@ -174,9 +173,9 @@
                     (log/error "Unhandled exception " e)))))
             (try
               (tc/update-nippu nippu
-                               {:sms_kasittelytila [:s (:vastausaika-loppunut
-                                                         c/kasittelytilat)]
-                                :sms_lahetyspvm [:s (str (c/local-date-now))]})
+                               {:sms_lahetyspvm [:s (str (c/local-date-now))]
+                                :sms_kasittelytila
+                                [:s (:vastausaika-loppunut c/kasittelytilat)]})
               (catch Exception e
                 (log/error "Virhe sms-lähetystilan päivityksessä nipulle,"
                            "jonka vastausaika umpeutunut")

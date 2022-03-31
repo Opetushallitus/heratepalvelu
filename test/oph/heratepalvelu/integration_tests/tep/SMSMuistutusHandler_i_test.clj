@@ -100,38 +100,36 @@
                             {:primary-key :ohjaaja_ytunnus_kj_tutkinto
                              :sort-key :niputuspvm}))
 
-(defn- teardown-test[]
+(defn- teardown-test []
   (mhc/clear-results)
   (mhc/clear-url-bindings)
   (mdb/clear-mock-db))
 
 (def expected-jaksotunnus-table (into #{} starting-jaksotunnus-table))
 
-(def expected-nippu-table #{{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
-                             :niputuspvm [:s "2022-01-16"]
-                             :kyselylinkki [:s "kysely.linkki/AAAAAA"]
-                             :lahetettynumeroon [:s "+358401234567"]
-                             :sms_muistutukset [:n 1]
-                             :sms_kasittelytila [:s (:viestintapalvelussa
-                                                      c/kasittelytilat)]
-                             :sms_lahetyspvm [:s "2022-01-27"]
-                             :sms_muistutuspvm [:s "2022-02-02"]}
-                            {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
-                             :niputuspvm [:s "2022-01-16"]
-                             :kyselylinkki [:s "kysely.linkki/BBBBBB"]
-                             :lahetettynumeroon [:s "+358401234567"]
-                             :sms_muistutukset [:n 1]
-                             :sms_kasittelytila [:s (:vastausaika-loppunut-m
-                                                      c/kasittelytilat)]
-                             :sms_lahetyspvm [:s "2022-01-27"]}
-                            {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
-                             :niputuspvm [:s "2022-01-16"]
-                             :kyselylinkki [:s "kysely.linkki/CCCCCC"]
-                             :lahetettynumeroon [:s "+358401234567"]
-                             :sms_muistutukset [:n 1]
-                             :sms_kasittelytila [:s (:vastattu
-                                                      c/kasittelytilat)]
-                             :sms_lahetyspvm [:s "2022-01-27"]}})
+(def expected-nippu-table
+  #{{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+     :niputuspvm [:s "2022-01-16"]
+     :kyselylinkki [:s "kysely.linkki/AAAAAA"]
+     :lahetettynumeroon [:s "+358401234567"]
+     :sms_muistutukset [:n 1]
+     :sms_kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
+     :sms_lahetyspvm [:s "2022-01-27"]
+     :sms_muistutuspvm [:s "2022-02-02"]}
+    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
+     :niputuspvm [:s "2022-01-16"]
+     :kyselylinkki [:s "kysely.linkki/BBBBBB"]
+     :lahetettynumeroon [:s "+358401234567"]
+     :sms_muistutukset [:n 1]
+     :sms_kasittelytila [:s (:vastausaika-loppunut-m c/kasittelytilat)]
+     :sms_lahetyspvm [:s "2022-01-27"]}
+    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
+     :niputuspvm [:s "2022-01-16"]
+     :kyselylinkki [:s "kysely.linkki/CCCCCC"]
+     :lahetettynumeroon [:s "+358401234567"]
+     :sms_muistutukset [:n 1]
+     :sms_kasittelytila [:s (:vastattu c/kasittelytilat)]
+     :sms_lahetyspvm [:s "2022-01-27"]}})
 
 (def expected-http-results [{:method :get
                              :url (str (:arvo-url mock-env)
