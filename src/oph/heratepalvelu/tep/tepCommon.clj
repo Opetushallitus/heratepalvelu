@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tep.tepCommon
+  "Yhteiset funktiot TEP-puolelle."
   (:require [clojure.string :as s]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
@@ -12,14 +13,13 @@
   ei ole vastattu. Palauttaa muuten nil."
   ([nippu] (get-new-loppupvm nippu (c/local-date-now)))
   ([nippu date]
-    (if (or (= (:kasittelytila nippu) (:success c/kasittelytilat))
-            (= (:kasittelytila nippu) (:vastattu c/kasittelytilat))
-            (= (:sms_kasittelytila nippu) (:success c/kasittelytilat))
-            (= (:sms_kasittelytila nippu) (:vastattu c/kasittelytilat)))
-      nil
-      (let [new-loppupvm (.plusDays date 30)
-            takaraja (.plusDays (c/to-date (:niputuspvm nippu)) 60)]
-        (str (if (.isBefore takaraja new-loppupvm) takaraja new-loppupvm))))))
+   (when-not (or (= (:kasittelytila nippu) (:success c/kasittelytilat))
+                 (= (:kasittelytila nippu) (:vastattu c/kasittelytilat))
+                 (= (:sms_kasittelytila nippu) (:success c/kasittelytilat))
+                 (= (:sms_kasittelytila nippu) (:vastattu c/kasittelytilat)))
+     (let [new-loppupvm (.plusDays date 30)
+           takaraja (.plusDays (c/to-date (:niputuspvm nippu)) 60)]
+       (str (if (.isBefore takaraja new-loppupvm) takaraja new-loppupvm))))))
 
 (defn get-jaksot-for-nippu
   "Hakee nippuun liittyvät jaksot tietokannasta."
@@ -29,8 +29,8 @@
       {:ohjaaja_ytunnus_kj_tutkinto [:eq
                                      [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
        :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-                     {:index "niputusIndex"}
-                     (:jaksotunnus-table env))
+      {:index "niputusIndex"}
+      (:jaksotunnus-table env))
     (catch AwsServiceException e
       (log/error "Jakso-query epäonnistui nipulla" nippu)
       (log/error e))))
@@ -50,8 +50,7 @@
   perusteella."
   [jaksot]
   (try
-    (seq (into #{} (map #(:nimi (org/get-organisaatio (:oppilaitos %1)))
-                        jaksot)))
+    (seq (set (map #(:nimi (org/get-organisaatio (:oppilaitos %1))) jaksot)))
     (catch Exception e
       (log/error "Virhe kutsussa organisaatiopalveluun")
       (log/error e))))
@@ -60,8 +59,8 @@
   "Wrapper update-itemin ympäri, joka yksinkertaistaa tietokantapäivitykset."
   ([nippu updates] (update-nippu nippu updates {}))
   ([nippu updates options]
-    (ddb/update-item
-      {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
-       :niputuspvm                  [:s (:niputuspvm nippu)]}
-      (merge (c/create-update-item-options updates) options)
-      (:nippu-table env))))
+   (ddb/update-item
+     {:ohjaaja_ytunnus_kj_tutkinto [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]
+      :niputuspvm                  [:s (:niputuspvm nippu)]}
+     (merge (c/create-update-item-options updates) options)
+     (:nippu-table env))))

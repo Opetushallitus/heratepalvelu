@@ -48,19 +48,19 @@
   (queueUrl [this queue-url]
     (MockSendMessageRequest. (assoc contents :queue-url queue-url))))
 
-(defn- mock-create-get-queue-url-request-builder []
+(defn- mock-create-get-queue-url-req-builder []
   (MockGetQueueUrlRequest. {}))
 
-(defn- mock-create-send-message-request-builder [] (MockSendMessageRequest. {}))
+(defn- mock-create-send-message-req-builder [] (MockSendMessageRequest. {}))
 
 (deftest test-handleDLQresend
   (testing "Varmista, että -handleDLQresend toimii oikein"
     (with-redefs
       [environ.core/env {:queue-name "queue-name"}
-       oph.heratepalvelu.util.DLQresendHandler/create-get-queue-url-request-builder
-       mock-create-get-queue-url-request-builder
-       oph.heratepalvelu.util.DLQresendHandler/create-send-message-request-builder
-       mock-create-send-message-request-builder
+       oph.heratepalvelu.util.DLQresendHandler/create-get-queue-url-req-builder
+       mock-create-get-queue-url-req-builder
+       oph.heratepalvelu.util.DLQresendHandler/create-send-message-req-builder
+       mock-create-send-message-req-builder
        oph.heratepalvelu.util.DLQresendHandler/sqs-client (MockSqsClient.)]
       (let [event (tu/mock-sqs-event {:sqs-message "asdf"})
             context (tu/mock-handler-context)

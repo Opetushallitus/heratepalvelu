@@ -1,4 +1,6 @@
 (ns oph.heratepalvelu.amis.AMISEmailResendHandler
+  "Ottaa vastaan viestejä ehoksAmisResendQueuesta ja merkitsee kyseessä olevan
+  kyselylinkin sähköpostin lähetettäväksi uudestaan, jos osoite löytyy."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
@@ -10,9 +12,6 @@
   (:import (com.fasterxml.jackson.core JsonParseException)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
-;; Ottaa vastaan viestejä ehoksAmisResendQueuesta ja merkitsee kyseessä olevan
-;; kyselylinkin sähköpostin lähetettäväksi uudestaan, jos osoite löytyy.
-
 (gen-class
   :name "oph.heratepalvelu.amis.AMISEmailResendHandler"
   :methods [[^:static handleEmailResend
@@ -20,10 +19,12 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (s/defschema resend-schema
+  "Uuudelleenlähetyksen herätteen schema."
   {:kyselylinkki (s/constrained s/Str not-empty)
    (s/optional-key :sahkoposti) (s/constrained s/Str not-empty)})
 
 (def resend-checker
+  "Uudelleenlähetyksen herätteen scheman tarkistusfunktio."
   (s/checker resend-schema))
 
 (defn -handleEmailResend

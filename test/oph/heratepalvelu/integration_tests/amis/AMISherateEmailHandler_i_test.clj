@@ -15,33 +15,32 @@
                :arvo-url "arvo-example.com/"
                :arvo-user "arvo-user"})
 
-(def starting-table-contents [{:toimija_oppija [:s "abc/123"]
-                               :tyyppi_kausi [:s "aloittaneet/2021-2022"]
-                               :muistutukset [:n 2]
-                               :kyselylinkki [:s "kysely.linkki/123"]
-                               :sahkoposti [:s "sahko.posti@esimerkki.fi"]
-                               :lahetystila [:s (:ei-lahetetty
-                                                  c/kasittelytilat)]
-                               :suorituskieli [:s "fi"]
-                               :kyselytyyppi [:s "aloittaneet"]
-                               :alkupvm [:s "2022-01-01"]}
-                              {:toimija_oppija [:s "lkj/245"]
-                               :tyyppi_kausi [:s "paattyneet/2022-2023"]
-                               :kyselylinkki [:s "kysely.linkki/245"]
-                               :sahkoposti [:s "asdf@esimerkki.fi"]
-                               :lahetystila [:s (:ei-lahetetty
-                                                  c/kasittelytilat)]
-                               :suorituskieli [:s "fi"]
-                               :kyselytyyppi [:s "tutkinnon_suorittaneet"]
-                               :alkupvm [:s "2022-01-05"]}
-                              {:toimija_oppija [:s "test/1"]
-                               :tyyppi_kausi [:s "asdf"]
-                               :lahetystila [:s (:success c/kasittelytilat)]
-                               :alkupvm [:s "2022-06-06"]}
-                              {:toimija_oppija [:s "test/2"]
-                               :tyyppi_kausi [:s "asdf"]
-                               :lahetystila [:s (:success c/kasittelytilat)]
-                               :alkupvm [:s "2022-06-04"]}])
+(def starting-table-contents
+  [{:toimija_oppija [:s "abc/123"]
+    :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+    :muistutukset [:n 2]
+    :kyselylinkki [:s "kysely.linkki/123"]
+    :sahkoposti [:s "sahko.posti@esimerkki.fi"]
+    :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+    :suorituskieli [:s "fi"]
+    :kyselytyyppi [:s "aloittaneet"]
+    :alkupvm [:s "2022-01-01"]}
+   {:toimija_oppija [:s "lkj/245"]
+    :tyyppi_kausi [:s "paattyneet/2022-2023"]
+    :kyselylinkki [:s "kysely.linkki/245"]
+    :sahkoposti [:s "asdf@esimerkki.fi"]
+    :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+    :suorituskieli [:s "fi"]
+    :kyselytyyppi [:s "tutkinnon_suorittaneet"]
+    :alkupvm [:s "2022-01-05"]}
+   {:toimija_oppija [:s "test/1"]
+    :tyyppi_kausi [:s "asdf"]
+    :lahetystila [:s (:success c/kasittelytilat)]
+    :alkupvm [:s "2022-06-06"]}
+   {:toimija_oppija [:s "test/2"]
+    :tyyppi_kausi [:s "asdf"]
+    :lahetystila [:s (:success c/kasittelytilat)]
+    :alkupvm [:s "2022-06-04"]}])
 
 (defn- setup-test []
   (mhc/clear-results)
@@ -87,36 +86,35 @@
   (mcc/clear-url-bindings)
   (mdb/clear-mock-db))
 
-(def expected-table-contents #{{:toimija_oppija [:s "abc/123"]
-                                :tyyppi_kausi [:s "aloittaneet/2021-2022"]
-                                :muistutukset [:n 0]
-                                :kyselylinkki [:s "kysely.linkki/123"]
-                                :sahkoposti [:s "sahko.posti@esimerkki.fi"]
-                                :lahetystila [:s (:viestintapalvelussa
-                                                   c/kasittelytilat)]
-                                :lahetyspvm [:s "2022-02-02"]
-                                :suorituskieli [:s "fi"]
-                                :kyselytyyppi [:s "aloittaneet"]
-                                :alkupvm [:s "2022-01-01"]
-                                :viestintapalvelu-id [:n 123]}
-                               {:toimija_oppija [:s "lkj/245"]
-                                :tyyppi_kausi [:s "paattyneet/2022-2023"]
-                                :kyselylinkki [:s "kysely.linkki/245"]
-                                :sahkoposti [:s "asdf@esimerkki.fi"]
-                                :lahetystila [:s (:vastausaika-loppunut
-                                                   c/kasittelytilat)]
-                                :lahetyspvm [:s "2022-02-02"]
-                                :suorituskieli [:s "fi"]
-                                :kyselytyyppi [:s "tutkinnon_suorittaneet"]
-                                :alkupvm [:s "2022-01-05"]}
-                               {:toimija_oppija [:s "test/1"]
-                                :tyyppi_kausi [:s "asdf"]
-                                :lahetystila [:s (:success c/kasittelytilat)]
-                                :alkupvm [:s "2022-06-06"]}
-                               {:toimija_oppija [:s "test/2"]
-                                :tyyppi_kausi [:s "asdf"]
-                                :lahetystila [:s (:success c/kasittelytilat)]
-                                :alkupvm [:s "2022-06-04"]}})
+(def expected-table-contents
+  #{{:toimija_oppija [:s "abc/123"]
+     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+     :muistutukset [:n 0]
+     :kyselylinkki [:s "kysely.linkki/123"]
+     :sahkoposti [:s "sahko.posti@esimerkki.fi"]
+     :lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]
+     :lahetyspvm [:s "2022-02-02"]
+     :suorituskieli [:s "fi"]
+     :kyselytyyppi [:s "aloittaneet"]
+     :alkupvm [:s "2022-01-01"]
+     :viestintapalvelu-id [:n 123]}
+    {:toimija_oppija [:s "lkj/245"]
+     :tyyppi_kausi [:s "paattyneet/2022-2023"]
+     :kyselylinkki [:s "kysely.linkki/245"]
+     :sahkoposti [:s "asdf@esimerkki.fi"]
+     :lahetystila [:s (:vastausaika-loppunut c/kasittelytilat)]
+     :lahetyspvm [:s "2022-02-02"]
+     :suorituskieli [:s "fi"]
+     :kyselytyyppi [:s "tutkinnon_suorittaneet"]
+     :alkupvm [:s "2022-01-05"]}
+    {:toimija_oppija [:s "test/1"]
+     :tyyppi_kausi [:s "asdf"]
+     :lahetystila [:s (:success c/kasittelytilat)]
+     :alkupvm [:s "2022-06-06"]}
+    {:toimija_oppija [:s "test/2"]
+     :tyyppi_kausi [:s "asdf"]
+     :lahetystila [:s (:success c/kasittelytilat)]
+     :alkupvm [:s "2022-06-04"]}})
 
 (def expected-http-results
   [{:method :get

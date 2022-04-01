@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISDeleteTunnusHandler
+  "Ottaa viestejä vastaan AmisDeleteTunnusQueuesta ja hoitaa tunnuksen poiston."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
@@ -8,8 +9,6 @@
   (:import (com.fasterxml.jackson.core JsonParseException)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
-;; Ottaa viestejä vastaan AmisDeleteTunnusQueuesta ja hoitaa tunnuksen poiston.
-
 (gen-class
   :name "oph.heratepalvelu.amis.AMISDeleteTunnusHandler"
   :methods [[^:static handleDeleteTunnus
@@ -17,9 +16,12 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (s/defschema delete-tunnus-schema
+  "Tunnuksen poistoherätteen schema."
   {:kyselylinkki (s/constrained s/Str not-empty)})
 
-(def delete-tunnus-checker (s/checker delete-tunnus-schema))
+(def delete-tunnus-checker
+  "Tunnuksen poistoherätteen scheman tarkistusfunktio."
+  (s/checker delete-tunnus-schema))
 
 (defn delete-one-item
   "Poistaa yhden tietueen tietokannasta, jos item on olemassa."

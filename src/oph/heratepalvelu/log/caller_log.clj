@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.log.caller-log
+  "Eräät räätälöidyt logitusfunktiot."
   (:require [clojure.tools.logging :as log]))
 
 (defn- get-caller-header

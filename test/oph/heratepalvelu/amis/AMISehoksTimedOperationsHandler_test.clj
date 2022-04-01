@@ -31,7 +31,6 @@
                      {:level :info
                       :message "Lähetetty 1000 viestiä"})))))))
 
-
 (def mass-resend-results (atom []))
 
 (defn- mock-resend-aloitusheratteet [start end]

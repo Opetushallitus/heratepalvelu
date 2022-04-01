@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tep.emailHandler
+  "Käsittelee TEP-jaksoja, joiden sähköpostit on määrä lähettää."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
@@ -9,8 +10,6 @@
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
-
-;; Käsittelee TEP-jaksoja, joiden sähköpostit on määrä lähettää.
 
 (gen-class
   :name "oph.heratepalvelu.tep.emailHandler"
@@ -41,8 +40,8 @@
                               #{}
                               jaksot)]
         (log/warn "Ei yksiselitteistä ohjaajan sähköpostia "
-                    (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
-                    (:niputuspvm nippu) "," osoitteet)
+                  (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
+                  (:niputuspvm nippu) "," osoitteet)
         (let [kasittelytila (if (empty? osoitteet)
                               (:no-email c/kasittelytilat)
                               (:email-mismatch c/kasittelytilat))]

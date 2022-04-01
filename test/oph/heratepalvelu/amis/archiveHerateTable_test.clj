@@ -47,7 +47,6 @@
                            :tyyppi_kausi   [:s "tyyppi-kausi"]}
                :table "from-table-name"}])))))
 
-
 (def test-archiveHerateTable-results (atom []))
 
 (defn- mock-do-herate-table-archiving [kausi to-table]

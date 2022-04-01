@@ -1,10 +1,17 @@
 (ns oph.heratepalvelu.external.aws-xray
+  "Wrapperit X-Rayn ympäri."
   (:require [clojure.string :as str])
   (:import (com.amazonaws.xray AWSXRay)))
 
-(defn- wrap-begin-subsegment [line] (AWSXRay/beginSubsegment line))
+(defn- wrap-begin-subsegment
+  "Wrapper AWSXRayn beginSubsegmentin ympäri."
+  [line]
+  (AWSXRay/beginSubsegment line))
 
-(defn- wrap-end-subsegment [] (AWSXRay/endSubsegment))
+(defn- wrap-end-subsegment
+  "Wrapper AWSXRayn endSubsegmentin ympäri."
+  []
+  (AWSXRay/endSubsegment))
 
 (defn wrap-aws-xray
   "Käärii requestin X-Rayiin."
@@ -18,7 +25,7 @@
         (.putHttp segment "response"
                   {"status" (:status resp)
                    "content_length"
-                            (get-in resp [:headers "Content-Length"] 0)})
+                   (get-in resp [:headers "Content-Length"] 0)})
         resp)
       (catch Exception e
         (.addException segment e)

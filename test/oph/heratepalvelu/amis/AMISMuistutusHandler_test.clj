@@ -44,10 +44,10 @@
             expected-vastattu (assoc expected
                                      :lahetystila
                                      [:s (:vastattu c/kasittelytilat)])
-            expected-aika-loppunut (assoc expected
-                                          :lahetystila
-                                          [:s (:vastausaika-loppunut-m
-                                                c/kasittelytilat)])]
+            expected-aika-loppunut
+            (assoc expected
+                   :lahetystila
+                   [:s (:vastausaika-loppunut-m c/kasittelytilat)])]
         (mh/update-when-not-sent email 1 {:vastattu true})
         (is (= @mock-update-when-not-sent-results {:herate email
                                                    :updates expected-vastattu}))

@@ -129,55 +129,54 @@
   (mdb/clear-mock-db))
 
 (def expected-jaksotunnus-table #{{:hankkimistapa_id [:n 1]
-                                  :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
-                                  :niputuspvm [:s "2022-02-01"]
-                                  :oppilaitos [:s "testilaitos"]}
-                                 {:hankkimistapa_id [:n 2]
-                                  :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
-                                  :niputuspvm [:s "2022-02-01"]
-                                  :oppilaitos [:s "testilaitos"]}
-                                 {:hankkimistapa_id [:n 3]
-                                  :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
-                                  :niputuspvm [:s "2022-02-01"]
-                                  :oppilaitos [:s "testilaitos"]}})
+                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+                                   :niputuspvm [:s "2022-02-01"]
+                                   :oppilaitos [:s "testilaitos"]}
+                                  {:hankkimistapa_id [:n 2]
+                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
+                                   :niputuspvm [:s "2022-02-01"]
+                                   :oppilaitos [:s "testilaitos"]}
+                                  {:hankkimistapa_id [:n 3]
+                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
+                                   :niputuspvm [:s "2022-02-01"]
+                                   :oppilaitos [:s "testilaitos"]}})
 
-(def expected-nippu-table #{{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
-                             :niputuspvm [:s "2022-02-01"]
-                             :lahetysosoite [:s "ohjaaja1@esimerkki.fi"]
-                             :kyselylinkki [:s "kysely.linkki/1"]
-                             :muistutukset [:n 1]
-                             :lahetyspvm [:s "2022-01-27"]
-                             :kasittelytila [:s (:viestintapalvelussa
-                                                  c/kasittelytilat)]
-                             :viestintapalvelu-id [:n 1]
-                             :email_muistutuspvm [:s "2022-02-02"]}
-                            {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
-                             :niputuspvm [:s "2022-02-01"]
-                             :lahetysosoite [:s "ohjaaja2@esimerkki.fi"]
-                             :kyselylinkki [:s "kysely.linkki/2"]
-                             :muistutukset [:n 1]
-                             :lahetyspvm [:s "2022-01-27"]
-                             :kasittelytila [:s (:vastattu c/kasittelytilat)]}
-                            {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
-                             :niputuspvm [:s "2022-02-01"]
-                             :lahetysosoite [:s "ohjaaja3@esimerkki.fi"]
-                             :kyselylinkki [:s "kysely.linkki/3"]
-                             :muistutukset [:n 1]
-                             :lahetyspvm [:s "2022-01-27"]
-                             :kasittelytila [:s (:vastausaika-loppunut-m
-                                                  c/kasittelytilat)]}
-                            {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-4"]
-                             :niputuspvm [:s "2022-02-01"]
-                             :lahetysosoite [:s "ohjaaja4@esimerkki.fi"]
-                             :kyselylinkki [:s "kysely.linkki/4"]
-                             :muistutukset [:n 1]
-                             :lahetyspvm [:s "2022-01-27"]}
-                            {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-5"]
-                             :niputuspvm [:s "2022-02-01"]
-                             :lahetysosoite [:s "ohjaaja5@esimerkki.fi"]
-                             :kyselylinkki [:s "kysely.linkki/5"]
-                             :muistutukset [:n 0]
-                             :lahetyspvm [:s "2022-01-31"]}})
+(def expected-nippu-table
+  #{{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+     :niputuspvm [:s "2022-02-01"]
+     :lahetysosoite [:s "ohjaaja1@esimerkki.fi"]
+     :kyselylinkki [:s "kysely.linkki/1"]
+     :muistutukset [:n 1]
+     :lahetyspvm [:s "2022-01-27"]
+     :kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
+     :viestintapalvelu-id [:n 1]
+     :email_muistutuspvm [:s "2022-02-02"]}
+    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
+     :niputuspvm [:s "2022-02-01"]
+     :lahetysosoite [:s "ohjaaja2@esimerkki.fi"]
+     :kyselylinkki [:s "kysely.linkki/2"]
+     :muistutukset [:n 1]
+     :lahetyspvm [:s "2022-01-27"]
+     :kasittelytila [:s (:vastattu c/kasittelytilat)]}
+    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-3"]
+     :niputuspvm [:s "2022-02-01"]
+     :lahetysosoite [:s "ohjaaja3@esimerkki.fi"]
+     :kyselylinkki [:s "kysely.linkki/3"]
+     :muistutukset [:n 1]
+     :lahetyspvm [:s "2022-01-27"]
+     :kasittelytila [:s (:vastausaika-loppunut-m c/kasittelytilat)]}
+    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-4"]
+     :niputuspvm [:s "2022-02-01"]
+     :lahetysosoite [:s "ohjaaja4@esimerkki.fi"]
+     :kyselylinkki [:s "kysely.linkki/4"]
+     :muistutukset [:n 1]
+     :lahetyspvm [:s "2022-01-27"]}
+    {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-5"]
+     :niputuspvm [:s "2022-02-01"]
+     :lahetysosoite [:s "ohjaaja5@esimerkki.fi"]
+     :kyselylinkki [:s "kysely.linkki/5"]
+     :muistutukset [:n 0]
+     :lahetyspvm [:s "2022-01-31"]}})
 
 (def expected-http-results [{:method :get
                              :url (str (:arvo-url mock-env)

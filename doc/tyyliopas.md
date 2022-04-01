@@ -22,6 +22,18 @@ tätä voi olla mahdotonta toteuttaa. Niissä tapauksissa ylipitkä rivi on
 sallittu.
 
 
+## Linterit
+
+Voit ajaa linterit komennolla `lein checkall`. Tämä ajaa `lein kibit`, `lein
+bikeshed` ja `lein cljfmt` -tarkistukset. Tämä kannattaa ajaa ennen kuin pushaat
+uutta koodia tai muutoksia.
+
+Komento `lein bikeshed` on tosi huono erottamaan funktioita globaaleista
+muuttujista, ja voi raportoida, että osassa funktioista ei ole docstringejä,
+vaikka kyse ei oikeastaan ole funktioista. On hyvä käytäntö lisätä docstringejä
+myös näihin globaaleihin.
+
+
 ## Kielten käyttö projektissa
 
 Tämä on suomenkielinen projekti, ja ainakin tähän saakka kaikki kehittäjät ovat

@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.aws-ssm
+  "Wrapperit SSM:n ympäri."
   (:import (software.amazon.awssdk.services.ssm SsmClient)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.services.ssm.model GetParameterRequest)
@@ -6,13 +7,15 @@
              ClientOverrideConfiguration)
            (com.amazonaws.xray.interceptors TracingInterceptor)))
 
-(def client (-> (SsmClient/builder)
-                (.region (Region/EU_WEST_1))
-                (.overrideConfiguration
-                  (-> (ClientOverrideConfiguration/builder)
-                      (.addExecutionInterceptor (TracingInterceptor.))
-                      (.build)))
-                (.build)))
+(def client
+  "SSM-client -objekti."
+  (-> (SsmClient/builder)
+      (.region (Region/EU_WEST_1))
+      (.overrideConfiguration
+        (-> (ClientOverrideConfiguration/builder)
+            (.addExecutionInterceptor (TracingInterceptor.))
+            (.build)))
+      (.build)))
 
 (defn- create-get-parameter-request-builder
   "Abstraktio GetParameterRequest/builderin ympäri, joka helpottaa testaamista."

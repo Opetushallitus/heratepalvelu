@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.aws-sqs
+  "Wrapperit SQS:n ympäri."
   (:require [environ.core :refer [env]]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log])
@@ -8,9 +9,10 @@
              SendMessageRequest)))
 
 (def ^:private sqs-client
-    (-> (SqsClient/builder)
-        (.region (Region/EU_WEST_1))
-        (.build)))
+  "SQS-client -objekti."
+  (-> (SqsClient/builder)
+      (.region (Region/EU_WEST_1))
+      (.build)))
 
 (defn- create-send-message-request-builder
   "Abstraktio SendMessageRequest/builderin ympäri, joka helpotta testaamista."

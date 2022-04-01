@@ -66,7 +66,8 @@
                   :tyopaikan_ytunnus      "1234567-8"
                   :jakso_loppupvm         "2021-11-20"
                   :hankkimistapa_tyyppi   "koulutussopimus"}]
-      (is (= "testi_tyopaikka/1234567-8/1.2.246.562.10.346830761110/2021-07-01_2021-12-31"
+      (is (= (str "testi_tyopaikka/1234567-8/1.2.246.562.10.346830761110/"
+                  "2021-07-01_2021-12-31")
              (tpk/create-nippu-id jakso1))))))
 
 (deftest test-get-next-vastaamisajan-alkupvm-date
@@ -94,8 +95,9 @@
                  :jakso_loppupvm         "2021-11-20"
                  :hankkimistapa_tyyppi   "koulutussopimus"}]
       (is (= (tpk/create-tpk-nippu jakso)
-             {:nippu-id
-              "testi_tyopaikka/1234567-8/1.2.246.562.10.346830761110/2021-07-01_2021-12-31"
+             {:nippu-id (str "testi_tyopaikka/1234567-8/"
+                             "1.2.246.562.10.346830761110/"
+                             "2021-07-01_2021-12-31")
               :tyopaikan-nimi               "Testi työpaikka"
               :tyopaikan-nimi-normalisoitu  "testi_tyopaikka"
               :vastaamisajan-alkupvm        "2022-01-01"
@@ -214,11 +216,11 @@
       (with-redefs [oph.heratepalvelu.common/local-date-now
                     (fn [] (LocalDate/of 2021 12 25))]
         (is (= (tpk/query-niputtamattomat "asdf")
-               (results-with-end-date "2021-12-25")))
+               (results-with-end-date "2021-12-25"))))
       (with-redefs [oph.heratepalvelu.common/local-date-now
                     (fn [] (LocalDate/of 2022 2 2))]
         (is (= (tpk/query-niputtamattomat "asdf")
-               (results-with-end-date "2021-12-31"))))))))
+               (results-with-end-date "2021-12-31")))))))
 
 (def mock-handleTpkNiputus-results (atom []))
 

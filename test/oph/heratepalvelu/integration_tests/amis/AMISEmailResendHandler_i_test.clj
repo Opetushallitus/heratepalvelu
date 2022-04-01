@@ -21,14 +21,14 @@
                                               :sort-key :tyyppi_kausi})
   (mdb/set-table-contents (:herate-table mock-env) starting-table-contents))
 
-(def expected-table-contents #{{:toimija_oppija [:s "abc/123"]
-                                :tyyppi_kausi [:s "aloittaneet/2021-2022"]
-                                :muistutukset [:n 2]
-                                :kyselylinkki [:s "kysely.linkki/123"]
-                                :sahkoposti [:s "new@esimerkki.fi"]
-                                :lahetystila [:s (:ei-lahetetty
-                                                   c/kasittelytilat)]
-                                :viestintapalvelu-id [:n 123]}})
+(def expected-table-contents
+  #{{:toimija_oppija [:s "abc/123"]
+     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+     :muistutukset [:n 2]
+     :kyselylinkki [:s "kysely.linkki/123"]
+     :sahkoposti [:s "new@esimerkki.fi"]
+     :viestintapalvelu-id [:n 123]
+     :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]}})
 
 (deftest test-AMISEmailResendHandler-integration
   (testing "AMISEmailResendHandlerin integraatiotesti"

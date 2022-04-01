@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tpk.tpkCommon
+  "Yhteiset funktiot TPK-toiminnallisuuteen."
   (:require [oph.heratepalvelu.common :as c])
   (:import (java.time LocalDate)))
 

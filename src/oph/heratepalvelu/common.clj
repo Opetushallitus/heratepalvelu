@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.common
+  "Yhteiset funktiot herätepalvelulle."
   (:require [clj-time.coerce :as c]
             [clj-time.format :as f]
             [clojure.string :as str]
@@ -14,14 +15,16 @@
            (java.util UUID)))
 
 (s/defschema herate-schema
-             {:ehoks-id           s/Num
-              :kyselytyyppi       s/Str
-              :opiskeluoikeus-oid s/Str
-              :oppija-oid         s/Str
-              :sahkoposti         (s/constrained s/Str not-empty)
-              :alkupvm            s/Str})
+  "AMIS-herätteen schema."
+  {:ehoks-id           s/Num
+   :kyselytyyppi       s/Str
+   :opiskeluoikeus-oid s/Str
+   :oppija-oid         s/Str
+   :sahkoposti         (s/constrained s/Str not-empty)
+   :alkupvm            s/Str})
 
 (def kasittelytilat
+  "Heräteviestien lähetyksien käsittelytilat."
   {:ei-lahetetty "ei_lahetetty"
    :viestintapalvelussa "viestintapalvelussa"
    :vastausaika-loppunut "vastausaika_loppunut_ennen_lahetysta"
@@ -46,7 +49,7 @@
 (defn rand-str
   "Luo stringin, jossa on len randomisti valittua isoa kirjainta."
   [len]
-  (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
+  (str/join (repeatedly len #(char (+ (rand 26) 65)))))
 
 (defn generate-uuid
   "Abstraktio UUID/randomUUID:n ympäri, joka helpottaa testaamista."
@@ -84,8 +87,8 @@
             (ehoks/add-kyselytunnus-to-hoks
               (:ehoks-id item)
               (assoc data
-                :alkupvm (:alkupvm item)
-                :tyyppi (:kyselytyyppi item)))
+                     :alkupvm (:alkupvm item)
+                     :tyyppi (:kyselytyyppi item)))
             (catch ExceptionInfo e
               (if (= 404 (:status (ex-data e)))
                 (log/warn "Ei hoksia " (:ehoks-id item))
@@ -109,9 +112,8 @@
     (do
       (log/info "Ei koulutustoimijaa opiskeluoikeudessa "
                 (:oid opiskeluoikeus) ", haetaan Organisaatiopalvelusta")
-      (:parentOid
-        (org/get-organisaatio
-          (get-in opiskeluoikeus [:oppilaitos :oid]))))))
+      (:parentOid (org/get-organisaatio
+                    (get-in opiskeluoikeus [:oppilaitos :oid]))))))
 
 (defn kausi
   "Palauttaa kauden, johon annettu päivämäärä kuuluu. Kausi kestää heinäkuusta
@@ -119,8 +121,8 @@
   [alkupvm]
   (let [[year month] (str/split alkupvm #"-")]
     (if (> (Integer/parseInt month) 6)
-      (str year "-" (+ (Integer/parseInt year) 1))
-      (str (- (Integer/parseInt year) 1) "-" year))))
+      (str year "-" (inc (Integer/parseInt year)))
+      (str (dec (Integer/parseInt year)) "-" year))))
 
 (defn check-suoritus-type?
   "Varmistaa, että suorituksen tyyppi on joko ammatillinen tutkinto tai
@@ -175,8 +177,8 @@
     (if (< day 16)
       (LocalDate/of year month 16)
       (if (= 12 month)
-        (LocalDate/of (+ year 1) 1 1)
-        (LocalDate/of year (+ month 1) 1)))))
+        (LocalDate/of (inc year) 1 1)
+        (LocalDate/of year (inc month) 1)))))
 
 (defn- deaccent-string
   "Poistaa diakriittiset merkit stringistä ja palauttaa muokatun stringin."
@@ -200,37 +202,35 @@
   [koulutustoimija timestamp]
   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                            (:orgwhitelist-table env))]
-    (if (.isBefore (LocalDate/of 2021 6 30)
-                   (LocalDate/ofEpochDay (/ timestamp 86400000)))
+    (if (or (.isBefore (LocalDate/of 2021 6 30)
+                       (LocalDate/ofEpochDay (/ timestamp 86400000)))
+            (and (:kayttoonottopvm item)
+                 (<= (c/to-long (f/parse (:date f/formatters)
+                                         (:kayttoonottopvm item)))
+                     timestamp)
+                 (<= (c/to-long (f/parse (:date f/formatters)
+                                         (:kayttoonottopvm item)))
+                     (c/to-long (local-date-now)))))
       true
-      (if
-        (and
-          (:kayttoonottopvm item)
-          (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-              timestamp)
-          (<= (c/to-long (f/parse (:date f/formatters) (:kayttoonottopvm item)))
-              (c/to-long (local-date-now))))
-        true
-        (log/info "Koulutustoimija" koulutustoimija
-                  "ei ole mukana automaatiossa, tai herätepvm"
-                  (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
-                  "on ennen käyttöönotto päivämäärää")))))
+      (log/info "Koulutustoimija" koulutustoimija
+                "ei ole mukana automaatiossa, tai herätepvm"
+                (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
+                "on ennen käyttöönotto päivämäärää"))))
 
 (defn check-duplicate-herate?
   "Palauttaa true, jos ei ole vielä herätettä tallennettua tietokantaan samoilla
   koulutustoimijalla, oppijalla, tyypillä ja laskentakaudella."
   [oppija koulutustoimija laskentakausi kyselytyyppi]
-  (if
-    (let [check-db?
-          (fn [tyyppi]
-            (empty? (ddb/get-item
-                      {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
-                       :tyyppi_kausi [:s (str tyyppi "/" laskentakausi)]})))]
-      (if (or (= kyselytyyppi "tutkinnon_suorittaneet")
-              (= kyselytyyppi "tutkinnon_osia_suorittaneet"))
-        (and (check-db? "tutkinnon_suorittaneet")
-             (check-db? "tutkinnon_osia_suorittaneet"))
-        (check-db? kyselytyyppi)))
+  (if (let [check-db?
+            (fn [tyyppi]
+              (empty? (ddb/get-item
+                        {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                         :tyyppi_kausi [:s (str tyyppi "/" laskentakausi)]})))]
+        (if (or (= kyselytyyppi "tutkinnon_suorittaneet")
+                (= kyselytyyppi "tutkinnon_osia_suorittaneet"))
+          (and (check-db? "tutkinnon_suorittaneet")
+               (check-db? "tutkinnon_osia_suorittaneet"))
+          (check-db? kyselytyyppi)))
     true
     (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
               oppija " koulutustoimijalla " koulutustoimija
@@ -241,10 +241,11 @@
   [heratepvm]
   (try
     (not (.isAfter (LocalDate/of 2021 7 1) (LocalDate/parse heratepvm)))
-   (catch Exception e
-     (log/error e))))
+    (catch Exception e
+      (log/error e))))
 
 (def herate-checker
+  "Herätescheman tarkistusfunktio."
   (s/checker herate-schema))
 
 (defn alku

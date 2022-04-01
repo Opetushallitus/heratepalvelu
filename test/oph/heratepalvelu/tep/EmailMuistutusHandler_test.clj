@@ -25,10 +25,10 @@
                                     "Työpaikkaohjaajakysely - "
                                     "Enkät till arbetsplatshandledaren - "
                                     "Survey to workplace instructors")
-                    :body (vp/tyopaikkaohjaaja-muistutus-html nippu
-                                                              oppilaitokset)
-                    :address (:lahetysosoite nippu)
-                    :sender "OPH – UBS – EDUFI"}]
+                      :body (vp/tyopaikkaohjaaja-muistutus-html nippu
+                                                                oppilaitokset)
+                      :address (:lahetysosoite nippu)
+                      :sender "OPH – UBS – EDUFI"}]
         (emh/send-reminder-email nippu oppilaitokset)
         (is (= @test-send-reminder-email-result expected))))))
 

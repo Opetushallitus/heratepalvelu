@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.cas-client
+  "Wrapperit CAS-clientin ympäri."
   (:refer-clojure :exclude [get])
   (:require [clj-cas.cas :refer :all]
             [clj-cas.client :as cl]
@@ -14,12 +15,14 @@
 
 (defrecord CasClient [client params session-id])
 
-(def client (atom nil))
+(def client
+  "CAS-client -objekti (atom, joka saa sisältää nil)."
+  (atom nil))
 
-(def ^:private pwd (delay
-                     (ssm/get-secret
-                       (str "/" (:stage env)
-                            "/services/heratepalvelu/cas-pwd"))))
+(def ^:private pwd
+  "CAS-clientin autentikoinnin salasana."
+  (delay
+    (ssm/get-secret (str "/" (:stage env) "/services/heratepalvelu/cas-pwd"))))
 
 (defn init-client
   "Luo ja asentaa uuden CasClient-rekordin."
@@ -49,10 +52,10 @@
            :cookies          {"CSRF" {:value (:caller-id env)
                                       :path "/"}
                               "JSESSIONID" {:value (str @cas-session-id)
-                                             :path "/"}}
+                                            :path "/"}}
            :redirect-strategy :none}
-          (some? body)
-          (request-with-json-body body)))
+    (some? body)
+    (request-with-json-body body)))
 
 (defn cas-http
   "Tekee Cas-autentikoidun requestin."
@@ -96,7 +99,9 @@
       (.toOption)
       (.get)))
 
-(def tgt (atom nil))
+(def tgt
+  "Ticket granting ticket client -objekti (atom, joka saa sisältää nil)."
+  (atom nil))
 
 (defn get-service-ticket
   "Hakee service ticketin palvelusta."

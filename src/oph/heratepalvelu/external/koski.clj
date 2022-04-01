@@ -1,13 +1,14 @@
 (ns oph.heratepalvelu.external.koski
+  "Wrapperit Kosken REST-rajapinnan ympäri."
   (:require [oph.heratepalvelu.external.http-client :as client]
             [oph.heratepalvelu.external.aws-ssm :as ssm]
             [environ.core :refer [env]])
   (:import (clojure.lang ExceptionInfo)))
 
-(def ^:private pwd (delay
-                     (ssm/get-secret
-                       (str "/" (:stage env)
-                            "/services/heratepalvelu/koski-pwd"))))
+(def ^:private pwd
+  "Kosken autentikoinnin salasana."
+  (delay (ssm/get-secret
+           (str "/" (:stage env) "/services/heratepalvelu/koski-pwd"))))
 
 (defn get-opiskeluoikeus
   "Hakee opiskeluoikeuden OID:n perusteella."
@@ -29,16 +30,14 @@
 (defn get-updated-opiskeluoikeudet
   "Hakee opiskeluoikeudet, joihin on tehty päivityksiä datetime-str:n jälkeen."
   [datetime-str page]
-  (let
-    [resp
-     (client/get
-       (str (:koski-url env) "/oppija/")
-       {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
-                       "muuttunutJälkeen" datetime-str
-                       "pageSize" 100
-                       "pageNumber" page}
-        :basic-auth [(:koski-user env) @pwd]
-        :as :json-strict})]
+  (let [resp (client/get
+               (str (:koski-url env) "/oppija/")
+               {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
+                               "muuttunutJälkeen"       datetime-str
+                               "pageSize"               100
+                               "pageNumber"             page}
+                :basic-auth   [(:koski-user env) @pwd]
+                :as           :json-strict})]
     (sort-by :aikaleima
              (reduce
                #(into %1 (:opiskeluoikeudet %2))

@@ -5,28 +5,28 @@
             [clojure.string :as string]
             [clj-time.core :as t])
   (:import (com.amazonaws.services.lambda.runtime.events SQSEvent)
-           (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage ScheduledEvent)
+           (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage
+                                                         ScheduledEvent)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
+           (software.amazon.awssdk.services.dynamodb.model
+             ConditionalCheckFailedException)))
 
 (defn mock-gets [url & [options]]
   (cond
     (.endsWith url "/opiskeluoikeus/1.2.246.562.15.43634207518")
     {:status 200
      :body {:oid "1.2.246.562.15.43634207518"
-            :suoritukset
-                 [{:tyyppi {:koodiarvo "ammattitutkinto"}
-                   :suorituskieli {:koodiarvo "FI"}
-                   :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
+            :suoritukset [{:tyyppi {:koodiarvo "ammattitutkinto"}
+                           :suorituskieli {:koodiarvo "FI"}
+                           :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
             :koulutustoimija {:oid "1.2.246.562.10.346830761110"}
             :oppilaitos {:oid "1.2.246.562.10.52251087186"}}}
     (.endsWith url "/opiskeluoikeus/1.2.246.562.15.43634207512")
     {:status 200
      :body {:oid "1.2.246.562.15.43634207512"
-            :suoritukset
-                 [{:tyyppi {:koodiarvo "ammattitutkinto"}
-                   :suorituskieli {:koodiarvo "FI"}
-                   :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
+            :suoritukset [{:tyyppi {:koodiarvo "ammattitutkinto"}
+                           :suorituskieli {:koodiarvo "FI"}
+                           :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
             :oppilaitos {:oid "1.2.246.562.10.52251087186"}}}))
 
 (defn mock-get-organisaatio [oid]
@@ -58,7 +58,8 @@
 
 (def dummy-opiskeluoikeus-oid "1.2.246.562.24.10442483592")
 (def dummy-request-id "1d6c30bb-a2d9-5540-aa1a-65410fc2f8f5")
-(def dummy-scheduled-resources "arn:aws:events:eu-west-1:123456789:rule/test-service-rule")
+(def dummy-scheduled-resources
+  "arn:aws:events:eu-west-1:123456789:rule/test-service-rule")
 
 (def mock-herate-sqs-message
   (doto (SQSEvent$SQSMessage.)
@@ -97,11 +98,9 @@
 (defn reify-context
   ([] (reify-context 100))
   ([milliseconds]
-    (reify com.amazonaws.services.lambda.runtime.Context
-      (getAwsRequestId [this]
-        dummy-request-id)
-      (getRemainingTimeInMillis [this]
-        milliseconds))))
+   (reify com.amazonaws.services.lambda.runtime.Context
+     (getAwsRequestId [this] dummy-request-id)
+     (getRemainingTimeInMillis [this] milliseconds))))
 
 (defn mock-handler-context
   ([] (reify-context))
@@ -116,10 +115,9 @@
 
 (defn mock-get-opiskeluoikeus [_]
   {:oid "1.2.246.562.24.10442483592"
-   :suoritukset [
-                 {:tyyppi {:koodiarvo "ammatillinentutkinto"}
-                 :suorituskieli {:koodiarvo "FI"}
-                 :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
+   :suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
+                  :suorituskieli {:koodiarvo "FI"}
+                  :koulustusmoduuli {:tunniste {:koodiarvo 123456}}}]
    :koulutustoimija {:oid "1.2.246.562.10.346830761110"}
    :oppilaitos {:oid "1.2.246.562.10.52251087186"}})
 
@@ -153,18 +151,19 @@
 
 (defn did-log? [msg lvl]
   (let [logs (map #(parse-string % true)
-       (line-seq (clojure.java.io/reader
-                   (str (System/getProperty "java.io.tmpdir") "herate/herate-test.log"))))]
-    (some #(log-row-has-message-and-level % msg lvl) logs)
-    ))
+                  (line-seq (clojure.java.io/reader
+                              (str (System/getProperty "java.io.tmpdir")
+                                   "herate/herate-test.log"))))]
+    (some #(log-row-has-message-and-level % msg lvl) logs)))
 
 (defn delete-test-log-file []
-  (io/delete-file (str (System/getProperty "java.io.tmpdir") "herate/herate-test.log") true))
+  (io/delete-file (str (System/getProperty "java.io.tmpdir")
+                       "herate/herate-test.log")
+                  true))
 
 (defn clean-logs [f]
   (f)
   (delete-test-log-file))
-
 
 (def mock-log-file (atom []))
 

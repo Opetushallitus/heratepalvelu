@@ -24,7 +24,7 @@
       (mdb/put-item {:test-item-id [:n 42]
                      :type-and-term [:s "nm/2019"]
                      :other [:s "poiupo"]}
-                    {:cond-expr "attribute_not_exists(test-item-id)"} 
+                    {:cond-expr "attribute_not_exists(test-item-id)"}
                     "test-table")
       (is (= (mdb/get-whole-table "test-table")
              {{:test-item-id [:n 12] :type-and-term [:s "x/2022"]} item-1
@@ -37,7 +37,7 @@
       (mdb/put-item {:test-item-id [:n 42]
                      :type-and-term [:s "nm/2019"]
                      :other [:s "IIII"]}
-                    {:cond-expr "attribute_not_exists(test-item-id)"} 
+                    {:cond-expr "attribute_not_exists(test-item-id)"}
                     "test-table")
       (is (= (mdb/get-whole-table "test-table")
              {{:test-item-id [:n 12] :type-and-term [:s "x/2022"]} item-1

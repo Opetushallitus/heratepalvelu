@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tep.SMSMuistutusHandler
+  "Käsittelee ja lähettää SMS-muistutukset"
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
@@ -10,8 +11,6 @@
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
            (java.time LocalDate)))
-
-;; Käsittelee ja lähettää SMS-muistutukset
 
 (gen-class
   :name "oph.heratepalvelu.tep.SMSMuistutusHandler"

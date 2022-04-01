@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.ehoks
+  "Wrapperit eHOKSin REST-rajapinnan ympäri."
   (:require [cheshire.core :refer [generate-string]]
             [environ.core :refer [env]]
             [oph.heratepalvelu.external.cas-client :as cas]
@@ -8,14 +9,14 @@
 (defn get-hoks-by-opiskeluoikeus
   "Hakee HOKSin opiskeluoikeuden OID:n perusteella."
   [opiskeluoikeus-oid]
-  (:data
-    (:body
-      (client/get
-        (str (:ehoks-url env) "hoks/opiskeluoikeus/" opiskeluoikeus-oid)
-        {:headers {:ticket (cas/get-service-ticket
-                             "/ehoks-virkailija-backend"
-                             "cas-security-check")}
-         :as :json}))))
+  (:data (:body (client/get
+                  (str (:ehoks-url env)
+                       "hoks/opiskeluoikeus/"
+                       opiskeluoikeus-oid)
+                  {:headers {:ticket (cas/get-service-ticket
+                                       "/ehoks-virkailija-backend"
+                                       "cas-security-check")}
+                   :as      :json}))))
 
 (defn add-kyselytunnus-to-hoks
   "Lisää kyselytunnuksen HOKSiin. Tekee yhden retryn automaattiesti."
@@ -34,25 +35,22 @@
 (defn get-osaamisen-hankkimistapa-by-id
   "Hakee osaamisen hankkimistavan ID:n perusteella."
   [oht-id]
-  (:data
-    (:body
-      (client/get
-        (str (:ehoks-url env) "hoks/osaamisen-hankkimistapa/" oht-id)
-        {:headers {:ticket (cas/get-service-ticket
-                             "/ehoks-virkailija-backend"
-                             "cas-security-check")}
-         :as :json}))))
+  (:data (:body (client/get
+                  (str (:ehoks-url env) "hoks/osaamisen-hankkimistapa/" oht-id)
+                  {:headers {:ticket (cas/get-service-ticket
+                                       "/ehoks-virkailija-backend"
+                                       "cas-security-check")}
+                   :as      :json}))))
 
 (defn get-hankintakoulutus-oids
   "Hakee HOKSin hankintakoulutus-OID:t."
   [hoks-id]
-  (:body
-    (client/get
-      (str (:ehoks-url env) "hoks/" hoks-id "/hankintakoulutukset")
-      {:headers {:ticket (cas/get-service-ticket
-                           "/ehoks-virkailija-backend"
-                           "cas-security-check")}
-       :as :json})))
+  (:body (client/get
+           (str (:ehoks-url env) "hoks/" hoks-id "/hankintakoulutukset")
+           {:headers {:ticket (cas/get-service-ticket
+                                "/ehoks-virkailija-backend"
+                                "cas-security-check")}
+            :as      :json})))
 
 (defn add-lahetys-info-to-kyselytunnus
   "Lisää lähetysinfon kyselytunnukseen. Tekee yhden retryn jos vastaus on virhe
@@ -72,7 +70,7 @@
              (action)
              (throw e))))))
 
-(defn patch-osaamisenhankkimistapa-tep-kasitelty
+(defn patch-oht-tep-kasitelty
   "Merkitsee osaamisen hankkimistavan käsitellyksi eHOKS-palvelussa."
   [id]
   (client/patch

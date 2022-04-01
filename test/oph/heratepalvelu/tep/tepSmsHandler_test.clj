@@ -7,7 +7,8 @@
   (:import (java.time LocalDate)))
 
 (deftest valid-number-test
-  (testing "Funktio valid-number? tunnistaa oikeita ja virheellisiä puhelinnumeroja"
+  (testing
+    "Funktio valid-number? tunnistaa oikeita ja virheellisiä puhelinnumeroja"
     (let [fi-phone-number "040 654 3210"
           fi-phone-number-intl-fmt "040 654 3210"
           intl-phone-number "+1 517 987 5432"
@@ -20,7 +21,8 @@
       (is (not (sh/valid-number? unicode-invalid))))))
 
 (deftest client-error-test
-  (testing "Funktio client-error? erottaa client erroreja muista HTTP-statuksista"
+  (testing
+    "Funktio client-error? erottaa client erroreja muista HTTP-statuksista"
     (let [client-error (ex-info "File not found" {:status 404})
           server-error (ex-info "Internal server error" {:status 503})]
       (is (sh/client-error? client-error))
@@ -32,7 +34,8 @@
                                 :voimassa_loppupvm "2021-09-09"}
           success              {:tila (:success c/kasittelytilat)}
           failure              {:tila (:failure c/kasittelytilat)}]
-      (is (= (sh/update-arvo-obj-sms "CREATED" "2021-09-09") success-new-loppupvm))
+      (is (= (sh/update-arvo-obj-sms "CREATED" "2021-09-09")
+             success-new-loppupvm))
       (is (= (sh/update-arvo-obj-sms "CREATED" nil) success))
       (is (= (sh/update-arvo-obj-sms "asdfads" nil) failure)))))
 
@@ -180,8 +183,7 @@
                            [:s (:phone-mismatch c/kasittelytilat)]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
-                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}
-                ]))
+                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}]))
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-no-email jaksot-no-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
@@ -301,7 +303,7 @@
 
 (deftest test-handleTepSmsSending
   (testing "Varmista, että -handleTepSmsSending kutsuu funktioita oikein"
-    (with-redefs 
+    (with-redefs
       [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 20))
@@ -328,16 +330,16 @@
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
                               :niputuspvm "2021-12-15"
                               :voimassaloppupvm "2021-12-20"
-                              :sms_kasittelytila (:ei-lahetetty
-                                                   c/kasittelytilat)
-                              :kyselylinkki "kysely.linkki/0"}}
+                              :kyselylinkki "kysely.linkki/0"
+                              :sms_kasittelytila
+                              (:ei-lahetetty c/kasittelytilat)}}
                      {:type "mock-get-jaksot-for-nippu"
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
                               :niputuspvm "2021-12-15"
                               :voimassaloppupvm "2021-12-30"
-                              :sms_kasittelytila (:ei-lahetetty
-                                                   c/kasittelytilat)
-                              :kyselylinkki "kysely.linkki/1"}}
+                              :kyselylinkki "kysely.linkki/1"
+                              :sms_kasittelytila
+                              (:ei-lahetetty c/kasittelytilat)}}
                      {:type "mock-handleTepSmsSending-get-organisaatio"
                       :oppilaitos "1234"}
                      {:type "mock-handleTepSmsSending-send-tep-sms"
@@ -352,9 +354,9 @@
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
                               :niputuspvm "2021-12-15"
                               :voimassaloppupvm "2021-12-30"
+                              :kyselylinkki "kysely.linkki/1"
                               :sms_kasittelytila
-                              (:ei-lahetetty c/kasittelytilat)
-                              :kyselylinkki "kysely.linkki/1"}
+                              (:ei-lahetetty c/kasittelytilat)}
                       :new-loppupvm "2022-01-19"}
                      {:type "mock-handleTepSmsSending-patch-nippulinkki"
                       :kyselylinkki "kysely.linkki/1"

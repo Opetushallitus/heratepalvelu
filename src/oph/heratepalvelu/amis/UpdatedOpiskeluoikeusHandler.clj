@@ -1,21 +1,19 @@
 (ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler
-  (:require
-    [clj-time.coerce :as c]
-    [clj-time.core :as t]
-    [clj-time.format :as f]
-    [clojure.tools.logging :as log]
-    [environ.core :refer [env]]
-    [oph.heratepalvelu.amis.AMISCommon :as ac]
-    [oph.heratepalvelu.common :refer :all]
-    [oph.heratepalvelu.db.dynamodb :as ddb]
-    [oph.heratepalvelu.external.ehoks :refer [get-hoks-by-opiskeluoikeus]]
-    [oph.heratepalvelu.external.koski :refer [get-updated-opiskeluoikeudet]]
-    [oph.heratepalvelu.log.caller-log :refer :all]
-    [schema.core :as s])
+  "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
+  tietokantaan."
+  (:require [clj-time.coerce :as c]
+            [clj-time.core :as t]
+            [clj-time.format :as f]
+            [clojure.tools.logging :as log]
+            [environ.core :refer [env]]
+            [oph.heratepalvelu.amis.AMISCommon :as ac]
+            [oph.heratepalvelu.common :refer :all]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
+            [oph.heratepalvelu.external.koski :as k]
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [schema.core :as s])
   (:import (clojure.lang ExceptionInfo)))
-
-;; Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
-;; tietokantaan.
 
 (gen-class
   :name "oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler"
@@ -40,8 +38,7 @@
   (if-let [vahvistus-pvm
            (reduce
              (fn [_ suoritus]
-               (when
-                 (check-suoritus-type? suoritus)
+               (when (check-suoritus-type? suoritus)
                  (reduced (get-in suoritus [:vahvistus :päivä]))))
              nil (:suoritukset opiskeluoikeus))]
     vahvistus-pvm
@@ -120,9 +117,9 @@
                             {:key [:s "opiskeluoikeus-last-page"]}
                             (:metadata-table env))))]
     (log/info "Käsitellään" last-checked "jälkeen muuttuneet opiskeluoikeudet")
-    (loop [opiskeluoikeudet (get-updated-opiskeluoikeudet
-                              last-checked last-page)
-           next-page (+ last-page 1)]
+    (loop [opiskeluoikeudet (k/get-updated-opiskeluoikeudet last-checked
+                                                            last-page)
+           next-page (inc last-page)]
       (if (seq opiskeluoikeudet)
         (do (doseq [opiskeluoikeus opiskeluoikeudet]
               (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
@@ -137,13 +134,14 @@
                            (check-tila opiskeluoikeus vahvistus-pvm))
                   (if-let [hoks
                            (try
-                             (get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))
+                             (ehoks/get-hoks-by-opiskeluoikeus
+                               (:oid opiskeluoikeus))
                              (catch ExceptionInfo e
                                (if (= 404 (:status (ex-data e)))
-                                 (log/warn
-                                   "Opiskeluoikeudella" (:oid opiskeluoikeus)
-                                   "ei HOKSia. Koulutustoimija:"
-                                    koulutustoimija)
+                                 (log/warn "Opiskeluoikeudella"
+                                           (:oid opiskeluoikeus)
+                                           "ei HOKSia. Koulutustoimija:"
+                                           koulutustoimija)
                                  (throw e))))]
                     (if (:osaamisen-hankkimisen-tarve hoks)
                       (ac/save-herate
@@ -156,12 +154,12 @@
                       (log/info "Ei osaamisen hankkimisen tarvetta hoksissa"
                                 (:id hoks)))))))
             (log/info "Käsitelty" (count opiskeluoikeudet)
-                      "opiskeluoikeutta, sivu" (- next-page 1))
+                      "opiskeluoikeutta, sivu" (dec next-page))
             (update-last-page next-page)
             (when (< 120000 (.getRemainingTimeInMillis context))
               (recur
-                (get-updated-opiskeluoikeudet last-checked next-page)
-                (+ next-page 1))))
+                (k/get-updated-opiskeluoikeudet last-checked next-page)
+                (inc next-page))))
         (do
           (update-last-page 0)
           (update-last-checked (c/from-long start-time)))))))

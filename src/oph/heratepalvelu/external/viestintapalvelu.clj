@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.viestintapalvelu
+  "Wrapperit ja funktiot viestien luomiseen viestintäpalvelulle."
   (:require [clojure.string :as str]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
@@ -6,6 +7,7 @@
   (:use hiccup.core))
 
 (def horizontal-line
+  "Vaakasuora linja HTML-sähköpostiviestissä."
   [:table {:cellspacing "0"
            :cellpadding "0"
            :border "0"

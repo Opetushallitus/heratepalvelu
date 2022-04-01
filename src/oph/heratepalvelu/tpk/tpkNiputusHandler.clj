@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler
+  "Käsittelee TPK:n niputusta ja tallennusta herätepalvelun tietokantaan."
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
@@ -51,7 +52,7 @@
   (let [loppupvm (c/to-date (:jakso_loppupvm jakso))
         year (.getYear loppupvm)
         kausi-month (if (<= (.getMonthValue loppupvm) 6) 7 1)
-        kausi-year (if (= kausi-month 1) (+ year 1) year)]
+        kausi-year (if (= kausi-month 1) (inc year) year)]
     (LocalDate/of kausi-year kausi-month 1)))
 
 (defn create-tpk-nippu
@@ -100,7 +101,7 @@
   loppupäivään asti (tai nykyiseen päivään asti, jos tiedonkeruukauden
   loppupäivä ei ole vielä tullut). Hakee vain ne jaksot, joiden
   TPK-niputuspäivämäärä ei ole vielä määritelty.
- 
+
   Jos edeltävän kauden vastausaika ei ole loppunut, niputtaa jaksoja edeltävästä
   kaudesta. Muuten niputtaa seuraavan kauden jaksot."
   [exclusive-start-key]
@@ -136,9 +137,9 @@
                                  (get-existing-nippu jakso))]
             (if (and (empty? existing-nippu) (not memoized-nippu))
               (let [nippu (create-tpk-nippu jakso)]
-                (do (save-tpk-nippu nippu)
-                    (swap! memoization assoc (create-nippu-id jakso) nippu)
-                    (update-tpk-niputuspvm jakso (:niputuspvm nippu))))
+                (save-tpk-nippu nippu)
+                (swap! memoization assoc (create-nippu-id jakso) nippu)
+                (update-tpk-niputuspvm jakso (:niputuspvm nippu)))
               (update-tpk-niputuspvm
                 jakso
                 (:niputuspvm (or memoized-nippu existing-nippu)))))

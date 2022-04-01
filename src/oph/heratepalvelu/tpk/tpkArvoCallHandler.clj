@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tpk.tpkArvoCallHandler
+  "Hakee työpaikkakyselynipuille kyselylinkkejä Arvosta."
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
@@ -9,8 +10,6 @@
   (:import (clojure.lang ExceptionInfo)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
-;; Hakee työpaikkakyselynipuille kyselylinkkejä Arvosta.
-
 (gen-class :name "oph.heratepalvelu.tpk.tpkArvoCallHandler"
            :methods
            [[^:static handleTpkArvoCalls
@@ -20,22 +19,22 @@
 (defn do-scan
   "Hakee TPK-nippuja tietokannasta, joissa ei ole vielä kyselylinkkiä ja jotka
   tiedonkeruukauden alkupäivämäärän perusteella kuuluvat tähän kauteen.
-  
+
   Jos edeltävän kauden vastausaika ei ole loppunut, käsittelee edeltävän kauden
   niput. Muuten käsittelee seuraavan kauden niput."
   ([] (do-scan nil))
   ([exclusive-start-key]
-    (let [resp (ddb/scan {:filter-expression
-                          "attribute_not_exists(#linkki) AND #kausi = :kausi"
-                          :exclusive-start-key exclusive-start-key
-                          :expr-attr-names {"#kausi"  "tiedonkeruu-alkupvm"
-                                            "#linkki" "kyselylinkki"}
-                          :expr-attr-vals
-                          {":kausi" [:s (str
-                                          (tpkc/get-current-kausi-alkupvm))]}}
-                         (:tpk-nippu-table env))]
-      (log/info "TPK-Arvovälitysfunktion scan" (count (:items resp)))
-      resp)))
+   (let [resp (ddb/scan {:filter-expression
+                         "attribute_not_exists(#linkki) AND #kausi = :kausi"
+                         :exclusive-start-key exclusive-start-key
+                         :expr-attr-names {"#kausi"  "tiedonkeruu-alkupvm"
+                                           "#linkki" "kyselylinkki"}
+                         :expr-attr-vals
+                         {":kausi" [:s (str
+                                         (tpkc/get-current-kausi-alkupvm))]}}
+                        (:tpk-nippu-table env))]
+     (log/info "TPK-Arvovälitysfunktion scan" (count (:items resp)))
+     resp)))
 
 (defn make-arvo-request
   "Pyytää TPK-kyselylinkin Arvosta."

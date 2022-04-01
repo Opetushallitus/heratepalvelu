@@ -61,28 +61,28 @@
 (defn put-item
   ([item options] (put-item item options (:herate-table env)))
   ([item options table-name]
-    (let [item-key (get-item-key (get-table-key-fields table-name) item)
-          table (get @mock-db-tables table-name)
-          cond-expr-predicate (pce/parse (:cond-expr options)
-                                         (:expr-attr-names options)
-                                         (:expr-attr-vals options))]
-      (when (cond-expr-predicate (get table item-key))
-        (reset! mock-db-tables
-                (assoc @mock-db-tables
-                       table-name
-                       (assoc table item-key item)))))))
+   (let [item-key (get-item-key (get-table-key-fields table-name) item)
+         table (get @mock-db-tables table-name)
+         cond-expr-predicate (pce/parse (:cond-expr options)
+                                        (:expr-attr-names options)
+                                        (:expr-attr-vals options))]
+     (when (cond-expr-predicate (get table item-key))
+       (reset! mock-db-tables
+               (assoc @mock-db-tables
+                      table-name
+                      (assoc table item-key item)))))))
 
 (defn get-item
   ([key-conds] (get-item key-conds (:herate-table env)))
   ([key-conds table-name]
-    (strip-attr-vals (get (get @mock-db-tables table-name) key-conds))))
+   (strip-attr-vals (get (get @mock-db-tables table-name) key-conds))))
 
 (defn delete-item
   ([key-conds] (delete-item key-conds (:herate-table env)))
   ([key-conds table-name]
-    (let [table (get @mock-db-tables table-name)]
-      (reset! mock-db-tables
-              (assoc @mock-db-tables table-name (dissoc table key-conds))))))
+   (let [table (get @mock-db-tables table-name)]
+     (reset! mock-db-tables
+             (assoc @mock-db-tables table-name (dissoc table key-conds))))))
 
 (defn- attr-val-comparison [op]
   (fn [x y] (if (not= (first x) (first y))
@@ -119,22 +119,22 @@
 (defn query-items
   ([key-conds options] (query-items key-conds options (:herate-table env)))
   ([key-conds options table-name]
-    (let [table (get @mock-db-tables table-name)
-          key-fields (if (:index options)
-                       (get-index-key-fields table-name (:index options))
-                       (get-table-key-fields table-name))
-          filter-expr-predicate (pce/parse (:filter-expression options)
-                                           (:expr-attr-names options)
-                                           (:expr-attr-vals options))
-          key-cond-predicate (create-key-cond-predicate key-conds)
-          predicate (fn [item] (and (key-cond-predicate item)
-                                    (filter-expr-predicate item)))
-          items-sorted (sort-by-index (filter predicate (vals table))
-                                      key-fields)
-          items-limited (if (:limit options)
-                          (take (:limit options) items-sorted)
-                          items-sorted)]
-      (map strip-attr-vals items-limited))))
+   (let [table (get @mock-db-tables table-name)
+         key-fields (if (:index options)
+                      (get-index-key-fields table-name (:index options))
+                      (get-table-key-fields table-name))
+         filter-expr-predicate (pce/parse (:filter-expression options)
+                                          (:expr-attr-names options)
+                                          (:expr-attr-vals options))
+         key-cond-predicate (create-key-cond-predicate key-conds)
+         predicate (fn [item] (and (key-cond-predicate item)
+                                   (filter-expr-predicate item)))
+         items-sorted (sort-by-index (filter predicate (vals table))
+                                     key-fields)
+         items-limited (if (:limit options)
+                         (take (:limit options) items-sorted)
+                         items-sorted)]
+     (map strip-attr-vals items-limited))))
 
 (defn- parse-update-expr [update-expr attr-names attr-vals]
   (into {} (map (fn [[k v]] [(keyword (get attr-names k k)) (get attr-vals v)])
@@ -144,26 +144,26 @@
 (defn update-item
   ([key-conds options] (update-item key-conds options (:herate-table env)))
   ([key-conds options table-name]
-    (let [existing (get (get @mock-db-tables table-name) key-conds)
-          updates (parse-update-expr (:update-expr options)
-                                     (:expr-attr-names options)
-                                     (:expr-attr-vals options))]
-      (put-item (merge existing updates)
-                {:cond-expr (:cond-expr options)}
-                table-name))))
+   (let [existing (get (get @mock-db-tables table-name) key-conds)
+         updates (parse-update-expr (:update-expr options)
+                                    (:expr-attr-names options)
+                                    (:expr-attr-vals options))]
+     (put-item (merge existing updates)
+               {:cond-expr (:cond-expr options)}
+               table-name))))
 
 (defn scan
   ([options] (scan options (:herate-table env)))
   ([options table-name]
-    (let [table (get @mock-db-tables table-name)
-          key-fields (get-table-key-fields table-name)
-          filter-expr-predicate (pce/parse (:filter-expression options)
-                                           (:expr-attr-names options)
-                                           (:expr-attr-vals options))
-          items-sorted (sort-by-index (vals table) key-fields)
-          last-eval-key (:last-evaluated-key options)
-          items-sliced (if (and last-eval-key (>= last-eval-key 0))
-                         (nthrest items-sorted (+ last-eval-key 1))
-                         items-sorted)
-          items-filtered (filter filter-expr-predicate items-sliced)]
-      {:items (map strip-attr-vals items-filtered)})))
+   (let [table (get @mock-db-tables table-name)
+         key-fields (get-table-key-fields table-name)
+         filter-expr-predicate (pce/parse (:filter-expression options)
+                                          (:expr-attr-names options)
+                                          (:expr-attr-vals options))
+         items-sorted (sort-by-index (vals table) key-fields)
+         last-eval-key (:last-evaluated-key options)
+         items-sliced (if (and last-eval-key (>= last-eval-key 0))
+                        (nthrest items-sorted (+ last-eval-key 1))
+                        items-sorted)
+         items-filtered (filter filter-expr-predicate items-sliced)]
+     {:items (map strip-attr-vals items-filtered)})))

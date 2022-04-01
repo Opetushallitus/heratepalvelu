@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.db.dynamodb
+  "Funktiot, joilla päivitetään tietokanta ja haetaan siitä tietoja."
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]])
   (:import (clojure.lang Reflector)
@@ -18,15 +19,18 @@
              ClientOverrideConfiguration)
            (com.amazonaws.xray.interceptors TracingInterceptor)))
 
-(def ddb-client (-> (DynamoDbClient/builder)
-                    (.region (Region/EU_WEST_1))
-                    (.overrideConfiguration
-                      (-> (ClientOverrideConfiguration/builder)
-                          (.addExecutionInterceptor (TracingInterceptor.))
-                          (.build)))
-                    (.build)))
+(def ddb-client
+  "DynamoDB client -objekti."
+  (-> (DynamoDbClient/builder)
+      (.region (Region/EU_WEST_1))
+      (.overrideConfiguration
+        (-> (ClientOverrideConfiguration/builder)
+            (.addExecutionInterceptor (TracingInterceptor.))
+            (.build)))
+      (.build)))
 
 (def ^:private comparison-operators
+  "Vertailuoperaatorit tietokantahakuja varten."
   {:eq "EQ" :ne "NE" :le "LE"
    :lt "LT" :ge "GE" :gt "GT"
    :not-null "NOT_NULL" :null "NULL"
@@ -34,6 +38,7 @@
    :begins "BEGINS_WITH" :in "IN" :between "BETWEEN"})
 
 (def ^:private attribute-types
+  "Tietotyypit DynamoDB-tietokannassa."
   {:s "s" :n "n" :b "b"
    :ss "ss" :ns "ns" :bs "bs"
    :m "m" :l "l" :bool "bool"
@@ -121,17 +126,15 @@
   "Muuttaa key value mapin muodosta {\"key\" <Clojure-arvo>} muodoksi
   {\"key\" [:<tyyppi> <arvo>]}."
   [item]
-  (reduce #(assoc %1 (first %2) (cond (or (= (type (second %2))
-                                             java.lang.Long)
-                                          (= (type (second %2))
-                                             java.lang.Integer))
-                                      [:n (second %2)]
-                                      (= (type (second %2)) java.lang.Boolean)
-                                      [:bool (second %2)]
-                                      :else
-                                      [:s (second %2)]))
-                        {}
-                        (seq item)))
+  (reduce #(assoc %1
+                  (first %2) (cond (or (= (type (second %2)) java.lang.Long)
+                                       (= (type (second %2)) java.lang.Integer))
+                                   [:n (second %2)]
+                                   (= (type (second %2)) java.lang.Boolean)
+                                   [:bool (second %2)]
+                                   :else [:s (second %2)]))
+          {}
+          (seq item)))
 
 (defn- create-put-item-request-builder
   "Abstraktio PutItemRequest/builderin ympäri, joka helpottaa testaamista."
@@ -144,7 +147,7 @@
   sisältää seuraavat ehdolliset kentät:
     :cond-expr - konditionaalinen ekspressio DynamoDB:n syntaksin mukaan."
   ([item options]
-    (put-item item options (:herate-table env)))
+   (put-item item options (:herate-table env)))
   ([item options table]
    (.putItem ddb-client (-> (create-put-item-request-builder)
                             (.tableName table)
@@ -165,7 +168,7 @@
   jotka löytyvät comparison-operators -objektista. Funktion key-conds
   -argumentti seuraa tällaista syntaksia:
     {:<key> [:<op> [:<tyyppi> <value>]]}
-  
+
   Objektista options voi löytyä myös suodatusekspressio ja/tai muita ehdollisia
   parametreja:
     :index               - index, jota käytetään key-condsissa
@@ -178,7 +181,7 @@
                            laitetaan avaimien sijoihin, kun ekspressio
                            evaluoidaan"
   ([key-conds options]
-    (query-items key-conds options (:herate-table env)))
+   (query-items key-conds options (:herate-table env)))
   ([key-conds options table]
    (let [conditions (map-vals-to-conditions key-conds)
          response (.query ddb-client (-> (create-query-request-builder)
@@ -201,9 +204,7 @@
                                                (:expr-attr-vals options))))
                                          (.build)))
          items (.items response)]
-     (into [] (map
-                map-attribute-values-to-vals
-                items)))))
+     (vec (map map-attribute-values-to-vals items)))))
 
 (defn- create-update-item-request-builder
   "Abstraktio UpdateItemRequest/builderin ympäri, joka helpottaa testaamista."
@@ -228,7 +229,7 @@
                         avaimien sijoihin, kun ekspressio (update-expr tai
                         cond-expr) evaluoidaan"
   ([key-conds options]
-    (update-item key-conds options (:herate-table env)))
+   (update-item key-conds options (:herate-table env)))
   ([key-conds options table]
    (let [req (-> (create-update-item-request-builder)
                  (.tableName table)
@@ -257,15 +258,15 @@
   seuraa tätä mallia:
     {:<key> [:<tyyppi> <arvo>]}"
   ([key-conds]
-    (get-item key-conds (:herate-table env)))
+   (get-item key-conds (:herate-table env)))
   ([key-conds table]
-    (let [req (-> (create-get-item-request-builder)
-                  (.tableName table)
-                  (.key (map-vals-to-attribute-values key-conds))
-                  (.build))
-          response (.getItem ddb-client req)
-          item (.item response)]
-      (map-attribute-values-to-vals item))))
+   (let [req (-> (create-get-item-request-builder)
+                 (.tableName table)
+                 (.key (map-vals-to-attribute-values key-conds))
+                 (.build))
+         response (.getItem ddb-client req)
+         item (.item response)]
+     (map-attribute-values-to-vals item))))
 
 (defn- create-delete-item-request-builder
   "Abstraktio DeleteItemRequest/builderin ympäri, joka helpottaa testaamista."
@@ -277,13 +278,13 @@
   syntaksi seuraa tätä mallia:
     {:<key> [:<tyyppi> <arvo>]}"
   ([key-conds]
-    (delete-item key-conds (:herate-table env)))
+   (delete-item key-conds (:herate-table env)))
   ([key-conds table]
-    (let [req (-> (create-delete-item-request-builder)
-                  (.tableName table)
-                  (.key (map-vals-to-attribute-values key-conds))
-                  (.build))]
-      (.deleteItem ddb-client req))))
+   (let [req (-> (create-delete-item-request-builder)
+                 (.tableName table)
+                 (.key (map-vals-to-attribute-values key-conds))
+                 (.build))]
+     (.deleteItem ddb-client req))))
 
 (defn- create-scan-request-builder
   "Abstraktio ScanRequest/builderin ympäri, joka helpottaa testaamista."

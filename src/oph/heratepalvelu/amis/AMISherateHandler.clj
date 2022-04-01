@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISherateHandler
+  "Käsittelee SQS:stä saatuja AMIS-herätteitä."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
@@ -42,18 +43,17 @@
                 (log/error "Ei opiskeluoikeutta ID:llä"
                            (:opiskeluoikeus-oid herate))))
             (log/warn "Ei tallenneta kantaan. Alkupvm virheellinen."
-                       (str "alkupvm " (:alkupvm herate))
-                       (str "opiskeluoikeus-oid " (:opiskeluoikeus-oid herate))
-                       (str "oppija-oid " (:oppija-oid herate))
-                       (str "kyselytyyppi " (:kyselytyyppi herate)))))
+                      (str "alkupvm " (:alkupvm herate))
+                      (str "opiskeluoikeus-oid " (:opiskeluoikeus-oid herate))
+                      (str "oppija-oid " (:oppija-oid herate))
+                      (str "kyselytyyppi " (:kyselytyyppi herate)))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa:" msg "\n" e))
         (catch ExceptionInfo e
-          (if (and
-                (:status (ex-data e))
-                (= 404 (:status (ex-data e))))
+          (if (and (:status (ex-data e))
+                   (= 404 (:status (ex-data e))))
             (log/error "404-virhe. Opiskeluoikeus:"
                        (:opiskeluoikeus-oid (parse-string (.getBody msg) true))
                        "error:"
                        e)
-            (do (log/error e))))))))
+            (log/error e)))))))

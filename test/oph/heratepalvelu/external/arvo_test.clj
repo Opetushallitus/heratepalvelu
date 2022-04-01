@@ -34,7 +34,6 @@
     (= id 3)
     ["222.222.222" "333.333.333"]))
 
-
 (deftest test-get-toimipiste
   (testing "Get opiskeluoikeus toimipiste"
     (with-redefs [oph.heratepalvelu.external.organisaatio/get-organisaatio

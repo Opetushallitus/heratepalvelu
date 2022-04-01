@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISCommon
+  "Yhteiset funktiot AMIS-puolelle."
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
@@ -61,8 +62,8 @@
           (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
             (try
               (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
-                         (str kyselytyyppi "/" laskentakausi) ", request-id:"
-                         uuid)
+                        (str kyselytyyppi "/" laskentakausi) ", request-id:"
+                        uuid)
               (ddb/put-item
                 {:toimija_oppija      [:s (str koulutustoimija "/" oppija)]
                  :tyyppi_kausi        [:s (str kyselytyyppi "/" laskentakausi)]
@@ -86,8 +87,7 @@
                  :osaamisala          [:s (str (seq (:osaamisala req-body)))]
                  :toimipiste-oid      [:s (str (:toimipiste_oid req-body))]
                  :hankintakoulutuksen-toteuttaja
-                                      [:s (str (:hankintakoulutuksen_toteuttaja
-                                                 req-body))]
+                 [:s (str (:hankintakoulutuksen_toteuttaja req-body))]
                  :tallennuspvm        [:s (str (c/local-date-now))]}
                 {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
                                  "attribute_not_exists(tyyppi_kausi)")})

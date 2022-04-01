@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.util.DLQresendHandler
+  "Lähettää AMISin dead letter queuessa olevia herätteitä uudestaan."
   (:require [environ.core :refer [env]]
             [clojure.tools.logging :as log])
   (:import (software.amazon.awssdk.services.sqs SqsClient)
@@ -15,20 +16,22 @@
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(def sqs-client (-> (SqsClient/builder)
-                    (.region (Region/EU_WEST_1))
-                    (.overrideConfiguration
-                      (-> (ClientOverrideConfiguration/builder)
-                          (.addExecutionInterceptor (TracingInterceptor.))
-                          (.build)))
-                    (.build)))
+(def sqs-client
+  "SQS-client -objekti."
+  (-> (SqsClient/builder)
+      (.region (Region/EU_WEST_1))
+      (.overrideConfiguration
+        (-> (ClientOverrideConfiguration/builder)
+            (.addExecutionInterceptor (TracingInterceptor.))
+            (.build)))
+      (.build)))
 
-(defn- create-get-queue-url-request-builder
+(defn- create-get-queue-url-req-builder
   "Abstraktio GetQueueUrlRequest/builderin ympäri, joka helpottaa testaamista."
   []
   (GetQueueUrlRequest/builder))
 
-(defn- create-send-message-request-builder
+(defn- create-send-message-req-builder
   "Abstraktio SendMessageRequest/builderin ympäri, joka helpottaa testaamista."
   []
   (SendMessageRequest/builder))
@@ -41,13 +44,13 @@
         queue-url (.queueUrl
                     (.getQueueUrl
                       sqs-client
-                      (-> (create-get-queue-url-request-builder)
+                      (-> (create-get-queue-url-req-builder)
                           (.queueName (:queue-name env))
                           (.build))))]
     (doseq [msg messages]
       (log/info (.getBody msg))
       (try
-        (.sendMessage sqs-client (-> (create-send-message-request-builder)
+        (.sendMessage sqs-client (-> (create-send-message-req-builder)
                                      (.queueUrl queue-url)
                                      (.messageBody (.getBody msg))
                                      (.build)))

@@ -31,6 +31,20 @@
                          [org.apache.logging.log4j/log4j-api "2.17.0"]
                          [org.apache.logging.log4j/log4j-core "2.17.0"]
                          [org.apache.logging.log4j/log4j-slf4j-impl "2.17.0"]]
+  :plugins [[lein-bikeshed "0.5.2"]
+            [lein-cljfmt "0.8.0"]
+            [lein-kibit "0.1.8"]]
+  :aliases {"checkall" ["do"
+                        ["kibit"]
+                        ["bikeshed"]
+                        ["cljfmt" "check"]]}
+  :cljfmt {:indents {cond->       [[:inner 0]]
+                     definterface [[:inner 0]]
+                     defschema    [[:inner 0]]
+                     deftest      [[:inner 0]]
+                     testing      [[:inner 0]]
+                     with-redefs  [[:inner 0]]
+                     #".*"        [[:block 0]]}}
   :aot :all
   :source-paths ["src"]
   :java-source-paths ["src/java"]

@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.arvo
+  "Wrapperit Arvon REST-rajapinnan ympäri."
   (:require [cheshire.core :refer [generate-string]]
             [clj-http.util :as util]
             [clj-time.core :as t]
@@ -13,10 +14,10 @@
             [oph.heratepalvelu.external.organisaatio :as org])
   (:import (clojure.lang ExceptionInfo)))
 
-(def ^:private pwd (delay
-                     (ssm/get-secret
-                       (str "/" (:stage env)
-                            "/services/heratepalvelu/arvo-pwd"))))
+(def ^:private pwd
+  "Arvon autentikoinnin salasana."
+  (delay
+    (ssm/get-secret (str "/" (:stage env) "/services/heratepalvelu/arvo-pwd"))))
 
 (defn get-toimipiste
   "Palauttaa toimipisteen OID jos sen organisaatiotyyppi on toimipiste. Tämä
@@ -26,9 +27,8 @@
   (let [oid (:oid (:toimipiste suoritus))
         org (org/get-organisaatio oid)
         org-tyypit (:tyypit org)]
-    (if (some #{"organisaatiotyyppi_03"} org-tyypit)
-      oid
-      nil)))
+    (when (some #{"organisaatiotyyppi_03"} org-tyypit)
+      oid)))
 
 (defn get-osaamisalat
   "Hakee voimassa olevat osaamisalat suorituksesta."
