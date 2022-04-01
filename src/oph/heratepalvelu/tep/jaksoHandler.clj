@@ -345,8 +345,7 @@
                              opiskeluoikeus)
                            (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
                   (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))))
-          (ehoks/patch-osaamisenhankkimistapa-tep-kasitelty
-            (:hankkimistapa-id herate)))
+          (ehoks/patch-oht-tep-kasitelty (:hankkimistapa-id herate)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa:" e))
         (catch ExceptionInfo e

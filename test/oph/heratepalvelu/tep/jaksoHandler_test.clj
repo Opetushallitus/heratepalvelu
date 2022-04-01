@@ -561,9 +561,9 @@
                                           :opiskeluoikeus opiskeluoikeus
                                           :koulutustoimija koulutustoimija}))
 
-(defn- mock-patch-osaamisenhankkimistapa-tep-kasitelty [hankkimistapa-id]
+(defn- mock-patch-oht-tep-kasitelty [hankkimistapa-id]
   (add-to-test-handleJaksoHerate-results
-    {:type "mock-patch-osaamisenhankkimistapa-tep-kasitelty"
+    {:type "mock-patch-oht-tep-kasitelty"
      :hankkimistapa-id hankkimistapa-id}))
 
 (deftest test-handleJaksoHerate
@@ -574,8 +574,8 @@
                   mock-check-sisaltyy-opiskeluoikeuteen?
                   oph.heratepalvelu.common/get-koulutustoimija-oid
                   mock-get-koulutustoimija-oid
-                  oph.heratepalvelu.external.ehoks/patch-osaamisenhankkimistapa-tep-kasitelty
-                  mock-patch-osaamisenhankkimistapa-tep-kasitelty
+                  oph.heratepalvelu.external.ehoks/patch-oht-tep-kasitelty
+                  mock-patch-oht-tep-kasitelty
                   oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
                   mock-get-opiskeluoikeus-catch-404
                   oph.heratepalvelu.tep.jaksoHandler/check-not-fully-keskeytynyt
@@ -621,7 +621,7 @@
                       {:oid "123.456.789"
                        :koulutustoimija "mock-koulutustoimija-oid"}
                       :koulutustoimija "mock-koulutustoimija-oid"}
-                     {:type "mock-patch-osaamisenhankkimistapa-tep-kasitelty"
+                     {:type "mock-patch-oht-tep-kasitelty"
                       :hankkimistapa-id 12345}]]
         (jh/-handleJaksoHerate {} event context)
         (is (= results (vec (reverse @test-handleJaksoHerate-results))))))))

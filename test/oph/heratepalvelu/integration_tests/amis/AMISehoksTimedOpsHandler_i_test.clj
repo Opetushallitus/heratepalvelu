@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.integration-tests.amis.AMISehoksTimedOperationsHandler-i-test
+(ns oph.heratepalvelu.integration-tests.amis.AMISehoksTimedOpsHandler-i-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler :as toh]
             [oph.heratepalvelu.integration-tests.mock-cas-client :as mcc]

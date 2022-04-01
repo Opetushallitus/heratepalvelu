@@ -7,7 +7,8 @@
   (:import (java.time LocalDate)))
 
 (deftest valid-number-test
-  (testing "Funktio valid-number? tunnistaa oikeita ja virheellisiä puhelinnumeroja"
+  (testing
+    "Funktio valid-number? tunnistaa oikeita ja virheellisiä puhelinnumeroja"
     (let [fi-phone-number "040 654 3210"
           fi-phone-number-intl-fmt "040 654 3210"
           intl-phone-number "+1 517 987 5432"
@@ -20,7 +21,8 @@
       (is (not (sh/valid-number? unicode-invalid))))))
 
 (deftest client-error-test
-  (testing "Funktio client-error? erottaa client erroreja muista HTTP-statuksista"
+  (testing
+    "Funktio client-error? erottaa client erroreja muista HTTP-statuksista"
     (let [client-error (ex-info "File not found" {:status 404})
           server-error (ex-info "Internal server error" {:status 503})]
       (is (sh/client-error? client-error))
@@ -32,7 +34,8 @@
                                 :voimassa_loppupvm "2021-09-09"}
           success              {:tila (:success c/kasittelytilat)}
           failure              {:tila (:failure c/kasittelytilat)}]
-      (is (= (sh/update-arvo-obj-sms "CREATED" "2021-09-09") success-new-loppupvm))
+      (is (= (sh/update-arvo-obj-sms "CREATED" "2021-09-09")
+             success-new-loppupvm))
       (is (= (sh/update-arvo-obj-sms "CREATED" nil) success))
       (is (= (sh/update-arvo-obj-sms "asdfads" nil) failure)))))
 

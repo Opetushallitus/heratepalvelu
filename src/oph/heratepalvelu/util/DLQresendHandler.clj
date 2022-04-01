@@ -23,12 +23,12 @@
                           (.build)))
                     (.build)))
 
-(defn- create-get-queue-url-request-builder
+(defn- create-get-queue-url-req-builder
   "Abstraktio GetQueueUrlRequest/builderin ympäri, joka helpottaa testaamista."
   []
   (GetQueueUrlRequest/builder))
 
-(defn- create-send-message-request-builder
+(defn- create-send-message-req-builder
   "Abstraktio SendMessageRequest/builderin ympäri, joka helpottaa testaamista."
   []
   (SendMessageRequest/builder))
@@ -41,13 +41,13 @@
         queue-url (.queueUrl
                     (.getQueueUrl
                       sqs-client
-                      (-> (create-get-queue-url-request-builder)
+                      (-> (create-get-queue-url-req-builder)
                           (.queueName (:queue-name env))
                           (.build))))]
     (doseq [msg messages]
       (log/info (.getBody msg))
       (try
-        (.sendMessage sqs-client (-> (create-send-message-request-builder)
+        (.sendMessage sqs-client (-> (create-send-message-req-builder)
                                      (.queueUrl queue-url)
                                      (.messageBody (.getBody msg))
                                      (.build)))

@@ -20,7 +20,7 @@
 (defn do-scan
   "Hakee TPK-nippuja tietokannasta, joissa ei ole vielä kyselylinkkiä ja jotka
   tiedonkeruukauden alkupäivämäärän perusteella kuuluvat tähän kauteen.
-  
+
   Jos edeltävän kauden vastausaika ei ole loppunut, käsittelee edeltävän kauden
   niput. Muuten käsittelee seuraavan kauden niput."
   ([] (do-scan nil))

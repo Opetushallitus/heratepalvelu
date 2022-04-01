@@ -238,7 +238,8 @@
                                  "test-hankintakoulutuksen-toteuttaja"}}
                      {:type "mock-put-item"
                       :item {:toimija_oppija [:s "3.4.5.6/56.78.34"]
-                             :tyyppi_kausi [:s "tutkinnonsuorittaneet/2021-2022"]
+                             :tyyppi_kausi
+                             [:s "tutkinnonsuorittaneet/2021-2022"]
                              :kyselylinkki [:s "kysely.linkki/123"]
                              :sahkoposti [:s "a@b.com"]
                              :suorituskieli [:s "fi"]

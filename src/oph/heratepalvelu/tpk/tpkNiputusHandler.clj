@@ -100,7 +100,7 @@
   loppupäivään asti (tai nykyiseen päivään asti, jos tiedonkeruukauden
   loppupäivä ei ole vielä tullut). Hakee vain ne jaksot, joiden
   TPK-niputuspäivämäärä ei ole vielä määritelty.
- 
+
   Jos edeltävän kauden vastausaika ei ole loppunut, niputtaa jaksoja edeltävästä
   kaudesta. Muuten niputtaa seuraavan kauden jaksot."
   [exclusive-start-key]

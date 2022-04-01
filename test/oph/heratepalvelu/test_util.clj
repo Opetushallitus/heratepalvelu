@@ -5,9 +5,11 @@
             [clojure.string :as string]
             [clj-time.core :as t])
   (:import (com.amazonaws.services.lambda.runtime.events SQSEvent)
-           (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage ScheduledEvent)
+           (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage
+                                                         ScheduledEvent)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (software.amazon.awssdk.services.dynamodb.model ConditionalCheckFailedException)))
+           (software.amazon.awssdk.services.dynamodb.model
+             ConditionalCheckFailedException)))
 
 (defn mock-gets [url & [options]]
   (cond
@@ -56,7 +58,8 @@
 
 (def dummy-opiskeluoikeus-oid "1.2.246.562.24.10442483592")
 (def dummy-request-id "1d6c30bb-a2d9-5540-aa1a-65410fc2f8f5")
-(def dummy-scheduled-resources "arn:aws:events:eu-west-1:123456789:rule/test-service-rule")
+(def dummy-scheduled-resources
+  "arn:aws:events:eu-west-1:123456789:rule/test-service-rule")
 
 (def mock-herate-sqs-message
   (doto (SQSEvent$SQSMessage.)
@@ -154,7 +157,9 @@
     (some #(log-row-has-message-and-level % msg lvl) logs)))
 
 (defn delete-test-log-file []
-  (io/delete-file (str (System/getProperty "java.io.tmpdir") "herate/herate-test.log") true))
+  (io/delete-file (str (System/getProperty "java.io.tmpdir")
+                       "herate/herate-test.log")
+                  true))
 
 (defn clean-logs [f]
   (f)

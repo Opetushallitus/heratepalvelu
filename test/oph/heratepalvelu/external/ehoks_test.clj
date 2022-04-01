@@ -146,8 +146,8 @@
           (is (= (ehoks/add-lahetys-info-to-kyselytunnus data) expected)))
         (reset! has-errored? false)))))
 
-(deftest test-patch-osaamisenhankkimistapa-tep-kasitelty
-  (testing "Varmista, että patch-osaamisenhankkimistapa-tep-kasitelty toimii"
+(deftest test-patch-oht-tep-kasitelty
+  (testing "Varmista, että patch-oht-tep-kasitelty toimii oikein"
     (with-redefs [environ.core/env {:ehoks-url "example.com/path/"}
                   oph.heratepalvelu.external.cas-client/get-service-ticket
                   mock-get-service-ticket
@@ -166,8 +166,7 @@
                                            :suffix "cas-security-check"}}
                         :content-type "application/json"
                         :as :json}}}}}]
-        (is (= (ehoks/patch-osaamisenhankkimistapa-tep-kasitelty 11235)
-               expect))))))
+        (is (= (ehoks/patch-oht-tep-kasitelty 11235) expect))))))
 
 (deftest test-get-paattyneet-tyoelamajaksot
   (testing "Varmista, että get-paattyneet-tyoelamajaksot toimii oikein"

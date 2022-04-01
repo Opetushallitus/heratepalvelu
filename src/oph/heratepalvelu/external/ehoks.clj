@@ -69,7 +69,7 @@
              (action)
              (throw e))))))
 
-(defn patch-osaamisenhankkimistapa-tep-kasitelty
+(defn patch-oht-tep-kasitelty
   "Merkitsee osaamisen hankkimistavan käsitellyksi eHOKS-palvelussa."
   [id]
   (client/patch

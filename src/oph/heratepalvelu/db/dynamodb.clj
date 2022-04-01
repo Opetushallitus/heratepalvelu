@@ -163,7 +163,7 @@
   jotka löytyvät comparison-operators -objektista. Funktion key-conds
   -argumentti seuraa tällaista syntaksia:
     {:<key> [:<op> [:<tyyppi> <value>]]}
-  
+
   Objektista options voi löytyä myös suodatusekspressio ja/tai muita ehdollisia
   parametreja:
     :index               - index, jota käytetään key-condsissa

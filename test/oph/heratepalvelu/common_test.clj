@@ -30,17 +30,22 @@
 (deftest test-check-suoritus-type
   (testing "Check suoritus type"
     (is (false? (check-suoritus-type? {:tyyppi {:koodiarvo "valma"}})))
-    (is (true? (check-suoritus-type? {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}})))
-    (is (true? (check-suoritus-type? {:tyyppi {:koodiarvo "ammatillinentutkinto"}})))))
+    (is (true? (check-suoritus-type?
+                 {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}})))
+    (is (true? (check-suoritus-type?
+                 {:tyyppi {:koodiarvo "ammatillinentutkinto"}})))))
 
 (deftest test-check-opiskeluoikeus-suoritus-types
   (testing "Check opiskeluoikeus suoritus types"
-    (is (nil? (check-opiskeluoikeus-suoritus-types? {:suoritukset [{:tyyppi {:koodiarvo "valma"}}]})))
+    (is (nil? (check-opiskeluoikeus-suoritus-types?
+                {:suoritukset [{:tyyppi {:koodiarvo "valma"}}]})))
     (is (true? (check-opiskeluoikeus-suoritus-types?
-                 {:suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]})))
+                 {:suoritukset
+                  [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]})))
     (is (true? (check-opiskeluoikeus-suoritus-types?
-                 {:suoritukset [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}
-                                {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]})))
+                 {:suoritukset
+                  [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}
+                   {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]})))
     (is (nil? (check-opiskeluoikeus-suoritus-types?
                 {:suoritukset [{:tyyppi {:koodiarvo "valma"}}
                                {:tyyppi {:koodiarvo "telma"}}]})))))
@@ -63,10 +68,10 @@
 
 (deftest test-create-nipputunniste
   (testing "Create normalized nipputunniste"
-    (is (str/starts-with?
-          (create-nipputunniste "Ääkköspaikka, Crème brûlée") "aakkospaikka_creme_brulee"))
-    (is (str/starts-with?
-          (create-nipputunniste "árvíztűrő tükörfúrógép") "arvizturo_tukorfurogep"))))
+    (is (str/starts-with? (create-nipputunniste "Ääkköspaikka, Crème brûlée")
+                          "aakkospaikka_creme_brulee"))
+    (is (str/starts-with? (create-nipputunniste "árvíztűrő tükörfúrógép")
+                          "arvizturo_tukorfurogep"))))
 
 (deftest test-check-valid-herate-date
   (testing "True if heratepvm is >= 2021-07-01"
@@ -85,7 +90,8 @@
 
 (deftest test-has-nayttotutkintoonvalmistavakoulutus
   (testing "Check has-nayttotutkintoonvalmistavakoulutus"
-    (let [oo1 {:suoritukset [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}]}
+    (let [oo1 {:suoritukset
+               [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}]}
           oo2 {:suoritukset [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]}]
       (is (true? (has-nayttotutkintoonvalmistavakoulutus? oo1)))
       (is (= nil (has-nayttotutkintoonvalmistavakoulutus? oo2))))))
