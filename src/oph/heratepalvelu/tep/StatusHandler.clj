@@ -17,7 +17,9 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(def ^:private new-changes? (atom false))
+(def ^:private new-changes?
+  "Atom, jolla pidetään kiinni siitä, onko uusia muutoksia tapahtunut."
+  (atom false))
 
 (defn -handleEmailStatus
   "Hakee nippuja, joilla on sähköpostiviestejä viestintäpalvelussa, ja päivittää

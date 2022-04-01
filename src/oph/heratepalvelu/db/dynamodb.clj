@@ -19,15 +19,18 @@
              ClientOverrideConfiguration)
            (com.amazonaws.xray.interceptors TracingInterceptor)))
 
-(def ddb-client (-> (DynamoDbClient/builder)
-                    (.region (Region/EU_WEST_1))
-                    (.overrideConfiguration
-                      (-> (ClientOverrideConfiguration/builder)
-                          (.addExecutionInterceptor (TracingInterceptor.))
-                          (.build)))
-                    (.build)))
+(def ddb-client
+  "DynamoDB client -objekti."
+  (-> (DynamoDbClient/builder)
+      (.region (Region/EU_WEST_1))
+      (.overrideConfiguration
+        (-> (ClientOverrideConfiguration/builder)
+            (.addExecutionInterceptor (TracingInterceptor.))
+            (.build)))
+      (.build)))
 
 (def ^:private comparison-operators
+  "Vertailuoperaatorit tietokantahakuja varten."
   {:eq "EQ" :ne "NE" :le "LE"
    :lt "LT" :ge "GE" :gt "GT"
    :not-null "NOT_NULL" :null "NULL"
@@ -35,6 +38,7 @@
    :begins "BEGINS_WITH" :in "IN" :between "BETWEEN"})
 
 (def ^:private attribute-types
+  "Tietotyypit DynamoDB-tietokannassa."
   {:s "s" :n "n" :b "b"
    :ss "ss" :ns "ns" :bs "bs"
    :m "m" :l "l" :bool "bool"

@@ -14,10 +14,10 @@
             [oph.heratepalvelu.external.organisaatio :as org])
   (:import (clojure.lang ExceptionInfo)))
 
-(def ^:private pwd (delay
-                     (ssm/get-secret
-                       (str "/" (:stage env)
-                            "/services/heratepalvelu/arvo-pwd"))))
+(def ^:private pwd
+  "Arvon autentikoinnin salasana."
+  (delay
+    (ssm/get-secret (str "/" (:stage env) "/services/heratepalvelu/arvo-pwd"))))
 
 (defn get-toimipiste
   "Palauttaa toimipisteen OID jos sen organisaatiotyyppi on toimipiste. Tämä

@@ -6,6 +6,7 @@
             [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]]))
 
 (def client-options
+  "Client-optioiden oletusarvot."
   {:headers {"Caller-Id" (:caller-id env)
              "CSRF"      (:caller-id env)}
    :cookies {"CSRF" {:value (:caller-id env)

@@ -16,7 +16,10 @@
   :methods [[^:static handleEmailStatus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
-(def ^:private new-changes? (atom false))
+
+(def ^:private new-changes?
+  "Atom, jolla pidetään kiinni siitä, onko uusia muutoksia tapahtunut."
+  (atom false))
 
 (defn update-ehoks-if-not-muistutus
   "Päivittää sähköpostitiedot ehoksiin lähetyksen jälkeen, jos viesti ei ole

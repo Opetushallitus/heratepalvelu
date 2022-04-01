@@ -15,12 +15,14 @@
 
 (defrecord CasClient [client params session-id])
 
-(def client (atom nil))
+(def client
+  "CAS-client -objekti (atom, joka saa sisältää nil)."
+  (atom nil))
 
-(def ^:private pwd (delay
-                     (ssm/get-secret
-                       (str "/" (:stage env)
-                            "/services/heratepalvelu/cas-pwd"))))
+(def ^:private pwd
+  "CAS-clientin autentikoinnin salasana."
+  (delay
+    (ssm/get-secret (str "/" (:stage env) "/services/heratepalvelu/cas-pwd"))))
 
 (defn init-client
   "Luo ja asentaa uuden CasClient-rekordin."
@@ -97,7 +99,9 @@
       (.toOption)
       (.get)))
 
-(def tgt (atom nil))
+(def tgt
+  "Ticket granting ticket client -objekti (atom, joka saa sisältää nil)."
+  (atom nil))
 
 (defn get-service-ticket
   "Hakee service ticketin palvelusta."

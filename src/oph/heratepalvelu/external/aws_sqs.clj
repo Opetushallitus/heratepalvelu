@@ -9,6 +9,7 @@
              SendMessageRequest)))
 
 (def ^:private sqs-client
+  "SQS-client -objekti."
   (-> (SqsClient/builder)
       (.region (Region/EU_WEST_1))
       (.build)))

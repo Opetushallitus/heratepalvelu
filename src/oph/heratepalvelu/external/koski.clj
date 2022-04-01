@@ -5,10 +5,10 @@
             [environ.core :refer [env]])
   (:import (clojure.lang ExceptionInfo)))
 
-(def ^:private pwd (delay
-                     (ssm/get-secret
-                       (str "/" (:stage env)
-                            "/services/heratepalvelu/koski-pwd"))))
+(def ^:private pwd
+  "Kosken autentikoinnin salasana."
+  (delay (ssm/get-secret
+           (str "/" (:stage env) "/services/heratepalvelu/koski-pwd"))))
 
 (defn get-opiskeluoikeus
   "Hakee opiskeluoikeuden OID:n perusteella."

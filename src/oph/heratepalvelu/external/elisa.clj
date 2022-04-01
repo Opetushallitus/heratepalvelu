@@ -9,10 +9,10 @@
   (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private apikey
-  (delay (ssm/get-secret
-           (str "/"
-                (:stage env)
-                "/services/heratepalvelu/elisa-sms-dialogi-key"))))
+  "Elisan API key."
+  (delay
+    (ssm/get-secret
+      (str "/" (:stage env) "/services/heratepalvelu/elisa-sms-dialogi-key"))))
 
 (defn msg-body
   "Luo työpaikkaohjaajakyselyn viestin tekstin."

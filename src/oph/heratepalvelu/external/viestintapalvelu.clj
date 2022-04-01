@@ -7,6 +7,7 @@
   (:use hiccup.core))
 
 (def horizontal-line
+  "Vaakasuora linja HTML-sähköpostiviestissä."
   [:table {:cellspacing "0"
            :cellpadding "0"
            :border "0"

@@ -15,6 +15,7 @@
            (java.util UUID)))
 
 (s/defschema herate-schema
+  "AMIS-herätteen schema."
   {:ehoks-id           s/Num
    :kyselytyyppi       s/Str
    :opiskeluoikeus-oid s/Str
@@ -23,6 +24,7 @@
    :alkupvm            s/Str})
 
 (def kasittelytilat
+  "Heräteviestien lähetyksien käsittelytilat."
   {:ei-lahetetty "ei_lahetetty"
    :viestintapalvelussa "viestintapalvelussa"
    :vastausaika-loppunut "vastausaika_loppunut_ennen_lahetysta"
