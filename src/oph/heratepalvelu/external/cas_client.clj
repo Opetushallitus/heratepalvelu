@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.cas-client
+  "Wrapperit CAS-clientin ympäri."
   (:refer-clojure :exclude [get])
   (:require [clj-cas.cas :refer :all]
             [clj-cas.client :as cl]

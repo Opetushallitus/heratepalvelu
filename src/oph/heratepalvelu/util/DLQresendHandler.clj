@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.util.DLQresendHandler
+  "Lähettää AMISin dead letter queuessa olevia herätteitä uudestaan."
   (:require [environ.core :refer [env]]
             [clojure.tools.logging :as log])
   (:import (software.amazon.awssdk.services.sqs SqsClient)
@@ -15,13 +16,15 @@
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(def sqs-client (-> (SqsClient/builder)
-                    (.region (Region/EU_WEST_1))
-                    (.overrideConfiguration
-                      (-> (ClientOverrideConfiguration/builder)
-                          (.addExecutionInterceptor (TracingInterceptor.))
-                          (.build)))
-                    (.build)))
+(def sqs-client
+  "SQS-client -objekti."
+  (-> (SqsClient/builder)
+      (.region (Region/EU_WEST_1))
+      (.overrideConfiguration
+        (-> (ClientOverrideConfiguration/builder)
+            (.addExecutionInterceptor (TracingInterceptor.))
+            (.build)))
+      (.build)))
 
 (defn- create-get-queue-url-req-builder
   "Abstraktio GetQueueUrlRequest/builderin ympäri, joka helpottaa testaamista."

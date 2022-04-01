@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISherateHandler
+  "Käsittelee SQS:stä saatuja AMIS-herätteitä."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]

@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.amis.archiveHerateTable
+  "Käsittelee AMISin herätetaulun arkistointia."
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.db.dynamodb :as ddb]))

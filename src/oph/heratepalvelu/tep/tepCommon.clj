@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tep.tepCommon
+  "Yhteiset funktiot TEP-puolelle."
   (:require [clojure.string :as s]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]

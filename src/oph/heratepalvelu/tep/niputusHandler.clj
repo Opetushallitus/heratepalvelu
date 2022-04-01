@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tep.niputusHandler
+  "Käsittelee alustavia nippuja ja luo niille kyselylinkeille."
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.log.caller-log :refer :all]
@@ -12,8 +13,6 @@
            (clojure.lang ExceptionInfo)
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
-
-;; Käsittelee alustavia nippuja ja luo niille kyselylinkeille.
 
 (gen-class
   :name "oph.heratepalvelu.tep.niputusHandler"

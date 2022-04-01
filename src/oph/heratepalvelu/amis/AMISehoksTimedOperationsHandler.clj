@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler
+  "Käsittelee ajastettuja operaatioita AMIS-puolella."
   (:require [clojure.tools.logging :as log]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.ehoks :as ehoks]))

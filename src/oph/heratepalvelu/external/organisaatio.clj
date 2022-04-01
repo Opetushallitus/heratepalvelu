@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.organisaatio
+  "Wrapperit organisaatiopalvelun REST-rajapinnan ympäri."
   (:require [oph.heratepalvelu.external.http-client :as client]
             [environ.core :refer [env]]
             [clojure.tools.logging :as log])

@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.aws-xray
+  "Wrapperit X-Rayn ympäri."
   (:require [clojure.string :as str])
   (:import (com.amazonaws.xray AWSXRay)))
 

@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.ehoks
+  "Wrapperit eHOKSin REST-rajapinnan ympäri."
   (:require [cheshire.core :refer [generate-string]]
             [environ.core :refer [env]]
             [oph.heratepalvelu.external.cas-client :as cas]

@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler
+  "Käsittelee TPK:n niputusta ja tallennusta herätepalvelun tietokantaan."
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]

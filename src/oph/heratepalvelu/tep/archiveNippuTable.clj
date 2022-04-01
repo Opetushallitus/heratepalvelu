@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tep.archiveNippuTable
+  "Käsittelee TEPin nipputaulun arkistointia."
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.db.dynamodb :as ddb]))

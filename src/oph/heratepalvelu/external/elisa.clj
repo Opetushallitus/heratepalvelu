@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.elisa
+  "Apufunktiot SMS-viestien luomiseen ja lähettämiseen."
   (:require [cheshire.core :refer [generate-string]]
             [clojure.string :as str]
             [clojure.tools.logging :as log]

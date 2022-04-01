@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.http-client
+  "Wrapperit HTTP-clientin ympäri."
   (:refer-clojure :exclude [get])
   (:require [clj-http.client :as client]
             [environ.core :refer [env]]

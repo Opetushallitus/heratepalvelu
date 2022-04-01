@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tpk.tpkArvoCallHandler
+  "Hakee työpaikkakyselynipuille kyselylinkkejä Arvosta."
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
@@ -8,8 +9,6 @@
             [oph.heratepalvelu.tpk.tpkCommon :as tpkc])
   (:import (clojure.lang ExceptionInfo)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
-
-;; Hakee työpaikkakyselynipuille kyselylinkkejä Arvosta.
 
 (gen-class :name "oph.heratepalvelu.tpk.tpkArvoCallHandler"
            :methods

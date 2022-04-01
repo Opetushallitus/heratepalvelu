@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISherateEmailHandler
+  "Lähettää herätteiden sähköpostiviestit viestintäpalveluun."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
@@ -8,8 +9,6 @@
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
-
-;; Lähettää herätteiden sähköpostiviestit viestintäpalveluun.
 
 (gen-class
   :name "oph.heratepalvelu.amis.AMISherateEmailHandler"

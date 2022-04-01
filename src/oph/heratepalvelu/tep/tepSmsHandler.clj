@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tep.tepSmsHandler
+  "Käsittelee nippuihin liittyvät SMS-lähetykset."
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
@@ -11,8 +12,6 @@
            (com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException)
            (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
-
-;; Käsittelee nippuihin liittyvät SMS-lähetykset
 
 (gen-class
   :name "oph.heratepalvelu.tep.tepSmsHandler"

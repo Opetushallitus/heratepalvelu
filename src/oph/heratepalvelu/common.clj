@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.common
+  "Yhteiset funktiot herätepalvelulle."
   (:require [clj-time.coerce :as c]
             [clj-time.format :as f]
             [clojure.string :as str]
@@ -242,6 +243,7 @@
       (log/error e))))
 
 (def herate-checker
+  "Herätescheman tarkistusfunktio."
   (s/checker herate-schema))
 
 (defn alku

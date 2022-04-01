@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tep.EmailMuistutusHandler
+  "Käsittelee ja lähettää TEP-sähköpostimuistutuksia"
   (:require [cheshire.core :refer [parse-string]]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
@@ -10,8 +11,6 @@
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
-
-;; Käsittelee ja lähettää TEP-sähköpostimuistutuksia
 
 (gen-class
   :name "oph.heratepalvelu.tep.EmailMuistutusHandler"

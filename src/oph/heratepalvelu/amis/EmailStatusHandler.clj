@@ -1,4 +1,6 @@
 (ns oph.heratepalvelu.amis.EmailStatusHandler
+  "Hakee viestintäpalvelussa olevian sähköpostien tilat viestintäpalvelusta ja
+  ja päivittää ne tietokantaan."
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
@@ -8,9 +10,6 @@
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
-
-;; Hakee viestintäpalvelussa olevian sähköpostien tilat viestintäpalvelusta ja
-;; ja päivittää ne tietokantaan.
 
 (gen-class
   :name "oph.heratepalvelu.amis.EmailStatusHandler"

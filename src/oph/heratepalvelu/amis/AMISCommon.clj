@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISCommon
+  "Yhteiset funktiot AMIS-puolelle."
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]

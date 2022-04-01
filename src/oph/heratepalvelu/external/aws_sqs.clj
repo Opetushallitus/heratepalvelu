@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.aws-sqs
+  "Wrapperit SQS:n ympäri."
   (:require [environ.core :refer [env]]
             [clojure.data.json :as json]
             [clojure.tools.logging :as log])

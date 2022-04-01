@@ -1,4 +1,6 @@
 (ns oph.heratepalvelu.amis.AMISMuistutusHandler
+  "Käsittelee sähköpostimuistutuksia ja lähettää viestit viestintäpalveluun, jos
+  kyselyyn ei ole vastattu ja vastausaika ei ole umpeutunut."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
@@ -8,9 +10,6 @@
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
-
-;; Käsittelee sähköpostimuistutuksia ja lähettää viestit viestintäpalveluun, jos
-;; kyselyyn ei ole vastattu ja vastausaika ei ole umpeutunut.
 
 (gen-class
   :name "oph.heratepalvelu.amis.AMISMuistutusHandler"
@@ -89,7 +88,9 @@
                    {:index "muistutusIndex"
                     :limit 50}))
 
-(defn -handleSendAMISMuistutus [this event context]
+(defn -handleSendAMISMuistutus
+  "Käsittelee AMISin muistutusviestien lähetystä."
+  [this event context]
   (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
   (loop [muistutettavat1 (query-muistutukset 1)
          muistutettavat2 (query-muistutukset 2)]

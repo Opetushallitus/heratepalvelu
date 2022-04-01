@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.tep.StatusHandler
+  "Käsittelee viestintäpalvelussa olevien viestien tiloja."
   (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]

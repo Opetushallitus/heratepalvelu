@@ -1,4 +1,6 @@
 (ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler
+  "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
+  tietokantaan."
   (:require [clj-time.coerce :as c]
             [clj-time.core :as t]
             [clj-time.format :as f]
@@ -12,9 +14,6 @@
             [oph.heratepalvelu.log.caller-log :refer :all]
             [schema.core :as s])
   (:import (clojure.lang ExceptionInfo)))
-
-;; Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
-;; tietokantaan.
 
 (gen-class
   :name "oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler"

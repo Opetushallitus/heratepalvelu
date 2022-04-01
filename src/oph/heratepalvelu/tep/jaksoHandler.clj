@@ -1,4 +1,6 @@
 (ns oph.heratepalvelu.tep.jaksoHandler
+  "Käsittelee työpaikkajaksoja, tallentaa niitä tietokantaan, ja valmistaa niitä
+  niputukseen."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
@@ -17,9 +19,6 @@
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (java.time LocalDate DayOfWeek)))
 
-;; Käsittelee työpaikkajaksoja, tallentaa niitä tietokantaan, ja valmistaa niitä
-;; niputukseen.
-
 (gen-class
   :name "oph.heratepalvelu.tep.jaksoHandler"
   :methods [[^:static handleJaksoHerate
@@ -27,10 +26,12 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (s/defschema tep-herate-keskeytymisajanjakso-schema
+  "Keskeytymisajanjakson schema."
   {:alku                   (s/conditional not-empty s/Str)
    (s/optional-key :loppu) (s/maybe s/Str)})
 
 (s/defschema tep-herate-schema
+  "TEP-herätteen schema."
   {:tyyppi                 (s/conditional not-empty s/Str)
    :alkupvm                (s/conditional not-empty s/Str)
    :loppupvm               (s/conditional not-empty s/Str)
@@ -53,6 +54,7 @@
    (s/maybe [tep-herate-keskeytymisajanjakso-schema])})
 
 (def tep-herate-checker
+  "TEP-herätescheman tarkistusfunktio."
   (s/checker tep-herate-schema))
 
 (defn check-duplicate-hankkimistapa

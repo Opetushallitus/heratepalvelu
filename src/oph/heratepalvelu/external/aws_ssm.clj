@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.aws-ssm
+  "Wrapperit SSM:n ympäri."
   (:import (software.amazon.awssdk.services.ssm SsmClient)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.services.ssm.model GetParameterRequest)

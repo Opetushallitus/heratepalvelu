@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.arvo
+  "Wrapperit Arvon REST-rajapinnan ympäri."
   (:require [cheshire.core :refer [generate-string]]
             [clj-http.util :as util]
             [clj-time.core :as t]

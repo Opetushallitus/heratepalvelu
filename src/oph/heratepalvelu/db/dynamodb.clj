@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.db.dynamodb
+  "Funktiot, joilla päivitetään tietokanta ja haetaan siitä tietoja."
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]])
   (:import (clojure.lang Reflector)

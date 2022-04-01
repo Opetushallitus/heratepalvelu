@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.koski
+  "Wrapperit Kosken REST-rajapinnan ympäri."
   (:require [oph.heratepalvelu.external.http-client :as client]
             [oph.heratepalvelu.external.aws-ssm :as ssm]
             [environ.core :refer [env]])

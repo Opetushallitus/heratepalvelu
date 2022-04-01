@@ -1,4 +1,5 @@
 (ns oph.heratepalvelu.external.viestintapalvelu
+  "Wrapperit ja funktiot viestien luomiseen viestintäpalvelulle."
   (:require [clojure.string :as str]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
