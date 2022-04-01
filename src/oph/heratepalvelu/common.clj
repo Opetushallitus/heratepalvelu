@@ -46,7 +46,7 @@
 (defn rand-str
   "Luo stringin, jossa on len randomisti valittua isoa kirjainta."
   [len]
-  (apply str (take len (repeatedly #(char (+ (rand 26) 65))))))
+  (str/join (repeatedly len #(char (+ (rand 26) 65)))))
 
 (defn generate-uuid
   "Abstraktio UUID/randomUUID:n ympäri, joka helpottaa testaamista."
@@ -118,8 +118,8 @@
   [alkupvm]
   (let [[year month] (str/split alkupvm #"-")]
     (if (> (Integer/parseInt month) 6)
-      (str year "-" (+ (Integer/parseInt year) 1))
-      (str (- (Integer/parseInt year) 1) "-" year))))
+      (str year "-" (inc (Integer/parseInt year)))
+      (str (dec (Integer/parseInt year)) "-" year))))
 
 (defn check-suoritus-type?
   "Varmistaa, että suorituksen tyyppi on joko ammatillinen tutkinto tai
@@ -174,8 +174,8 @@
     (if (< day 16)
       (LocalDate/of year month 16)
       (if (= 12 month)
-        (LocalDate/of (+ year 1) 1 1)
-        (LocalDate/of year (+ month 1) 1)))))
+        (LocalDate/of (inc year) 1 1)
+        (LocalDate/of year (inc month) 1)))))
 
 (defn- deaccent-string
   "Poistaa diakriittiset merkit stringistä ja palauttaa muokatun stringin."

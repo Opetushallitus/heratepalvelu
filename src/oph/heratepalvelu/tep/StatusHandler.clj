@@ -40,7 +40,7 @@
             new-loppupvm (tc/get-new-loppupvm nippu)]
         (if tila
           (do
-            (when (not @new-changes?)
+            (when-not @new-changes?
               (reset! new-changes? true))
             (try
               (when-not (or (str/includes? (:kyselylinkki nippu) ",")

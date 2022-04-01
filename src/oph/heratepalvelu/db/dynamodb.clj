@@ -199,9 +199,7 @@
                                                (:expr-attr-vals options))))
                                          (.build)))
          items (.items response)]
-     (into [] (map
-                map-attribute-values-to-vals
-                items)))))
+     (vec (map map-attribute-values-to-vals items)))))
 
 (defn- create-update-item-request-builder
   "Abstraktio UpdateItemRequest/builderin ympäri, joka helpottaa testaamista."

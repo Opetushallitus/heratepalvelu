@@ -146,7 +146,7 @@
            pvm alku-date
            tilat voimassa
            keskeytymisajanjaksot sorted-keskeytymisajanjaksot]
-      (if (not (.isAfter pvm loppu-date))
+      (if-not (.isAfter pvm loppu-date)
         (let [first-kjakso (first keskeytymisajanjaksot)
               new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
                                 (= (.getDayOfWeek pvm) DayOfWeek/SUNDAY)
@@ -160,7 +160,7 @@
                                       (not (.isAfter pvm
                                                      (:loppu first-kjakso))))))
                           kesto
-                          (+ 1 kesto))
+                          (inc kesto))
               new-pvm (.plusDays pvm 1)]
           (recur new-kesto
                  new-pvm
@@ -174,7 +174,7 @@
                    (rest keskeytymisajanjaksot)
                    keskeytymisajanjaksot)))
         (if (and (some? (:osa-aikaisuus herate))
-                 (< 0   (:osa-aikaisuus herate))
+                 (pos?  (:osa-aikaisuus herate))
                  (> 100 (:osa-aikaisuus herate)))
           (int (Math/ceil (/ (* kesto (:osa-aikaisuus herate)) 100)))
           kesto)))))

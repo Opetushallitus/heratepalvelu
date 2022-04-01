@@ -26,9 +26,8 @@
   (let [oid (:oid (:toimipiste suoritus))
         org (org/get-organisaatio oid)
         org-tyypit (:tyypit org)]
-    (if (some #{"organisaatiotyyppi_03"} org-tyypit)
-      oid
-      nil)))
+    (when (some #{"organisaatiotyyppi_03"} org-tyypit)
+      oid)))
 
 (defn get-osaamisalat
   "Hakee voimassa olevat osaamisalat suorituksesta."

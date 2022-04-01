@@ -14,8 +14,7 @@
   "Muuttaa headersit default optioiden headers-kenttään ja yhdistää default
   optiot ja kutsujan antamat optiot."
   [options]
-  (merge (assoc client-options :headers (merge (:headers client-options)
-                                               (:headers options)))
+  (merge (update-in client-options [:headers] merge (:headers options))
          (dissoc options :headers)))
 
 (defn get

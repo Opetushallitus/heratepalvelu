@@ -63,7 +63,7 @@
             tila (vp/convert-email-status status)]
         (if tila
           (do
-            (when (not @new-changes?)
+            (when-not @new-changes?
               (reset! new-changes? true))
             (try
               (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)

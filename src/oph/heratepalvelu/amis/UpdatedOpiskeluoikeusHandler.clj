@@ -120,7 +120,7 @@
     (log/info "Käsitellään" last-checked "jälkeen muuttuneet opiskeluoikeudet")
     (loop [opiskeluoikeudet (k/get-updated-opiskeluoikeudet last-checked
                                                             last-page)
-           next-page (+ last-page 1)]
+           next-page (inc last-page)]
       (if (seq opiskeluoikeudet)
         (do (doseq [opiskeluoikeus opiskeluoikeudet]
               (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
@@ -155,12 +155,12 @@
                       (log/info "Ei osaamisen hankkimisen tarvetta hoksissa"
                                 (:id hoks)))))))
             (log/info "Käsitelty" (count opiskeluoikeudet)
-                      "opiskeluoikeutta, sivu" (- next-page 1))
+                      "opiskeluoikeutta, sivu" (dec next-page))
             (update-last-page next-page)
             (when (< 120000 (.getRemainingTimeInMillis context))
               (recur
                 (k/get-updated-opiskeluoikeudet last-checked next-page)
-                (+ next-page 1))))
+                (inc next-page))))
         (do
           (update-last-page 0)
           (update-last-checked (c/from-long start-time)))))))

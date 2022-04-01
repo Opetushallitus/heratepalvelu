@@ -12,11 +12,10 @@
   ei ole vastattu. Palauttaa muuten nil."
   ([nippu] (get-new-loppupvm nippu (c/local-date-now)))
   ([nippu date]
-   (if (or (= (:kasittelytila nippu) (:success c/kasittelytilat))
-           (= (:kasittelytila nippu) (:vastattu c/kasittelytilat))
-           (= (:sms_kasittelytila nippu) (:success c/kasittelytilat))
-           (= (:sms_kasittelytila nippu) (:vastattu c/kasittelytilat)))
-     nil
+   (when-not (or (= (:kasittelytila nippu) (:success c/kasittelytilat))
+                 (= (:kasittelytila nippu) (:vastattu c/kasittelytilat))
+                 (= (:sms_kasittelytila nippu) (:success c/kasittelytilat))
+                 (= (:sms_kasittelytila nippu) (:vastattu c/kasittelytilat)))
      (let [new-loppupvm (.plusDays date 30)
            takaraja (.plusDays (c/to-date (:niputuspvm nippu)) 60)]
        (str (if (.isBefore takaraja new-loppupvm) takaraja new-loppupvm))))))
@@ -50,8 +49,7 @@
   perusteella."
   [jaksot]
   (try
-    (seq (into #{} (map #(:nimi (org/get-organisaatio (:oppilaitos %1)))
-                        jaksot)))
+    (seq (set (map #(:nimi (org/get-organisaatio (:oppilaitos %1))) jaksot)))
     (catch Exception e
       (log/error "Virhe kutsussa organisaatiopalveluun")
       (log/error e))))
