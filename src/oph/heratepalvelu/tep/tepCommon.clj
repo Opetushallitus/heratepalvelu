@@ -6,20 +6,21 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.organisaatio :as org])
-  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
+  (:import (java.time LocalDate)
+           (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (defn get-new-loppupvm
   "Laskee uuden loppupäivämäärän nipulle, jos kyselyä ei ole lähetetty ja siihen
   ei ole vastattu. Palauttaa muuten nil."
   ([nippu] (get-new-loppupvm nippu (c/local-date-now)))
-  ([nippu date]
+  ([nippu ^LocalDate date]
    (when-not (or (= (:kasittelytila nippu) (:success c/kasittelytilat))
                  (= (:kasittelytila nippu) (:vastattu c/kasittelytilat))
                  (= (:sms_kasittelytila nippu) (:success c/kasittelytilat))
                  (= (:sms_kasittelytila nippu) (:vastattu c/kasittelytilat)))
      (let [new-loppupvm (.plusDays date 30)
-           takaraja (.plusDays (c/to-date (:niputuspvm nippu)) 60)]
-       (str (if (.isBefore takaraja new-loppupvm) takaraja new-loppupvm))))))
+           takaraja (.plusDays (LocalDate/parse (:niputuspvm nippu)) 60)]
+       (str (if (c/is-before takaraja new-loppupvm) takaraja new-loppupvm))))))
 
 (defn get-jaksot-for-nippu
   "Hakee nippuun liittyvät jaksot tietokannasta."

@@ -22,12 +22,12 @@
 (defn- mock-client-patch-with-error [uri options]
   (if has-errored?
     (mock-general-client-call "patch" uri options)
-    (throw (ex-info {:type "random-error"}))))
+    (throw (ex-info "some error" {:type "random-error"}))))
 
 (defn- mock-client-post-with-error [uri options]
   (if has-errored?
     (mock-general-client-call "post" uri options)
-    (throw (ex-info {:type "random-error"}))))
+    (throw (ex-info "some error" {:type "random-error"}))))
 
 (defn- mock-get-service-ticket [service suffix]
   {:type "cas-service-ticket" :service service :suffix suffix})

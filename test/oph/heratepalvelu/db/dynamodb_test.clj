@@ -103,35 +103,10 @@
         (is (= (ddb/build-condition test-values-2) results-2))
         (is (= (ddb/build-condition test-values-3) results-3))))))
 
-(definterface IMockAttributeValue
-  (b [])
-  (bool [])
-  (bs [])
-  (l [])
-  (m [])
-  (n [])
-  (ns [])
-  (nul [])
-  (s [])
-  (ss []))
-
-(deftype MockAttributeValue [datatype value]
-  IMockAttributeValue
-  (b [this] (if (= datatype "b") value nil))
-  (bool [this] (if (= datatype "bool") value nil))
-  (bs [this] (if (= datatype "bs") value nil))
-  (l [this] (if (= datatype "l") value nil))
-  (m [this] (if (= datatype "m") value nil))
-  (n [this] (if (= datatype "n") value nil))
-  (ns [this] (if (= datatype "ns") value nil))
-  (nul [this] (if (= datatype "nul") value nil))
-  (s [this] (if (= datatype "s") value nil))
-  (ss [this] (if (= datatype "ss") value nil)))
-
 (deftest test-get-value
   (testing "Varmista, että get-value toimii oikein"
-    (is (= (ddb/get-value (MockAttributeValue. "n" 123)) 123))
-    (is (= (ddb/get-value (MockAttributeValue. "s" "asdf")) "asdf"))))
+    (is (= (ddb/get-value (ddb/to-attribute-value :n 123)) 123))
+    (is (= (ddb/get-value (ddb/to-attribute-value :s "asdf")) "asdf"))))
 
 (definterface IMockQueryResponse (items []))
 

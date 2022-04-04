@@ -6,7 +6,9 @@
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [schema.core :as s])
-  (:import (com.fasterxml.jackson.core JsonParseException)
+  (:import (com.amazonaws.services.lambda.runtime.events SQSEvent
+                                                         SQSEvent$SQSMessage)
+           (com.fasterxml.jackson.core JsonParseException)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
 (gen-class
@@ -36,10 +38,10 @@
 
 (defn -handleDeleteTunnus
   "Käsittelee poistettavan tunnuksen ja poistaa sen tietokannasta."
-  [this event context]
+  [this ^SQSEvent event context]
   (log-caller-details-sqs "handleDeleteTunnus" context)
   (let [messages (seq (.getRecords event))]
-    (doseq [msg messages]
+    (doseq [^SQSEvent$SQSMessage msg messages]
       (try
         (let [herate (parse-string (.getBody msg) true)
               tunnus-checked (delete-tunnus-checker herate)]

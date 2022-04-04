@@ -12,12 +12,14 @@
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [schema.core :as s])
-  (:import (com.fasterxml.jackson.core JsonParseException)
-           (clojure.lang ExceptionInfo)
-           (software.amazon.awssdk.services.dynamodb.model
-             ConditionalCheckFailedException)
+  (:import (clojure.lang ExceptionInfo)
+           (com.amazonaws.services.lambda.runtime.events SQSEvent
+                                                         SQSEvent$SQSMessage)
+           (com.fasterxml.jackson.core JsonParseException)
+           (java.time LocalDate DayOfWeek)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (java.time LocalDate DayOfWeek)))
+           (software.amazon.awssdk.services.dynamodb.model
+             ConditionalCheckFailedException)))
 
 (gen-class
   :name "oph.heratepalvelu.tep.jaksoHandler"
@@ -84,8 +86,8 @@
   (let [tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
         voimassa (reduce
                    (fn [res next]
-                     (if (.isBefore (LocalDate/parse (:alku next))
-                                    (LocalDate/parse loppupvm))
+                     (if (c/is-before (LocalDate/parse (:alku next))
+                                      (LocalDate/parse loppupvm))
                        next
                        (reduced res)))
                    (sort-by :alku tilat))
@@ -112,8 +114,8 @@
   (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
     (or (empty? kjaksot)
         (not (:loppu (last kjaksot)))
-        (.isAfter (LocalDate/parse (:loppupvm herate))
-                  (:loppu (last kjaksot))))))
+        (c/is-after (LocalDate/parse (:loppupvm herate))
+                    (:loppu (last kjaksot))))))
 
 (defn check-open-keskeytymisajanjakso
   "Palauttaa true, jos TEP-jakson viimeisellä keskeytymisajanjaksolla ei ole
@@ -136,8 +138,8 @@
                           (sort-by :alku oo-tilat))
         voimassa (reduce
                    (fn [res next]
-                     (if (and (.isBefore (:alku (first res)) alku-date)
-                              (not (.isAfter (:alku next) alku-date)))
+                     (if (and (c/is-before (:alku (first res)) alku-date)
+                              (not (c/is-after (:alku next) alku-date)))
                        (rest res)
                        (reduced res)))
                    sorted-tilat
@@ -148,7 +150,7 @@
            pvm alku-date
            tilat voimassa
            keskeytymisajanjaksot sorted-keskeytymisajanjaksot]
-      (if-not (.isAfter pvm loppu-date)
+      (if-not (c/is-after pvm loppu-date)
         (let [first-kjakso (first keskeytymisajanjaksot)
               new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
                                 (= (.getDayOfWeek pvm) DayOfWeek/SUNDAY)
@@ -157,22 +159,24 @@
                                 (= "loma" (:tila (first tilat)))
                                 (and
                                   (some? first-kjakso)
-                                  (not (.isBefore pvm (:alku first-kjakso)))
+                                  (not (c/is-before pvm (:alku first-kjakso)))
                                   (or (nil? (:loppu first-kjakso))
-                                      (not (.isAfter pvm
-                                                     (:loppu first-kjakso))))))
+                                      (not (c/is-after
+                                             pvm
+                                             (:loppu first-kjakso))))))
                           kesto
                           (inc kesto))
               new-pvm (.plusDays pvm 1)]
           (recur new-kesto
                  new-pvm
                  (if (and (some? (second tilat))
-                          (not (.isAfter (:alku (second tilat)) new-pvm)))
+                          (not (c/is-after (:alku (second tilat)) new-pvm)))
                    (rest tilat)
                    tilat)
                  (if (and (some? (second keskeytymisajanjaksot))
-                          (not (.isAfter (:alku (second keskeytymisajanjaksot))
-                                         new-pvm)))
+                          (not (c/is-after
+                                 (:alku (second keskeytymisajanjaksot))
+                                 new-pvm)))
                    (rest keskeytymisajanjaksot)
                    keskeytymisajanjaksot)))
         (if (and (some? (:osa-aikaisuus herate))
@@ -328,10 +332,10 @@
   "Käsittelee jaksoherätteet, jotka eHOKS-palvelu lähettää SQS:in kautta. Tekee
   joitakin tarkistaksia ja tallentaa herätteen tietokantaan, jos testit
   läpäistään."
-  [this event context]
+  [this ^SQSEvent event context]
   (log-caller-details-sqs "handleTPOherate" context)
   (let [messages (seq (.getRecords event))]
-    (doseq [msg messages]
+    (doseq [^SQSEvent$SQSMessage msg messages]
       (try
         (let [herate (parse-string (.getBody msg) true)
               opiskeluoikeus (koski/get-opiskeluoikeus-catch-404

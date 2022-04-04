@@ -29,7 +29,7 @@
   ;; heräte on saatu indexin kautta, joka ei sisällä kaikkia kenttiä.
   (let [full-herate (ddb/get-item {:toimija_oppija [:s (:toimija_oppija herate)]
                                    :tyyppi_kausi [:s (:tyyppi_kausi herate)]})]
-    (when-not (.contains [1 2] (:muistutukset full-herate))
+    (when-not (contains? #{1 2} (:muistutukset full-herate))
       (c/send-lahetys-data-to-ehoks
         (:toimija_oppija herate)
         (:tyyppi_kausi herate)
@@ -57,7 +57,7 @@
 
 (defn -handleEmailStatus
   "Päivittää viestintäpalvelussa olevien sähköpostien tilat tietokantaan."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
   (loop [heratteet (do-query)]
     (doseq [herate heratteet]

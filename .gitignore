@@ -1,6 +1,7 @@
 *.class
 *.iml
 *.jar
+.eastwood
 .idea
 .serverless
 .nrepl-port

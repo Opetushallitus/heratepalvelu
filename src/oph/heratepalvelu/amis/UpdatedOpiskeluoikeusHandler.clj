@@ -105,17 +105,16 @@
 (defn -handleUpdatedOpiskeluoikeus
   "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
   tietokantaan."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus" event context)
   (let [start-time (System/currentTimeMillis)
-        last-checked
-        (:value (ddb/get-item
-                  {:key [:s "opiskeluoikeus-last-checked"]}
-                  (:metadata-table env)))
-        last-page
-        (Integer. (:value (ddb/get-item
-                            {:key [:s "opiskeluoikeus-last-page"]}
-                            (:metadata-table env))))]
+        last-checked (:value (ddb/get-item
+                               {:key [:s "opiskeluoikeus-last-checked"]}
+                               (:metadata-table env)))
+        last-page (Integer/valueOf
+                    ^String (:value (ddb/get-item
+                                      {:key [:s "opiskeluoikeus-last-page"]}
+                                      (:metadata-table env))))]
     (log/info "Käsitellään" last-checked "jälkeen muuttuneet opiskeluoikeudet")
     (loop [opiskeluoikeudet (k/get-updated-opiskeluoikeudet last-checked
                                                             last-page)

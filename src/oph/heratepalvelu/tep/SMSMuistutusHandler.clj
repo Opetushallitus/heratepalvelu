@@ -79,7 +79,7 @@
 
 (defn -handleSendSMSMuistutus
   "Hakee SMS-muistutettavia nippuja tietokannasta ja lähettää viestejä."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendSMSMuistutus" event context)
   (loop [muistutettavat (query-muistutukset)]
     (sendSmsMuistutus muistutettavat)

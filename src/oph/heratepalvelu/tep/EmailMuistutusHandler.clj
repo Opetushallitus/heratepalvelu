@@ -99,7 +99,7 @@
 
 (defn -handleSendEmailMuistutus
   "Käsittelee muistettavia nippuja."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
   (loop [muistutettavat (query-muistutukset)]
     (sendEmailMuistutus muistutettavat)

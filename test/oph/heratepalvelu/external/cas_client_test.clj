@@ -80,7 +80,7 @@
 
 (defn- mock-clj-http-client-request [params]
   (swap! mock-clj-http-client-request-count inc)
-  {:status (if (.contains (:url params) "302") 302 200) :params params})
+  {:status (if (.contains ^String (:url params) "302") 302 200) :params params})
 
 (deftest test-cas-http
   (testing "Varmista, että cas-http toimii oikein"

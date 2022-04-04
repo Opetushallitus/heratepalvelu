@@ -1,12 +1,13 @@
 (ns oph.heratepalvelu.tep.tepCommon-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.tep.tepCommon :as tc]))
+            [oph.heratepalvelu.tep.tepCommon :as tc])
+  (:import (java.time LocalDate)))
 
 (deftest get-new-loppupvm-test
   (testing "Varmistaa, että get-new-loppupvm palauttaa oikean päivämäärän"
     (let [date-str "2021-09-15"
-          date (c/to-date date-str)
+          date (LocalDate/of 2021 9 15)
           email-sent {:kasittelytila (:success c/kasittelytilat)}
           email-vastattu {:kasittelytila (:vastattu c/kasittelytilat)}
           sms-sent {:sms_kasittelytila (:success c/kasittelytilat)}

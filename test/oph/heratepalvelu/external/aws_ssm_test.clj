@@ -47,4 +47,4 @@
        oph.heratepalvelu.external.aws-ssm/create-get-parameter-request-builder
        (fn [] (MockGetParameterRequestBuilder. {}))]
       (is (= (ssm/get-secret "random-secret") "asdf"))
-      (is @saved-results {:name "random-secret" :withDecryption true}))))
+      (is (= @saved-results {:name "random-secret" :withDecryption true})))))

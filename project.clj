@@ -31,12 +31,14 @@
                          [org.apache.logging.log4j/log4j-api "2.17.0"]
                          [org.apache.logging.log4j/log4j-core "2.17.0"]
                          [org.apache.logging.log4j/log4j-slf4j-impl "2.17.0"]]
-  :plugins [[lein-bikeshed "0.5.2"]
+  :plugins [[jonase/eastwood "1.2.3"]
+            [lein-bikeshed "0.5.2"]
             [lein-cljfmt "0.8.0"]
             [lein-kibit "0.1.8"]]
   :aliases {"checkall" ["do"
                         ["kibit"]
                         ["bikeshed"]
+                        ["eastwood"]
                         ["cljfmt" "check"]]}
   :cljfmt {:indents {cond->       [[:inner 0]]
                      definterface [[:inner 0]]

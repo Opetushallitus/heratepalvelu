@@ -5,12 +5,12 @@
 
 (defn get-kausi-alkupvm
   "Laske alkupäivämäärän tiedonkeruukaudelle, johon päivämäärä kuuluu."
-  [pvm]
+  [^LocalDate pvm]
   (LocalDate/of (.getYear pvm) (if (<= (.getMonthValue pvm) 6) 1 7) 1))
 
 (defn get-kausi-loppupvm
   "Laske loppupäivämäärän tiedonkeruukaudelle, johon päivämäärä kuuluu."
-  [pvm]
+  [^LocalDate pvm]
   (if (<= (.getMonthValue pvm) 6)
     (LocalDate/of (.getYear pvm) 6 30)
     (LocalDate/of (.getYear pvm) 12 31)))

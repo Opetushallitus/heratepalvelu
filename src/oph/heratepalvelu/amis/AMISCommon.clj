@@ -7,7 +7,8 @@
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.ehoks :as ehoks])
-  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
+  (:import (java.time LocalDate)
+           (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
 
@@ -30,7 +31,7 @@
     (log/error {:herate herate :msg (c/herate-checker herate)})
     (let [kyselytyyppi (:kyselytyyppi herate)
           heratepvm (:alkupvm herate)
-          herate-date (c/to-date heratepvm)
+          herate-date (LocalDate/parse heratepvm)
           alku-date (c/alku herate-date)
           alkupvm   (str alku-date)
           loppu-date (c/loppu herate-date alku-date)

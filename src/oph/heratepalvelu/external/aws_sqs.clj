@@ -6,9 +6,10 @@
   (:import (software.amazon.awssdk.services.sqs SqsClient)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.services.sqs.model
-             SendMessageRequest)))
+             SendMessageRequest
+             SendMessageRequest$Builder)))
 
-(def ^:private sqs-client
+(def ^:private ^SqsClient sqs-client
   "SQS-client -objekti."
   (-> (SqsClient/builder)
       (.region (Region/EU_WEST_1))
@@ -16,7 +17,7 @@
 
 (defn- create-send-message-request-builder
   "Abstraktio SendMessageRequest/builderin ympäri, joka helpotta testaamista."
-  []
+  ^SendMessageRequest$Builder []
   (SendMessageRequest/builder))
 
 (defn send-tep-sms-sqs-message
@@ -25,7 +26,7 @@
   (let [resp (.sendMessage sqs-client (-> (create-send-message-request-builder)
                                           (.queueUrl (:sms-queue env))
                                           (.messageBody (json/write-str msg))
-                                          (.build)))]
+                                          ^SendMessageRequest (.build)))]
     (when-not (some? (.messageId resp))
       (log/error "Failed to send message " msg)
       (throw (ex-info

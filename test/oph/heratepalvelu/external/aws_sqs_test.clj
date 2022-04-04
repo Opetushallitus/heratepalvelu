@@ -21,7 +21,7 @@
   (sendMessage [this message]
     (reset! saved-sent-message message)
     (MockSqsResponse.
-      (when (.contains (:messageBody message) "non-error") 123))))
+      (when (.contains ^String (:messageBody message) "non-error") 123))))
 
 (definterface IMockSendMessageRequestBuilder
   (build [])

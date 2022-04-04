@@ -33,8 +33,8 @@
   (str (c/normalize-string (:tyopaikan_nimi jakso)) "/"
        (:tyopaikan_ytunnus jakso) "/"
        (:koulutustoimija jakso) "/"
-       (tpkc/get-kausi-alkupvm (c/to-date (:jakso_loppupvm jakso))) "_"
-       (tpkc/get-kausi-loppupvm (c/to-date (:jakso_loppupvm jakso)))))
+       (tpkc/get-kausi-alkupvm (LocalDate/parse (:jakso_loppupvm jakso))) "_"
+       (tpkc/get-kausi-loppupvm (LocalDate/parse (:jakso_loppupvm jakso)))))
 
 (defn get-existing-nippu
   "Hakee nipun tietokannasta jakson tietojen perusteella, jos se on olemassa."
@@ -48,12 +48,12 @@
 
 (defn get-next-vastaamisajan-alkupvm-date
   "Laske vastaamisajan alkupäivämäärän jakso loppupäivämäärän perusteella."
-  [jakso]
-  (let [loppupvm (c/to-date (:jakso_loppupvm jakso))
+  ^LocalDate [jakso]
+  (let [loppupvm (LocalDate/parse (:jakso_loppupvm jakso))
         year (.getYear loppupvm)
         kausi-month (if (<= (.getMonthValue loppupvm) 6) 7 1)
         kausi-year (if (= kausi-month 1) (inc year) year)]
-    (LocalDate/of kausi-year kausi-month 1)))
+    (LocalDate/of ^long kausi-year kausi-month 1)))
 
 (defn create-tpk-nippu
   "Luo TPK-nipun jakson tietojen perusteella."
@@ -61,9 +61,9 @@
   (let [alkupvm (get-next-vastaamisajan-alkupvm-date jakso)
         loppupvm (.minusDays (.plusMonths alkupvm 2) 1)
         kausi-alkupvm (tpkc/get-kausi-alkupvm
-                        (c/to-date (:jakso_loppupvm jakso)))
+                        (LocalDate/parse (:jakso_loppupvm jakso)))
         kausi-loppupvm (tpkc/get-kausi-loppupvm
-                         (c/to-date (:jakso_loppupvm jakso)))]
+                         (LocalDate/parse (:jakso_loppupvm jakso)))]
     {:nippu-id                    (create-nippu-id jakso)
      :tyopaikan-nimi              (:tyopaikan_nimi jakso)
      :tyopaikan-nimi-normalisoitu (c/normalize-string (:tyopaikan_nimi jakso))
@@ -126,7 +126,7 @@
 (defn -handleTpkNiputus
   "Käsittelee työpaikkajaksoja ja luo vastaavia TPK-nippuja. Yhteen nippuun voi
   kuulua useita jaksoja."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
   (let [memoization (atom {})]
     (loop [niputettavat (query-niputtamattomat nil)]

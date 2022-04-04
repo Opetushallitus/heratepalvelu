@@ -106,9 +106,9 @@
                          (not (instance? DefaultSdkAutoConstructList v)))
                 (reduced (cond
                            (= t "n")
-                           (Integer. v)
+                           (Integer/parseInt v)
                            (= t "ns")
-                           (map #(Integer. %) v)
+                           (map #(Integer/parseInt %) v)
                            (= t "m")
                            (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
                                       {} (into {} v))

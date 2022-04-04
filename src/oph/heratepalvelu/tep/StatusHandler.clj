@@ -25,7 +25,7 @@
   "Hakee nippuja, joilla on sähköpostiviestejä viestintäpalvelussa, ja päivittää
   niiden tiedot tietokantaan ja Arvoon. Laskee uuden loppupäivämäärän nipulle,
   jos kyselyyn ei ole vielä vastattu ja kyselyä ei ole vielä lähetetty."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
   (loop [emails (ddb/query-items
                   {:kasittelytila
