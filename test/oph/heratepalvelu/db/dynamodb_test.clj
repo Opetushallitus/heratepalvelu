@@ -4,7 +4,11 @@
   (:import (software.amazon.awssdk.services.dynamodb DynamoDbClient)
            (software.amazon.awssdk.services.dynamodb.model Condition
                                                            DeleteItemRequest
+                                                           GetItemRequest
+                                                           GetItemResponse
                                                            PutItemRequest
+                                                           QueryRequest
+                                                           QueryResponse
                                                            UpdateItemRequest)))
 
 (defn- mock-to-attribute-value [tk v] {:key tk :value v})
@@ -78,49 +82,7 @@
     (is (= (ddb/get-value (ddb/to-attribute-value :n 123)) 123))
     (is (= (ddb/get-value (ddb/to-attribute-value :s "asdf")) "asdf"))))
 
-(definterface IMockQueryResponse (items []))
-
-(deftype MockQueryResponse [items-set]
-  IMockQueryResponse
-  (items [this] items-set))
-
-(definterface IMockScanResponse
-  (items [])
-  (hasLastEvaluatedKey [])
-  (lastEvaluatedKey []))
-
-(deftype MockScanResponse [items-set]
-  IMockScanResponse
-  (items [this] items-set)
-  (hasLastEvaluatedKey [this] true)
-  (lastEvaluatedKey [this] "mock-last-evaluated-key"))
-
-(definterface IMockGetItemResponse (item []))
-
-(deftype MockGetItemResponse [item-data]
-  IMockGetItemResponse
-  (item [this] item-data))
-
 (def mock-ddb-client-request-results (atom {}))
-
-(definterface IMockDDBClient
-  (putItem [req])
-  (query [req])
-  (scan [req])
-  (deleteItem [req])
-  (getItem [req])
-  (updateItem [req]))
-
-(deftype MockDDBClient []
-  IMockDDBClient
-  (putItem [this req] (reset! mock-ddb-client-request-results {:putItem req}))
-  (query [this req] (MockQueryResponse. [req]))
-  (scan [this req] (MockScanResponse. [req]))
-  (deleteItem [this req]
-    (reset! mock-ddb-client-request-results {:deleteItem req}))
-  (getItem [this req] (MockGetItemResponse. req))
-  (updateItem [this req]
-    (reset! mock-ddb-client-request-results {:updateItem req})))
 
 (def mockDDBClient
   (proxy [DynamoDbClient] []
@@ -129,12 +91,30 @@
                   :tableName (.tableName req)}]
         (reset! mock-ddb-client-request-results resp)
         nil))
+    (getItem [^GetItemRequest req]
+      (let [resp {:key       (.key req)
+                  :tableName (.tableName req)}]
+        (reset! mock-ddb-client-request-results resp)
+        (.build (.item (GetItemResponse/builder)
+                       {:field (ddb/to-attribute-value [:s "qwerty"])
+                        :other-field (ddb/to-attribute-value [:n 5])}))))
     (putItem [^PutItemRequest req]
       (let [resp {:conditionExpression (.conditionExpression req)
                   :item                (.item req)
                   :tableName           (.tableName req)}]
         (reset! mock-ddb-client-request-results resp)
         nil))
+    (query [^QueryRequest req]
+      (let [resp {:expressionAttributeNames  (.expressionAttributeNames req)
+                  :expressionAttributeValues (.expressionAttributeValues req)
+                  :filterExpression          (.filterExpression req)
+                  :indexName                 (.indexName req)
+                  :limit                     (.limit req)
+                  :keyConditions             (.keyConditions req)
+                  :tableName                 (.tableName req)}]
+        (reset! mock-ddb-client-request-results resp)
+        (.build (.items (QueryResponse/builder)
+                        [{"field" (ddb/to-attribute-value [:s "asdf"])}]))))
     (updateItem [^UpdateItemRequest req]
       (let [resp {:conditionExpression       (.conditionExpression req)
                   :expressionAttributeNames  (.expressionAttributeNames req)
@@ -164,68 +144,28 @@
         (ddb/put-item test-item {})
         (is (= results-2 @mock-ddb-client-request-results))))))
 
-(definterface IMockQueryRequestBuilder
-  (append [field value])
-  (build [])
-  (tableName [table])
-  (keyConditions [conditions])
-  (indexName [index])
-  (limit [l])
-  (filterExpression [filter-expression])
-  (expressionAttributeNames [expr-attr-names])
-  (expressionAttributeValues [expr-attr-vals]))
-
-(deftype MockQueryRequestBuilder [contents]
-  IMockQueryRequestBuilder
-  (append [this field value]
-    (MockQueryRequestBuilder. (assoc contents field value)))
-  (build [this] {:request-body contents})
-  (tableName [this table] (.append this :tableName table))
-  (keyConditions [this conditions]
-    (.append this :keyConditions conditions))
-  (indexName [this index] (.append this :indexName index))
-  (limit [this l] (.append this :limit l))
-  (filterExpression [this filter-expression]
-    (.append this :filterExpression filter-expression))
-  (expressionAttributeNames [this expr-attr-names]
-    (.append this :expressionAttributeNames expr-attr-names))
-  (expressionAttributeValues [this expr-attr-vals]
-    (.append this :expressionAttributeValues expr-attr-vals)))
-
-(defn- mock-create-query-request-builder [] (MockQueryRequestBuilder. {}))
-
-(defn- mock-map-attribute-values-to-vals [item]
-  {:mapped-request-body (:request-body item)})
-
-(defn- mock-qi-map-vals-to-conditions [item] {:mapped-vals-to-conditions item})
-
 (deftest test-query-items
   (testing "Varmista, että query-items toimii oikein"
     (with-redefs [environ.core/env {:herate-table "herate-table-name"}
-                  oph.heratepalvelu.db.dynamodb/create-query-request-builder
-                  mock-create-query-request-builder
-                  oph.heratepalvelu.db.dynamodb/ddb-client (MockDDBClient.)
-                  oph.heratepalvelu.db.dynamodb/map-attribute-values-to-vals
-                  mock-map-attribute-values-to-vals
-                  oph.heratepalvelu.db.dynamodb/map-vals-to-conditions
-                  mock-qi-map-vals-to-conditions]
+                  oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient]
       (let [test-key-conds {:test-field [:eq [:s "asdf"]]}
             test-options {:index "testIndex"
                           :limit 10
                           :filter-expression "#a = :a"
                           :expr-attr-names {"#a" "AAA"}
                           :expr-attr-vals {":a" [:s "aaa"]}}
-            results [{:mapped-request-body
-                      {:tableName "herate-table-name"
-                       :keyConditions {:mapped-vals-to-conditions
-                                       {:test-field [:eq [:s "asdf"]]}}
-                       :indexName "testIndex"
-                       :limit 10
-                       :filterExpression "#a = :a"
-                       :expressionAttributeNames {"#a" "AAA"}
-                       :expressionAttributeValues
-                       {":a" (ddb/to-attribute-value [:s "aaa"])}}}]]
-        (is (= (ddb/query-items test-key-conds test-options) results))))))
+            results {:tableName "herate-table-name"
+                     :keyConditions {"test-field" (ddb/build-condition
+                                                    [:eq [:s "asdf"]])}
+                     :indexName "testIndex"
+                     :limit 10
+                     :filterExpression "#a = :a"
+                     :expressionAttributeNames {"#a" "AAA"}
+                     :expressionAttributeValues
+                     {":a" (ddb/to-attribute-value [:s "aaa"])}}
+            expected-items [{:field "asdf"}]]
+        (is (= (ddb/query-items test-key-conds test-options) expected-items))
+        (is (= @mock-ddb-client-request-results results))))))
 
 (deftest test-update-item
   (testing "Varmista, että update-item toimii oikein"
@@ -247,33 +187,15 @@
         (ddb/update-item test-key-conds test-options)
         (is (= results @mock-ddb-client-request-results))))))
 
-(definterface IMockGetItemRequestBuilder
-  (build [])
-  (tableName [table])
-  (key [key-conds]))
-
-(deftype MockGetItemRequestBuilder [contents]
-  IMockGetItemRequestBuilder
-  (build [this] {:request-body contents})
-  (tableName [this table]
-    (MockGetItemRequestBuilder. (assoc contents :tableName table)))
-  (key [this key-conds]
-    (MockGetItemRequestBuilder. (assoc contents :key key-conds))))
-
 (deftest test-get-item
   (testing "Varmista, että get-item toimii oikein"
     (with-redefs [environ.core/env {:herate-table "herate-table-name"}
-                  oph.heratepalvelu.db.dynamodb/create-get-item-request-builder
-                  (fn [] (MockGetItemRequestBuilder. {}))
-                  oph.heratepalvelu.db.dynamodb/ddb-client (MockDDBClient.)
-                  oph.heratepalvelu.db.dynamodb/map-attribute-values-to-vals
-                  mock-map-attribute-values-to-vals]
+                  oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient]
       (let [test-key-conds {:test-field [:s "asdf"]}
-            results {:mapped-request-body
-                     {:tableName "herate-table-name"
-                      :key {"test-field" (ddb/to-attribute-value
-                                           [:s "asdf"])}}}]
-        (is (= (ddb/get-item test-key-conds) results))))))
+            results {:tableName "herate-table-name"
+                     :key {"test-field" (ddb/to-attribute-value [:s "asdf"])}}]
+        (is (= (ddb/get-item test-key-conds) {:field "qwerty" :other-field 5}))
+        (is (= results @mock-ddb-client-request-results))))))
 
 (deftest test-delete-item
   (testing "Varmista, että delete-item toimii oikein"
@@ -286,27 +208,10 @@
         (ddb/delete-item test-key-conds)
         (is (= results @mock-ddb-client-request-results))))))
 
-(definterface IMockScanRequestBuilder
-  (build [])
-  (filterExpression [filter-expression])
-  (tableName [table]))
-
-(deftype MockScanRequestBuilder [contents]
-  IMockScanRequestBuilder
-  (build [this] {:request-body contents})
-  (filterExpression [this filter-expression]
-    (MockScanRequestBuilder.
-      (assoc contents :filterExpression filter-expression)))
-  (tableName [this table]
-    (MockScanRequestBuilder. (assoc contents :tableName table))))
-
+;; TODO
 (deftest test-scan
   (testing "Varmista, että scan toimii oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/create-scan-request-builder
-                  (fn [] (MockScanRequestBuilder. {}))
-                  oph.heratepalvelu.db.dynamodb/ddb-client (MockDDBClient.)
-                  oph.heratepalvelu.db.dynamodb/map-attribute-values-to-vals
-                  mock-map-attribute-values-to-vals]
+    (with-redefs [oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient]
       (let [test-options {:filter-expression "a = b"}
             test-table "test-table-name"
             results {:items [{:mapped-request-body

@@ -10,12 +10,9 @@
              Condition
              DeleteItemRequest
              GetItemRequest
-             GetItemRequest$Builder
              PutItemRequest
              QueryRequest
-             QueryRequest$Builder
              ScanRequest
-             ScanRequest$Builder
              UpdateItemRequest)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap
@@ -149,11 +146,6 @@
                               (.conditionExpression (:cond-expr options)))
                             ^PutItemRequest (.build)))))
 
-(defn- create-query-request-builder
-  "Abstraktio QueryRequest/builderin ympäri, joka helpottaa testaamista."
-  ^QueryRequest$Builder []
-  (QueryRequest/builder))
-
 (defn query-items
   "Hakee tietueita tiettyjen ehtojen perusteella. Ehdot, jotka koskevat primary
   keytä ja sort keytä, ilmaistaan key-conds -argumentissa noilla keywordeilla,
@@ -176,7 +168,7 @@
    (query-items key-conds options (:herate-table env)))
   ([key-conds options table]
    (let [conditions (map-vals-to-conditions key-conds)
-         response (.query ddb-client (-> (create-query-request-builder)
+         response (.query ddb-client (-> (QueryRequest/builder)
                                          (.tableName table)
                                          (.keyConditions conditions)
                                          (cond->
@@ -235,11 +227,6 @@
                  ^UpdateItemRequest (.build))]
      (.updateItem ddb-client req))))
 
-(defn- create-get-item-request-builder
-  "Abstraktio GetItemRequest/builderin ympäri, joka helpottaa testaamista."
-  ^GetItemRequest$Builder []
-  (GetItemRequest/builder))
-
 (defn get-item
   "Hakee yhden tietueen tietokannasta key-condsin perusteella. Avaimien syntaksi
   seuraa tätä mallia:
@@ -247,7 +234,7 @@
   ([key-conds]
    (get-item key-conds (:herate-table env)))
   ([key-conds table]
-   (let [req (-> (create-get-item-request-builder)
+   (let [req (-> (GetItemRequest/builder)
                  (.tableName table)
                  (.key (map-vals-to-attribute-values key-conds))
                  ^GetItemRequest (.build))
@@ -268,11 +255,6 @@
                  ^DeleteItemRequest (.build))]
      (.deleteItem ddb-client req))))
 
-(defn- create-scan-request-builder
-  "Abstraktio ScanRequest/builderin ympäri, joka helpottaa testaamista."
-  ^ScanRequest$Builder []
-  (ScanRequest/builder))
-
 (defn scan
   "Käy taulussa olevien tietueiden läpi useat kerralla jossakin järjestyksessä.
   Jos :exclusive-start-key annetaan optiona, scan alkaa sieltä; muuten se alkaa
@@ -287,7 +269,7 @@
                             laitetaan avaimien sijoihin, kun ekspressio
                             evaluoidaan"
   [options table]
-  (let [req (-> (create-scan-request-builder)
+  (let [req (-> (ScanRequest/builder)
                 (cond->
                   (:filter-expression options)
                   (.filterExpression (:filter-expression options))
