@@ -1,30 +1,27 @@
 (ns oph.heratepalvelu.external.aws-xray-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.external.aws-xray :as xray])
-  (:import (clojure.lang ExceptionInfo)))
+  (:import (clojure.lang ExceptionInfo)
+           (com.amazonaws.xray.entities Segment)))
 
 (def saved-results (atom []))
 
-(definterface ISegment
-  (putHttp [segment-type options])
-  (addException [exception]))
-
-(deftype Segment []
-  ISegment
-  (putHttp [this segment-type options]
-    (reset! saved-results (cons {:type "putHttp"
-                                 :segment-type segment-type
-                                 :options options}
-                                @saved-results)))
-  (addException [this exception]
-    (reset! saved-results (cons {:type "addException"
-                                 :exception (ex-data exception)}
-                                @saved-results))))
+(def mockSegment
+  (proxy [Segment] []
+    (putHttp [segment-type options]
+      (reset! saved-results (cons {:type "putHttp"
+                                   :segment-type segment-type
+                                   :options options}
+                                  @saved-results)))
+    (addException [exception]
+      (reset! saved-results (cons {:type "addException"
+                                   :exception (ex-data exception)}
+                                  @saved-results)))))
 
 (defn- mock-wrap-begin-subsegment [line]
   (reset! saved-results
           (cons {:type "mock-wrap-begin-subsegment" :line line} @saved-results))
-  (Segment.))
+  mockSegment)
 
 (defn- mock-wrap-end-subsegment []
   (reset! saved-results
