@@ -7,27 +7,22 @@
              ClientOverrideConfiguration)
            (com.amazonaws.xray.interceptors TracingInterceptor)))
 
-(def client
+(def ^SsmClient client
   "SSM-client -objekti."
   (-> (SsmClient/builder)
       (.region (Region/EU_WEST_1))
       (.overrideConfiguration
         (-> (ClientOverrideConfiguration/builder)
             (.addExecutionInterceptor (TracingInterceptor.))
-            (.build)))
+            ^ClientOverrideConfiguration (.build)))
       (.build)))
-
-(defn- create-get-parameter-request-builder
-  "Abstraktio GetParameterRequest/builderin ympäri, joka helpottaa testaamista."
-  []
-  (GetParameterRequest/builder))
 
 (defn get-secret
   "Hakee salaisen arvon SSMistä."
   [secret-name]
   (.value
     (.parameter
-      (.getParameter client (-> (create-get-parameter-request-builder)
+      (.getParameter client (-> (GetParameterRequest/builder)
                                 (.name secret-name)
                                 (.withDecryption true)
-                                (.build))))))
+                                ^GetParameterRequest (.build))))))
