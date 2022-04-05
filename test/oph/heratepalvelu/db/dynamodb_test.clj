@@ -1,6 +1,11 @@
 (ns oph.heratepalvelu.db.dynamodb-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.db.dynamodb :as ddb]))
+            [oph.heratepalvelu.db.dynamodb :as ddb])
+  (:import (software.amazon.awssdk.services.dynamodb DynamoDbClient)
+           (software.amazon.awssdk.services.dynamodb.model Condition
+                                                           DeleteItemRequest
+                                                           PutItemRequest
+                                                           UpdateItemRequest)))
 
 (defn- mock-to-attribute-value [tk v] {:key tk :value v})
 
@@ -47,61 +52,26 @@
                    :string-field [:s "asdf"]}]
       (is (= (ddb/map-raw-vals-to-typed-vals test-item) results)))))
 
-(definterface IMockAttributeValueBuilder
-  (build [])
-  (n [number])
-  (s [string]))
-
-(deftype MockAttributeValueBuilder [t av]
-  IMockAttributeValueBuilder
-  (build [this] {:type t :value av})
-  (n [this number] (MockAttributeValueBuilder. "number" number))
-  (s [this string] (MockAttributeValueBuilder. "string" string)))
-
-(defn- mock-create-attribute-value-builder []
-  (MockAttributeValueBuilder. nil nil))
-
 (deftest test-to-attribute-value
   (testing "Varmista, että to-attribute-value käyttää apufunktioita oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/create-attribute-value-builder
-                  mock-create-attribute-value-builder]
-      (is (= (ddb/to-attribute-value :s "asdf") {:type "string" :value "asdf"}))
-      (is (= (ddb/to-attribute-value :n 12) {:type "number" :value "12"})))))
+    (is (= (.s (ddb/to-attribute-value :s "asdf")) "asdf"))
+    (is (= (.n (ddb/to-attribute-value :n 12)) "12"))))
 
-(definterface IMockConditionBuilder
-  (build [])
-  (attributeValueList [values])
-  (comparisonOperator [operator]))
-
-(deftype MockConditionBuilder [op stored-values]
-  IMockConditionBuilder
-  (build [this] {:operator op :values stored-values})
-  (attributeValueList [this values]
-    (MockConditionBuilder. op (or values stored-values)))
-  (comparisonOperator [this operator]
-    (MockConditionBuilder. (or operator op) stored-values)))
-
-(defn- mock-create-condition-builder [] (MockConditionBuilder. nil nil))
+(defn- extract-condition-data [^Condition condition]
+  {:operator (str (.comparisonOperator condition))
+   :values (vec (map ddb/get-value (.attributeValueList condition)))})
 
 (deftest test-build-condition
   (testing "Varmista, että build-condition toimii oikein"
-    (with-redefs [oph.heratepalvelu.db.dynamodb/create-attribute-value-builder
-                  mock-create-attribute-value-builder
-                  oph.heratepalvelu.db.dynamodb/create-condition-builder
-                  mock-create-condition-builder]
-      (let [test-values-1 [:eq [:s "asdf"]]
-            test-values-2 [:le [:n 123]]
-            test-values-3 [:between [[:s "aaa"] [:s "ccc"]]]
-            results-1 {:operator "EQ"
-                       :values [{:type "string" :value "asdf"}]}
-            results-2 {:operator "LE"
-                       :values [{:type "number" :value "123"}]}
-            results-3 {:operator "BETWEEN"
-                       :values [{:type "string" :value "aaa"}
-                                {:type "string" :value "ccc"}]}]
-        (is (= (ddb/build-condition test-values-1) results-1))
-        (is (= (ddb/build-condition test-values-2) results-2))
-        (is (= (ddb/build-condition test-values-3) results-3))))))
+    (let [test1 [:eq [:s "asdf"]]
+          test2 [:le [:n 123]]
+          test3 [:between [[:s "aaa"] [:s "ccc"]]]
+          results1 {:operator "EQ" :values ["asdf"]}
+          results2 {:operator "LE" :values [123]}
+          results3 {:operator "BETWEEN" :values ["aaa" "ccc"]}]
+      (is (= (extract-condition-data (ddb/build-condition test1)) results1))
+      (is (= (extract-condition-data (ddb/build-condition test2)) results2))
+      (is (= (extract-condition-data (ddb/build-condition test3)) results3)))))
 
 (deftest test-get-value
   (testing "Varmista, että get-value toimii oikein"
@@ -152,31 +122,33 @@
   (updateItem [this req]
     (reset! mock-ddb-client-request-results {:updateItem req})))
 
-(definterface IMockPutItemRequestBuilder
-  (build [])
-  (tableName [table])
-  (item [item])
-  (conditionExpression [cond-expr]))
-
-(deftype MockPutItemRequestBuilder [contents]
-  IMockPutItemRequestBuilder
-  (build [this] contents)
-  (tableName [this table]
-    (MockPutItemRequestBuilder. (assoc contents :tableName table)))
-  (item [this item]
-    (MockPutItemRequestBuilder. (assoc contents :item item)))
-  (conditionExpression [this cond-expr]
-    (MockPutItemRequestBuilder.
-      (assoc contents :conditionExpression cond-expr))))
-
-(defn- mock-create-put-item-request-builder [] (MockPutItemRequestBuilder. {}))
+(def mockDDBClient
+  (proxy [DynamoDbClient] []
+    (deleteItem [^DeleteItemRequest req]
+      (let [resp {:key       (.key req)
+                  :tableName (.tableName req)}]
+        (reset! mock-ddb-client-request-results resp)
+        nil))
+    (putItem [^PutItemRequest req]
+      (let [resp {:conditionExpression (.conditionExpression req)
+                  :item                (.item req)
+                  :tableName           (.tableName req)}]
+        (reset! mock-ddb-client-request-results resp)
+        nil))
+    (updateItem [^UpdateItemRequest req]
+      (let [resp {:conditionExpression       (.conditionExpression req)
+                  :expressionAttributeNames  (.expressionAttributeNames req)
+                  :expressionAttributeValues (.expressionAttributeValues req)
+                  :key                       (.key req)
+                  :tableName                 (.tableName req)
+                  :updateExpression          (.updateExpression req)}]
+        (reset! mock-ddb-client-request-results resp)
+        nil))))
 
 (deftest test-put-item
   (testing "Varmista, että put-item toimii oikein"
     (with-redefs [environ.core/env {:herate-table "herate-table-name"}
-                  oph.heratepalvelu.db.dynamodb/create-put-item-request-builder
-                  mock-create-put-item-request-builder
-                  oph.heratepalvelu.db.dynamodb/ddb-client (MockDDBClient.)
+                  oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient
                   oph.heratepalvelu.db.dynamodb/map-vals-to-attribute-values
                   (fn [item] {:mapped-to-attribute-values item})]
       (let [test-item {:test-field "abc"}
@@ -185,11 +157,12 @@
                        :item {:mapped-to-attribute-values {:test-field "abc"}}
                        :conditionExpression "a = 4"}
             results-2 {:tableName "herate-table-name"
-                       :item {:mapped-to-attribute-values {:test-field "abc"}}}]
+                       :item {:mapped-to-attribute-values {:test-field "abc"}}
+                       :conditionExpression nil}]
         (ddb/put-item test-item test-options)
-        (is (= {:putItem results-1} @mock-ddb-client-request-results))
+        (is (= results-1 @mock-ddb-client-request-results))
         (ddb/put-item test-item {})
-        (is (= {:putItem results-2} @mock-ddb-client-request-results))))))
+        (is (= results-2 @mock-ddb-client-request-results))))))
 
 (definterface IMockQueryRequestBuilder
   (append [field value])
@@ -254,53 +227,23 @@
                        {":a" (ddb/to-attribute-value [:s "aaa"])}}}]]
         (is (= (ddb/query-items test-key-conds test-options) results))))))
 
-(definterface IMockUpdateItemRequestBuilder
-  (append [field value])
-  (build [])
-  (tableName [table])
-  (key [key-conds])
-  (updateExpression [update-expr])
-  (expressionAttributeNames [expr-attr-names])
-  (expressionAttributeValues [expr-attr-vals])
-  (conditionExpression [cond-expr]))
-
-(deftype MockUpdateItemRequestBuilder [contents]
-  IMockUpdateItemRequestBuilder
-  (append [this field value]
-    (MockUpdateItemRequestBuilder. (assoc contents field value)))
-  (build [this] contents)
-  (tableName [this table] (.append this :tableName table))
-  (key [this key-conds] (.append this :key key-conds))
-  (updateExpression [this update-expr]
-    (.append this :updateExpression update-expr))
-  (expressionAttributeNames [this expr-attr-names]
-    (.append this :expressionAttributeNames expr-attr-names))
-  (expressionAttributeValues [this expr-attr-vals]
-    (.append this :expressionAttributeValues expr-attr-vals))
-  (conditionExpression [this cond-expr]
-    (.append this :conditionExpression cond-expr)))
-
 (deftest test-update-item
   (testing "Varmista, että update-item toimii oikein"
     (with-redefs
       [environ.core/env {:herate-table "herate-table-name"}
-       oph.heratepalvelu.db.dynamodb/create-update-item-request-builder
-       (fn [] (MockUpdateItemRequestBuilder. {}))
-       oph.heratepalvelu.db.dynamodb/ddb-client (MockDDBClient.)]
+       oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient]
       (let [test-key-conds {:test-field [:s "asdf"]}
             test-options {:update-expr "SET #x = :x"
                           :expr-attr-names {"#x" "XX"}
                           :expr-attr-vals {":x" [:n 6]}
                           :cond-expr "attribute_not_exists(y)"}
-            results {:updateItem
-                     {:updateExpression "SET #x = :x"
-                      :expressionAttributeNames {"#x" "XX"}
-                      :expressionAttributeValues {":x" (ddb/to-attribute-value
-                                                         [:n 6])}
-                      :conditionExpression "attribute_not_exists(y)"
-                      :tableName "herate-table-name"
-                      :key {"test-field" (ddb/to-attribute-value
-                                           [:s "asdf"])}}}]
+            results {:updateExpression "SET #x = :x"
+                     :expressionAttributeNames {"#x" "XX"}
+                     :expressionAttributeValues {":x" (ddb/to-attribute-value
+                                                        [:n 6])}
+                     :conditionExpression "attribute_not_exists(y)"
+                     :tableName "herate-table-name"
+                     :key {"test-field" (ddb/to-attribute-value [:s "asdf"])}}]
         (ddb/update-item test-key-conds test-options)
         (is (= results @mock-ddb-client-request-results))))))
 
@@ -332,30 +275,14 @@
                                            [:s "asdf"])}}}]
         (is (= (ddb/get-item test-key-conds) results))))))
 
-(definterface IMockDeleteItemRequestBuilder
-  (build [])
-  (tableName [table])
-  (key [key-conds]))
-
-(deftype MockDeleteItemRequestBuilder [contents]
-  IMockDeleteItemRequestBuilder
-  (build [this] contents)
-  (tableName [this table]
-    (MockDeleteItemRequestBuilder. (assoc contents :tableName table)))
-  (key [this key-conds]
-    (MockDeleteItemRequestBuilder. (assoc contents :key key-conds))))
-
 (deftest test-delete-item
   (testing "Varmista, että delete-item toimii oikein"
     (with-redefs
       [environ.core/env {:herate-table "herate-table-name"}
-       oph.heratepalvelu.db.dynamodb/create-delete-item-request-builder
-       (fn [] (MockDeleteItemRequestBuilder. {}))
-       oph.heratepalvelu.db.dynamodb/ddb-client (MockDDBClient.)]
+       oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient]
       (let [test-key-conds {:test-field [:n 1234]}
-            results {:deleteItem
-                     {:tableName "herate-table-name"
-                      :key {"test-field" (ddb/to-attribute-value [:n 1234])}}}]
+            results {:tableName "herate-table-name"
+                     :key {"test-field" (ddb/to-attribute-value [:n 1234])}}]
         (ddb/delete-item test-key-conds)
         (is (= results @mock-ddb-client-request-results))))))
 
