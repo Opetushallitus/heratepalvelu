@@ -279,7 +279,7 @@
    :oppija-oid "7.8.9"
    :sahkoposti "a@b.com"})
 
-(defn- mock-get-kysely-type [opiskeluoikeus]
+(defn- mock-get-kysely-type [_]
   (reset! test-handleUpdatedOpiskeluoikeus-results
           (str @test-handleUpdatedOpiskeluoikeus-results "get-kysely-type "))
   "tutkinnon_suorittaneet")

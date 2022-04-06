@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISherateEmailHandler-test
-  (:require [clj-time.core :as t]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISherateEmailHandler :as heh]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
@@ -132,7 +131,7 @@
     {:voimassa_loppupvm "2025-10-10"}))
 
 (defn- mock-has-time-to-answer? [pvm] (> (compare pvm "2021-12-12") 0))
-(defn- mock-send-feedback-email [email] {:id "test-id"})
+(defn- mock-send-feedback-email [_] {:id "test-id"})
 
 (def general-results (atom ""))
 

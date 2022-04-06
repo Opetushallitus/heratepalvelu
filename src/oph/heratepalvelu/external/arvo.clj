@@ -2,7 +2,6 @@
   "Wrapperit Arvon REST-rajapinnan ympäri."
   (:require [cheshire.core :refer [generate-string]]
             [clj-http.util :as util]
-            [clj-time.core :as t]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]

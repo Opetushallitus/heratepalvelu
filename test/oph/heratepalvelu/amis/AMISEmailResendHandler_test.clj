@@ -28,7 +28,7 @@
    :tyyppi_kausi "tyyppi-kausi"
    :sahkoposti "a@b.com"})
 
-(defn- mock-return-nothing [kyselylinkki] nil)
+(defn- mock-return-nothing [_] nil)
 
 (deftest test-handleEmailResend
   (testing "Varmista, että -handleEmailResend toimii oikein"

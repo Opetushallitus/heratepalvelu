@@ -18,7 +18,7 @@
 
 (defn -handleAMISTimedOperations
   "Pyytää ehoksia lähettämään käsittelemättömät herätteet uudestaan."
-  [this event context]
+  [_ _ _]
   (log/info "Käynnistetään herätteiden lähetys")
   (let [resp (ehoks/get-retry-kyselylinkit "2021-07-01"
                                            (str (c/local-date-now))
@@ -27,7 +27,7 @@
 
 (defn -handleMassHerateResend
   "Pyytää ehoksia lähettämäan viime 2 viikon herätteet uudestaan."
-  [this event context]
+  [_ _ _]
   (log/info "Käynnistetään herätteiden massauudelleenlähetys")
   (let [now          (c/local-date-now)
         start        (str (.minusDays now 14))
@@ -42,6 +42,6 @@
 
 (defn -handleEhoksOpiskeluoikeusUpdate
   "Pyytää ehoksia päivittämään opiskeluoikeuksien hankintakoulutukset."
-  [this event context]
+  [_ _ _]
   (log/info "Käynnistetään ehoksin opiskeluoikeuksien päivitys")
   (ehoks/update-ehoks-opiskeluoikeudet))

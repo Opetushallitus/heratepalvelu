@@ -36,7 +36,7 @@
 
 (defn -archiveHerateTable
   "Tekee arkistointia niille rahoituskausille, jotka ovat jo päättyneet."
-  [this event context]
+  [_ _ _]
   (do-herate-table-archiving "2019-2020" (:to-table env))
   (do-herate-table-archiving "2020-2021" (:to-table-2020-2021 env))
   (do-herate-table-archiving "2021-2022" (:to-table-2021-2022 env)))

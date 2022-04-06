@@ -1,7 +1,6 @@
 (ns oph.heratepalvelu.tep.emailHandler
   "Käsittelee TEP-jaksoja, joiden sähköpostit on määrä lähettää."
-  (:require [cheshire.core :refer [parse-string]]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -109,7 +108,7 @@
 (defn -handleSendTEPEmails
   "Hakee nippuja tietokannasta, joiden sähköpostit on aika lähettää, ja
   käsittelee näiden viestien lähettämisen viestinäpalveluun."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
   (loop [lahetettavat (do-nippu-query)]
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")

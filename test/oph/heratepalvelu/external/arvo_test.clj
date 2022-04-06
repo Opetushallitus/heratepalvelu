@@ -156,7 +156,7 @@
 (deftest test-create-amis-kyselylinkki-catch-404-not-found-error
   (testing "Create AMIS kyselylinkki catch 404 with 404 exeption"
     (with-redefs [oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
-                  (fn [data] (throw (ex-info "Test" {:status 404})))]
+                  (fn [_] (throw (ex-info "Test" {:status 404})))]
       (is (nil? (arvo/create-amis-kyselylinkki-catch-404 {:data "data"}))))))
 
 (deftest test-create-amis-kyselylinkki-catch-404-other-error
@@ -291,7 +291,7 @@
                                     :arvo-user "arvo-user"}
                   oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
                   oph.heratepalvelu.external.http-client/post
-                  (fn [url options] (throw (ex-info "Test" {:status 404})))]
+                  (fn [_ _] (throw (ex-info "Test" {:status 404})))]
       (is (nil? (arvo/create-jaksotunnus {:data "data"}))))))
 
 (deftest test-create-jaksotunnus-other-error
@@ -300,7 +300,7 @@
                                     :arvo-user "arvo-user"}
                   oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
                   oph.heratepalvelu.external.http-client/post
-                  (fn [url options] (throw (ex-info "Test" {})))]
+                  (fn [_ _] (throw (ex-info "Test" {})))]
       (is (thrown-with-msg? ExceptionInfo
                             #"Test"
                             (arvo/create-jaksotunnus {:data "data"}))))))
@@ -361,7 +361,7 @@
                                     :arvo-user "arvo-user"}
                   oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
                   oph.heratepalvelu.external.http-client/post
-                  (fn [url options] (throw (ex-info "Test" {:status 404})))]
+                  (fn [_ _] (throw (ex-info "Test" {:status 404})))]
       (is (nil? (arvo/create-nippu-kyselylinkki {:data "data"}))))))
 
 (deftest test-create-nippu-kyselylinkki-other-error
@@ -370,7 +370,7 @@
                                     :arvo-user "arvo-user"}
                   oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
                   oph.heratepalvelu.external.http-client/post
-                  (fn [url options] (throw (ex-info "Test" {})))]
+                  (fn [_ _] (throw (ex-info "Test" {})))]
       (is (thrown-with-msg? ExceptionInfo
                             #"Test"
                             (arvo/create-nippu-kyselylinkki {:data "data"}))))))

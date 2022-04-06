@@ -6,9 +6,7 @@
             [oph.heratepalvelu.tep.tepCommon :as tc]
             [oph.heratepalvelu.common :as c]
             [clojure.tools.logging :as log]
-            [environ.core :refer [env]]
-            [clojure.string :as str]
-            [clj-http.util :as util])
+            [environ.core :refer [env]])
   (:import (clojure.lang ExceptionInfo)
            (com.amazonaws.services.lambda.runtime Context)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
@@ -96,7 +94,7 @@
 
 (defn -handleNiputus
   "Hakee ja niputtaa niputtamattomat jaksot."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleNiputus" event context)
   (loop [niputettavat
          (sort-by

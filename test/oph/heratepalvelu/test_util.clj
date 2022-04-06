@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.test-util
-  (:require [clojure.test :refer :all]
-            [cheshire.core :refer :all]
+  (:require [cheshire.core :refer :all]
             [clojure.java.io :as io]
             [clojure.string :as string]
             [clj-time.core :as t])
@@ -11,7 +10,7 @@
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
 
-(defn mock-gets [^String url & [options]]
+(defn mock-gets [^String url & [_]]
   (cond
     (.endsWith url "/opiskeluoikeus/1.2.246.562.15.43634207518")
     {:status 200
@@ -34,12 +33,12 @@
     (= oid "1.2.246.562.10.52251087186")
     {:parentOid "1.2.246.562.10.346830761110"}))
 
-(defn mock-posts [^String url & [options]]
+(defn mock-posts [^String url & [_]]
   (cond
     (.endsWith url "/api/vastauslinkki/v1")
     {:kysely_linkki "https://arvovastaus.csc.fi/ABC123"}))
 
-(defn mock-get-item-from-whitelist [conds table]
+(defn mock-get-item-from-whitelist [conds _]
   (cond
     (= "1.2.246.562.10.346830761110"
        (last (:organisaatio-oid conds)))
@@ -177,6 +176,6 @@
         (vec (reverse @mock-log-file))))
 
 ;; https://stackoverflow.com/a/41823278
-(defn mock-log* [logger level throwable message]
+(defn mock-log* [_ level _ message]
   (reset! mock-log-file (cons {:level level :message message} @mock-log-file))
   nil)

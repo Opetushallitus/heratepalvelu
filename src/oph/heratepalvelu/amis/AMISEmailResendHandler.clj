@@ -3,10 +3,8 @@
   kyselylinkin sähköpostin lähetettäväksi uudestaan, jos osoite löytyy."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
-            [environ.core :refer [env]]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [schema.core :as s])
   (:import (com.amazonaws.services.lambda.runtime.events SQSEvent
@@ -32,7 +30,7 @@
 (defn -handleEmailResend
   "Merkistee sähköpostin lähetettäväksi uudestaan, jos osoite löytyy
   SQS-viestistä tai tietokannasta."
-  [this ^SQSEvent event context]
+  [_ ^SQSEvent event context]
   (log-caller-details-sqs "handleEmailResend" context)
   (let [messages (seq (.getRecords event))]
     (doseq [^SQSEvent$SQSMessage msg messages]

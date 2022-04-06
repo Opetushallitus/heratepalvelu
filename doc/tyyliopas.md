@@ -25,13 +25,20 @@ sallittu.
 ## Linterit
 
 Voit ajaa linterit komennolla `lein checkall`. Tämä ajaa `lein kibit`, `lein
-bikeshed` ja `lein cljfmt` -tarkistukset. Tämä kannattaa ajaa ennen kuin pushaat
-uutta koodia tai muutoksia.
+bikeshed`, `lein cljfmt` ja `lein eastwood` -tarkistukset. Tämä kannattaa ajaa
+ennen kuin pushaat uutta koodia tai muutoksia.
 
 Komento `lein bikeshed` on tosi huono erottamaan funktioita globaaleista
 muuttujista, ja voi raportoida, että osassa funktioista ei ole docstringejä,
 vaikka kyse ei oikeastaan ole funktioista. On hyvä käytäntö lisätä docstringejä
 myös näihin globaaleihin.
+
+Komento `lein eastwood` ajaa kaikki eastwoodin linterit paitsi
+`:unused-fn-args` (mikä heittää virheen myös macrojen luomien argumenttien
+takia) ja `:keyword-typos` (mikä ei tykkää siitä, että käytämme sekä
+viiva-avaimia että alaviiva-avaimia projektissa). Jos tarvitset kummankin näistä
+lintereistä, voit ajaa sen erikseen (ohjeet löytyvät eastwoodin GitHubista:
+https://github.com/jonase/eastwood).
 
 
 ## Kielten käyttö projektissa

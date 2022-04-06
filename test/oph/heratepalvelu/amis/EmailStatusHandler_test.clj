@@ -92,10 +92,9 @@
 (defn- mock-do-query [] [{:viestintapalvelu-id "12345"
                           :kyselylinkki "kysely.linkki/123"}])
 
-(defn- mock-get-email-status [viestintapalvelu-id]
-  {:numberOfSuccessfulSendings 1})
+(defn- mock-get-email-status [_] {:numberOfSuccessfulSendings 1})
 
-(defn- mock-get-email-status-none [viestintapalvelu-id] {})
+(defn- mock-get-email-status-none [_] {})
 
 (defn- mock-patch-kyselylinkki-metadata [kyselylinkki tila]
   (reset! test-handleEmailStatus-results

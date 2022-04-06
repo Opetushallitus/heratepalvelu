@@ -1,7 +1,6 @@
 (ns oph.heratepalvelu.tep.tepCommon
   "Yhteiset funktiot TEP-puolelle."
-  (:require [clojure.string :as s]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]

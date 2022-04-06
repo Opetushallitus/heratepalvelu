@@ -126,7 +126,7 @@
 (defn -handleTpkNiputus
   "Käsittelee työpaikkajaksoja ja luo vastaavia TPK-nippuja. Yhteen nippuun voi
   kuulua useita jaksoja."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
   (let [memoization (atom {})]
     (loop [niputettavat (query-niputtamattomat nil)]

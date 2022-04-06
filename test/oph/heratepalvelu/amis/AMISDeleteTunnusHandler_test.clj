@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISDeleteTunnusHandler-test
-  (:require [cheshire.core :refer [generate-string]]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISDeleteTunnusHandler :as dth]
             [oph.heratepalvelu.test-util :as tu]))
 

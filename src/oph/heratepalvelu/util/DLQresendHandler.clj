@@ -31,7 +31,7 @@
 (defn -handleDLQresend
   "Ottaa herätteitä vastaan AMISin dead letter queuesta ja lähettää ne
   uudestaan."
-  [this ^SQSEvent event context]
+  [_ ^SQSEvent event _]
   (let [messages (seq (.getRecords event))
         queue-url (.queueUrl
                     (.getQueueUrl

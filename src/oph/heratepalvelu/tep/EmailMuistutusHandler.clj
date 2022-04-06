@@ -1,7 +1,6 @@
 (ns oph.heratepalvelu.tep.EmailMuistutusHandler
   "Käsittelee ja lähettää TEP-sähköpostimuistutuksia"
-  (:require [cheshire.core :refer [parse-string]]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
@@ -99,7 +98,7 @@
 
 (defn -handleSendEmailMuistutus
   "Käsittelee muistettavia nippuja."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
   (loop [muistutettavat (query-muistutukset)]
     (sendEmailMuistutus muistutettavat)

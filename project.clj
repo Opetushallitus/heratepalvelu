@@ -47,6 +47,10 @@
                      testing      [[:inner 0]]
                      with-redefs  [[:inner 0]]
                      #".*"        [[:block 0]]}}
+  :eastwood {:add-linters [:no-ns-form-found
+                           :unused-locals
+                           :unused-namespaces
+                           :unused-private-vars]}
   :aot :all
   :source-paths ["src"]
   :java-source-paths ["src/java"]

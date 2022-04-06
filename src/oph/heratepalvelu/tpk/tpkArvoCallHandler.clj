@@ -49,7 +49,7 @@
 (defn -handleTpkArvoCalls
   "Hakee TPK-nipuille kyselylinkkejä Arvosta. Luo vain yhden kyselylinkin per
   nippu, vaikka siihen kuuluisi useita jaksoja."
-  [this event ^Context context]
+  [_ event ^Context context]
   (log-caller-details-scheduled "handleTpkArvoCalls" event context)
   (loop [scan-results (do-scan)]
     (doseq [nippu (:items scan-results)]

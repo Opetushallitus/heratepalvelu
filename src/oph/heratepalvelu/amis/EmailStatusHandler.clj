@@ -57,7 +57,7 @@
 
 (defn -handleEmailStatus
   "Päivittää viestintäpalvelussa olevien sähköpostien tilat tietokantaan."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
   (loop [heratteet (do-query)]
     (doseq [herate heratteet]

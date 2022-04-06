@@ -76,7 +76,7 @@
 
 (defn parse [cond-expr expr-attr-names expr-attr-vals]
   (if (or (not cond-expr) (= cond-expr ""))
-    (fn [item] true)
+    (fn [_] true)
     (first (parse-or (do-replacements
                        (tokenize cond-expr)
                        (merge expr-attr-names expr-attr-vals))))))

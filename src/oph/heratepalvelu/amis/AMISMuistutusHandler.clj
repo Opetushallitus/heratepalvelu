@@ -1,8 +1,7 @@
 (ns oph.heratepalvelu.amis.AMISMuistutusHandler
   "Käsittelee sähköpostimuistutuksia ja lähettää viestit viestintäpalveluun, jos
   kyselyyn ei ole vastattu ja vastausaika ei ole umpeutunut."
-  (:require [cheshire.core :refer [parse-string]]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -90,7 +89,7 @@
 
 (defn -handleSendAMISMuistutus
   "Käsittelee AMISin muistutusviestien lähetystä."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
   (loop [muistutettavat1 (query-muistutukset 1)
          muistutettavat2 (query-muistutukset 2)]

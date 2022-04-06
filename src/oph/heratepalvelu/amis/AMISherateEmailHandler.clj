@@ -1,7 +1,6 @@
 (ns oph.heratepalvelu.amis.AMISherateEmailHandler
   "Lähettää herätteiden sähköpostiviestit viestintäpalveluun."
-  (:require [cheshire.core :refer [parse-string]]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -85,7 +84,7 @@
 (defn -handleSendAMISEmails
   "Hakee lähetettäviä herätteitä tietokannasta ja lähettää viestit
   viestintäpalveluun."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendAMISEmails" event context)
   (loop [lahetettavat (do-query)]
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")

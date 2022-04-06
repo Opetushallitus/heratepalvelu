@@ -6,8 +6,8 @@
 (def call-log (atom ""))
 (def results (atom {}))
 
-(defn- mock-check-valid-herate-date-true [date] true)
-(defn- mock-check-valid-herate-date-false [date] false)
+(defn- mock-check-valid-herate-date-true [_] true)
+(defn- mock-check-valid-herate-date-false [_] false)
 
 (defn- mock-get-opiskeluoikeus-catch-404 [opiskeluoikeus-oid]
   (reset! call-log (str @call-log "get-opiskeluoikeus-catch-404 "))
@@ -18,15 +18,15 @@
   (reset! call-log (str @call-log "get-koulutustoimija-oid "))
   (:koulutustoimija-oid opiskeluoikeus))
 
-(defn- mock-check-opiskeluoikeus-suoritus-types? [opiskeluoikeus]
+(defn- mock-check-opiskeluoikeus-suoritus-types? [_]
   (reset! call-log (str @call-log "check-opiskeluoikeus-suoritus-types? "))
   true)
 
-(defn- mock-check-organisaatio-whitelist? [koulutustoimija alkupvm]
+(defn- mock-check-organisaatio-whitelist? [_ _]
   (reset! call-log (str @call-log "check-organisaatio-whitelist? "))
   true)
 
-(defn- mock-check-sisaltyy-opiskeluoikeuteen? [opiskeluoikeus]
+(defn- mock-check-sisaltyy-opiskeluoikeuteen? [_]
   (reset! call-log (str @call-log "check-sisaltyy-opiskeluoikeuteen? "))
   true)
 

@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.util.DLQresendHandler-test
-  (:require [cheshire.core :refer [generate-string]]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [oph.heratepalvelu.util.DLQresendHandler :as dlqrh]
             [oph.heratepalvelu.test-util :as tu])
   (:import (software.amazon.awssdk.services.sqs SqsClient SqsClientBuilder)
