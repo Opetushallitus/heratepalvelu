@@ -48,7 +48,7 @@
       (map #(or (:koodiarvo (:osaamisala %1))
                 (:koodiarvo %1))
            osaamisalat)
-      (log/warn "Ei osaamisaloja opiskeluoikeudessa" opiskeluoikeus-oid))))
+      (log/info "Ei osaamisaloja opiskeluoikeudessa" opiskeluoikeus-oid))))
 
 (defn get-hankintakoulutuksen-toteuttaja
   "Hakee hankintakoulutuksen toteuttajan OID:n eHOKS-palvelusta ja Koskesta."
