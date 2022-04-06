@@ -115,8 +115,13 @@
                   :keyConditions             (.keyConditions req)
                   :tableName                 (.tableName req)}]
         (reset! mock-ddb-client-request-results resp)
-        (.build (.items (QueryResponse/builder)
-                        [{"field" (ddb/to-attribute-value [:s "asdf"])}]))))
+        (.build
+          (.items (QueryResponse/builder)
+                  ; Sekä type hint että cast ovat tarpeellisia varmistamaan,
+                  ; että Eastwood hyväksyy tämän metodikutsun oikeanmuotoisena.
+                  ^java.util.Collection
+                  (cast java.util.Collection
+                        [{"field" (ddb/to-attribute-value [:s "asdf"])}])))))
     (scan [^ScanRequest req]
       (let [resp {:exclusiveStartKey         (.exclusiveStartKey req)
                   :expressionAttributeNames  (.expressionAttributeNames req)
@@ -124,8 +129,11 @@
                   :filterExpression          (.filterExpression req)
                   :tableName                 (.tableName req)}]
         (reset! mock-ddb-client-request-results resp)
-        (.build (.items (ScanResponse/builder)
-                        [{"field" (ddb/to-attribute-value [:s "asdf"])}]))))
+        (.build
+          (.items (ScanResponse/builder)
+                  ^java.util.Collection
+                  (cast java.util.Collection
+                        [{"field" (ddb/to-attribute-value [:s "asdf"])}])))))
     (updateItem [^UpdateItemRequest req]
       (let [resp {:conditionExpression       (.conditionExpression req)
                   :expressionAttributeNames  (.expressionAttributeNames req)

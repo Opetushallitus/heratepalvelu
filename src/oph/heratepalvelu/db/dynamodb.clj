@@ -216,14 +216,12 @@
                  (.updateExpression (:update-expr options))
                  (cond->
                    (:expr-attr-names options)
-                   (.expressionAttributeNames
-                     (:expr-attr-names options))
+                   (.expressionAttributeNames (:expr-attr-names options))
                    (:expr-attr-vals options)
                    (.expressionAttributeValues
                      (map-vals-to-attribute-values (:expr-attr-vals options)))
                    (:cond-expr options)
-                   (.conditionExpression
-                     (:cond-expr options)))
+                   (.conditionExpression (:cond-expr options)))
                  ^UpdateItemRequest (.build))]
      (.updateItem ddb-client req))))
 
@@ -276,8 +274,7 @@
                   (:exclusive-start-key options)
                   (.exclusiveStartKey (:exclusive-start-key options))
                   (:expr-attr-names options)
-                  (.expressionAttributeNames
-                    (:expr-attr-names options))
+                  (.expressionAttributeNames (:expr-attr-names options))
                   (:expr-attr-vals options)
                   (.expressionAttributeValues
                     (map-vals-to-attribute-values (:expr-attr-vals options))))
