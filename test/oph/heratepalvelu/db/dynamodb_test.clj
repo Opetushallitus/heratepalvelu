@@ -9,6 +9,8 @@
                                                            PutItemRequest
                                                            QueryRequest
                                                            QueryResponse
+                                                           ScanRequest
+                                                           ScanResponse
                                                            UpdateItemRequest)))
 
 (defn- mock-to-attribute-value [tk v] {:key tk :value v})
@@ -115,6 +117,15 @@
         (reset! mock-ddb-client-request-results resp)
         (.build (.items (QueryResponse/builder)
                         [{"field" (ddb/to-attribute-value [:s "asdf"])}]))))
+    (scan [^ScanRequest req]
+      (let [resp {:exclusiveStartKey         (.exclusiveStartKey req)
+                  :expressionAttributeNames  (.expressionAttributeNames req)
+                  :expressionAttributeValues (.expressionAttributeValues req)
+                  :filterExpression          (.filterExpression req)
+                  :tableName                 (.tableName req)}]
+        (reset! mock-ddb-client-request-results resp)
+        (.build (.items (ScanResponse/builder)
+                        [{"field" (ddb/to-attribute-value [:s "asdf"])}]))))
     (updateItem [^UpdateItemRequest req]
       (let [resp {:conditionExpression       (.conditionExpression req)
                   :expressionAttributeNames  (.expressionAttributeNames req)
@@ -208,14 +219,17 @@
         (ddb/delete-item test-key-conds)
         (is (= results @mock-ddb-client-request-results))))))
 
-;; TODO
 (deftest test-scan
   (testing "Varmista, että scan toimii oikein"
     (with-redefs [oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient]
       (let [test-options {:filter-expression "a = b"}
             test-table "test-table-name"
-            results {:items [{:mapped-request-body
-                              {:filterExpression "a = b"
-                               :tableName "test-table-name"}}]
-                     :last-evaluated-key "mock-last-evaluated-key"}]
-        (is (= (ddb/scan test-options test-table) results))))))
+            results {:exclusiveStartKey         {}
+                     :expressionAttributeNames  {}
+                     :expressionAttributeValues {}
+                     :filterExpression          "a = b"
+                     :tableName                 "test-table-name"}
+            expected-items {:items [{:field "asdf"}]
+                            :last-evaluated-key nil}]
+        (is (= (ddb/scan test-options test-table) expected-items))
+        (is (= results @mock-ddb-client-request-results))))))
