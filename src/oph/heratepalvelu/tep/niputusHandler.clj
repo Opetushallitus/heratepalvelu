@@ -9,8 +9,9 @@
             [environ.core :refer [env]]
             [clojure.string :as str]
             [clj-http.util :as util])
-  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
-           (clojure.lang ExceptionInfo)
+  (:import (clojure.lang ExceptionInfo)
+           (com.amazonaws.services.lambda.runtime Context)
+           (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
 
@@ -95,7 +96,7 @@
 
 (defn -handleNiputus
   "Hakee ja niputtaa niputtamattomat jaksot."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleNiputus" event context)
   (loop [niputettavat
          (sort-by

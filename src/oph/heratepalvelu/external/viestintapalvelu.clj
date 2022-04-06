@@ -2,9 +2,9 @@
   "Wrapperit ja funktiot viestien luomiseen viestintäpalvelulle."
   (:require [clojure.string :as str]
             [environ.core :refer [env]]
+            [hiccup.core :as h]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.external.cas-client :as cas-client])
-  (:use hiccup.core))
+            [oph.heratepalvelu.external.cas-client :as cas-client]))
 
 (def horizontal-line
   "Vaakasuora linja HTML-sähköpostiviestissä."
@@ -160,11 +160,9 @@
     :suorituskieli  - tutkinnon kieli kahden kirjaimein koodina"
   [data]
   (str "<!DOCTYPE html>"
-       (html [:html {:lang (:suorituskieli data)}
-              [:head
-               [:meta {:charset "UTF-8"}]]
-              [:body
-               (amispalaute-body data)]])))
+       (h/html [:html {:lang (:suorituskieli data)}
+                [:head [:meta {:charset "UTF-8"}]]
+                [:body (amispalaute-body data)]])))
 
 (defn amismuistutus-html
   "Luo kokonaisen AMIS-kyselyn muistutusviestin HTML-bodyn. Dataan kuuluvat:
@@ -172,12 +170,11 @@
     :suorituskieli  - tutkinnon kieli kahden kirjaimein koodina"
   [data]
   (str "<!DOCTYPE html>"
-       (html [:html {:lang (:suorituskieli data)}
-              [:head
-               [:meta {:charset "UTF-8"}]]
-              [:body
-               (amismuistutus-body (:kyselylinkki data))
-               (amispalaute-body data)]])))
+       (h/html [:html {:lang (:suorituskieli data)}
+                [:head [:meta {:charset "UTF-8"}]]
+                [:body
+                 (amismuistutus-body (:kyselylinkki data))
+                 (amispalaute-body data)]])))
 
 (defn- tyopaikkaohjaaja-body
   "Luo työpaikkaohjaajan kyselyviestin tekstisisällön. Data-objektiin täytyy
@@ -318,10 +315,9 @@
   kolmeksi eri kieleksi (avaimet :en, :fi, ja :sv)."
   [data oppilaitokset]
   (str "<!DOCTYPE html>"
-       (html [:html {:lang "FI"}
-              [:head
-               [:meta {:charset "UTF-8"}]]
-              [:body (tyopaikkaohjaaja-body data oppilaitokset)]])))
+       (h/html [:html {:lang "FI"}
+                [:head [:meta {:charset "UTF-8"}]]
+                [:body (tyopaikkaohjaaja-body data oppilaitokset)]])))
 
 (defn tyopaikkaohjaaja-muistutus-html
   "Luo kokonaisen työpaikkaohjaajan muistutusviestin HTML-bodyn. Data-objektiin
@@ -330,10 +326,9 @@
   kolmeksi eri kieleksi (avaimet :en, :fi, ja :sv)."
   [data oppilaitokset]
   (str "<!DOCTYPE html>"
-       (html [:html {:lang "FI"}
-              [:head
-               [:meta {:charset "UTF-8"}]]
-              [:body (tyopaikkaohjaaja-muistutus-body data oppilaitokset)]])))
+       (h/html [:html {:lang "FI"}
+                [:head [:meta {:charset "UTF-8"}]]
+                [:body (tyopaikkaohjaaja-muistutus-body data oppilaitokset)]])))
 
 (defn send-email
   "Lähettää sähköpostin viestintäpalveluun. Parametri 'email' on map, johon

@@ -1,11 +1,12 @@
 (ns oph.heratepalvelu.external.aws-xray
   "Wrapperit X-Rayn ympäri."
   (:require [clojure.string :as str])
-  (:import (com.amazonaws.xray AWSXRay)))
+  (:import (com.amazonaws.xray AWSXRay)
+           (com.amazonaws.xray.entities Segment)))
 
 (defn- wrap-begin-subsegment
   "Wrapper AWSXRayn beginSubsegmentin ympäri."
-  [line]
+  ^Segment [line]
   (AWSXRay/beginSubsegment line))
 
 (defn- wrap-end-subsegment

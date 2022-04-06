@@ -109,7 +109,7 @@
 (defn -handleSendTEPEmails
   "Hakee nippuja tietokannasta, joiden sähköpostit on aika lähettää, ja
   käsittelee näiden viestien lähettämisen viestinäpalveluun."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
   (loop [lahetettavat (do-nippu-query)]
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")

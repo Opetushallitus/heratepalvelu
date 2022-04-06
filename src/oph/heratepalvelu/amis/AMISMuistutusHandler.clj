@@ -90,7 +90,7 @@
 
 (defn -handleSendAMISMuistutus
   "Käsittelee AMISin muistutusviestien lähetystä."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
   (loop [muistutettavat1 (query-muistutukset 1)
          muistutettavat2 (query-muistutukset 2)]

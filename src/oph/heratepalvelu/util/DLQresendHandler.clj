@@ -2,13 +2,15 @@
   "Lähettää AMISin dead letter queuessa olevia herätteitä uudestaan."
   (:require [environ.core :refer [env]]
             [clojure.tools.logging :as log])
-  (:import (software.amazon.awssdk.services.sqs SqsClient)
-           (software.amazon.awssdk.regions Region)
-           (software.amazon.awssdk.services.sqs.model SendMessageRequest
-                                                      GetQueueUrlRequest)
-           (software.amazon.awssdk.core.client.config
+  (:import (software.amazon.awssdk.core.client.config
              ClientOverrideConfiguration)
-           (com.amazonaws.xray.interceptors TracingInterceptor)))
+           (com.amazonaws.services.lambda.runtime.events SQSEvent
+                                                         SQSEvent$SQSMessage)
+           (com.amazonaws.xray.interceptors TracingInterceptor)
+           (software.amazon.awssdk.regions Region)
+           (software.amazon.awssdk.services.sqs SqsClient)
+           (software.amazon.awssdk.services.sqs.model SendMessageRequest
+                                                      GetQueueUrlRequest)))
 
 (gen-class
   :name "oph.heratepalvelu.util.DLQresendHandler"
@@ -16,43 +18,34 @@
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(def sqs-client
+(def ^SqsClient sqs-client
   "SQS-client -objekti."
   (-> (SqsClient/builder)
       (.region (Region/EU_WEST_1))
       (.overrideConfiguration
         (-> (ClientOverrideConfiguration/builder)
             (.addExecutionInterceptor (TracingInterceptor.))
-            (.build)))
+            ^ClientOverrideConfiguration (.build)))
       (.build)))
-
-(defn- create-get-queue-url-req-builder
-  "Abstraktio GetQueueUrlRequest/builderin ympäri, joka helpottaa testaamista."
-  []
-  (GetQueueUrlRequest/builder))
-
-(defn- create-send-message-req-builder
-  "Abstraktio SendMessageRequest/builderin ympäri, joka helpottaa testaamista."
-  []
-  (SendMessageRequest/builder))
 
 (defn -handleDLQresend
   "Ottaa herätteitä vastaan AMISin dead letter queuesta ja lähettää ne
   uudestaan."
-  [this event context]
+  [this ^SQSEvent event context]
   (let [messages (seq (.getRecords event))
         queue-url (.queueUrl
                     (.getQueueUrl
                       sqs-client
-                      (-> (create-get-queue-url-req-builder)
+                      (-> (GetQueueUrlRequest/builder)
                           (.queueName (:queue-name env))
-                          (.build))))]
-    (doseq [msg messages]
+                          ^GetQueueUrlRequest (.build))))]
+    (doseq [^SQSEvent$SQSMessage msg messages]
       (log/info (.getBody msg))
       (try
-        (.sendMessage sqs-client (-> (create-send-message-req-builder)
-                                     (.queueUrl queue-url)
-                                     (.messageBody (.getBody msg))
-                                     (.build)))
+        (.sendMessage sqs-client
+                      (-> (SendMessageRequest/builder)
+                          (.queueUrl queue-url)
+                          (.messageBody (.getBody msg))
+                          ^SendMessageRequest (.build)))
         (catch Exception e
           (log/error e))))))

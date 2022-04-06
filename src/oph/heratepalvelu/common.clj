@@ -56,15 +56,9 @@
   []
   (str (UUID/randomUUID)))
 
-(defn to-date
-  "Parsii yyyy-MM-dd -muotoisen päivämäärän ja palauttaa LocalDate."
-  [str-date]
-  (let [[year month day] (map #(Integer. %1) (str/split str-date #"-"))]
-    (LocalDate/of year month day)))
-
 (defn local-date-now
   "Abstraktio LocalDate/now:n ympäri, joka helpottaa testaamista."
-  []
+  ^LocalDate []
   (LocalDate/now))
 
 (defn has-time-to-answer?
@@ -72,7 +66,7 @@
   [loppupvm]
   (when loppupvm
     (let [enddate (first (str/split loppupvm #"T"))]
-      (not (.isBefore (to-date enddate) (local-date-now))))))
+      (not (.isBefore (LocalDate/parse enddate) (local-date-now))))))
 
 (defn send-lahetys-data-to-ehoks
   "Lähettää lähetyksen tiedot ehoksiin."
@@ -170,10 +164,9 @@
 (defn next-niputus-date
   "Palauttaa seuraavan niputuspäivämäärän annetun päivämäärän jälkeen.
   Niputuspäivämäärät ovat kuun ensimmäinen ja kuudestoista päivä."
-  [pvm-str]
-  (let [[year month day] (map
-                           #(Integer. %)
-                           (str/split pvm-str #"-"))]
+  ^LocalDate [pvm-str]
+  (let [[^int year ^int month ^int day] (map #(Integer/parseInt %)
+                                             (str/split pvm-str #"-"))]
     (if (< day 16)
       (LocalDate/of year month 16)
       (if (= 12 month)
@@ -251,7 +244,7 @@
 (defn alku
   "Laskee vastausajan alkupäivämäärän: annettu päivämäärä jos se on vielä
   tulevaisuudessa; muuten tämä päivä."
-  [herate-date]
+  [^LocalDate herate-date]
   (if (.isAfter herate-date (local-date-now))
     herate-date
     (local-date-now)))
@@ -259,7 +252,7 @@
 (defn loppu
   "Laskee vastausajan loppupäivämäärän: 30 päivän päästä (inklusiivisesti),
   mutta ei myöhempi kuin 60 päivää (inklusiivisesti) herätepäivän jälkeen."
-  [herate alku]
+  [^LocalDate herate ^LocalDate alku]
   (let [last (.plusDays herate 59)
         normal (.plusDays alku 29)]
     (if (.isBefore last normal)
@@ -283,3 +276,13 @@
    (reduce-kv #(assoc %1 (str ":" (normalize-string (name %2))) %3)
               {}
               updates)})
+
+(defn is-before
+  "Wrapper .isBefore-metodin ympäri, jolla on tyyppianotaatiot."
+  [^LocalDate one-date ^LocalDate other-date]
+  (.isBefore one-date other-date))
+
+(defn is-after
+  "Wrapper .isAfter-metodin ympäri, jolla on tyyppianotaatiot."
+  [^LocalDate one-date ^LocalDate other-date]
+  (.isAfter one-date other-date))

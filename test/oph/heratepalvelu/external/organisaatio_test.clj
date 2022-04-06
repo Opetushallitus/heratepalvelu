@@ -6,7 +6,7 @@
 
 (use-fixtures :once tu/clear-logs-before-test)
 
-(defn- mock-client-get [uri options]
+(defn- mock-client-get [^String uri options]
   (if (.contains uri "11111")
     (throw (ex-info "Random error" {}))
     {:body {:uri uri :options options}}))

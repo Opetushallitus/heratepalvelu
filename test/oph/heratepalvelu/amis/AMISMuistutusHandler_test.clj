@@ -152,7 +152,7 @@
 (defn- mock-query-items [query-params options]
   (when (and (= :eq (first (:muistutukset query-params)))
              (= :n (first (second (:muistutukset query-params))))
-             (= :between (first (:lahetuspvm query-params)))
+             (= :between (first (:lahetyspvm query-params)))
              (= :s (first (first (second (:lahetyspvm query-params)))))
              (= :s (first (second (second (:lahetyspvm query-params)))))
              (= "muistutusIndex" (:index options)))
@@ -164,7 +164,7 @@
 (deftest test-query-muistutukset
   (testing "Varmista, että query-muistutukset kutsuu query-items oikein"
     (with-redefs
-      [oph.heratepalvelu.common/local-date-now (fn [] (t/local-date 2021 10 10))
+      [oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 10 10))
        oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
       (let [expected-1 {:muistutukset 0
                         :start-span "2021-10-01"
@@ -173,9 +173,9 @@
                         :start-span "2021-09-26"
                         :end-span "2021-09-30"}]
         (mh/query-muistutukset 1)
-        (is @mock-query-items-results expected-1)
+        (is (= @mock-query-items-results expected-1))
         (mh/query-muistutukset 2)
-        (is @mock-query-items-results expected-2)))))
+        (is (= @mock-query-items-results expected-2))))))
 
 (def test-handleSendAMISMuistutus-results (atom ""))
 

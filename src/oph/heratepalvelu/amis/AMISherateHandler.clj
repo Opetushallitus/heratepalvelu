@@ -9,7 +9,8 @@
              [get-opiskeluoikeus-catch-404]]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [environ.core :refer [env]])
-  (:import (com.fasterxml.jackson.core JsonParseException)
+  (:import (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage)
+           (com.fasterxml.jackson.core JsonParseException)
            (clojure.lang ExceptionInfo)))
 
 (gen-class
@@ -20,10 +21,10 @@
 
 (defn -handleAMISherate
   "Käsittelee herätteitä ja tallentaa ne tietokantaan, jos ne ovat valideja."
-  [this event context]
+  [this ^com.amazonaws.services.lambda.runtime.events.SQSEvent event context]
   (log-caller-details-sqs "handleAMISherate" context)
   (let [messages (seq (.getRecords event))]
-    (doseq [msg messages]
+    (doseq [^SQSEvent$SQSMessage msg messages]
       (try
         (let [herate (parse-string (.getBody msg) true)]
           (if (check-valid-herate-date (:alkupvm herate))

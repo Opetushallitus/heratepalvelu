@@ -4,14 +4,16 @@
             [environ.core :refer [env]])
   (:import (clojure.lang Reflector)
            (software.amazon.awssdk.services.dynamodb DynamoDbClient)
-           (software.amazon.awssdk.services.dynamodb.model AttributeValue
-                                                           Condition
-                                                           DeleteItemRequest
-                                                           GetItemRequest
-                                                           PutItemRequest
-                                                           QueryRequest
-                                                           ScanRequest
-                                                           UpdateItemRequest)
+           (software.amazon.awssdk.services.dynamodb.model
+             AttributeValue
+             AttributeValue$Builder
+             Condition
+             DeleteItemRequest
+             GetItemRequest
+             PutItemRequest
+             QueryRequest
+             ScanRequest
+             UpdateItemRequest)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.core.util DefaultSdkAutoConstructMap
                                              DefaultSdkAutoConstructList)
@@ -19,14 +21,14 @@
              ClientOverrideConfiguration)
            (com.amazonaws.xray.interceptors TracingInterceptor)))
 
-(def ddb-client
+(def ^DynamoDbClient ddb-client
   "DynamoDB client -objekti."
   (-> (DynamoDbClient/builder)
       (.region (Region/EU_WEST_1))
       (.overrideConfiguration
         (-> (ClientOverrideConfiguration/builder)
             (.addExecutionInterceptor (TracingInterceptor.))
-            (.build)))
+            ^ClientOverrideConfiguration (.build)))
       (.build)))
 
 (def ^:private comparison-operators
@@ -50,25 +52,17 @@
   (Reflector/invokeInstanceMethod
     inst m (to-array params)))
 
-(defn- create-attribute-value-builder
-  "Abstraktio AttributeValue/builderin ympäri, joka helpottaa testaamista."
-  []
-  (AttributeValue/builder))
-
 (defn to-attribute-value
   "Muuttaa [:<tyyppi> <arvo>] -tyyppisen arvo AttributeValue-objektiksi."
-  ([tk v]
+  (^AttributeValue [tk v]
    (if-let [t (get attribute-types tk)]
-     (.build (invoke-instance-method
-               (create-attribute-value-builder) t [(if (= t "n") (str v) v)]))
+     (.build ^AttributeValue$Builder (invoke-instance-method
+                                       (AttributeValue/builder)
+                                       t
+                                       [(if (= t "n") (str v) v)]))
      (throw (Exception. (str "Unknown attribute type " tk)))))
   ([[tk v]]
    (to-attribute-value tk v)))
-
-(defn- create-condition-builder
-  "Abstraktio Condition/builderin ympäri, joka helpottaa testaamista."
-  []
-  (Condition/builder))
 
 (defn build-condition
   "Muuttaa konditionaalisen hakuavaimen muodoista [:<op> [:<tyyppi> <arvo>]]
@@ -78,9 +72,9 @@
         values (if (coll? (first orig-values))
                  (map to-attribute-value orig-values)
                  [(to-attribute-value orig-values)])]
-    (-> (create-condition-builder)
-        (.attributeValueList values)
-        (.comparisonOperator (get comparison-operators op "EQ"))
+    (-> (Condition/builder)
+        (.attributeValueList ^clojure.lang.PersistentVector values)
+        (.comparisonOperator ^String (get comparison-operators op "EQ"))
         (.build))))
 
 (defn map-vals-to-attribute-values
@@ -106,9 +100,9 @@
                          (not (instance? DefaultSdkAutoConstructList v)))
                 (reduced (cond
                            (= t "n")
-                           (Integer. v)
+                           (Integer/parseInt v)
                            (= t "ns")
-                           (map #(Integer. %) v)
+                           (map #(Integer/parseInt %) v)
                            (= t "m")
                            (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
                                       {} (into {} v))
@@ -136,11 +130,6 @@
           {}
           (seq item)))
 
-(defn- create-put-item-request-builder
-  "Abstraktio PutItemRequest/builderin ympäri, joka helpottaa testaamista."
-  []
-  (PutItemRequest/builder))
-
 (defn put-item
   "Tallentaa yhden tietueen tietokantaan. Tallennettavassa itemissa täytyy olla
   primary key ja sort key (jos taulussa on sort key), ja options-objekti voi
@@ -149,18 +138,13 @@
   ([item options]
    (put-item item options (:herate-table env)))
   ([item options table]
-   (.putItem ddb-client (-> (create-put-item-request-builder)
+   (.putItem ddb-client (-> (PutItemRequest/builder)
                             (.tableName table)
                             (.item (map-vals-to-attribute-values item))
                             (cond->
                               (:cond-expr options)
                               (.conditionExpression (:cond-expr options)))
-                            (.build)))))
-
-(defn- create-query-request-builder
-  "Abstraktio QueryRequest/builderin ympäri, joka helpottaa testaamista."
-  []
-  (QueryRequest/builder))
+                            ^PutItemRequest (.build)))))
 
 (defn query-items
   "Hakee tietueita tiettyjen ehtojen perusteella. Ehdot, jotka koskevat primary
@@ -184,7 +168,7 @@
    (query-items key-conds options (:herate-table env)))
   ([key-conds options table]
    (let [conditions (map-vals-to-conditions key-conds)
-         response (.query ddb-client (-> (create-query-request-builder)
+         response (.query ddb-client (-> (QueryRequest/builder)
                                          (.tableName table)
                                          (.keyConditions conditions)
                                          (cond->
@@ -202,14 +186,9 @@
                                            (.expressionAttributeValues
                                              (map-vals-to-attribute-values
                                                (:expr-attr-vals options))))
-                                         (.build)))
+                                         ^QueryRequest (.build)))
          items (.items response)]
      (vec (map map-attribute-values-to-vals items)))))
-
-(defn- create-update-item-request-builder
-  "Abstraktio UpdateItemRequest/builderin ympäri, joka helpottaa testaamista."
-  []
-  (UpdateItemRequest/builder))
 
 (defn update-item
   "Päivittää yhden tietueen tietokantaan. Tietue identifioidaan key-condsissa
@@ -231,27 +210,20 @@
   ([key-conds options]
    (update-item key-conds options (:herate-table env)))
   ([key-conds options table]
-   (let [req (-> (create-update-item-request-builder)
+   (let [req (-> (UpdateItemRequest/builder)
                  (.tableName table)
                  (.key (map-vals-to-attribute-values key-conds))
                  (.updateExpression (:update-expr options))
                  (cond->
                    (:expr-attr-names options)
-                   (.expressionAttributeNames
-                     (:expr-attr-names options))
+                   (.expressionAttributeNames (:expr-attr-names options))
                    (:expr-attr-vals options)
                    (.expressionAttributeValues
                      (map-vals-to-attribute-values (:expr-attr-vals options)))
                    (:cond-expr options)
-                   (.conditionExpression
-                     (:cond-expr options)))
-                 (.build))]
+                   (.conditionExpression (:cond-expr options)))
+                 ^UpdateItemRequest (.build))]
      (.updateItem ddb-client req))))
-
-(defn- create-get-item-request-builder
-  "Abstraktio GetItemRequest/builderin ympäri, joka helpottaa testaamista."
-  []
-  (GetItemRequest/builder))
 
 (defn get-item
   "Hakee yhden tietueen tietokannasta key-condsin perusteella. Avaimien syntaksi
@@ -260,18 +232,13 @@
   ([key-conds]
    (get-item key-conds (:herate-table env)))
   ([key-conds table]
-   (let [req (-> (create-get-item-request-builder)
+   (let [req (-> (GetItemRequest/builder)
                  (.tableName table)
                  (.key (map-vals-to-attribute-values key-conds))
-                 (.build))
+                 ^GetItemRequest (.build))
          response (.getItem ddb-client req)
          item (.item response)]
      (map-attribute-values-to-vals item))))
-
-(defn- create-delete-item-request-builder
-  "Abstraktio DeleteItemRequest/builderin ympäri, joka helpottaa testaamista."
-  []
-  (DeleteItemRequest/builder))
 
 (defn delete-item
   "Poistaa yhden tietueen tietokannasta key-condsin perusteella. Avaimien
@@ -280,16 +247,11 @@
   ([key-conds]
    (delete-item key-conds (:herate-table env)))
   ([key-conds table]
-   (let [req (-> (create-delete-item-request-builder)
+   (let [req (-> (DeleteItemRequest/builder)
                  (.tableName table)
                  (.key (map-vals-to-attribute-values key-conds))
-                 (.build))]
+                 ^DeleteItemRequest (.build))]
      (.deleteItem ddb-client req))))
-
-(defn- create-scan-request-builder
-  "Abstraktio ScanRequest/builderin ympäri, joka helpottaa testaamista."
-  []
-  (ScanRequest/builder))
 
 (defn scan
   "Käy taulussa olevien tietueiden läpi useat kerralla jossakin järjestyksessä.
@@ -305,20 +267,19 @@
                             laitetaan avaimien sijoihin, kun ekspressio
                             evaluoidaan"
   [options table]
-  (let [req (-> (create-scan-request-builder)
+  (let [req (-> (ScanRequest/builder)
                 (cond->
                   (:filter-expression options)
                   (.filterExpression (:filter-expression options))
                   (:exclusive-start-key options)
                   (.exclusiveStartKey (:exclusive-start-key options))
                   (:expr-attr-names options)
-                  (.expressionAttributeNames
-                    (:expr-attr-names options))
+                  (.expressionAttributeNames (:expr-attr-names options))
                   (:expr-attr-vals options)
                   (.expressionAttributeValues
                     (map-vals-to-attribute-values (:expr-attr-vals options))))
                 (.tableName table)
-                (.build))
+                ^ScanRequest (.build))
         response (.scan ddb-client req)
         items (.items response)]
     {:items (into [] (map map-attribute-values-to-vals items))

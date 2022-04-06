@@ -28,7 +28,7 @@
   (try
     (let [utilobj (PhoneNumberUtil/getInstance)
           numberobj (.parse utilobj number "FI")]
-      (and (empty? (filter (fn [x] (Character/isLetter x)) number))
+      (and (empty? (filter (fn [^Character x] (Character/isLetter x)) number))
            (.isValidNumber utilobj numberobj)
            (let [numtype (str (.getNumberType utilobj numberobj))]
              (or (= numtype "FIXED_LINE_OR_MOBILE") (= numtype "MOBILE")))))
@@ -120,7 +120,7 @@
 (defn -handleTepSmsSending
   "Hakee nippuja tietokannasta, joilta ei ole lähetetty SMS-viestejä, ja
   käsittelee viestien lähetystä."
-  [this event context]
+  [this event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
   (loop [lahetettavat (query-lahetettavat 20)]
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
