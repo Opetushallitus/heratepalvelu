@@ -8,12 +8,13 @@
             [clj-http.client :refer [request]]
             [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]]
             [oph.heratepalvelu.external.aws-ssm :as ssm])
-  (:import (fi.vm.sade.utils.cas CasParams
+  (:import (fi.vm.sade.utils.cas CasClient
+                                 CasParams
                                  TicketGrantingTicketClient
                                  ServiceTicketClient)
            (org.http4s Uri)))
 
-(defrecord CasClient [client params session-id])
+(defrecord CasClientWrapper [client params session-id])
 
 (def client
   "CAS-client -objekti (atom, joka saa sisältää nil)."
@@ -25,16 +26,16 @@
     (ssm/get-secret (str "/" (:stage env) "/services/heratepalvelu/cas-pwd"))))
 
 (defn init-client
-  "Luo ja asentaa uuden CasClient-rekordin."
+  "Luo ja asentaa uuden CasClientWrapper-rekordin."
   []
   (let [username   (:cas-user env)
         password   @pwd
         cas-url    (:cas-url env)
         cas-params (cas-params "/ryhmasahkoposti-service" username password)
         cas-client (cas-client cas-url (:caller-id env))]
-    (map->CasClient {:client     cas-client
-                     :params     cas-params
-                     :session-id (atom nil)})))
+    (map->CasClientWrapper {:client     cas-client
+                            :params     cas-params
+                            :session-id (atom nil)})))
 
 (defn request-with-json-body
   "Muuttaa request bodyn JSON-muodoksi ja lisää sen requestiin."
@@ -62,7 +63,7 @@
   [method url options body]
   (when (nil? @client)
     (reset! client (init-client)))
-  (let [cas-client     (:client @client)
+  (let [cas-client     ^CasClient (:client @client)
         cas-params     (:params @client)
         cas-session-id (:session-id @client)]
     (when (nil? @cas-session-id)

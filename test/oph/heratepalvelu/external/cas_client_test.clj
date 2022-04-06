@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.external.cas-client-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.external.cas-client :as cas]))
+            [oph.heratepalvelu.external.cas-client :as cas])
+  (:import (fi.vm.sade.utils.cas CasClient CasParams)))
 
 (defn- mock-cas-client [url caller-id]
   (str "cas-client-placeholder " url " " caller-id))
@@ -56,25 +57,16 @@
         (is (= (cas/create-params cas-session-id body) results-body))
         (is (= (cas/create-params cas-session-id nil) results-no-body))))))
 
-(definterface IMockCasSession
-  (run []))
-
-(deftype MockCasSession [session-id]
-  IMockCasSession
-  (run [this] session-id))
-
-(definterface IMockCasClient
-  (fetchCasSession [cas-params session-id-key]))
-
-(deftype MockCasClient []
-  IMockCasClient
-  (fetchCasSession [this cas-params session-id-key]
-    (MockCasSession. (str cas-params " " session-id-key))))
+(def mockCasClient
+  (proxy [CasClient] ["" nil "abcdef"]
+    (fetchCasSession [cas-params session-id-key]
+      (scalaz.concurrent.Task/now (str cas-params " " session-id-key)))))
 
 (defn- mock-init-client []
-  (cas/map->CasClient {:client (MockCasClient.)
-                       :params "cas-params-placeholder"
-                       :session-id (atom nil)}))
+  (cas/map->CasClientWrapper {:client mockCasClient
+                              :params (proxy [CasParams] [nil nil]
+                                        (toString [] "cas-params-placeholder"))
+                              :session-id (atom nil)}))
 
 (def mock-clj-http-client-request-count (atom 0))
 
