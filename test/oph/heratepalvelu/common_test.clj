@@ -3,7 +3,6 @@
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.test-util :refer :all]
             [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [clojure.string :as str])
   (:import (java.time LocalDate)))
 

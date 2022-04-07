@@ -38,7 +38,7 @@
 
 (defn -handleDeleteTunnus
   "Käsittelee poistettavan tunnuksen ja poistaa sen tietokannasta."
-  [this ^SQSEvent event context]
+  [_ ^SQSEvent event context]
   (log-caller-details-sqs "handleDeleteTunnus" context)
   (let [messages (seq (.getRecords event))]
     (doseq [^SQSEvent$SQSMessage msg messages]

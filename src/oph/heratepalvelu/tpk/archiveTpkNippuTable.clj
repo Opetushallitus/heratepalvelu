@@ -41,5 +41,5 @@
   "Arkistoi kaikki vanhoihin tiedonkeruukausiin kuuluvat niput. Jos funktion
   sallittu ajoaika loppuu kesken ajon, voi joutua ajamaan funktion monta
   kertaa."
-  [this event context]
+  [_ _ _]
   (do-tpk-nippu-table-archiving "2021-07-01" (:archive-table-2021-fall env)))

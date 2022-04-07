@@ -61,7 +61,7 @@
                          :nippu-table "nippu-table-name"}
        oph.heratepalvelu.common/generate-uuid mock-generate-uuid
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 31))
-       oph.heratepalvelu.common/rand-str (fn [x] "abcdef")
+       oph.heratepalvelu.common/rand-str (fn [_] "abcdef")
        oph.heratepalvelu.db.dynamodb/query-items mock-niputa-query-items
        oph.heratepalvelu.external.arvo/create-nippu-kyselylinkki
        mock-create-nippu-kyselylinkki

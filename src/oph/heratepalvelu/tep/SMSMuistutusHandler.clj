@@ -26,9 +26,7 @@
   (doseq [nippu muistutettavat]
     (log/info "Kyselylinkin tunnusosa:"
               (last (str/split (:kyselylinkki nippu) #"_")))
-    (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))
-          ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
-          niputuspvm (:niputuspvm nippu)]
+    (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (try
@@ -79,7 +77,7 @@
 
 (defn -handleSendSMSMuistutus
   "Hakee SMS-muistutettavia nippuja tietokannasta ja lähettää viestejä."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendSMSMuistutus" event context)
   (loop [muistutettavat (query-muistutukset)]
     (sendSmsMuistutus muistutettavat)

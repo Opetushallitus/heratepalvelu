@@ -96,7 +96,7 @@
                                :as      :json}}]
         (is (= (elisa/send-tep-sms number message) results))))))
 
-(defn- mock-client-post-with-error [url options] (throw (ex-info "ABCDE" {})))
+(defn- mock-client-post-with-error [_ _] (throw (ex-info "ABCDE" {})))
 
 (deftest test-send-tep-sms-with-error
   (testing "Varmista, että send-tep-sms käsittelee virheitä oikein"

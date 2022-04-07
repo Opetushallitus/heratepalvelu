@@ -70,10 +70,6 @@
                         :opiskeluoikeus opiskeluoikeus})
   (= (:oid opiskeluoikeus) "123.456.789"))
 
-(defn- mock-delete-amis-kyselylinkki [kyselylinkki]
-  (add-to-test-results {:type "mock-delete-amis-kyselylinkki"
-                        :kyselylinkki kyselylinkki}))
-
 (defn- mock-get-toimipiste [suoritus]
   (add-to-test-results {:type "mock-get-toimipiste" :suoritus suoritus})
   "abc")

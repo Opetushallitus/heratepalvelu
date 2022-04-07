@@ -585,7 +585,7 @@
                   oph.heratepalvelu.tep.jaksoHandler/save-jaksotunnus
                   mock-save-jaksotunnus
                   oph.heratepalvelu.tep.jaksoHandler/tep-herate-checker
-                  (fn [x] nil)]
+                  (fn [_] nil)]
       (let [event (tu/mock-sqs-event {:opiskeluoikeus-oid "123.456.789"
                                       :loppupvm "2021-12-15"
                                       :hankkimistapa-id 12345})

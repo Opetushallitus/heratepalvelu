@@ -4,12 +4,6 @@
   (:import (com.amazonaws.services.lambda.runtime Context)
            (com.amazonaws.services.lambda.runtime.events ScheduledEvent)))
 
-(defn- get-caller-header
-  "Hakee kutsuvan järjestelmän oid:n Caller-Id-headerista, palauttaa
-  no-caller-id-found jos headeria ei löydy"
-  [headers]
-  (get headers "Caller-Id" "no-caller-id-found"))
-
 (defn- parse-schedule-rules
   "Parsii scheduled-eventistä kutsuvan säännön"
   [^ScheduledEvent event]

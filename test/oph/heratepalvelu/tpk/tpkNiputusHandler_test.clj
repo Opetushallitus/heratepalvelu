@@ -267,7 +267,7 @@
           {}
           (seq (get mock-niputtamattomat-list index))))
 
-(defn- mock-query-niputtamattomat [exclusive-start-key]
+(defn- mock-query-niputtamattomat [_]
   {:items (map
             ddb/map-attribute-values-to-vals
             (map ddb/map-vals-to-attribute-values mock-niputtamattomat-list))})

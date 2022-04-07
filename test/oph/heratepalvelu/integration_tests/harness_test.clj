@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.integration-tests.harness-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.integration-tests.mock-db :as mdb]))
 
 (deftest test-db-mock-functions

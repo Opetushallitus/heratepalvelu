@@ -3,7 +3,6 @@
   tietokantaan."
   (:require [clj-time.coerce :as c]
             [clj-time.core :as t]
-            [clj-time.format :as f]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
@@ -11,8 +10,7 @@
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as k]
-            [oph.heratepalvelu.log.caller-log :refer :all]
-            [schema.core :as s])
+            [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (clojure.lang ExceptionInfo)))
 
 (gen-class
@@ -105,7 +103,7 @@
 (defn -handleUpdatedOpiskeluoikeus
   "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
   tietokantaan."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus" event context)
   (let [start-time (System/currentTimeMillis)
         last-checked (:value (ddb/get-item

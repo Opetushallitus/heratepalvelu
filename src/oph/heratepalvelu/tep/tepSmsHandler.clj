@@ -41,20 +41,18 @@
   "Päivittää tiedot tietokantaan, kun SMS-viesti on lähetetty
   viestintäpalveluun. Parametrin status pitäisi olla string."
   [status puhelinnumero nippu new-loppupvm]
-  (let [ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
-        niputuspvm                  (:niputuspvm nippu)]
-    (try
-      (let [updates {:sms_kasittelytila [:s status]
-                     :sms_lahetyspvm    [:s (str (c/local-date-now))]
-                     :sms_muistutukset  [:n 0]
-                     :lahetettynumeroon [:s puhelinnumero]}
-            updates (if new-loppupvm
-                      (assoc updates :voimassaloppupvm [:s new-loppupvm])
-                      updates)]
-        (tc/update-nippu nippu updates))
-      (catch Exception e
-        (log/error (str "Error in update-status-to-db. Status:" status))
-        (throw e)))))
+  (try
+    (let [updates {:sms_kasittelytila [:s status]
+                   :sms_lahetyspvm    [:s (str (c/local-date-now))]
+                   :sms_muistutukset  [:n 0]
+                   :lahetettynumeroon [:s puhelinnumero]}
+          updates (if new-loppupvm
+                    (assoc updates :voimassaloppupvm [:s new-loppupvm])
+                    updates)]
+      (tc/update-nippu nippu updates))
+    (catch Exception e
+      (log/error (str "Error in update-status-to-db. Status:" status))
+      (throw e))))
 
 (defn update-arvo-obj-sms
   "Luo Arvon päivitysobjektin tilan ja uuden loppupäivämäärän perusteella."
@@ -120,7 +118,7 @@
 (defn -handleTepSmsSending
   "Hakee nippuja tietokannasta, joilta ei ole lähetetty SMS-viestejä, ja
   käsittelee viestien lähetystä."
-  [this event ^com.amazonaws.services.lambda.runtime.Context context]
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
   (loop [lahetettavat (query-lahetettavat 20)]
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")

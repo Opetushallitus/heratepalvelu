@@ -1,7 +1,6 @@
 (ns oph.heratepalvelu.db.dynamodb
   "Funktiot, joilla päivitetään tietokanta ja haetaan siitä tietoja."
-  (:require [clojure.tools.logging :as log]
-            [environ.core :refer [env]])
+  (:require [environ.core :refer [env]])
   (:import (clojure.lang Reflector)
            (software.amazon.awssdk.services.dynamodb DynamoDbClient)
            (software.amazon.awssdk.services.dynamodb.model
@@ -93,7 +92,7 @@
   "Hakee arvon AttributeValue-objektista ja muuttaa sen oikeaksi
   Clojure-tyypiksi."
   [av]
-  (reduce (fn [o t]
+  (reduce (fn [_ t]
             (let [v (invoke-instance-method av t [])]
               (when (and (some? v)
                          (not (instance? DefaultSdkAutoConstructMap v))

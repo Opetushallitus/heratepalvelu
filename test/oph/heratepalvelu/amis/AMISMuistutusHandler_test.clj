@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.amis.AMISMuistutusHandler-test
-  (:require [clj-time.core :as t]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISMuistutusHandler :as mh]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
