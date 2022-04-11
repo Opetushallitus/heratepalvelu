@@ -10,7 +10,7 @@
   "Alustavat optiot ehoks-kyselyyn."
   []
   {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
-                                                    "cas-security-check")}
+                                             "cas-security-check")}
    :as      :json})
 
 (defn- ehoks-get
