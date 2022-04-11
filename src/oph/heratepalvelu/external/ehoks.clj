@@ -14,52 +14,59 @@
    :as      :json})
 
 (defn- ehoks-get
-  "Tekee GET-kysely ehoksiin."
-  [uri-path options]
-  (client/get (str (:ehoks-url env) uri-path)
-              (merge (ehoks-query-base-options) options)))
+  "Tekee GET-kyselyn ehoksiin."
+  ([uri-path] (ehoks-get uri-path {}))
+  ([uri-path options]
+   (client/get (str (:ehoks-url env) uri-path)
+               (merge (ehoks-query-base-options) options))))
+
+(defn- ehoks-post
+  "Tekee POST-kyselyn ehoksiin"
+  ([uri-path] (ehoks-post uri-path {}))
+  ([uri-path options]
+   (client/post (str (:ehoks-url env) uri-path)
+                (merge (ehoks-query-base-options) options))))
+
+(defn- ehoks-patch
+  "Tekee PATCH-kyselyn ehoksiin"
+  ([uri-path] (ehoks-patch uri-path {}))
+  ([uri-path options]
+   (client/patch (str (:ehoks-url env) uri-path)
+                 (merge (assoc (ehoks-query-base-options)
+                               :content-type
+                               "application/json")
+                        options))))
 
 (defn get-hoks-by-opiskeluoikeus
   "Hakee HOKSin opiskeluoikeuden OID:n perusteella."
   [oo-oid]
-  (:data (:body (ehoks-get (str "hoks/opiskeluoikeus/" oo-oid) {}))))
+  (:data (:body (ehoks-get (str "hoks/opiskeluoikeus/" oo-oid)))))
 
 (defn add-kyselytunnus-to-hoks
   "Lisää kyselytunnuksen HOKSiin. Tekee yhden retryn automaattiesti."
   [hoks-id data]
-  (let [action (fn [] (client/post
-                        (str (:ehoks-url env) "hoks/" hoks-id "/kyselylinkki")
-                        {:headers {:ticket (cas/get-service-ticket
-                                             "/ehoks-virkailija-backend"
-                                             "cas-security-check")}
-                         :content-type "application/json"
-                         :body (generate-string data)
-                         :as :json}))]
+  (let [action (fn [] (ehoks-post (str "hoks/" hoks-id "/kyselylinkki")
+                                  {:content-type "application/json"
+                                   :body         (generate-string data)}))]
     (try (action)
          (catch ExceptionInfo e (action)))))
 
 (defn get-osaamisen-hankkimistapa-by-id
   "Hakee osaamisen hankkimistavan ID:n perusteella."
   [oht-id]
-  (:data (:body (ehoks-get (str "hoks/osaamisen-hankkimistapa/" oht-id) {}))))
+  (:data (:body (ehoks-get (str "hoks/osaamisen-hankkimistapa/" oht-id)))))
 
 (defn get-hankintakoulutus-oids
   "Hakee HOKSin hankintakoulutus-OID:t."
   [hoks-id]
-  (:body (ehoks-get (str "hoks/" hoks-id "/hankintakoulutukset") {})))
+  (:body (ehoks-get (str "hoks/" hoks-id "/hankintakoulutukset"))))
 
 (defn add-lahetys-info-to-kyselytunnus
   "Lisää lähetysinfon kyselytunnukseen. Tekee yhden retryn jos vastaus on virhe
   ja status ei ole 404."
   [data]
-  (let [action (fn [] (client/patch
-                        (str (:ehoks-url env) "hoks/kyselylinkki")
-                        {:headers {:ticket (cas/get-service-ticket
-                                             "/ehoks-virkailija-backend"
-                                             "cas-security-check")}
-                         :content-type "application/json"
-                         :body (generate-string data)
-                         :as :json}))]
+  (let [action (fn [] (ehoks-patch "hoks/kyselylinkki"
+                                   {:body (generate-string data)}))]
     (try (action)
          (catch ExceptionInfo e
            (if (not= 404 (:status (ex-data e)))
@@ -69,16 +76,7 @@
 (defn patch-oht-tep-kasitelty
   "Merkitsee osaamisen hankkimistavan käsitellyksi eHOKS-palvelussa."
   [id]
-  (client/patch
-    (str (:ehoks-url env)
-         "heratepalvelu/osaamisenhankkimistavat/"
-         id
-         "/kasitelty")
-    {:headers {:ticket (cas/get-service-ticket
-                         "/ehoks-virkailija-backend"
-                         "cas-security-check")}
-     :content-type "application/json"
-     :as :json}))
+  (ehoks-patch (str "heratepalvelu/osaamisenhankkimistavat/" id "/kasitelty")))
 
 (defn get-paattyneet-tyoelamajaksot
   "Pyytää eHOKS-palvelua lähettämään käsittelemättömät TEP-jaksot SQS:iin."
@@ -96,54 +94,31 @@
                              :end end
                              :limit limit}}))
 
-(defn patch-amisherate-kasitelty
-  "Merkitsee HOKSin aloitus- tai päättöherätteen käsitellyksi."
-  [url-tyyppi-element id]
-  (client/patch
-    (str (:ehoks-url env) "heratepalvelu/hoksit/" id "/" url-tyyppi-element)
-    {:headers {:ticket (cas/get-service-ticket
-                         "/ehoks-virkailija-backend"
-                         "cas-security-check")}
-     :content-type "application/json"
-     :as :json}))
-
 (defn patch-amis-aloitusherate-kasitelty
   "Merkitsee HOKSin aloitusherätteen käsitellyksi."
   [id]
-  (patch-amisherate-kasitelty "aloitusherate-kasitelty" id))
+  (ehoks-patch (str "heratepalvelu/hoksit/" id "/aloitusherate-kasitelty")))
 
 (defn patch-amis-paattoherate-kasitelty
   "Merkitsee HOKSin päättöherätteen käsitellyksi."
   [id]
-  (patch-amisherate-kasitelty "paattoherate-kasitelty" id))
+  (ehoks-patch (str "heratepalvelu/hoksit/" id "/paattoherate-kasitelty")))
 
 (defn resend-aloitusheratteet
   "Pyytää eHOKS-palvelua lähettämään aloitusherätteet uudelleen tietylle
   aikavälille."
   [start end]
-  (client/post
-    (str (:ehoks-url env) "heratepalvelu/hoksit/resend-aloitusherate")
-    {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
-                                               "cas-security-check")}
-     :query-params {:from start :to end}
-     :as :json}))
+  (ehoks-post "heratepalvelu/hoksit/resend-aloitusherate"
+              {:query-params {:from start :to end}}))
 
 (defn resend-paattoheratteet
   "Pyytää eHOKS-palvelua lähettämään päättöherätteet uudelleen tietylle
   aikavälille."
   [start end]
-  (client/post
-    (str (:ehoks-url env) "heratepalvelu/hoksit/resend-paattoherate")
-    {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
-                                               "cas-security-check")}
-     :query-params {:from start :to end}
-     :as :json}))
+  (ehoks-post "heratepalvelu/hoksit/resend-paattoherate"
+              {:query-params {:from start :to end}}))
 
 (defn update-ehoks-opiskeluoikeudet
   "Päivittää aktiivisten hoksien opiskeluoikeudet Koskesta"
   []
-  (client/post
-    (str (:ehoks-url env) "heratepalvelu/opiskeluoikeus-update")
-    {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
-                                               "cas-security-check")}
-     :as :json}))
+  (ehoks-post "heratepalvelu/opiskeluoikeus-update" {}))
