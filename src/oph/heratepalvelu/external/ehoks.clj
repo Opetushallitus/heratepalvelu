@@ -6,17 +6,23 @@
             [oph.heratepalvelu.external.http-client :as client])
   (:import (clojure.lang ExceptionInfo)))
 
+(defn- ehoks-query-base-options
+  "Alustavat optiot ehoks-kyselyyn."
+  []
+  {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
+                                                    "cas-security-check")}
+   :as      :json})
+
+(defn- ehoks-get
+  "Tekee GET-kysely ehoksiin."
+  [uri-path options]
+  (client/get (str (:ehoks-url env) uri-path)
+              (merge (ehoks-query-base-options) options)))
+
 (defn get-hoks-by-opiskeluoikeus
   "Hakee HOKSin opiskeluoikeuden OID:n perusteella."
-  [opiskeluoikeus-oid]
-  (:data (:body (client/get
-                  (str (:ehoks-url env)
-                       "hoks/opiskeluoikeus/"
-                       opiskeluoikeus-oid)
-                  {:headers {:ticket (cas/get-service-ticket
-                                       "/ehoks-virkailija-backend"
-                                       "cas-security-check")}
-                   :as      :json}))))
+  [oo-oid]
+  (:data (:body (ehoks-get (str "hoks/opiskeluoikeus/" oo-oid) {}))))
 
 (defn add-kyselytunnus-to-hoks
   "Lisää kyselytunnuksen HOKSiin. Tekee yhden retryn automaattiesti."
@@ -35,22 +41,12 @@
 (defn get-osaamisen-hankkimistapa-by-id
   "Hakee osaamisen hankkimistavan ID:n perusteella."
   [oht-id]
-  (:data (:body (client/get
-                  (str (:ehoks-url env) "hoks/osaamisen-hankkimistapa/" oht-id)
-                  {:headers {:ticket (cas/get-service-ticket
-                                       "/ehoks-virkailija-backend"
-                                       "cas-security-check")}
-                   :as      :json}))))
+  (:data (:body (ehoks-get (str "hoks/osaamisen-hankkimistapa/" oht-id) {}))))
 
 (defn get-hankintakoulutus-oids
   "Hakee HOKSin hankintakoulutus-OID:t."
   [hoks-id]
-  (:body (client/get
-           (str (:ehoks-url env) "hoks/" hoks-id "/hankintakoulutukset")
-           {:headers {:ticket (cas/get-service-ticket
-                                "/ehoks-virkailija-backend"
-                                "cas-security-check")}
-            :as      :json})))
+  (:body (ehoks-get (str "hoks/" hoks-id "/hankintakoulutukset") {})))
 
 (defn add-lahetys-info-to-kyselytunnus
   "Lisää lähetysinfon kyselytunnukseen. Tekee yhden retryn jos vastaus on virhe
@@ -87,29 +83,18 @@
 (defn get-paattyneet-tyoelamajaksot
   "Pyytää eHOKS-palvelua lähettämään käsittelemättömät TEP-jaksot SQS:iin."
   [start end limit]
-  (client/get
-    (str (:ehoks-url env) "heratepalvelu/tyoelamajaksot")
-    {:headers {:ticket (cas/get-service-ticket
-                         "/ehoks-virkailija-backend"
-                         "cas-security-check")}
-     :query-params {:start start
-                    :end end
-                    :limit limit}
-     :as :json}))
+  (ehoks-get "heratepalvelu/tyoelamajaksot" {:query-params {:start start
+                                                            :end end
+                                                            :limit limit}}))
 
 (defn get-retry-kyselylinkit
   "Pyytää eHOKS-palvelua lähettämään käsittelemättömät AMIS-herätteet
   SQS:iin."
   [start end limit]
-  (client/get
-    (str (:ehoks-url env) "heratepalvelu/kasittelemattomat-heratteet")
-    {:headers {:ticket (cas/get-service-ticket
-                         "/ehoks-virkailija-backend"
-                         "cas-security-check")}
-     :query-params {:start start
-                    :end end
-                    :limit limit}
-     :as :json}))
+  (ehoks-get "heratepalvelu/kasittelemattomat-heratteet"
+             {:query-params {:start start
+                             :end end
+                             :limit limit}}))
 
 (defn patch-amisherate-kasitelty
   "Merkitsee HOKSin aloitus- tai päättöherätteen käsitellyksi."
