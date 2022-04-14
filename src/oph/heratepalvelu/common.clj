@@ -225,7 +225,7 @@
                (check-db? "tutkinnon_osia_suorittaneet"))
           (check-db? kyselytyyppi)))
     true
-    (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
+    (log/info "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
               oppija " koulutustoimijalla " koulutustoimija
               "(tyyppi '" kyselytyyppi "' kausi " laskentakausi ")")))
 
