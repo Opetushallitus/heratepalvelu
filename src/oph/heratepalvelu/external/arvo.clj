@@ -18,6 +18,37 @@
   (delay
     (ssm/get-secret (str "/" (:stage env) "/services/heratepalvelu/arvo-pwd"))))
 
+(defn- arvo-delete
+  "Tekee DELETE-kyselyn Arvoon."
+  [uri-path]
+  (client/delete (str (:arvo-url env) uri-path)
+                 {:basic-auth [(:arvo-user env) @pwd]}))
+
+(defn- arvo-get
+  "Tekee GET-kyselyn Arvoon."
+  [uri-path]
+  (client/get (str (:arvo-url env) uri-path)
+              {:basic-auth [(:arvo-user env) @pwd]
+               :as         :json}))
+
+(defn- arvo-patch
+  "Tekee PATCH-kyselyn Arvoon."
+  [uri-path body]
+  (client/patch (str (:arvo-url env) uri-path)
+                {:basic-auth   [(:arvo-user env) @pwd]
+                 :content-type "application/json"
+                 :body         (generate-string body)
+                 :as           :json}))
+
+(defn- arvo-post
+  "Tekee POST-kyselyn Arvoon."
+  [uri-path body]
+  (client/post (str (:arvo-url env) uri-path)
+               {:content-type "application/json"
+                :body         (generate-string body)
+                :basic-auth   [(:arvo-user env) @pwd]
+                :as           :json}))
+
 (defn get-toimipiste
   "Palauttaa toimipisteen OID jos sen organisaatiotyyppi on toimipiste. Tämä
   tarkistetaan tekemällä request organisaatiopalveluun. Jos organisaatiotyyppi
@@ -91,13 +122,7 @@
   "Pyytää Arvolta uuden AMIS-kyselylinkin annettujen tietojen perusteella."
   [data]
   (try
-    (let [resp (client/post
-                 (str (:arvo-url env) "vastauslinkki/v1")
-                 {:content-type "application/json"
-                  :body         (generate-string data)
-                  :basic-auth   [(:arvo-user env) @pwd]
-                  :as           :json})]
-      (:body resp))
+    (:body (arvo-post "vastauslinkki/v1" data))
     (catch ExceptionInfo e
       (log/error "request-id: " (:request_id data))
       (log/error e)
@@ -116,39 +141,27 @@
 (defn delete-amis-kyselylinkki
   "Poistaa AMIS-kyselylinkin Arvosta."
   [linkki]
-  (let [tunnus (last (str/split linkki #"/"))]
-    (client/delete (str (:arvo-url env) "vastauslinkki/v1/" tunnus)
-                   {:basic-auth [(:arvo-user env) @pwd]})))
+  (arvo-delete (str "vastauslinkki/v1/" (last (str/split linkki #"/")))))
 
 (defn get-kyselylinkki-status
   "Hakee Arvolta AMIS-kyselylinkin tilan."
   [linkki]
-  (let [tunnus (last (str/split linkki #"/"))]
-    (:body (client/get (str (:arvo-url env) "vastauslinkki/v1/status/" tunnus)
-                       {:basic-auth [(:arvo-user env) @pwd]
-                        :as         :json}))))
+  (:body (arvo-get (str "vastauslinkki/v1/status/"
+                        (last (str/split linkki #"/"))))))
 
 (defn get-nippulinkki-status
   "Hakee TEP-kyselylinkin tilan."
   [linkki]
-  (let [tunniste (last (str/split linkki #"/"))]
-    (:body (client/get
-             (str (:arvo-url env) "tyoelamapalaute/v1/status/" tunniste)
-             {:basic-auth [(:arvo-user env) @pwd]
-              :as         :json}))))
+  (:body (arvo-get (str "tyoelamapalaute/v1/status/"
+                        (last (str/split linkki #"/"))))))
 
 (defn patch-kyselylinkki-metadata
   "Päivittää AMIS-kyselinkin tilan Arvoon."
   [linkki tila]
   (try
     (let [tunnus (last (str/split linkki #"/"))]
-      (:body (client/patch
-               (str (:arvo-url env) "vastauslinkki/v1/" tunnus "/metatiedot")
-               {:basic-auth   [(:arvo-user env) @pwd]
-                :content-type "application/json"
-                :body         (generate-string {:tila tila})
-                :as           :json})))
-
+      (:body (arvo-patch (str "vastauslinkki/v1/" tunnus "/metatiedot")
+                         {:tila tila})))
     (catch ExceptionInfo e
       (log/error e)
       (when-not (= 404 (:status (ex-data e)))
@@ -205,13 +218,7 @@
   "Pyytää Arvolta TEP-jaksotunnuksen."
   [data]
   (try
-    (let [resp (client/post
-                 (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus")
-                 {:content-type "application/json"
-                  :body         (generate-string data)
-                  :basic-auth   [(:arvo-user env) @pwd]
-                  :as           :json})]
-      resp)
+    (arvo-post "tyoelamapalaute/v1/vastaajatunnus" data)
     (catch ExceptionInfo e
       (log/error e)
       (when-not (= 404 (:status (ex-data e)))
@@ -220,9 +227,7 @@
 (defn delete-jaksotunnus
   "Poistaa TEP-jaksotunnuksen Arvosta."
   [tunnus]
-  (client/delete
-    (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
-    {:basic-auth   [(:arvo-user env) @pwd]}))
+  (arvo-delete (str "tyoelamapalaute/v1/vastaajatunnus/" tunnus)))
 
 (defn build-niputus-request-body
   "Luo dataobjektin TEP-nippulinkin luomisrequestille."
@@ -240,12 +245,7 @@
   "Pyytää TEP-kyselylinkin Arvolta."
   [data]
   (try
-    (let [resp (client/post
-                 (str (:arvo-url env) "tyoelamapalaute/v1/nippu")
-                 {:content-type "application/json"
-                  :body         (generate-string data)
-                  :basic-auth   [(:arvo-user env) @pwd]
-                  :as           :json})]
+    (let [resp (arvo-post "tyoelamapalaute/v1/nippu" data)]
       (log/info resp)
       (:body resp))
     (catch ExceptionInfo e
@@ -256,23 +256,16 @@
 (defn delete-nippukyselylinkki
   "Poistaa TEP-kyselylinkin Arvosta."
   [tunniste]
-  (client/delete
-    (str (:arvo-url env) "tyoelamapalaute/v1/nippu/" (util/url-encode tunniste))
-    {:basic-auth   [(:arvo-user env) @pwd]}))
+  (arvo-delete (str "tyoelamapalaute/v1/nippu/" (util/url-encode tunniste))))
 
 (defn patch-nippulinkki
   "Päivittää TEP-kyselylinkin tiedot Arvoon."
   [linkki data]
   (try
     (let [tunniste (last (str/split linkki #"/"))]
-      (:body (client/patch
-               (str (:arvo-url env)
-                    "tyoelamapalaute/v1/nippu/"
-                    (util/url-encode tunniste))
-               {:basic-auth   [(:arvo-user env) @pwd]
-                :content-type "application/json"
-                :body         (generate-string data)
-                :as           :json})))
+      (:body (arvo-patch (str "tyoelamapalaute/v1/nippu/"
+                              (util/url-encode tunniste))
+                         data)))
     (catch ExceptionInfo e
       (log/error "Virhe patch-nippulinkki -funktiossa")
       (log/error e)
@@ -281,12 +274,7 @@
 (defn patch-vastaajatunnus
   "Päivittää TEP-jaksotunnuksen tiedot Arvoon."
   [tunnus data]
-  (client/patch
-    (str (:arvo-url env) "tyoelamapalaute/v1/vastaajatunnus/" tunnus)
-    {:basic-auth   [(:arvo-user env) @pwd]
-     :content-type "application/json"
-     :body         (generate-string data)
-     :as           :json}))
+  (arvo-patch (str "tyoelamapalaute/v1/vastaajatunnus/" tunnus) data))
 
 (defn build-tpk-request-body
   "Luo dataobjektin TPK-kyselylinkin luomisrequestille."
@@ -305,13 +293,6 @@
   "Pyytää TPK-kyselylinkin Arvolta annettujen tietojen perusteella."
   [data]
   (try
-    (let [resp (client/post
-                 (str (:arvo-url env)
-                      "tyoelamapalaute/v1/tyopaikkakysely-tunnus")
-                 {:content-type "application/json"
-                  :body         (generate-string data)
-                  :basic-auth   [(:arvo-user env) @pwd]
-                  :as           :json})]
-      (:body resp))
+    (:body (arvo-post "tyoelamapalaute/v1/tyopaikkakysely-tunnus" data))
     (catch ExceptionInfo e
       (log/error e))))
