@@ -40,7 +40,7 @@
                  (reduced (get-in suoritus [:vahvistus :päivä]))))
              nil (:suoritukset opiskeluoikeus))]
     vahvistus-pvm
-    (log/warn "Opiskeluoikeudessa" (:oid opiskeluoikeus)
+    (log/info "Opiskeluoikeudessa" (:oid opiskeluoikeus)
               "ei vahvistus päivämäärää")))
 
 (defn update-last-checked
