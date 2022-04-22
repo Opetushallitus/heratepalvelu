@@ -9,6 +9,8 @@
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (clojure.lang ExceptionInfo)
            (com.amazonaws.services.lambda.runtime Context)
+           (java.time LocalDate)
+           (java.time.temporal ChronoUnit)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
@@ -18,6 +20,83 @@
   :methods [[^:static handleNiputus
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
+
+(defn period-as-list-of-days
+  ""
+  [start end]
+  (let [start-date (LocalDate/parse start)]
+    (map #(.plusDays start-date %)
+         (range (+ 1 (.between ChronoUnit/DAYS
+                               start-date
+                               (LocalDate/parse end)))))))
+
+;; TODO täytyy sitten suodattaa tämä lista ja saada viikonloppupäivät ja
+;; pyhäpäivät poistettua.
+
+(defn filtered-jakso-days
+  ""
+  [jakso]
+  ;; TODO filtering
+  ;; TODO suodatetaanko myös keskeytyneet päivät pois tässä?
+  (period-as-list-of-days (:jakso_alkupvm jakso) (:jakso_loppupvm jakso)))
+
+;; TODO otetaanko me pyhäpäivät huomioon?
+
+(defn add-to-jaksot-by-day
+  ""
+  [jaksot-by-day jakso]
+  (reduce #(assoc %1 %2 (cons jakso (get %1 %2)))
+          jaksot-by-day
+          (filtered-jakso-days jakso)))
+
+(defn create-all-jaksot-by-day
+  ""
+  [jaksot]
+  (reduce add-to-jaksot-by-day {} jaksot))
+
+;; TODO keskeytymisajanjaksot! Miten ne otetaan huomioon?
+;; TODO käy päivämäärät läpi
+
+(defn handle-one-day
+  ""
+  [jaksot]
+  ;; TODO distribute the day across the different jaksot; taking osa-aikaisuus into account
+  )
+
+(defn merge-maps
+  ""
+  [maps]
+  (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0))) acc m))
+          {}
+          maps))
+
+(defn process-jaksot-by-day
+  ""
+  [jaksot-by-day]
+  (merge-maps (map handle-one-day jaksot-by-day)))
+
+;; TODO convert doubles to longs?
+
+;; TODO extract those values that we actually want
+
+(defn do-kesto-computation
+  ""
+  [jaksot]
+  ;; TODO create-jaksot-by-day, process-jaksot-by-day, and get only those values we want
+  )
+
+(defn compute-kesto
+  ""
+  [jaksot]
+  (let [first-start-date  (first (sort (map :jakso_alkupvm jaksot)))
+        last-end-date     (first (reverse (sort (map :jakso_loppupvm jaksot))))
+        concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between
+                            (:oppija_oid (first jaksot))
+                            first-start-date
+                            last-end-date)
+        ;; TODO varmistaa, että olemassa olevat jaksotkin otetaan mukaan?
+        ]
+    (do-kesto-computation concurrent-jaksot)))
 
 (defn niputa
   "Luo nippukyselylinkin jokaiselle alustavalle nipulle, jos sillä on vielä
