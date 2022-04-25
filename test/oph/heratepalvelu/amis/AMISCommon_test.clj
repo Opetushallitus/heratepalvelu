@@ -144,24 +144,9 @@
                                  :suorituskieli {:koodiarvo "fi"}}}
                      {:type "mock-get-hankintakoulutuksen-toteuttaja"
                       :ehoks-id 98}
-                     {:type "mock-create-amis-kyselylinkki"
-                      :req-body {:vastaamisajan_alkupvm "2021-12-17"
-                                 :heratepvm "2021-12-15"
-                                 :vastaamisajan_loppupvm "2022-01-15"
-                                 :kyselyn_tyyppi "aloittaneet"
-                                 :tutkintotunnus "234"
-                                 :tutkinnon_suorituskieli "fi"
-                                 :osaamisala (seq ["a" "b" "c"])
-                                 :koulutustoimija_oid "3.4.5.6"
-                                 :oppilaitos_oid "test-laitos-id"
-                                 :request_id "test-uuid"
-                                 :toimipiste_oid "abc"
-                                 :hankintakoulutuksen_toteuttaja
-                                 "test-hankintakoulutuksen-toteuttaja"}}
                      {:type "mock-put-item"
                       :item {:toimija_oppija [:s "3.4.5.6/34.56.78"]
                              :tyyppi_kausi [:s "aloittaneet/2021-2022"]
-                             :kyselylinkki [:s "kysely.linkki/123"]
                              :sahkoposti [:s "a@b.com"]
                              :suorituskieli [:s "fi"]
                              :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
@@ -186,12 +171,6 @@
                       :options {:cond-expr
                                 (str "attribute_not_exists(toimija_oppija) AND "
                                      "attribute_not_exists(tyyppi_kausi)")}}
-                     {:type "mock-add-kyselytunnus-to-hoks"
-                      :ehoks-id 98
-                      :data {:kyselylinkki "kysely.linkki/123"
-                             :tyyppi "aloittaneet"
-                             :alkupvm "2021-12-17"
-                             :lahetystila (:ei-lahetetty c/kasittelytilat)}}
                      {:type "mock-patch-amis-aloitusherate-kasitelty"
                       :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"
@@ -218,25 +197,10 @@
                                  :suorituskieli {:koodiarvo "fi"}}}
                      {:type "mock-get-hankintakoulutuksen-toteuttaja"
                       :ehoks-id 98}
-                     {:type "mock-create-amis-kyselylinkki-catch-404"
-                      :req-body {:vastaamisajan_alkupvm "2021-12-17"
-                                 :heratepvm "2021-12-15"
-                                 :vastaamisajan_loppupvm "2022-01-15"
-                                 :kyselyn_tyyppi "tutkinnonsuorittaneet"
-                                 :tutkintotunnus "234"
-                                 :tutkinnon_suorituskieli "fi"
-                                 :osaamisala (seq ["a" "b" "c"])
-                                 :koulutustoimija_oid "3.4.5.6"
-                                 :oppilaitos_oid "test-laitos-id"
-                                 :request_id "test-uuid"
-                                 :toimipiste_oid "abc"
-                                 :hankintakoulutuksen_toteuttaja
-                                 "test-hankintakoulutuksen-toteuttaja"}}
                      {:type "mock-put-item"
                       :item {:toimija_oppija [:s "3.4.5.6/56.78.34"]
                              :tyyppi_kausi
                              [:s "tutkinnonsuorittaneet/2021-2022"]
-                             :kyselylinkki [:s "kysely.linkki/123"]
                              :sahkoposti [:s "a@b.com"]
                              :suorituskieli [:s "fi"]
                              :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
@@ -261,12 +225,6 @@
                       :options {:cond-expr
                                 (str "attribute_not_exists(toimija_oppija) AND "
                                      "attribute_not_exists(tyyppi_kausi)")}}
-                     {:type "mock-add-kyselytunnus-to-hoks"
-                      :ehoks-id 98
-                      :data {:kyselylinkki "kysely.linkki/123"
-                             :tyyppi "tutkinnonsuorittaneet"
-                             :alkupvm "2021-12-17"
-                             :lahetystila (:ei-lahetetty c/kasittelytilat)}}
                      {:type "mock-patch-amis-paattoherate-kasitelty"
                       :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"

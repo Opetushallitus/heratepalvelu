@@ -131,7 +131,6 @@
      :tyyppi_kausi [:s "tutkinnon_suorittaneet/2021-2022"]
      :kyselytyyppi [:s "tutkinnon_suorittaneet"]
      :request-id [:s "test-uuid"]
-     :kyselylinkki [:s "kysely.linkki/12345"]
      :voimassa-loppupvm [:s "2022-03-03"]
      :hankintakoulutuksen-toteuttaja [:s ""]
      :suorituskieli [:s "fi"]
@@ -175,30 +174,6 @@
     {:headers
      {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"}
      :as :json}}
-   {:method :post
-    :url (str (:arvo-url mock-env) "vastauslinkki/v1")
-    :options {:content-type "application/json"
-              :body (str "{\"vastaamisajan_alkupvm\":\"2022-02-02\","
-                         "\"osaamisala\":null,\"heratepvm\":\"2022-01-05\","
-                         "\"koulutustoimija_oid\":\"test-ktid\","
-                         "\"tutkinnon_suorituskieli\":\"fi\","
-                         "\"toimipiste_oid\":null,\"oppilaitos_oid\":null,"
-                         "\"hankintakoulutuksen_toteuttaja\":null,"
-                         "\"kyselyn_tyyppi\":\"tutkinnon_suorittaneet\","
-                         "\"tutkintotunnus\":null,\"request_id\":\"test-uuid\","
-                         "\"vastaamisajan_loppupvm\":\"2022-03-03\"}")
-              :basic-auth ["arvo-user" "arvo-pwd"]
-              :as :json}}
-   {:method :post
-    :url (str (:ehoks-url mock-env) "hoks/123/kyselylinkki")
-    :options
-    {:headers
-     {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"}
-     :content-type "application/json"
-     :body (str "{\"kyselylinkki\":\"kysely.linkki/12345\","
-                "\"tyyppi\":\"tutkinnon_suorittaneet\","
-                "\"alkupvm\":\"2022-02-02\",\"lahetystila\":\"ei_lahetetty\"}")
-     :as :json}}
    {:method :patch
     :url (str (:ehoks-url mock-env)
               "heratepalvelu/hoksit/123/paattoherate-kasitelty")
@@ -215,9 +190,6 @@
      :as :json}}])
 
 (def expected-cas-client-results [{:type :get-service-ticket
-                                   :service "/ehoks-virkailija-backend"
-                                   :suffix "cas-security-check"}
-                                  {:type :get-service-ticket
                                    :service "/ehoks-virkailija-backend"
                                    :suffix "cas-security-check"}
                                   {:type :get-service-ticket
