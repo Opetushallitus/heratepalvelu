@@ -45,14 +45,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         name: "alkupvm",
         type: dynamodb.AttributeType.STRING
       },
-      nonKeyAttributes: [
-        "sahkoposti",
-        "kyselylinkki",
-        "suorituskieli",
-        "viestintapalvelu-id",
-        "kyselytyyppi"
-      ],
-      projectionType: dynamodb.ProjectionType.INCLUDE
+      projectionType: dynamodb.ProjectionType.ALL
     });
 
     AMISherateTable.addGlobalSecondaryIndex({
