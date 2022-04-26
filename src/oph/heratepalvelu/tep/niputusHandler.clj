@@ -9,7 +9,7 @@
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (clojure.lang ExceptionInfo)
            (com.amazonaws.services.lambda.runtime Context)
-           (java.time LocalDate)
+           (java.time DayOfWeek LocalDate)
            (java.time.temporal ChronoUnit)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
@@ -30,29 +30,43 @@
                                start-date
                                (LocalDate/parse end)))))))
 
-;; TODO täytyy sitten suodattaa tämä lista ja saada viikonloppupäivät ja
-;; pyhäpäivät poistettua.
+;; TODO tämä täytyy ehkä monimutkaistaa vähän
+;; Täytyy ottaa huomioon myös toinen ryhmä keskeytymisajanjaksoista (oo-tilat)
+(defn not-in-keskeytymisajanjakso?
+  ""
+  [date keskeytymisajanjaksot];;TODO ensure alku is date obj
+  (or (empty? keskeytymisajanjaksot)
+      (some? #(or (and (:alku %) (.isBefore date (:alku %)))
+                  (and (:loppu %) (.isAfter date (:loppu %))))
+             keskeytymisajanjaksot)))
+
+(defn is-workday?
+  ""
+  [date]
+  (not (or (= (.getDayOfWeek date) DayOfWeek/SATURDAY)
+           (= (.getDayOfWeek date) DayOfWeek/SUNDAY))))
 
 (defn filtered-jakso-days
   ""
   [jakso]
-  ;; TODO filtering
-  ;; TODO suodatetaanko myös keskeytyneet päivät pois tässä?
-  (period-as-list-of-days (:jakso_alkupvm jakso) (:jakso_loppupvm jakso)))
+  (filter is-workday?
+          (period-as-list-of-days (:jakso_alkupvm jakso)
+                                  (:jakso_loppupvm jakso))))
 
 ;; TODO otetaanko me pyhäpäivät huomioon?
 
 (defn add-to-jaksot-by-day
   ""
   [jaksot-by-day jakso]
-  (reduce #(assoc %1 %2 (cons jakso (get %1 %2)))
+  (reduce #(assoc %1 %2 (cons (if (not-in-keskeytymisajanjakso?
+                                    %2
+                                    (:keskeytymisajanjaksot jakso))
+                                jakso
+                                ;TODO something
+                                )
+                              (get %1 %2)))
           jaksot-by-day
           (filtered-jakso-days jakso)))
-
-(defn create-all-jaksot-by-day
-  ""
-  [jaksot]
-  (reduce add-to-jaksot-by-day {} jaksot))
 
 ;; TODO keskeytymisajanjaksot! Miten ne otetaan huomioon?
 ;; TODO käy päivämäärät läpi
@@ -60,29 +74,26 @@
 (defn handle-one-day
   ""
   [jaksot]
-  ;; TODO distribute the day across the different jaksot; taking osa-aikaisuus into account
-  )
+  (let [fraction (/ 1.0 (count jaksot))]
+    (into {} (map #(do [(:hankkimistapa-id %)
+                        (/ (* fraction (:osa-aikaisuus %)) 100)])
+                  jaksot))))
 
 (defn merge-maps
   ""
   [maps]
-  (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0))) acc m))
+  (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
           {}
           maps))
-
-(defn process-jaksot-by-day
-  ""
-  [jaksot-by-day]
-  (merge-maps (map handle-one-day jaksot-by-day)))
-
-;; TODO convert doubles to longs?
 
 ;; TODO extract those values that we actually want
 
 (defn do-kesto-computation
   ""
   [jaksot]
-  ;; TODO create-jaksot-by-day, process-jaksot-by-day, and get only those values we want
+  ;; TODO get only those values we want
+  (merge-maps (map handle-one-day
+                   (vals (reduce add-to-jaksot-by-day {} jaksot))))
   )
 
 (defn compute-kesto
