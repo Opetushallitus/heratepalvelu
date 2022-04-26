@@ -5,6 +5,8 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
+            [oph.heratepalvelu.external.koski :as k]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
@@ -14,6 +16,45 @@
   :methods [[^:static handleSendAMISEmails
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
+
+(defn get-and-assoc-kyselylinkki
+  "Hakee herätteen kyselylinkin Arvosta, päivittää sen herätteeseen
+  tietokantaan, ja lisää sen herätteen. Jos kyselylinkki on jo olemassa,
+  palauttaa herätteen ilman muutoksia; jos kyselylinkkiä ei voitu luoda,
+  palauttaa nil."
+  [herate]
+  (if (:kyselylinkki herate)
+    herate
+    (try
+      (let [opiskeluoikeus (k/get-opiskeluoikeus-catch-404
+                             (:opiskeluoikeus-oid herate))
+            req-body (arvo/build-arvo-request-body
+                       herate
+                       opiskeluoikeus
+                       (:request-id herate)
+                       (:koulutustoimija herate)
+                       (c/get-suoritus opiskeluoikeus)
+                       (:alkupvm herate)
+                       (:voimassa-loppupvm herate))
+            arvo-resp (if (= (:kyselytyyppi herate) "aloittaneet")
+                        (arvo/create-amis-kyselylinkki req-body)
+                        (arvo/create-amis-kyselylinkki-catch-404 req-body))]
+        (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
+          (do (ac/update-herate herate {:kyselylinkki [:s kyselylinkki]})
+              (try
+                (ehoks/add-kyselytunnus-to-hoks
+                  (:ehoks-id herate)
+                  {:kyselylinkki kyselylinkki
+                   :tyyppi       (:kyselytyyppi herate)
+                   :alkupvm      (:alkupvm herate)
+                   :lahetystila  (:ei-lahetetty c/kasittelytilat)})
+                (catch Exception e
+                  (log/error "Virhe linkin lähetyksessä eHOKSiin " e)))
+              (assoc herate :kyselylinkki kyselylinkki))
+          (log/error "Kyselylinkkiä ei palautettu Arvosta. Request ID:"
+                     (:request-id herate))))
+      (catch Exception e
+        (log/error "Virhe kyselylinkin hakemisessa Arvosta" e)))))
 
 (defn save-email-to-db
   "Tallentaa sähköpostin tiedot tietokantaan, kun sähköposti on lähetetty
@@ -89,13 +130,14 @@
   (loop [lahetettavat (do-query)]
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
-      (doseq [herate lahetettavat]
-        (let [status (arvo/get-kyselylinkki-status (:kyselylinkki herate))]
-          (if (c/has-time-to-answer? (:voimassa_loppupvm status))
-            (let [id (:id (send-feedback-email herate))
-                  lahetyspvm (str (c/local-date-now))]
-              (save-email-to-db herate id lahetyspvm)
-              (update-data-in-ehoks herate lahetyspvm))
-            (save-no-time-to-answer herate))))
+      (doseq [lahetettava lahetettavat]
+        (when-let [herate (get-and-assoc-kyselylinkki lahetettava)]
+          (let [status (arvo/get-kyselylinkki-status (:kyselylinkki herate))]
+            (if (c/has-time-to-answer? (:voimassa_loppupvm status))
+              (let [id (:id (send-feedback-email herate))
+                    lahetyspvm (str (c/local-date-now))]
+                (save-email-to-db herate id lahetyspvm)
+                (update-data-in-ehoks herate lahetyspvm))
+              (save-no-time-to-answer herate)))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (do-query))))))
