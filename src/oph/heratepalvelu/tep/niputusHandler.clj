@@ -5,6 +5,8 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
+            [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (clojure.lang ExceptionInfo)
@@ -21,55 +23,52 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn period-as-list-of-days
-  ""
-  [start end]
-  (let [start-date (LocalDate/parse start)]
-    (map #(.plusDays start-date %)
-         (range (+ 1 (.between ChronoUnit/DAYS
-                               start-date
-                               (LocalDate/parse end)))))))
-
-;; TODO tämä täytyy ehkä monimutkaistaa vähän
-;; Täytyy ottaa huomioon myös toinen ryhmä keskeytymisajanjaksoista (oo-tilat)
 (defn not-in-keskeytymisajanjakso?
   ""
-  [date keskeytymisajanjaksot];;TODO ensure alku is date obj
+  [date keskeytymisajanjaksot]
   (or (empty? keskeytymisajanjaksot)
-      (some? #(or (and (:alku %) (.isBefore date (:alku %)))
-                  (and (:loppu %) (.isAfter date (:loppu %))))
-             keskeytymisajanjaksot)))
-
-(defn is-workday?
-  ""
-  [date]
-  (not (or (= (.getDayOfWeek date) DayOfWeek/SATURDAY)
-           (= (.getDayOfWeek date) DayOfWeek/SUNDAY))))
+      (every? #(or (and (:alku %) (.isBefore date (:alku %)))
+                   (and (:loppu %) (.isAfter date (:loppu %))))
+              keskeytymisajanjaksot)))
 
 (defn filtered-jakso-days
   ""
   [jakso]
-  (filter is-workday?
-          (period-as-list-of-days (:jakso_alkupvm jakso)
-                                  (:jakso_loppupvm jakso))))
+  (filter #(not (or (= (.getDayOfWeek %) DayOfWeek/SATURDAY)
+                    (= (.getDayOfWeek %) DayOfWeek/SUNDAY)))
+          (let [start (LocalDate/parse (:jakso_alkupvm jakso))
+                end (LocalDate/parse (:jakso_loppupvm jakso))]
+            (map #(.plusDays start %)
+                 (range (+ 1 (.between ChronoUnit/DAYS start end)))))))
 
-;; TODO otetaanko me pyhäpäivät huomioon?
+(defn convert-keskeytymisajanjakso
+  ""
+  [kj]
+  (cond-> {}
+    (:alku kj)  (assoc :alku  (LocalDate/parse (:alku kj)))
+    (:loppu kj) (assoc :loppu (LocalDate/parse (:loppu kj)))))
 
 (defn add-to-jaksot-by-day
   ""
   [jaksot-by-day jakso]
-  (reduce #(assoc %1 %2 (cons (if (not-in-keskeytymisajanjakso?
-                                    %2
-                                    (:keskeytymisajanjaksot jakso))
-                                jakso
-                                ;TODO something
-                                )
-                              (get %1 %2)))
-          jaksot-by-day
-          (filtered-jakso-days jakso)))
-
-;; TODO keskeytymisajanjaksot! Miten ne otetaan huomioon?
-;; TODO käy päivämäärät läpi
+  (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
+                         (:opiskeluoikeus-oid jakso))
+        oo-tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
+        kjaksot-parsed (map convert-keskeytymisajanjakso
+                            (:keskeytymisajanjaksot jakso))
+        kjaksot-oo (map convert-keskeytymisajanjakso
+                        (filter #(or (= "valiaikaisestikeskeytynyt"
+                                        (:koodiarvo (:tila %)))
+                                     (= "loma" (:koodiarvo (:tila %))))
+                                oo-tilat))
+        kjaksot (concat kjaksot-parsed kjaksot-oo)]
+    (reduce #(assoc %1 %2 (cons (if (not-in-keskeytymisajanjakso? %2 kjaksot)
+                                  jakso
+                                  {:hankkimistapa-id (:hankkimistapa-id %)
+                                   :osa-aikaisuus 0}) ;; TODO onko tämä oikea?
+                                (get %1 %2)))
+            jaksot-by-day
+            (filtered-jakso-days jakso))))
 
 (defn handle-one-day
   ""
@@ -79,22 +78,7 @@
                         (/ (* fraction (:osa-aikaisuus %)) 100)])
                   jaksot))))
 
-(defn merge-maps
-  ""
-  [maps]
-  (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
-          {}
-          maps))
-
 ;; TODO extract those values that we actually want
-
-(defn do-kesto-computation
-  ""
-  [jaksot]
-  ;; TODO get only those values we want
-  (merge-maps (map handle-one-day
-                   (vals (reduce add-to-jaksot-by-day {} jaksot))))
-  )
 
 (defn compute-kesto
   ""
@@ -107,7 +91,10 @@
                             last-end-date)
         ;; TODO varmistaa, että olemassa olevat jaksotkin otetaan mukaan?
         ]
-    (do-kesto-computation concurrent-jaksot)))
+    (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
+            {}
+            (map handle-one-day
+                 (vals (reduce add-to-jaksot-by-day {} jaksot))))))
 
 (defn niputa
   "Luo nippukyselylinkin jokaiselle alustavalle nipulle, jos sillä on vielä

@@ -5,6 +5,28 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
+;; TODO test not-in-keskeytymisajanjakso?
+
+;; TODO test filtered-jakso-days
+
+(deftest test-convert-keskeytymisajanjakso
+  (testing "Varmistaa, että convert-keskeytymisajanjakso toimii oikein."
+    (let [test1 {:alku "2022-01-01" :loppu "2022-03-03"}
+          test2 {:alku "2022-06-06"}
+          test3 {:loppu "2022-08-08"}
+          result1 {:alku (LocalDate/of 2022 1 1) :loppu (LocalDate/of 2022 3 3)}
+          result2 {:alku (LocalDate/of 2022 6 6)}
+          result3 {:loppu (LocalDate/of 2022 8 8)}]
+      (is (= (nh/convert-keskeytymisajanjakso test1) result1))
+      (is (= (nh/convert-keskeytymisajanjakso test2) result2))
+      (is (= (nh/convert-keskeytymisajanjakso test3) result3)))))
+
+;; TODO add-to-jaksot-by-day
+
+;; TODO handle-one-day
+
+;; TODO compute-kesto
+
 (def test-niputa-results (atom []))
 
 (defn- add-to-test-niputa-results [data]
