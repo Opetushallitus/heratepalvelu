@@ -5,9 +5,41 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
-;; TODO test not-in-keskeytymisajanjakso?
+(deftest not-in-keskeytymisajanjakso?
+  (testing "Varmistaa, että not-in-keskeytymisajanjakso? toimii oikein."
+    (let [kjaksot [{:loppu (LocalDate/of 2022 4 1)}
+                   {:alku  (LocalDate/of 2022 4 4)
+                    :loppu (LocalDate/of 2022 4 6)}
+                   {:alku  (LocalDate/of 2022 4 8)}]]
+      (is (true? (nh/not-in-keskeytymisajanjakso? (LocalDate/of 2022 4 4) [])))
+      (is (true? (nh/not-in-keskeytymisajanjakso? (LocalDate/of 2022 4 2)
+                                                  kjaksot)))
+      (is (true? (nh/not-in-keskeytymisajanjakso? (LocalDate/of 2022 4 7)
+                                                  kjaksot)))
+      (is (false? (nh/not-in-keskeytymisajanjakso? (LocalDate/of 2022 3 30)
+                                                   kjaksot)))
+      (is (false? (nh/not-in-keskeytymisajanjakso? (LocalDate/of 2022 4 4)
+                                                   kjaksot)))
+      (is (false? (nh/not-in-keskeytymisajanjakso? (LocalDate/of 2022 4 6)
+                                                   kjaksot)))
+      (is (false? (nh/not-in-keskeytymisajanjakso? (LocalDate/of 2022 4 10)
+                                                   kjaksot))))))
 
-;; TODO test filtered-jakso-days
+(deftest test-filtered-jakso-days
+  (testing "Varmistaa, että filtered-jakso-days toimii oikein."
+    (let [test-jakso1 {:jakso_alkupvm "2022-04-27" :jakso_loppupvm "2022-05-02"}
+          test-jakso2 {:jakso_alkupvm "2022-04-24" :jakso_loppupvm "2022-04-30"}
+          days1 (seq [(LocalDate/of 2022 4 27)
+                      (LocalDate/of 2022 4 28)
+                      (LocalDate/of 2022 4 29)
+                      (LocalDate/of 2022 5 2)])
+          days2 (seq [(LocalDate/of 2022 4 25)
+                      (LocalDate/of 2022 4 26)
+                      (LocalDate/of 2022 4 27)
+                      (LocalDate/of 2022 4 28)
+                      (LocalDate/of 2022 4 29)])]
+      (is (= (nh/filtered-jakso-days test-jakso1) days1))
+      (is (= (nh/filtered-jakso-days test-jakso2) days2)))))
 
 (deftest test-convert-keskeytymisajanjakso
   (testing "Varmistaa, että convert-keskeytymisajanjakso toimii oikein."
@@ -23,7 +55,17 @@
 
 ;; TODO add-to-jaksot-by-day
 
-;; TODO handle-one-day
+(deftest test-handle-one-day
+  (testing "Varmistaa, että handle-one-day toimii oikein."
+    (let [jaksot (seq [{:hankkimistapa-id 1 :osa-aikaisuus 100}
+                       {:hankkimistapa-id 2 :osa-aikaisuus 50}
+                       {:hankkimistapa-id 3 :osa-aikaisuus 0}
+                       {:hankkimistapa-id 4}])
+          results {1 0.25
+                   2 0.125
+                   3 0.0
+                   4 0.25}]
+      (is (= (nh/handle-one-day jaksot) results)))))
 
 ;; TODO compute-kesto
 

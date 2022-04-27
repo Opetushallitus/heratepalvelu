@@ -75,7 +75,7 @@
   [jaksot]
   (let [fraction (/ 1.0 (count jaksot))]
     (into {} (map #(do [(:hankkimistapa-id %)
-                        (/ (* fraction (:osa-aikaisuus %)) 100)])
+                        (/ (* fraction (get % :osa-aikaisuus 100)) 100)])
                   jaksot))))
 
 ;; TODO extract those values that we actually want
