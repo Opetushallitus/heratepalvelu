@@ -61,7 +61,9 @@
 (deftest test-to-attribute-value
   (testing "Varmista, että to-attribute-value käyttää apufunktioita oikein"
     (is (= (.s (ddb/to-attribute-value :s "asdf")) "asdf"))
-    (is (= (.n (ddb/to-attribute-value :n 12)) "12"))))
+    (is (= (.n (ddb/to-attribute-value :n 12)) "12"))
+    (is (= (.bool (ddb/to-attribute-value :bool true)) true))
+    (is (= (.bool (ddb/to-attribute-value :bool false)) false))))
 
 (defn- extract-condition-data [^Condition condition]
   {:operator (str (.comparisonOperator condition))
@@ -82,7 +84,9 @@
 (deftest test-get-value
   (testing "Varmista, että get-value toimii oikein"
     (is (= (ddb/get-value (ddb/to-attribute-value :n 123)) 123))
-    (is (= (ddb/get-value (ddb/to-attribute-value :s "asdf")) "asdf"))))
+    (is (= (ddb/get-value (ddb/to-attribute-value :s "asdf")) "asdf"))
+    (is (= (ddb/get-value (ddb/to-attribute-value :bool true)) true))
+    (is (= (ddb/get-value (ddb/to-attribute-value :bool false)) false))))
 
 (def mock-ddb-client-request-results (atom {}))
 
