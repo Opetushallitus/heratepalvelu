@@ -43,3 +43,8 @@
                 :as           :json-strict})]
     (sort-by :aikaleima
              (reduce #(into %1 (:opiskeluoikeudet %2)) [] (:body resp)))))
+
+(defn get-oppija
+  "Hakee oppijan OID:n perusteella."
+  [oid]
+  (:body (koski-get (str "/oppija/" oid) {:as :json})))

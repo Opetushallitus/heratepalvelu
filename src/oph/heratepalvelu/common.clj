@@ -68,6 +68,13 @@
   ^LocalDate []
   (LocalDate/now))
 
+(defn period-contains-date?
+  "Tarkistaa, onko annettu päivämäärä ainakin yhden annetun aikajakson sisällä."
+  [periods date]
+  (some? #(and (or (not (:alku %)) (>= (compare date (:alku %)) 0))
+               (or (not (:loppu %)) (<= (compare date (:loppu %)) 0)))
+         periods))
+
 (defn has-time-to-answer?
   "Tarkistaa, onko aikaa jäljellä ennen annettua päivämäärää."
   [loppupvm]
