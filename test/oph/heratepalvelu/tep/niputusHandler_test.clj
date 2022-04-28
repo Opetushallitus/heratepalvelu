@@ -67,7 +67,60 @@
                    4 0.25}]
       (is (= (nh/handle-one-day jaksot) results)))))
 
-;; TODO compute-kesto
+(def test-compute-kesto-results (atom []))
+
+(deftest test-compute-kesto
+  (testing "Varmistaa, että compute-kesto laskee kestot oikein."
+    (with-redefs
+      [oph.heratepalvelu.external.ehoks/get-tyoelamajaksot-active-between
+       (fn [oppija-oid start end];; TODO
+         (reset! test-compute-kesto-results
+                 (cons {:type "gtab" :start start :end end}
+                       @test-compute-kesto-results))
+         (seq [{:hankkimistapa-id 1
+                :oppija_oid "4.4.4.4"
+                :osa-aikaisuus 100
+                :jakso_alkupvm "2022-01-03"
+                :jakso_loppupvm "2022-02-05"
+                :keskeytymisajanjaksot []
+                :opiskeluoikeus-oid "1.2.3.1"
+                }
+               {:hankkimistapa-id 2
+                :oppija_oid "4.4.4.4"
+                :osa-aikaisuus 50
+                :jakso_alkupvm ;; TODO
+                :jakso_loppupvm ;; TODO
+                ;; ei keskeytymisajanjaksoja ollenkaan
+                :opiskeluoikeus-oid "1.2.3.2"
+                }
+
+
+
+               ]))
+
+       ;; TODO koski redef
+
+       ]
+      (let [jaksot [{:jakso_alkupvm "2022-01-05"
+                     :Jakso_loppupvm "2022-03-03"}
+                    {:jakso_alkupvm "2022-01-10"
+                     :jakso_loppupvm "2022-02-28"}]
+            
+            results {
+                     ;; TODO
+
+                     }
+
+            call-results [
+
+                          ;; TODO
+
+                          ]]
+        (is (= (nh/compute-kesto jaksot) results))
+        ;; TODO tarkista tallennetut hommat
+      ;; TODO
+
+      ))))
 
 (def test-niputa-results (atom []))
 

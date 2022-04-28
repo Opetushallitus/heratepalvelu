@@ -94,7 +94,7 @@
     (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
             {}
             (map handle-one-day
-                 (vals (reduce add-to-jaksot-by-day {} jaksot))))))
+                 (vals (reduce add-to-jaksot-by-day {} concurrent-jaksot))))))
 
 (defn niputa
   "Luo nippukyselylinkin jokaiselle alustavalle nipulle, jos sillä on vielä
