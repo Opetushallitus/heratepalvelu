@@ -6,7 +6,8 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.ehoks :as ehoks])
+            [oph.heratepalvelu.external.ehoks :as ehoks]
+            [oph.heratepalvelu.external.koski :as koski])
   (:import (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
@@ -37,6 +38,7 @@
           loppupvm  (str loppu-date)
           suoritus (c/get-suoritus opiskeluoikeus)
           oppija (str (:oppija-oid herate))
+          oppija-obj (koski/get-oppija oppija)
           laskentakausi (c/kausi heratepvm)
           uuid (c/generate-uuid)
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
@@ -84,6 +86,14 @@
                :hankintakoulutuksen-toteuttaja
                [:s (str (:hankintakoulutuksen_toteuttaja req-body))]
                :tallennuspvm        [:s (str (c/local-date-now))]
+               :maksuton            [:bool (c/is-maksuton? opiskeluoikeus
+                                                           heratepvm)]
+               :erityinen-tuki      [:bool (c/erityinen-tuki-voimassa?
+                                             opiskeluoikeus
+                                             heratepvm)]
+               :alle-21             [:bool (c/is-under-21-on? oppija-obj
+                                                              (LocalDate/parse
+                                                                heratepvm))]
                :herate-source       [:s herate-source]}
               (if (= herate-source (:ehoks c/herate-sources))
                 {:cond-expr "attribute_not_exists(kyselylinkki)"}

@@ -160,8 +160,10 @@
               tutkinto   (get-in suoritus [:koulutusmoduuli
                                            :tunniste
                                            :koodiarvo])
-              oo-info (:lisätiedot opiskeluoikeus)
-              oppija (koski/get-oppija (:oppija-oid herate))
+              oppija     (koski/get-oppija (:oppija-oid herate))
+              maksuton   (c/is-maksuton? opiskeluoikeus alkupvm)
+              erityinen-tuki (c/erityinen-tuki-voimassa? opiskeluoikeus alkupvm)
+              alle-21    (c/is-under-21-on? oppija date)
               db-data {:hankkimistapa_id     [:n tapa-id]
                        :hankkimistapa_tyyppi
                        [:s (last (str/split (:hankkimistapa-tyyppi herate)
@@ -200,18 +202,9 @@
                                 koulutustoimija "/" tutkinto)]
                        :tyopaikan_normalisoitu_nimi
                        [:s (c/normalize-string (:tyopaikan-nimi herate))]
-                       :maksuttomuus
-                       [:bool (c/period-contains-date?
-                                (filter :maksuton (:maksuttomuus oo-info))
-                                alkupvm)]
-                       :erityinen_tuki
-                       [:bool (c/period-contains-date? (:erityinenTuki oo-info)
-                                                       alkupvm)]
-                       :alle_21
-                       [:bool (pos? (compare
-                                      (:syntymäaika (:henkilö oppija))
-                                      (str (.minusYears (c/local-date-now)
-                                                        21))))]}
+                       :maksuton             [:bool maksuton]
+                       :erityinen_tuki       [:bool erityinen-tuki]
+                       :alle_21              [:bool alle-21]}
               jaksotunnus-table-data
               (cond-> db-data
                 (not-empty (:tyopaikkaohjaaja-email herate))
