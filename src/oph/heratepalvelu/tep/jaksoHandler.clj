@@ -163,7 +163,7 @@
               oppija     (koski/get-oppija (:oppija-oid herate))
               maksuton   (c/is-maksuton? opiskeluoikeus alkupvm)
               erityinen-tuki (c/erityinen-tuki-voimassa? opiskeluoikeus alkupvm)
-              alle-21    (c/is-under-21-on? oppija date)
+              alle-21    (c/is-under-21-on? oppija alkupvm)
               db-data {:hankkimistapa_id     [:n tapa-id]
                        :hankkimistapa_tyyppi
                        [:s (last (str/split (:hankkimistapa-tyyppi herate)

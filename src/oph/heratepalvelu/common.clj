@@ -68,29 +68,30 @@
   ^LocalDate []
   (LocalDate/now))
 
-(defn contains-date?
+(defn period-contains-date?
   "Tarkistaa, onko annettu päivämäärä ainakin yhden annetun aikajakson sisällä."
   [periods date]
-  (some? #(and (or (not (:alku %)) (>= (compare date (:alku %)) 0))
-               (or (not (:loppu %)) (<= (compare date (:loppu %)) 0)))
-         periods))
+  (let [date-string (str date)]
+    (some #(and (or (not (:alku %)) (>= (compare date-string (:alku %)) 0))
+                (or (not (:loppu %)) (<= (compare date-string (:loppu %)) 0)))
+          periods)))
 
 (defn is-maksuton?
   "Tarkistaa, onko kyseessä oleva opiskeluoikeus maksuton."
   [opiskeluoikeus date]
-  (contains-date?
+  (period-contains-date?
     (filter :maksuton (:maksuttomuus (:lisätiedot opiskeluoikeus)))
-    (str date)))
+    date))
 
 (defn erityinen-tuki-voimassa?
   "Tarkistaa, saako opiskelija erityistä tukea opiskeluoikeuden perusteella."
   [opiskeluoikeus date]
-  (contains-date? (:erityinenTuki (:lisätiedot opiskeluoikeus)) (str date)))
+  (period-contains-date? (:erityinenTuki (:lisätiedot opiskeluoikeus)) date))
 
 (defn is-under-21-on?
   "Tarkistaa, onko oppija alle 21-vuotias."
-  [oppija date]
-  (> (compare (:syntymäaika (:henkilö oppija)) (str (.minusYears date 21))) 0))
+  [oppija ^LocalDate date]
+  (pos? (compare (:syntymäaika (:henkilö oppija)) (str (.minusYears date 21)))))
 
 (defn has-time-to-answer?
   "Tarkistaa, onko aikaa jäljellä ennen annettua päivämäärää."
