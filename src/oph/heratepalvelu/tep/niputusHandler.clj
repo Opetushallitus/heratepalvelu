@@ -62,11 +62,9 @@
                                      (= "loma" (:koodiarvo (:tila %))))
                                 oo-tilat))
         kjaksot (concat kjaksot-parsed kjaksot-oo)]
-    (reduce #(assoc %1 %2 (cons (if (not-in-keskeytymisajanjakso? %2 kjaksot)
-                                  jakso
-                                  {:hankkimistapa-id (:hankkimistapa-id %)
-                                   :osa-aikaisuus 0}) ;; TODO onko tämä oikea?
-                                (get %1 %2)))
+    (reduce #(if (not-in-keskeytymisajanjakso? %2 kjaksot)
+               (assoc %1 %2 (cons jakso (get %1 %2)))
+               %1)
             jaksot-by-day
             (filtered-jakso-days jakso))))
 
