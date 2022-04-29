@@ -72,9 +72,10 @@
   "Tarkistaa, onko annettu päivämäärä ainakin yhden annetun aikajakson sisällä."
   [periods date]
   (let [date-string (str date)]
-    (some #(and (or (not (:alku %)) (>= (compare date-string (:alku %)) 0))
-                (or (not (:loppu %)) (<= (compare date-string (:loppu %)) 0)))
-          periods)))
+    (boolean
+      (some #(and (or (not (:alku %)) (>= (compare date-string (:alku %)) 0))
+                  (or (not (:loppu %)) (<= (compare date-string (:loppu %)) 0)))
+            periods))))
 
 (defn is-maksuton?
   "Tarkistaa, onko kyseessä oleva opiskeluoikeus maksuton."

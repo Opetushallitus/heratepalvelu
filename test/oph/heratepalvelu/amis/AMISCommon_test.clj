@@ -87,6 +87,10 @@
                         :ehoks-id ehoks-id})
   "test-hankintakoulutuksen-toteuttaja")
 
+(defn- mock-get-oppija [oid]
+  (add-to-test-results {:type "mock-get-oppija" :oid oid})
+  {:henkilö {:synytmäaika "2002-01-01"}})
+
 (deftest test-save-herate
   (testing "Varmista, että save-herate kutsuu funktioita oikein"
     (with-redefs
@@ -110,7 +114,8 @@
        oph.heratepalvelu.external.ehoks/patch-amis-aloitusherate-kasitelty
        mock-patch-amis-aloitusherate-kasitelty
        oph.heratepalvelu.external.ehoks/patch-amis-paattoherate-kasitelty
-       mock-patch-amis-paattoherate-kasitelty]
+       mock-patch-amis-paattoherate-kasitelty
+       oph.heratepalvelu.external.koski/get-oppija mock-get-oppija]
       (let [herate-1 {:kyselytyyppi "aloittaneet"
                       :alkupvm "2021-12-15"
                       :oppija-oid "34.56.78"
@@ -147,6 +152,8 @@
                                  :suorituskieli {:koodiarvo "fi"}}}
                      {:type "mock-get-hankintakoulutuksen-toteuttaja"
                       :ehoks-id 98}
+                     {:type "mock-get-oppija"
+                      :oid "34.56.78"}
                      {:type "mock-put-item"
                       :item {:toimija_oppija [:s "3.4.5.6/34.56.78"]
                              :tyyppi_kausi [:s "aloittaneet/2021-2022"]

@@ -62,11 +62,11 @@
           no-loppu [{:alku "2022-01-01"}]]
       (is (true? (period-contains-date? normal "2022-03-05")))
       (is (true? (period-contains-date? normal "2022-04-04")))
-      (is (not (true? (period-contains-date? normal "2022-03-10"))))
+      (is (false? (period-contains-date? normal "2022-03-10")))
       (is (true? (period-contains-date? no-alku "2022-01-03")))
-      (is (not (true? (period-contains-date? no-alku "2022-07-07"))))
+      (is (false? (period-contains-date? no-alku "2022-07-07")))
       (is (true? (period-contains-date? no-loppu "2025-07-07")))
-      (is (not (true? (period-contains-date? no-loppu "2021-12-31")))))))
+      (is (false? (period-contains-date? no-loppu "2021-12-31"))))))
 
 (deftest test-is-maksuton?
   (testing "Check whether opiskeluoikeus is free (maksuton)."
@@ -77,22 +77,21 @@
                                                        :loppu "2022-12-31"
                                                        :maksuton false}]}}]
       (is (true? (is-maksuton? opiskeluoikeus "2022-02-02")))
-      (is (not (true? (is-maksuton? opiskeluoikeus "2022-08-09")))))))
+      (is (false? (is-maksuton? opiskeluoikeus "2022-08-09"))))))
 
 (deftest test-erityinen-tuki-voimassa?
   (testing "Check whether opiskeluoikeus has erityinen tuki."
     (let [opiskeluoikeus {:lisätiedot {:erityinenTuki [{:alku "2022-01-01"
                                                         :loppu "2022-06-30"}]}}]
       (is (true? (erityinen-tuki-voimassa? opiskeluoikeus "2022-02-02")))
-      (is (not (true? (erityinen-tuki-voimassa? opiskeluoikeus
-                                                "2022-08-09")))))))
+      (is (false? (erityinen-tuki-voimassa? opiskeluoikeus "2022-08-09"))))))
 
 (deftest test-is-under-21-on?
   (testing "Check whether student is under 21 on given date."
     (let [oppija {:henkilö {:syntymäaika "2000-01-01"}}]
       (is (true? (is-under-21-on? oppija (LocalDate/of 2020 3 3))))
-      (is (not (true? (is-under-21-on? oppija (LocalDate/of 2022 12 31)))))
-      (is (not (true? (is-under-21-on? oppija (LocalDate/of 2021 1 1))))))))
+      (is (false? (is-under-21-on? oppija (LocalDate/of 2022 12 31))))
+      (is (false? (is-under-21-on? oppija (LocalDate/of 2021 1 1)))))))
 
 (deftest test-has-time-to-answer
   (let [date1 (t/today)

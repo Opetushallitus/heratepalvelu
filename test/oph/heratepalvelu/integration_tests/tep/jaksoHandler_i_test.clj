@@ -158,7 +158,10 @@
      :rahoituskausi [:s "2021-2022"]
      :tutkintonimike [:s "(\"test-tutkintonimike\")"]
      :viimeinen_vastauspvm [:s "2022-04-17"]
-     :request_id [:s "test-uuid"]}})
+     :request_id [:s "test-uuid"]
+     :maksuton [:bool false]
+     :erityinen_tuki [:bool false]
+     :alle_21 [:bool false]}})
 
 (def expected-nippu-table
   #{{:ohjaaja_ytunnus_kj_tutkinto
@@ -175,6 +178,9 @@
 (def expected-http-results
   [{:method :get
     :url "https://oph-koski.com/opiskeluoikeus/test-oo-oid"
+    :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
+   {:method :get
+    :url "https://oph-koski.com/oppija/test-oppija-oid"
     :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
    {:method :get
     :url "https://oph-organisaatio.com/test-toimipiste"
