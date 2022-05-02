@@ -135,7 +135,9 @@
                               :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
                               :suorituskieli {:koodiarvo "fi"}}]}
             koulutustoimija "3.4.5.6"
-            results [{:type "mock-check-duplicate-herate?"
+            results [{:type "mock-get-oppija"
+                      :oid "34.56.78"}
+                     {:type "mock-check-duplicate-herate?"
                       :oppija "34.56.78"
                       :koulutustoimija "3.4.5.6"
                       :laskentakausi "2021-2022"
@@ -152,8 +154,6 @@
                                  :suorituskieli {:koodiarvo "fi"}}}
                      {:type "mock-get-hankintakoulutuksen-toteuttaja"
                       :ehoks-id 98}
-                     {:type "mock-get-oppija"
-                      :oid "34.56.78"}
                      {:type "mock-put-item"
                       :item {:toimija_oppija [:s "3.4.5.6/34.56.78"]
                              :tyyppi_kausi [:s "aloittaneet/2021-2022"]
@@ -178,6 +178,9 @@
                              :hankintakoulutuksen-toteuttaja
                              [:s "test-hankintakoulutuksen-toteuttaja"]
                              :tallennuspvm [:s "2021-12-17"]
+                             :maksuton [:bool false]
+                             :erityinen-tuki [:bool false]
+                             :alle-21 [:bool false]
                              :herate-source [:s (:ehoks c/herate-sources)]}
                       :options
                       {:cond-expr "attribute_not_exists(kyselylinkki)"}}
@@ -191,6 +194,8 @@
                        [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
                          :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
                          :suorituskieli {:koodiarvo "fi"}}]}}
+                     {:type "mock-get-oppija"
+                      :oid "56.78.34"}
                      {:type "mock-check-duplicate-herate?"
                       :oppija "56.78.34"
                       :koulutustoimija "3.4.5.6"
@@ -233,6 +238,9 @@
                              :hankintakoulutuksen-toteuttaja
                              [:s "test-hankintakoulutuksen-toteuttaja"]
                              :tallennuspvm [:s "2021-12-17"]
+                             :maksuton [:bool false]
+                             :erityinen-tuki [:bool false]
+                             :alle-21 [:bool false]
                              :herate-source [:s (:koski c/herate-sources)]}
                       :options
                       {:cond-expr (str "attribute_not_exists(toimija_oppija) "
