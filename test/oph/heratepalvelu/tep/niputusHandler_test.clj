@@ -18,8 +18,10 @@
              (= :eq (first (:niputuspvm query-params)))
              (= :s (first (second (:niputuspvm query-params))))
              (= "niputusIndex" (:index options))
-             (= "#pvm >= :pvm" (:filter-expression options))
+             (= "#pvm >= :pvm AND attribute_exists(#tunnus)"
+                (:filter-expression options))
              (= "viimeinen_vastauspvm" (get (:expr-attr-names options) "#pvm"))
+             (= "tunnus" (get (:expr-attr-names options) "#tunnus"))
              (= :s (first (get (:expr-attr-vals options) ":pvm")))
              (= "jaksotunnus-table-name" table))
     (add-to-test-niputa-results

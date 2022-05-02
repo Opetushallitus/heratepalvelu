@@ -4,7 +4,8 @@
 (def binary-operators {"=" = "<>" not= "<" < "<=" <= ">" > ">=" >=})
 
 (def unary-operators
-  {"attribute_not_exists" (fn [field] (fn [item] (not (get item field))))})
+  {"attribute_not_exists" (fn [field] (fn [item] (not (get item field))))
+   "attribute_exists"     (fn [field] (fn [item] (get item field)))})
 
 ;; Tämä käsittelee vain noita tapauksia, jotka löytyvät meidän koodista. Se voi
 ;; täytyä muokata tulevaisuudessa jos tarvitsee monimutkaisempia ekspressioita.
