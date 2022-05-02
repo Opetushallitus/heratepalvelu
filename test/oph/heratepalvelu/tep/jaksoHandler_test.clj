@@ -298,7 +298,7 @@
              :alkupvm "2021-09-09"
              :loppupvm "2021-12-15"
              :hoks-id "123"
-             :oppija-id "123.456.789"
+             :oppija-oid "123.456.789"
              :tyyppi "test-tyyppi"
              :tutkinnonosa-id "test-tutkinnonosa-id"
              :hankkimistapa-id 1
@@ -310,7 +310,7 @@
                               :alkupvm "2021-09-09"
                               :loppupvm "2021-12-15"
                               :hoks-id "123"
-                              :oppija-id "123.456.789"
+                              :oppija-oid "123.456.789"
                               :tyyppi "test-tyyppi"
                               :tutkinnonosa-id "test-tutkinnonosa-id"
                               :hankkimistapa-id 2
@@ -321,7 +321,7 @@
                                      :alkupvm "2021-09-09"
                                      :loppupvm "2021-12-15"
                                      :hoks-id "123"
-                                     :oppija-id "123.456.789"
+                                     :oppija-oid "123.456.789"
                                      :tyyppi "test-tyyppi"
                                      :tutkinnonosa-id "test-tutkinnonosa-id"
                                      :hankkimistapa-id 3
@@ -332,7 +332,7 @@
                          :alkupvm "2021-09-09"
                          :loppupvm "2021-12-15"
                          :hoks-id "123"
-                         :oppija-id "123.456.789"
+                         :oppija-oid "123.456.789"
                          :tyyppi "test-tyyppi"
                          :tutkinnonosa-id "test-tutkinnonosa-id"
                          :hankkimistapa-id 4
@@ -368,7 +368,10 @@
                        :oppija_oid [:s nil]
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
-                       :viimeinen_vastauspvm [:s "2022-02-14"]}
+                       :viimeinen_vastauspvm [:s "2022-02-14"]
+                       :maksuton [:bool false]
+                       :erityinen_tuki [:bool false]
+                       :alle_21 [:bool false]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]
@@ -478,7 +481,10 @@
                        :oppija_oid [:s nil]
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
-                       :viimeinen_vastauspvm [:s "2022-02-14"]}
+                       :viimeinen_vastauspvm [:s "2022-02-14"]
+                       :maksuton [:bool false]
+                       :erityinen_tuki [:bool false]
+                       :alle_21 [:bool false]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]
