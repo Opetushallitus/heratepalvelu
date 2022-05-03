@@ -94,7 +94,7 @@
                            :content-type "application/json"}
                  :body    (generate-string {:sender "OPH"
                                             :destination ["0401234567"]
-                                            :text (elisa/msg-body
+                                            :text (elisa/tep-msg-body
                                                     "kysely.linkki/1"
                                                     [{:fi "Testilaitos"
                                                       :sv "Testanstalt"
@@ -181,7 +181,7 @@
                         :content-type "application/json"}
               :body    (generate-string {:sender "OPH"
                                          :destination ["0401234567"]
-                                         :text (elisa/msg-body
+                                         :text (elisa/tep-msg-body
                                                  "kysely.linkki/1"
                                                  [{:fi "Testilaitos"
                                                    :sv "Testanstalt"

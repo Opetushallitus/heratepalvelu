@@ -32,8 +32,9 @@
         (try
           (let [jaksot (tc/get-jaksot-for-nippu nippu)
                 laitokset (tc/get-oppilaitokset jaksot)
-                body (elisa/muistutus-msg-body (:kyselylinkki nippu) laitokset)
-                resp (elisa/send-tep-sms (:lahetettynumeroon nippu) body)
+                body (elisa/tep-muistutus-msg-body (:kyselylinkki nippu)
+                                                   laitokset)
+                resp (elisa/send-sms (:lahetettynumeroon nippu) body)
                 tila (get-in resp [:body
                                    :messages
                                    (keyword (:lahetettynumeroon nippu))

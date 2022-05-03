@@ -14,7 +14,7 @@
     (ssm/get-secret
       (str "/" (:stage env) "/services/heratepalvelu/elisa-sms-dialogi-key"))))
 
-(defn msg-body
+(defn tep-msg-body
   "Luo työpaikkaohjaajakyselyn viestin tekstin."
   [linkki oppilaitokset]
   (str "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - "
@@ -40,7 +40,7 @@
        (str/join ", " (map :fi oppilaitokset)) "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
-(defn muistutus-msg-body
+(defn tep-muistutus-msg-body
   "Luo työpaikkaohjaajakyselyn muistutuksen viestin tekstin."
   [linkki oppilaitokset]
   (str "Muistutus-påminnelse-reminder: Työpaikkaohjaajakysely - "
@@ -63,7 +63,13 @@
        "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
-(defn send-tep-sms
+(defn amis-msg-body
+  "" ;;  TODO
+  [linkki]
+  ;; TODO
+  )
+
+(defn send-sms
   "Lähettää SMS-viestin viestintäpalveluun."
   [number message]
   (if (= "true" (:send-messages env))

@@ -6,28 +6,6 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
-(deftest valid-number-test
-  (testing
-    "Funktio valid-number? tunnistaa oikeita ja virheellisiä puhelinnumeroja"
-    (let [fi-phone-number "040 654 3210"
-          fi-phone-number-intl-fmt "040 654 3210"
-          intl-phone-number "+1 517 987 5432"
-          junk-invalid "laksj fdaiu fd098098asdf"
-          unicode-invalid "+358 40 987 6543à"]
-      (is (sh/valid-number? fi-phone-number))
-      (is (sh/valid-number? fi-phone-number-intl-fmt))
-      (is (sh/valid-number? intl-phone-number))
-      (is (not (sh/valid-number? junk-invalid)))
-      (is (not (sh/valid-number? unicode-invalid))))))
-
-(deftest client-error-test
-  (testing
-    "Funktio client-error? erottaa client erroreja muista HTTP-statuksista"
-    (let [client-error (ex-info "File not found" {:status 404})
-          server-error (ex-info "Internal server error" {:status 503})]
-      (is (sh/client-error? client-error))
-      (is (not (sh/client-error? server-error))))))
-
 (deftest update-arvo-obj-sms-test
   (testing "Funktio update-arvo-obj-sms luo oikean objektin patch-nippulinkkiin"
     (let [success-new-loppupvm {:tila (:success c/kasittelytilat)
@@ -248,9 +226,9 @@
           :en "Test Dept."
           :sv "Testanstalt"}})
 
-(defn- mock-handleTepSmsSending-send-tep-sms [puhelinnumero body]
+(defn- mock-handleTepSmsSending-send-sms [puhelinnumero body]
   (add-to-test-handleTepSmsSending-results
-    {:type "mock-handleTepSmsSending-send-tep-sms"
+    {:type "mock-handleTepSmsSending-send-sms"
      :puhelinnumero puhelinnumero
      :body body})
   {:body {:messages {(keyword puhelinnumero) (if (= "0401234567" puhelinnumero)
@@ -310,8 +288,8 @@
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 20))
        oph.heratepalvelu.external.arvo/patch-nippulinkki
        mock-handleTepSmsSending-patch-nippulinkki
-       oph.heratepalvelu.external.elisa/send-tep-sms
-       mock-handleTepSmsSending-send-tep-sms
+       oph.heratepalvelu.external.elisa/send-sms
+       mock-handleTepSmsSending-send-sms
        oph.heratepalvelu.external.organisaatio/get-organisaatio
        mock-handleTepSmsSending-get-organisaatio
        oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
@@ -343,12 +321,12 @@
                               (:ei-lahetetty c/kasittelytilat)}}
                      {:type "mock-handleTepSmsSending-get-organisaatio"
                       :oppilaitos "1234"}
-                     {:type "mock-handleTepSmsSending-send-tep-sms"
+                     {:type "mock-handleTepSmsSending-send-sms"
                       :puhelinnumero "+358401234567"
-                      :body (elisa/msg-body "kysely.linkki/1"
-                                            {:fi "Testilaitos"
-                                             :en "Test Dept."
-                                             :sv "Testanstalt"})}
+                      :body (elisa/tep-msg-body "kysely.linkki/1"
+                                                {:fi "Testilaitos"
+                                                 :en "Test Dept."
+                                                 :sv "Testanstalt"})}
                      {:type "mock-handleTepSmsSending-update-status-to-db"
                       :status "mock-lahetys"
                       :puhelinnumero "+358401234567"
@@ -368,12 +346,12 @@
                       :niputuspvm "2021-12-15"}
                      {:type "mock-handleTepSmsSending-get-organisaatio"
                       :oppilaitos "1234"}
-                     {:type "mock-handleTepSmsSending-send-tep-sms"
+                     {:type "mock-handleTepSmsSending-send-sms"
                       :puhelinnumero "+358401234567"
-                      :body (elisa/msg-body "kysely.linkki/2"
-                                            {:fi "Testilaitos"
-                                             :en "Test Dept."
-                                             :sv "Testanstalt"})}
+                      :body (elisa/tep-msg-body "kysely.linkki/2"
+                                                {:fi "Testilaitos"
+                                                 :en "Test Dept."
+                                                 :sv "Testanstalt"})}
                      {:type "mock-handleTepSmsSending-update-status-to-db"
                       :status "mock-lahetys"
                       :puhelinnumero "+358401234567"

@@ -9,7 +9,6 @@
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (clojure.lang ExceptionInfo)
-           (com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException)
            (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
@@ -18,24 +17,6 @@
   :methods [[^:static handleTepSmsSending
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
-
-(defn valid-number?
-  "Sallii vain numeroita, jotka kirjasto luokittelee mobiilinumeroiksi tai
-  mahdollisiksi mobiilinumeroiksi (FIXED_LINE_OR_MOBILE). Jos funktio ei hyväksy
-  numeroa, jonka tiedät olevan validi, tarkista, miten kirjasto luokittelee sen:
-  https://libphonenumber.appspot.com/."
-  [number]
-  (try
-    (let [utilobj (PhoneNumberUtil/getInstance)
-          numberobj (.parse utilobj number "FI")]
-      (and (empty? (filter (fn [^Character x] (Character/isLetter x)) number))
-           (.isValidNumber utilobj numberobj)
-           (let [numtype (str (.getNumberType utilobj numberobj))]
-             (or (= numtype "FIXED_LINE_OR_MOBILE") (= numtype "MOBILE")))))
-    (catch NumberParseException e
-      (log/error "PhoneNumberUtils failed to parse phonenumber")
-      (log/error e)
-      false)))
 
 (defn update-status-to-db
   "Päivittää tiedot tietokantaan, kun SMS-viesti on lähetetty
@@ -73,7 +54,7 @@
   löytynyt, päivittää myös Arvoon sen, että nippulinkillä ei ole yhteystietoja."
   [nippu jaksot]
   (let [number (tc/reduce-common-value jaksot :ohjaaja_puhelinnumero)]
-    (if (and (some? number) (valid-number? number))
+    (if (and (some? number) (c/valid-number? number))
       number
       (do
         (tc/update-nippu
@@ -97,12 +78,6 @@
           (arvo/patch-nippulinkki (:kyselylinkki nippu)
                                   {:tila (:ei-yhteystietoja c/kasittelytilat)}))
         nil))))
-
-(defn client-error?
-  "Tarkistaa, onko virheen statuskoodi 4xx-haitarissa."
-  [e]
-  (and (> (:status (ex-data e)) 399)
-       (< (:status (ex-data e)) 500)))
 
 (defn query-lahetettavat
   "Hakee enintään limit nippua tietokannasta, joilta SMS-viesti ei ole vielä
@@ -135,9 +110,9 @@
                              (= sms-kasittelytila
                                 (:ei-lahetetty c/kasittelytilat))))
                 (try
-                  (let [body (elisa/msg-body (:kyselylinkki nippu)
-                                             oppilaitokset)
-                        resp (elisa/send-tep-sms puhelinnumero body)
+                  (let [body (elisa/tep-msg-body (:kyselylinkki nippu)
+                                                 oppilaitokset)
+                        resp (elisa/send-sms puhelinnumero body)
                         status (get-in resp [:body
                                              :messages
                                              (keyword puhelinnumero)
@@ -168,7 +143,7 @@
                                "tapahtui virhe!")
                     (log/error e))
                   (catch ExceptionInfo e
-                    (if (client-error? e)
+                    (if (c/client-error? e)
                       (do
                         (log/error "Client error while sending sms")
                         (log/error e))
