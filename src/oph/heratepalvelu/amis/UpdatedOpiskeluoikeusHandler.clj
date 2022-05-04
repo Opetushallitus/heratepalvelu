@@ -27,6 +27,7 @@
    :opiskeluoikeus-oid (:opiskeluoikeus-oid hoks)
    :oppija-oid         (:oppija-oid hoks)
    :sahkoposti         (:sahkoposti hoks)
+   :puhelinnumero      (:puhelinnumero hoks)
    :alkupvm            alkupvm})
 
 (defn get-vahvistus-pvm
