@@ -116,13 +116,15 @@
                       :oppija-oid "34.56.78"
                       :opiskeluoikeus-oid "123.456.789"
                       :ehoks-id 98
-                      :sahkoposti "a@b.com"}
+                      :sahkoposti "a@b.com"
+                      :puhelinnumero "1234567"}
             herate-2 {:kyselytyyppi "tutkinnonsuorittaneet"
                       :alkupvm "2021-12-15"
                       :oppija-oid "56.78.34"
                       :opiskeluoikeus-oid "123.456.789"
                       :ehoks-id 98
-                      :sahkoposti "a@b.com"}
+                      :sahkoposti "a@b.com"
+                      :puhelinnumero "1234567"}
             opiskeluoikeus {:oppilaitos {:oid "test-laitos-id"}
                             :oid "123.456.789"
                             :suoritukset
@@ -151,8 +153,11 @@
                       :item {:toimija_oppija [:s "3.4.5.6/34.56.78"]
                              :tyyppi_kausi [:s "aloittaneet/2021-2022"]
                              :sahkoposti [:s "a@b.com"]
+                             :puhelinnumero [:s "1234567"]
                              :suorituskieli [:s "fi"]
                              :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+                             :sms-lahetystila
+                             [:s (:ei-lahetetty c/kasittelytilat)]
                              :alkupvm [:s "2021-12-17"]
                              :heratepvm [:s "2021-12-15"]
                              :request-id [:s "test-uuid"]
@@ -207,8 +212,11 @@
                              :tyyppi_kausi
                              [:s "tutkinnonsuorittaneet/2021-2022"]
                              :sahkoposti [:s "a@b.com"]
+                             :puhelinnumero [:s "1234567"]
                              :suorituskieli [:s "fi"]
                              :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+                             :sms-lahetystila
+                             [:s (:ei-lahetetty c/kasittelytilat)]
                              :alkupvm [:s "2021-12-17"]
                              :heratepvm [:s "2021-12-15"]
                              :request-id [:s "test-uuid"]
