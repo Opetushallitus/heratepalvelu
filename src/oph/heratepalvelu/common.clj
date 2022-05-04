@@ -16,12 +16,13 @@
 
 (s/defschema herate-schema
   "AMIS-herätteen schema."
-  {:ehoks-id           s/Num
-   :kyselytyyppi       s/Str
-   :opiskeluoikeus-oid s/Str
-   :oppija-oid         s/Str
-   :sahkoposti         (s/constrained s/Str not-empty)
-   :alkupvm            s/Str})
+  {:ehoks-id                       s/Num
+   :kyselytyyppi                   s/Str
+   :opiskeluoikeus-oid             s/Str
+   :oppija-oid                     s/Str
+   :sahkoposti                     (s/constrained s/Str not-empty)
+   (s/optional-key :puhelinnumero) (s/maybe s/Str)
+   :alkupvm                        s/Str})
 
 (def kasittelytilat
   "Heräteviestien lähetyksien käsittelytilat."
