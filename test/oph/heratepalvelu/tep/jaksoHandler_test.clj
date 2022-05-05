@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.tep.jaksoHandler-test
   (:require [clojure.test :refer :all]
+            [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.tep.jaksoHandler :as jh]
             [oph.heratepalvelu.test-util :as tu])
   (:import (clojure.lang ExceptionInfo)
@@ -226,16 +227,39 @@
                      :nippu-table-data
                      data)))))
 
+(defn- mock-save-to-tables-get-item [query-params table]
+  (if (= (second (:ohjaaja_ytunnus_kj_tutkinto query-params)) "1")
+    {}
+    (if (= (second (:ohjaaja_ytunnus_kj_tutkinto query-params)) "2")
+      {:kasittelytila (:ei-niputeta c/kasittelytilat)
+       :sms_kasittelytila (:ei-niputeta c/kasittelytilat)}
+      {:kasittelytila (:ei-lahetetty c/kasittelytilat)
+       :sms_kasittelytila (:ei-lahetetty c/kasittelytilat)})))
+
 (deftest test-save-to-tables
   (testing "Varmista, että jaksotunnus- ja nipputiedot tallennetaan oikein"
     (with-redefs
       [environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"
                          :nippu-table "nippu-table-name"}
+       oph.heratepalvelu.db.dynamodb/get-item mock-save-to-tables-get-item
        oph.heratepalvelu.db.dynamodb/put-item mock-save-to-tables-put-item]
       (let [jaksotunnus-table-data {:contents "jaksotunnus-table-data"}
             nippu-table-data {:contents "nippu-table-data"}
-            results {:jaksotunnus-table-data jaksotunnus-table-data
-                     :nippu-table-data nippu-table-data}]
+            nippu-table-data-1 {:contents "nippu-table-data"
+                                :ohjaaja_ytunnus_kj_tutkinto "1"}
+            nippu-table-data-2 {:contents "nipput-table-data"
+                                :ohjaaja_ytunnus_kj_tutkinto "2"}
+            results {:jaksotunnus-table-data jaksotunnus-table-data}
+            results-1 {:jaksotunnus-table-data jaksotunnus-table-data
+                       :nippu-table-data nippu-table-data-1}
+            results-2 {:jaksotunnus-table-data jaksotunnus-table-data
+                       :nippu-table-data nippu-table-data-2}]
+        (jh/save-to-tables jaksotunnus-table-data nippu-table-data-1)
+        (is (= results-1 @mock-save-to-tables-put-item-results))
+        (reset! mock-save-to-tables-put-item-results {})
+        (jh/save-to-tables jaksotunnus-table-data nippu-table-data-2)
+        (is (= results-2 @mock-save-to-tables-put-item-results))
+        (reset! mock-save-to-tables-put-item-results {})
         (jh/save-to-tables jaksotunnus-table-data nippu-table-data)
         (is (= results @mock-save-to-tables-put-item-results))))))
 
