@@ -67,6 +67,7 @@
   "" ;;  TODO
   [linkki]
   ;; TODO
+  (str "Teksti: " linkki)
   )
 
 (defn send-sms
