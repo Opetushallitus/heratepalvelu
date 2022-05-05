@@ -1,6 +1,8 @@
 (ns oph.heratepalvelu.util.ONRhenkilomodify
   "Käsittelee SQS:stä vastaanotettavia ONR:n henkilömuutoksia."
-  (:require [oph.heratepalvelu.log.caller-log :refer :all])
+  (:require [cheshire.core :refer [parse-string]]
+            [clojure.tools.logging :as log]
+            [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage)
            (clojure.lang ExceptionInfo)))
 

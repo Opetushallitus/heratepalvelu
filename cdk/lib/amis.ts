@@ -138,7 +138,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     const ONRhenkilomodifyQueue = new sqs.Queue(this, "ONRhenkilomodifyQueue", {
-      queueName: `${id}-ONRhenkilomodifyQueue`,
+      queueName: `${id}-ehokshenkilomodify`,
       deadLetterQueue: {
         queue: ONRhenkilomodifyDLQ,
         maxReceiveCount: 5
