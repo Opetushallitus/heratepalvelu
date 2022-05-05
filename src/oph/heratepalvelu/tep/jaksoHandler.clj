@@ -79,8 +79,6 @@
       (throw (ex-info (str "Tunnus " tunnus " on jo käytössä.")
                       {:items items})))))
 
-
-
 (defn check-opiskeluoikeus-tila
   "Palauttaa true, jos opiskeluoikeus ei ole terminaalitilassa (eronnut,
   katsotaan eronneeksi, mitätöity, peruutettu, tai väliaikaisesti keskeytynyt)."
