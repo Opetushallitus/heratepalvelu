@@ -20,10 +20,10 @@
   (let [messages (seq (.getRecords event))]
     (doseq [^SQSEvent$SQSMessage msg messages]
       (try
-        (let [body (parse-string (.getBody msg) true)]
+        (let [body (parse-string (.getBody msg) true)
+              message (parse-string (:Message body) true)]
           (println body)
-          (println (:Message body))
-          (println (:oidHenkilo (:Message body)))
-          (ehoks/post-henkilomodify-event (:oidHenkilo (:Message body))))
+          (println (:oidHenkilo message))
+          (ehoks/post-henkilomodify-event (:oidHenkilo message)))
         (catch ExceptionInfo e
           (log/error e))))))
