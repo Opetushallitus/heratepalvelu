@@ -80,6 +80,19 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       projectionType: dynamodb.ProjectionType.INCLUDE
     });
 
+    AMISherateTable.addGlobalSecondaryIndex({
+      indexName: "smsIndex",
+      partitionKey: {
+        name: "sms-lahetystila",
+        type: dynamodb.AttributeType.STRING
+      },
+      sortKey: {
+        name: "alkupvm",
+        type: dynamodb.AttributeType.STRING
+      },
+      projectionType: dynamodb.ProjectionType.ALL
+    });
+
     const organisaatioWhitelistTable = new dynamodb.Table(
       this,
       "OrganisaatioWhitelistTable",

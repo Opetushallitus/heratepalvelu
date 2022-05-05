@@ -101,7 +101,7 @@
      :osaamisala [:s ""]
      :heratepvm [:s "2022-01-05"]
      :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
-     :sms-lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+     :sms-lahetystila [:s (:ei-laheteta c/kasittelytilat)]
      :tallennuspvm [:s "2022-02-02"]
      :oppilaitos [:s "test-oppilaitos-oid"]
      :toimipiste-oid [:s "test-toimipiste-oid"]

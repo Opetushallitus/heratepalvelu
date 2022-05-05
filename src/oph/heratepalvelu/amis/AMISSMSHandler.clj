@@ -1,8 +1,9 @@
 (ns oph.heratepalvelu.amis.AMISSMSHandler
-  "";; TODO
+  "Käsittelee SMS-viestien lähettämistä herätteitä varten."
   (:require [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.elisa :as elisa]
             [oph.heratepalvelu.log.caller-log :as cl])
   (:import (clojure.lang ExceptionInfo)
@@ -15,14 +16,21 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn query-lahetettavat
-  "" ;; TODO
+  "Hakee eniten limit herätettä tietokannasta, joilta SMS-viestiä ei ole vielä
+  lähetetty ja herätepäivämäärä on jo mennyt. Hakee vain herätteet, joihin
+  kyselylinkki on jo luotu."
   [limit]
-  ;; TODO
-
-  )
+  (ddb/query-items
+    {:sms-lahetystila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
+     :alkupvm         [:le [:s (str (c/local-date-now))]]}
+    {:index "smsIndex"
+     :filter-expression "attribute_exists(#kyselylinkki)"
+     :expr-attr-names {"#kyselylinkki" "kyselylinkki"}
+     :limit limit}))
 
 (defn -handleAMISSMS
-  "" ;; TODO
+  "Hakee tietokannasta herätteitä, joilta SMS-viesti ei ole vielä lähetetty, ja
+  käsittelee viestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (cl/log-caller-details-scheduled "AMISSMSHandler" event context)
   (loop [lahetettavat (query-lahetettavat 20)]
@@ -38,7 +46,7 @@
                     results (get-in resp [:body :message (keyword numero)])]
                 (ac/update-herate
                   herate ;; TODO onko meillä uusi loppupvm?
-                  {:sms-kasittelytila [:s (:status results)]
+                  {:sms-lahetystila   [:s (:status results)]
                    :sms-lahetyspvm    [:s (str (c/local-date-now))]
                    :lahetettynumeroon [:s (or (:converted results) numero)]})
 
@@ -57,17 +65,17 @@
                 (log/error "Virhe AMIS SMS-lähetyksessä:" e)))
             (try (ac/update-herate
                    herate
-                   {:sms-lahetyspvm    [:s (str (c/local-date-now))]
-                    :sms-kasittelytila [:s (:phone-invalid c/kasittelytilat)]})
+                   {:sms-lahetyspvm  [:s (str (c/local-date-now))]
+                    :sms-lahetystila [:s (:phone-invalid c/kasittelytilat)]})
               (catch Exception e
                 (log/error "Virhe AMIS SMS-lähetystila päivistykessä kun"
                            "puhelinnumero ei ollut validi."
                            e))))
           (try
-            (ac/update-herate herate
-                              {:sms-lahetyspvm [:s (str (c/local-date-now))]
-                               :sms-kasittelytila
-                               [:s (:vastausaika-loppunut c/kasittelytilat)]})
+            (ac/update-herate
+              herate
+              {:sms-lahetyspvm [:s (str (c/local-date-now))]
+               :sms-lahetystila [:s (:vastausaika-loppunut c/kasittelytilat)]})
             (catch Exception e
               (log/error "Virhe AMIS SMS-lähetystilan päivityksessä kun"
                          "vastausaika on umpeutunut:"
