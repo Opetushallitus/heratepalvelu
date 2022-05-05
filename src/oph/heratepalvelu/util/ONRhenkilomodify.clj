@@ -22,6 +22,8 @@
       (try
         (let [body (parse-string (.getBody msg) true)]
           (println body)
+          (println (:Message body))
+          (println (:oidHenkilo (:Message body)))
           (ehoks/post-henkilomodify-event (:oidHenkilo (:Message body))))
         (catch ExceptionInfo e
           (log/error e))))))
