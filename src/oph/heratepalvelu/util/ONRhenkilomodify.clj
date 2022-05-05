@@ -2,7 +2,8 @@
   "Käsittelee SQS:stä vastaanotettavia ONR:n henkilömuutoksia."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.log.caller-log :refer :all])
+            [oph.heratepalvelu.log.caller-log :refer :all]
+            [oph.heratepalvelu.external.ehoks :as ehoks])
   (:import (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage)
            (clojure.lang ExceptionInfo)))
 
@@ -19,7 +20,8 @@
   (let [messages (seq (.getRecords event))]
     (doseq [^SQSEvent$SQSMessage msg messages]
       (try
-        (let [msg (parse-string (.getBody msg) true)]
-          (println msg))
+        (let [body (parse-string (.getBody msg) true)]
+          (println body)
+          (ehoks/post-henkilomodify-event (:oidHenkilo (:Message body))))
         (catch ExceptionInfo e
           (log/error e))))))
