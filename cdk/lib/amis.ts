@@ -234,6 +234,17 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     ONRhenkilomodifyHandler.addEventSource(new SqsEventSource(ONRhenkilomodifyQueue, { batchSize: 1, }));
 
+    ONRhenkilomodifyHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [ONRhenkilomodifyQueue.queueArn, herateDeadLetterQueue.queueArn],
+      actions: [
+        "sqs:GetQueueUrl",
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ]}));
+
     const AMISherateEmailHandler = new lambda.Function(this, "AMISHerateEmailHandler", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
@@ -409,30 +420,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       batchSize: 1,
       enabled: false
     });
-
-    const ONRhenkilomodify = new lambda.Function(this, "ONRhenkilomodify", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
-      code: lambdaCode,
-      environment: {
-        queue_name: ONRhenkilomodifyQueue.queueName
-      },
-      handler: "oph.heratepalvelu.util.ONRhenkilomodify::handleONRhenkilomodify",
-      memorySize: 1024,
-      timeout: Duration.seconds(60),
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    ONRhenkilomodify.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: [ONRhenkilomodifyQueue.queueArn, herateDeadLetterQueue.queueArn],
-      actions: [
-        "sqs:GetQueueUrl",
-        "sqs:SendMessage",
-        "sqs:ReceiveMessage",
-        "sqs:ChangeMessageVisibility",
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes"
-      ]}));
 
     const AMISDeleteTunnusHandler = new lambda.Function(this, "AMISDeleteTunnusHandler", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
