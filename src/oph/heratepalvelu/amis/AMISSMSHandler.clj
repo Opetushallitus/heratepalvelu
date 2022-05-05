@@ -45,15 +45,10 @@
                     resp (elisa/send-sms numero body)
                     results (get-in resp [:body :message (keyword numero)])]
                 (ac/update-herate
-                  herate ;; TODO onko meillä uusi loppupvm?
+                  herate ;; TODO onko meillä uusi loppupvm välitettävä Arvoon?
                   {:sms-lahetystila   [:s (:status results)]
                    :sms-lahetyspvm    [:s (str (c/local-date-now))]
-                   :lahetettynumeroon [:s (or (:converted results) numero)]})
-
-              ;; TODO arvo patch?
-              ;; TODO patch in ehoks?
-
-              )
+                   :lahetettynumeroon [:s (or (:converted results) numero)]}))
               (catch AwsServiceException e
                 (log/error "AMIS SMS-viestin lähetysvaiheen kantapäivityksessä"
                            "tapahtui virhe!"
