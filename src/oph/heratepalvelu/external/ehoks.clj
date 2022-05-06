@@ -135,4 +135,4 @@
 (defn post-henkilomodify-event
   "Lähettää tiedon henkilön tietojen muutoksesta eHOKS-palveluun."
   [oppija-oid]
-  (ehoks-post (str "heratepalvelu/onrmodify") {:query-params {:oppija oppija-oid}}))
+  (ehoks-post (str "heratepalvelu/onrmodify") {:query-params {:oid oppija-oid}}))
