@@ -192,7 +192,18 @@
     (ddb/put-item jaksotunnus-table-data
                   {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
                   (:jaksotunnus-table env))
-    (ddb/put-item nippu-table-data {} (:nippu-table env))))
+    (let [oykt (:ohjaaja_ytunnus_kj_tutkinto nippu-table-data)
+          niputuspvm (:niputuspvm nippu-table-data)
+          existing-nippu (ddb/get-item
+                           {:ohjaaja_ytunnus_kj_tutkinto [:s oykt]
+                            :niputuspvm                  [:s niputuspvm]}
+                           (:nippu-table env))]
+      (when (or (empty? existing-nippu)
+                (and (= (:kasittelytila existing-nippu)
+                        (:ei-niputeta c/kasittelytilat))
+                     (= (:sms_kasittelytila existing-nippu)
+                        (:ei-niputeta c/kasittelytilat))))
+        (ddb/put-item nippu-table-data {} (:nippu-table env))))))
 
 (defn save-jaksotunnus
   "Käsittelee herätteen, varmistaa, että se tulee tallentaa, hakee
