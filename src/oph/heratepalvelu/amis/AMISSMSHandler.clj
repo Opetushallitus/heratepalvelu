@@ -62,10 +62,10 @@
                    herate
                    {:sms-lahetyspvm  [:s (str (c/local-date-now))]
                     :sms-lahetystila [:s (:phone-invalid c/kasittelytilat)]})
-              (catch Exception e
-                (log/error "Virhe AMIS SMS-lähetystila päivistykessä kun"
-                           "puhelinnumero ei ollut validi."
-                           e))))
+                 (catch Exception e
+                   (log/error "Virhe AMIS SMS-lähetystila päivistykessä kun"
+                              "puhelinnumero ei ollut validi."
+                              e))))
           (try
             (ac/update-herate
               herate
