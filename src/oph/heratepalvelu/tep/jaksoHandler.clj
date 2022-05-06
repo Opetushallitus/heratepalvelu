@@ -193,7 +193,7 @@
                   {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
                   (:jaksotunnus-table env))
     (let [oykt (second (:ohjaaja_ytunnus_kj_tutkinto nippu-table-data))
-          niputuspvm (:niputuspvm nippu-table-data)
+          niputuspvm (second (:niputuspvm nippu-table-data))
           existing-nippu (ddb/get-item
                            {:ohjaaja_ytunnus_kj_tutkinto [:s oykt]
                             :niputuspvm                  [:s niputuspvm]}
