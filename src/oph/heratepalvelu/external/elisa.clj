@@ -83,7 +83,7 @@
                                                :text message})
                     :as      :json})
       (catch ExceptionInfo e
-        (log/error "Virhe send-tep-sms -funktiossa")
+        (log/error "Virhe send-sms -funktiossa")
         (log/error e)
         (throw e)))
     (do

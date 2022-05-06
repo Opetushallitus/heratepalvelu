@@ -42,7 +42,7 @@
 
 (defn- mock-send-sms [numero body]
   (add-to-results {:type "mock-send-sms" :numero numero :body body})
-  {:body {:message {:12345 {:status "test-status" :converted "+358 12345"}}}})
+  {:body {:messages {:12345 {:status "test-status" :converted "+358 12345"}}}})
 
 (defn- mock-valid-number? [number] (= number "12345"))
 

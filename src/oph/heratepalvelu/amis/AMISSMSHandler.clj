@@ -43,7 +43,7 @@
               (let [numero (:puhelinnumero herate)
                     body (elisa/amis-msg-body (:kyselylinkki herate))
                     resp (elisa/send-sms numero body)
-                    results (get-in resp [:body :message (keyword numero)])]
+                    results (get-in resp [:body :messages (keyword numero)])]
                 (ac/update-herate
                   herate ;; TODO onko meillä uusi loppupvm välitettävä Arvoon?
                   {:sms-lahetystila   [:s (:status results)]
