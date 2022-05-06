@@ -244,11 +244,11 @@
        oph.heratepalvelu.db.dynamodb/get-item mock-save-to-tables-get-item
        oph.heratepalvelu.db.dynamodb/put-item mock-save-to-tables-put-item]
       (let [jaksotunnus-table-data {:contents "jaksotunnus-table-data"}
-            nippu-table-data {:contents "nippu-table-data"}
-            nippu-table-data-1 {:contents "nippu-table-data"
-                                :ohjaaja_ytunnus_kj_tutkinto "1"}
-            nippu-table-data-2 {:contents "nipput-table-data"
-                                :ohjaaja_ytunnus_kj_tutkinto "2"}
+            nippu-table-data {:contents [:s "nippu-table-data"]}
+            nippu-table-data-1 {:contents [:s "nippu-table-data"]
+                                :ohjaaja_ytunnus_kj_tutkinto [:s "1"]}
+            nippu-table-data-2 {:contents [:s "nipput-table-data"]
+                                :ohjaaja_ytunnus_kj_tutkinto [:s "2"]}
             results {:jaksotunnus-table-data jaksotunnus-table-data}
             results-1 {:jaksotunnus-table-data jaksotunnus-table-data
                        :nippu-table-data nippu-table-data-1}
