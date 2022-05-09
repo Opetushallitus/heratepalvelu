@@ -87,4 +87,4 @@
                                 {:index "supplementaryNiputusIndex"}
                                 (:jaksotunnus-table env))]
     (doseq [jakso jaksot] (conditional-create-nippu jakso)))
-  (log/info "Niput lisätty: " @niput-updated))
+  (log/info "Niput lisätty:" @niput-updated))
