@@ -556,7 +556,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     );
 
     nippuTable.grantReadWriteData(supplementaryNiputusHandler);
-    nippuArchive2021_2022Table.grantReadWriteData(supplementaryNiputusHandler);
+    jaksotunnusTable.grantReadWriteData(supplementaryNiputusHandler);
 
     // IAM
 
