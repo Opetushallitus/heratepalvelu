@@ -1,12 +1,12 @@
 (ns oph.heratepalvelu.tep.niputusHandler
   "Käsittelee alustavia nippuja ja luo niille kyselylinkeille."
-  (:require [oph.heratepalvelu.db.dynamodb :as ddb]
+  (:require [clojure.tools.logging :as log]
+            [environ.core :refer [env]]
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.tep.tepCommon :as tc]
-            [oph.heratepalvelu.common :as c]
-            [clojure.tools.logging :as log]
-            [environ.core :refer [env]])
+            [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (clojure.lang ExceptionInfo)
            (com.amazonaws.services.lambda.runtime Context)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
