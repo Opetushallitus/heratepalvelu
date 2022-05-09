@@ -535,6 +535,26 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     nippuTable.grantReadWriteData(archiveNippuTable);
     nippuArchive2021_2022Table.grantReadWriteData(archiveNippuTable);*/
 
+    const supplementaryNiputusHandler = new lambda.Function(
+      this,
+      "supplementaryNiputusHandler",
+      {
+        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        code: lambdaCode,
+        environment: {
+          ...this.envVars,
+          jaksotunnus_table: jaksotunnusTable.tableName,
+          nippu_table: nippuTable.tableName,
+          caller_id: `1.2.246.562.10.00000000001.${id}-supplementaryNiputusHandler`,
+        },
+        memorySize: Token.asNumber(1024),
+        reservedConcurrentExecutions: 1,
+        timeout: Duration.seconds(900),
+        handler: "oph.heratepalvelu.util.supplementaryNiputusHandler::handleSupplementaryNiputus",
+        tracing: lambda.Tracing.ACTIVE
+      }
+    );
+
     // IAM
 
     [
@@ -546,6 +566,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tepSmsHandler,
       SmsMuistutusHandler,
       EmailMuistutusHandler,
+      supplementaryNiputusHandler,
   //    archiveJaksoTable,
   //    archiveNippuTable,
     ].forEach(
