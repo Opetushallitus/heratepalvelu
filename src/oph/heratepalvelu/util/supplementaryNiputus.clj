@@ -83,7 +83,7 @@
   "Hakee jaksot tietokannasta ja käynnistää nippuluontifunktion."
   [_ _ _]
   (reset! niput-updated 0)
-  (let [jaksot (ddb/query-items {:tallennuspvm [:s "2022-05-06"]}
+  (let [jaksot (ddb/query-items {:tallennuspvm [:eq [:s "2022-05-06"]]}
                                 {:index "supplementaryNiputusIndex"}
                                 (:jaksotunnus-table env))]
     (doseq [jakso jaksot] (conditional-create-nippu jakso)))
