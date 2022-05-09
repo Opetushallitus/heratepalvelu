@@ -550,7 +550,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         memorySize: Token.asNumber(1024),
         reservedConcurrentExecutions: 1,
         timeout: Duration.seconds(900),
-        handler: "oph.heratepalvelu.util.supplementaryNiputusHandler::handleSupplementaryNiputus",
+        handler: "oph.heratepalvelu.util.supplementaryNiputus::handleSupplementaryNiputus",
         tracing: lambda.Tracing.ACTIVE
       }
     );
