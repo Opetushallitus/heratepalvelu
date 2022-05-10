@@ -282,6 +282,30 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     AMISEmailResendHandler.addEventSource(new SqsEventSource(ehoksAmisResendQueue, { batchSize: 1, }));
 
+    const AMISSMSHandler = new lambda.Function(this, "AMISSMSHandler", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-AMISSMSHandler`,
+      },
+      memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
+      reservedConcurrentExecutions: 1,
+      timeout: Duration.seconds(
+        Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
+      ),
+      handler: "oph.heratepalvelu.amis.AMISSMSHandler::handleAMISSMS",
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    new events.Rule(this, "AMISSMSScheduleRule", {
+      schedule: events.Schedule.expression(
+        `cron(${this.getParameterFromSsm("emailhandler-cron")})`
+      ),
+      targets: [new targets.LambdaFunction(AMISSMSHandler)]
+    });
+
     const updatedOoHandler = new lambda.Function(this, "UpdatedOOHandler", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
@@ -532,6 +556,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISEmailResendHandler,
       AMISMuistutusHandler,
       AMISEmailStatusHandler,
+      AMISSMSHandler,
       AMISDeleteTunnusHandler,
       AMISTimedOperationsHandler,
       AMISMassHerateResendHandler,
