@@ -24,7 +24,7 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn not-in-keskeytymisajanjakso?
-  ""
+  "Varmistaa, että annettu päivämäärä ei kuulu keskeytymisajanjaksoon."
   [date keskeytymisajanjaksot]
   (or (empty? keskeytymisajanjaksot)
       (every? #(or (and (:alku %) (.isBefore date (:alku %)))
@@ -32,7 +32,7 @@
               keskeytymisajanjaksot)))
 
 (defn filtered-jakso-days
-  ""
+  "Luo listan jakson arkipäivistä LocalDate:ina."
   [jakso]
   (filter #(not (or (= (.getDayOfWeek %) DayOfWeek/SATURDAY)
                     (= (.getDayOfWeek %) DayOfWeek/SUNDAY)))
@@ -42,7 +42,7 @@
                  (range (+ 1 (.between ChronoUnit/DAYS start end)))))))
 
 (defn convert-keskeytymisajanjakso
-  ""
+  "Muuntaa keskeytymisajanjakson alku- ja loppupäivät LocalDate:iksi."
   [kj]
   (cond-> {}
     (:alku kj)  (assoc :alku  (LocalDate/parse (:alku kj)))
@@ -53,6 +53,7 @@
   [jaksot-by-day jakso]
   (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
                          (:opiskeluoikeus-oid jakso))
+        ;; TODO oo-tilat tarvitsevat loppupäiviä.
         oo-tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
         kjaksot-parsed (map convert-keskeytymisajanjakso
                             (:keskeytymisajanjaksot jakso))
@@ -78,8 +79,8 @@
 
 ;; TODO extract those values that we actually want
 
-(defn compute-kesto
-  ""
+(defn compute-kestot
+  "Laskee kaikkien jaksojen kestot ja palauttaa mapin OHT ID:stä kestoihin."
   [jaksot]
   (let [first-start-date  (first (sort (map :jakso_alkupvm jaksot)))
         last-end-date     (first (reverse (sort (map :jakso_loppupvm jaksot))))
@@ -94,29 +95,41 @@
             (map handle-one-day
                  (vals (reduce add-to-jaksot-by-day {} concurrent-jaksot))))))
 
+(defn query-jaksot
+  "" ;; TODO
+  [nippu]
+  (ddb/query-items
+    {:ohjaaja_ytunnus_kj_tutkinto
+     [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
+     :niputuspvm [:eq [:s (:niputuspvm nippu)]]}
+    {:index "niputusIndex"
+     :filter-expression "#pvm >= :pvm AND attribute_exists(#tunnus)"
+     :expr-attr-names {"#pvm"    "viimeinen_vastauspvm"
+                       "#tunnus" "tunnus"}
+     :expr-attr-vals {":pvm" [:s (str (c/local-date-now))]}}
+    (:jaksotunnus-table env)))
+
+(defn retrieve-and-update-jaksot
+  "" ;; TODO
+  [nippu]
+  (let [jaksot (query-jaksot nippu)
+        kestot (compute-kestot jaksot)]
+    (map #(let [kesto (get kestot (:hankkimistapa-id %) 0.0)]
+            ;; TODO päivitä tietokantaan
+            ;; TODO välitä Arvoon
+            (assoc % :kesto kesto))
+         jaksot)))
+
 (defn niputa
   "Luo nippukyselylinkin jokaiselle alustavalle nipulle, jos sillä on vielä
   jaksoja, joilla on vielä aikaa vastata."
   [nippu]
   (log/info "Niputetaan " nippu)
   (let [request-id (c/generate-uuid)
-        jaksot (filter
-                 #(>= (compare (:viimeinen_vastauspvm %1)
-                               (str (c/local-date-now)))
-                      0)
-                 (ddb/query-items
-                   {:ohjaaja_ytunnus_kj_tutkinto
-                    [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
-                    :niputuspvm [:eq [:s (:niputuspvm nippu)]]}
-                   {:index "niputusIndex"
-                    :filter-expression (str "#pvm >= :pvm "
-                                            "AND attribute_exists(#tunnus)")
-                    :expr-attr-names {"#pvm"    "viimeinen_vastauspvm"
-                                      "#tunnus" "tunnus"}
-                    :expr-attr-vals {":pvm" [:s (str (c/local-date-now))]}}
-                   (:jaksotunnus-table env)))
+        jaksot (retrieve-and-update-jaksot nippu)
         tunnukset (map :tunnus jaksot)]
     (if (not-empty tunnukset)
+      ;; TODO vai välitetäänkö ne kestot Arvoon tässä?
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))
             arvo-resp (arvo/create-nippu-kyselylinkki
                         (arvo/build-niputus-request-body
