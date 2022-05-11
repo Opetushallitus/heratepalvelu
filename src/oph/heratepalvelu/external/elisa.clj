@@ -64,11 +64,10 @@
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
 (defn amis-msg-body
-  "" ;;  TODO
+  "Luo opiskelijapalauteviestin tekstin."
   [linkki]
   ;; TODO
-  (str "Teksti: " linkki)
-  )
+  (str "Test Teksti: " linkki))
 
 (defn send-sms
   "Lähettää SMS-viestin viestintäpalveluun."

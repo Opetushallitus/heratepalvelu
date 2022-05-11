@@ -101,11 +101,13 @@
 (def expected-http-results
   [{:method :post
     :url "https://viestipalvelu-api.elisa.fi/api/v1/"
-    :options {:headers {:Authorization "apikey elisa-apikey"
-                        :content-type "application/json"}
-              :body    (str "{\"sender\":\"OPH\",\"destination\":[\"12345\"],"
-                            "\"text\":\"Teksti: kysely.linkki/4\"}")
-              :as      :json}}])
+    :options
+    {:headers {:Authorization "apikey elisa-apikey"
+               :content-type "application/json"}
+     :body    (generate-string {:sender "OPH"
+                                :destination ["12345"]
+                                :text (elisa/amis-msg-body "kysely.linkki/4")})
+     :as      :json}}])
 
 (deftest test-AMISSMSHerate-integration
   (testing "AMISSMSHandler integraatiotesti"
