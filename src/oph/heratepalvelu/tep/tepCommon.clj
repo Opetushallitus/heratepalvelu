@@ -64,3 +64,11 @@
       :niputuspvm                  [:s (:niputuspvm nippu)]}
      (merge (c/create-update-item-options updates) options)
      (:nippu-table env))))
+
+(defn update-jakso
+  "Wrapper update-itemin ympäri, joka yksinkertaistaa tietokantapäivitykset."
+  ([jakso updates] (update-jakso jakso updates {}))
+  ([jakso updates options]
+   (ddb/update-item {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+                    (merge (c/create-update-item-options updates) options)
+                    (:jaksotunnus-table env))))

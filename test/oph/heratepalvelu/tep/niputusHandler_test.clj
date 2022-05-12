@@ -67,36 +67,61 @@
                    4 0.25}]
       (is (= (nh/handle-one-day jaksot) results)))))
 
-(def test-compute-kesto-results (atom []))
+(def test-compute-kestot-results (atom []))
 
-(deftest test-compute-kesto
-  (testing "Varmistaa, että compute-kesto laskee kestot oikein."
+(defn- mock-get-opiskeluoikeus-catch-404 [oo-oid]
+  (cond
+    (= oo-oid "5.5.5.5") {:tila
+                          {:opiskeluoikeusjaksot
+                           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
+                            {:alku "2022-01-30" :tila {:koodiarvo "loma"}}
+                            {:alku "2022-02-10" :tila {:koodiarvo "lasna"}}]}}
+    (= oo-oid "6.6.6.6") {
+                          ; TODO
+
+                          }
+    :else {}))
+
+(deftest test-compute-kestot
+  (testing "Varmistaa, että compute-kestot laskee kestot oikein."
     (with-redefs
       [oph.heratepalvelu.external.ehoks/get-tyoelamajaksot-active-between
        (fn [oppija-oid start end];; TODO
-         (reset! test-compute-kesto-results
-                 (cons {:type "gtab" :start start :end end}
-                       @test-compute-kesto-results))
-         (seq [{:hankkimistapa-id 1
+         (reset! test-compute-kestot-results
+                 (cons {:type "gtab" :start start :end end :oppija oppija-oid}
+                       @test-compute-kestot-results))
+         (seq [{:hankkimistapa_id 1
                 :oppija_oid "4.4.4.4"
-                :osa-aikaisuus 100
+                :osa_aikaisuus 100
                 :jakso_alkupvm "2022-01-03"
                 :jakso_loppupvm "2022-02-05"
                 :keskeytymisajanjaksot []
                 :opiskeluoikeus-oid "1.2.3.1"
                 }
-               {:hankkimistapa-id 2
+               {:hankkimistapa_id 2
                 :oppija_oid "4.4.4.4"
-                :osa-aikaisuus 50
-                :jakso_alkupvm ;; TODO
-                :jakso_loppupvm ;; TODO
+                :osa_aikaisuus 50
+                :jakso_alkupvm "2022-02-07"
+                :jakso_loppupvm "2022-04-04"
                 ;; ei keskeytymisajanjaksoja ollenkaan
                 :opiskeluoikeus-oid "1.2.3.2"
+                }
+               {:hankkimistapa_id 3
+                :oppija_oid "5.5.5.5"
+                :osa_aikaisuus 0
+                :jakso_alkupvm ;; TODO
+                :jakso_loppupvm ;; TODO
+                ;; TODO keskeytymisajanjaksot
+                :opiskeluoikeus
+
+
                 }
 
 
 
                ]))
+       oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
+       mock-get-opiskeluoikeus-catch-404
 
        ;; TODO koski redef
 
@@ -116,11 +141,27 @@
                           ;; TODO
 
                           ]]
-        (is (= (nh/compute-kesto jaksot) results))
+        (is (= (nh/compute-kestot jaksot) results))
         ;; TODO tarkista tallennetut hommat
       ;; TODO
 
       ))))
+
+(defn- mock-compute-kestot [jaksot] {(:oppija_oid (first jaksot)) (vec jaksot)})
+
+(deftest test-group-jaksot-and-compute-kestot
+  (testing "Varmistaa, että group-jaksot-and-compute-kestot toimii oikein."
+    (with-redefs [oph.heratepalvelu.tep.niputusHandler/compute-kestot
+                  mock-compute-kestot]
+      (let [jaksot [{:oppija_oid "1234" :other_field "A"}
+                    {:oppija_oid "5678" :other_field "B"}
+                    {:oppija_oid "1234" :other_field "C"}
+                    {:oppija_oid "8900" :other_field "D"}]
+            results {"1234" [{:oppija_oid "1234" :other_field "C"}
+                             {:oppija_oid "1234" :other_field "A"}]
+                     "5678" [{:oppija_oid "5678" :other_field "B"}]
+                     "8900" [{:oppija_oid "8900" :other_field "D"}]}]
+        (is (= (nh/group-jaksot-and-compute-kestot jaksot) results))))))
 
 (def test-niputa-results (atom []))
 

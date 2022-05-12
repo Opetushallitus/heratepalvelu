@@ -49,7 +49,10 @@
     (:loppu kj) (assoc :loppu (LocalDate/parse (:loppu kj)))))
 
 (defn add-to-jaksot-by-day
-  ""
+  "Lisää jaksoon viittaavan referenssin jokaiselle päivälle jaksot-by-day
+  -objektissa, jolloin jakso on voimassa eikä ole keskeytynyt. Objekti
+  jaksot-by-day on map LocalDate-päivämääristä sekvensseihin jaksoista, jotka
+  ovat voimassa ja keskeytymättömiä sinä päivänä."
   [jaksot-by-day jakso]
   (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
                          (:opiskeluoikeus-oid jakso))
@@ -75,17 +78,16 @@
             (filtered-jakso-days jakso))))
 
 (defn handle-one-day
-  ""
+  "Jakaa yhden päivän aikaa silloin keskeytymättömien jaksojen välillä."
   [jaksot]
   (let [fraction (/ 1.0 (count jaksot))]
-    (into {} (map #(do [(:hankkimistapa-id %)
+    (into {} (map #(do [(:hankkimistapa_id %)
                         (/ (* fraction (get % :osa-aikaisuus 100)) 100)])
                   jaksot))))
 
-;; TODO extract those values that we actually want
-
 (defn compute-kestot
-  "Laskee kaikkien jaksojen kestot ja palauttaa mapin OHT ID:stä kestoihin."
+  "Laskee jaksojen kestot ja palauttaa mapin OHT ID:stä kestoihin. Olettaa, että
+  kaikki jaksot kuuluvat samalle oppilaalle."
   [jaksot]
   (let [first-start-date  (first (sort (map :jakso_alkupvm jaksot)))
         last-end-date     (first (reverse (sort (map :jakso_loppupvm jaksot))))
@@ -93,15 +95,26 @@
                             (:oppija_oid (first jaksot))
                             first-start-date
                             last-end-date)
-        ;; TODO varmistaa, että olemassa olevat jaksotkin otetaan mukaan?
+
+        ;; TODO ehkä olisi tehokkaampi hakea OO tässä. Se riippuu siitä, 
+        ;; yksilöidäänkö jaksot OO:n tai oppijan perusteella. Jos ne yksilöidään
+        ;; oppijan perusteella, meidän kannattaa memoisoida ne haut, koska
+        ;; muuten niistä tulee todella kalliit.
         ]
     (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
             {}
             (map handle-one-day
                  (vals (reduce add-to-jaksot-by-day {} concurrent-jaksot))))))
 
+(defn group-jaksot-and-compute-kestot
+  "Ryhmittää jaksot oppija_oid:n perusteella ja laskee niiden kestot."
+  [jaksot]
+  (let [f #(assoc %1 (:oppija_oid %2) (cons %2 (get %1 (:oppija_oid %2))))]
+    (apply merge (map compute-kestot (vals (reduce f {} jaksot))))))
+
 (defn query-jaksot
-  "" ;; TODO
+  "Hakee tietokannasta ne jaksot, jotka kuuluvat annettuun nippuun ja joiden
+  viimeiset vastauspäivämäärät eivät ole menneisyydessä."
   [nippu]
   (ddb/query-items
     {:ohjaaja_ytunnus_kj_tutkinto
@@ -115,12 +128,13 @@
     (:jaksotunnus-table env)))
 
 (defn retrieve-and-update-jaksot
-  "" ;; TODO
+  "Hakee nippuun kuuluvat jaksot tietokannasta, laskee niiden kestot, päivittää
+  kestotiedot tietokantaan, ja palauttaa päivitetyt jaksot."
   [nippu]
   (let [jaksot (query-jaksot nippu)
-        kestot (compute-kestot jaksot)]
-    (map #(let [kesto (get kestot (:hankkimistapa-id %) 0.0)]
-            ;; TODO päivitä tietokantaan
+        kestot (group-jaksot-and-compute-kestot jaksot)]
+    (map #(let [kesto (get kestot (:hankkimistapa_id %) 0.0)]
+            (tc/update-jakso % {:kesto [:n kesto]})
             ;; TODO välitä Arvoon
             (assoc % :kesto kesto))
          jaksot)))
