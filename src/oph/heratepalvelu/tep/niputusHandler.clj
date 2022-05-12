@@ -53,8 +53,13 @@
   [jaksot-by-day jakso]
   (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
                          (:opiskeluoikeus-oid jakso))
-        ;; TODO oo-tilat tarvitsevat loppupäiviä.
-        oo-tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
+        oo-tilat (reverse
+                   (reduce
+                     #(if (first %1) (assoc %2 :loppu (:alku (first %1))) %2)
+                     []
+                     (reverse
+                       (sort :alku
+                             (:opiskeluoikeusjaksot (:tila opiskeluoikeus))))))
         kjaksot-parsed (map convert-keskeytymisajanjakso
                             (:keskeytymisajanjaksot jakso))
         kjaksot-oo (map convert-keskeytymisajanjakso
