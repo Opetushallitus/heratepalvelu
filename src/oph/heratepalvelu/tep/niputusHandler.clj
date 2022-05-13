@@ -45,8 +45,12 @@
   "Muuntaa keskeytymisajanjakson alku- ja loppupäivät LocalDate:iksi."
   [kj]
   (cond-> {}
-    (:alku kj)  (assoc :alku  (LocalDate/parse (:alku kj)))
-    (:loppu kj) (assoc :loppu (LocalDate/parse (:loppu kj)))))
+    (:alku kj)  (assoc :alku  (if (not= (type (:alku kj)) LocalDate)
+                                (LocalDate/parse (:alku kj))
+                                (:alku kj)))
+    (:loppu kj) (assoc :loppu (if (not= (type (:loppu kj)) LocalDate)
+                                (LocalDate/parse (:loppu kj))
+                                (:loppu kj)))))
 
 (defn add-to-jaksot-by-day
   "Lisää jaksoon viittaavan referenssin jokaiselle päivälle jaksot-by-day
@@ -55,14 +59,19 @@
   ovat voimassa ja keskeytymättömiä sinä päivänä."
   [jaksot-by-day jakso]
   (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
-                         (:opiskeluoikeus-oid jakso))
-        oo-tilat (reverse
-                   (reduce
-                     #(if (first %1) (assoc %2 :loppu (:alku (first %1))) %2)
-                     []
-                     (reverse
-                       (sort :alku
-                             (:opiskeluoikeusjaksot (:tila opiskeluoikeus))))))
+                         (:opiskeluoikeus_oid jakso))
+        oo-tilat (reduce #(cons
+                            (if (first %1)
+                              (assoc %2 :loppu (.minusDays (LocalDate/parse
+                                                             (:alku (first %1)))
+                                                           1))
+                              %2)
+                            %1)
+                         []
+                         (reverse
+                           (sort-by
+                             :alku
+                             (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))))
         kjaksot-parsed (map convert-keskeytymisajanjakso
                             (:keskeytymisajanjaksot jakso))
         kjaksot-oo (map convert-keskeytymisajanjakso
@@ -82,7 +91,7 @@
   [jaksot]
   (let [fraction (/ 1.0 (count jaksot))]
     (into {} (map #(do [(:hankkimistapa_id %)
-                        (/ (* fraction (get % :osa-aikaisuus 100)) 100)])
+                        (/ (* fraction (get % :osa_aikaisuus 100)) 100)])
                   jaksot))))
 
 (defn compute-kestot
