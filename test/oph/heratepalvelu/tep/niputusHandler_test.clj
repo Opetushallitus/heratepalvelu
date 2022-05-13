@@ -200,6 +200,29 @@
                      "8900" [{:oppija_oid "8900" :other_field "D"}]}]
         (is (= (nh/group-jaksot-and-compute-kestot jaksot) results))))))
 
+(deftest test-query-jaksot
+  (testing "Varmistaa, että query-jaksot toimii oikein."
+    (with-redefs [environ.core/env {:jaksotunnus-table "table-name"}
+                  oph.heratepalvelu.common/local-date-now
+                  (fn [] (LocalDate/of 2022 3 3))
+                  oph.heratepalvelu.db.dynamodb/query-items
+                  (fn [query-params options table]
+                    {:query-params query-params :options options :table table})]
+      (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "asdf"
+                   :niputuspvm "2022-02-02"}
+            results {:query-params
+                     {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s "asdf"]]
+                      :niputuspvm [:eq [:s "2022-02-02"]]}
+                     :options
+                     {:index "niputusIndex"
+                      :filter-expression
+                      "#pvm >= :pvm AND attribute_exists(#tunnus)"
+                      :expr-attr-names {"#pvm"    "viimeinen_vastauspvm"
+                                        "#tunnus" "tunnus"}
+                      :expr-attr-vals {":pvm" [:s "2022-03-03"]}}
+                     :table "table-name"}]
+        (is (= (nh/query-jaksot nippu) results))))))
+
 (def test-niputa-results (atom []))
 
 (defn- add-to-test-niputa-results [data]
