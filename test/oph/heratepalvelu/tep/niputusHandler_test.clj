@@ -141,8 +141,8 @@
                {:hankkimistapa_id 3
                 :oppija_oid "5.5.5.5"
                 :osa_aikaisuus 0
-       ;         :jakso_alkupvm ;; TODO
-       ;         :jakso_loppupvm ;; TODO
+                :jakso_alkupvm "2022-01-31"
+                :jakso_loppupvm "2022-02-20"
                 ;; TODO keskeytymisajanjaksot
         ;        :opiskeluoikeus
 
@@ -163,7 +163,9 @@
                     {:jakso_alkupvm "2022-01-10"
                      :jakso_loppupvm "2022-02-28"}]
             
-            results {
+            results {1 22.5
+                     2 18.0
+                     3 0.0
                      ;; TODO
 
                      }
