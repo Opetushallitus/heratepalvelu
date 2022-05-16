@@ -272,31 +272,6 @@
 
 (defn- mock-generate-uuid [] "test-uuid")
 
-(defn- mock-niputa-query-items [query-params options table]
-  (when (and (= :eq (first (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-             (= :s (first (second (:ohjaaja_ytunnus_kj_tutkinto query-params))))
-             (= :eq (first (:niputuspvm query-params)))
-             (= :s (first (second (:niputuspvm query-params))))
-             (= "niputusIndex" (:index options))
-             (= "#pvm >= :pvm AND attribute_exists(#tunnus)"
-                (:filter-expression options))
-             (= "viimeinen_vastauspvm" (get (:expr-attr-names options) "#pvm"))
-             (= "tunnus" (get (:expr-attr-names options) "#tunnus"))
-             (= :s (first (get (:expr-attr-vals options) ":pvm")))
-             (= "jaksotunnus-table-name" table))
-    (add-to-test-niputa-results
-      {:type "mock-niputa-query-items"
-       :pvm (second (get (:expr-attr-vals options) ":pvm"))
-       :niputuspvm (second (second (:niputuspvm query-params)))
-       :ohjaaja_ytunnus_kj_tutkinto
-       (second (second (:ohjaaja_ytunnus_kj_tutkinto query-params)))})
-    (if (not= (second (second (:ohjaaja_ytunnus_kj_tutkinto query-params)))
-              "test-id-0")
-      [{:tunnus "ABCDEF"
-        :tyopaikan_nimi "Testi Työ Paikka"
-        :viimeinen_vastauspvm "2022-02-02"}]
-      [])))
-
 (defn- mock-create-nippu-kyselylinkki [niputus-request-body]
   (add-to-test-niputa-results {:type "mock-create-nippu-kyselylinkki"
                                :niputus-request-body niputus-request-body})
@@ -319,7 +294,6 @@
 (defn- mock-retrieve-and-update-jaksot [nippu]
   (add-to-test-niputa-results {:type "mock-retrieve-and-update-jaksot"
                                :nippu nippu})
-  ; ;TODO some conditional stuff here no doubt
   (if (not= (:ohjaaja_ytunnus_kj_tutkinto nippu) "test-id-0")
     [{:tunnus "ABCDEF"
       :tyopaikan_nimi "Testi Työ Paikka"
@@ -334,7 +308,6 @@
        oph.heratepalvelu.common/generate-uuid mock-generate-uuid
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 31))
        oph.heratepalvelu.common/rand-str (fn [_] "abcdef")
-       oph.heratepalvelu.db.dynamodb/query-items mock-niputa-query-items
        oph.heratepalvelu.external.arvo/create-nippu-kyselylinkki
        mock-create-nippu-kyselylinkki
        oph.heratepalvelu.external.arvo/delete-nippukyselylinkki
@@ -357,26 +330,14 @@
                           :tutkinto "aaaa"}
             results [{:type "mock-retrieve-and-update-jaksot"
                       :nippu test-nippu-0}
-
-                     
-        ;             {:type "mock-niputa-query-items"
-        ;              :pvm "2021-12-31"
-        ;              :ohjaaja_ytunnus_kj_tutkinto "test-id-0"
-        ;              :niputuspvm "2021-12-15"}
-        ;             {:type "mock-update-nippu"
-        ;              :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
-        ;                      :niputuspvm "2021-12-15"}
-        ;              :updates
-        ;              {:kasittelytila [:s (:ei-jaksoja c/kasittelytilat)]
-        ;               :request_id [:s "test-uuid"]
-        ;               :kasittelypvm [:s "2021-12-31"]}
-        ;              :options {}}
-        ;             {:type "mock-niputa-query-items"
-        ;              :pvm "2021-12-31"
-        ;              :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
-        ;              :niputuspvm "2021-12-15"}
-                     
-                     
+                     {:type "mock-update-nippu"
+                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
+                              :niputuspvm "2021-12-15"}
+                      :updates
+                      {:kasittelytila [:s (:ei-jaksoja c/kasittelytilat)]
+                       :request_id [:s "test-uuid"]
+                       :kasittelypvm [:s "2021-12-31"]}
+                      :options {}}
                      {:type "mock-retrieve-and-update-jaksot"
                       :nippu test-nippu-1} 
                      {:type "mock-create-nippu-kyselylinkki"
@@ -404,10 +365,6 @@
                        :kasittelypvm [:s "2021-12-31"]}
                       :options
                       {:cond-expr "attribute_not_exists(kyselylinkki)"}}
-              ;       {:type "mock-niputa-query-items"
-              ;        :pvm "2021-12-31"
-               ;       :ohjaaja_ytunnus_kj_tutkinto "test-id-2"
-                ;      :niputuspvm "2021-12-15"}
                      {:type "mock-retrieve-and-update-jaksot"
                       :nippu test-nippu-2}
                      {:type "mock-create-nippu-kyselylinkki"
