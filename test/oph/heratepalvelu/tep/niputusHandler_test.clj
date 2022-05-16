@@ -181,9 +181,6 @@
 
       ))))
 
-
-;; TODO vielä enemmän funktioita
-
 (defn- mock-compute-kestot [jaksot] {(:oppija_oid (first jaksot)) (vec jaksot)})
 
 (deftest test-group-jaksot-and-compute-kestot
@@ -222,6 +219,51 @@
                       :expr-attr-vals {":pvm" [:s "2022-03-03"]}}
                      :table "table-name"}]
         (is (= (nh/query-jaksot nippu) results))))))
+
+(def trauj-results (atom []))
+
+(defn- add-to-trauj-results [item]
+  (reset! trauj-results (conj @trauj-results item)))
+
+(defn- mock-trauj-query-jaksot [nippu]
+  (add-to-trauj-results {:type "query-jaksot" :nippu nippu})
+  [{:hankkimistapa_id 1} {:hankkimistapa_id 2} {:hankkimistapa_id 3}])
+
+(defn- mock-trauj-group-jaksot-and-compute-kestot [jaksot]
+  (add-to-trauj-results {:type "group-jaksot-and-compute-kestot"
+                         :jaksot jaksot})
+  {1 0.0 2 0.3 3 0.5})
+
+(defn- mock-trauj-update-jakso [jakso updates]
+  (add-to-trauj-results {:type "update-jakso" :jakso jakso :updates updates}))
+
+(deftest test-retrieve-and-update-jaksot
+  (testing "Varmistaa, että retrieve-and-update-jaksot toimii oikein."
+    (with-redefs
+      [oph.heratepalvelu.tep.niputusHandler/group-jaksot-and-compute-kestot
+       mock-trauj-group-jaksot-and-compute-kestot
+       oph.heratepalvelu.tep.niputusHandler/query-jaksot mock-trauj-query-jaksot
+       oph.heratepalvelu.tep.tepCommon/update-jakso mock-trauj-update-jakso]
+      (let [nippu {:mock-nippu-contents "asdf"}
+            results [{:type "query-jaksot" :nippu {:mock-nippu-contents "asdf"}}
+                     {:type "group-jaksot-and-compute-kestot"
+                      :jaksot [{:hankkimistapa_id 1}
+                               {:hankkimistapa_id 2}
+                               {:hankkimistapa_id 3}]}
+                     {:type "update-jakso"
+                      :jakso {:hankkimistapa_id 1}
+                      :updates {:kesto [:n 0.0]}}
+                     {:type "update-jakso"
+                      :jakso {:hankkimistapa_id 2}
+                      :updates {:kesto [:n 0.3]}}
+                     {:type "update-jakso"
+                      :jakso {:hankkimistapa_id 3}
+                      :updates {:kesto [:n 0.5]}}]
+            updated-jaksot [{:hankkimistapa_id 1 :kesto 0.0}
+                            {:hankkimistapa_id 2 :kesto 0.3}
+                            {:hankkimistapa_id 3 :kesto 0.5}]]
+        (is (= (nh/retrieve-and-update-jaksot nippu) updated-jaksot))
+        (is (= @trauj-results results))))))
 
 (def test-niputa-results (atom []))
 
@@ -274,6 +316,10 @@
                                 :updates updates
                                 :options options})))
 
+(defn- mock-retrieve-and-update-jaksot [nippu]
+  ;; TODO
+  )
+
 (deftest test-niputa
   (testing "Varmista, että niputa-funktio tekee oikeita kutsuja"
     (with-redefs
@@ -287,6 +333,8 @@
        mock-create-nippu-kyselylinkki
        oph.heratepalvelu.external.arvo/delete-nippukyselylinkki
        mock-delete-nippukyselylinkki
+       oph.heratepalvelu.tep.niputusHandler/retrieve-and-update-jaksot
+       mock-retrieve-and-update-jaksot
        oph.heratepalvelu.tep.tepCommon/update-nippu mock-update-nippu]
       (let [test-nippu-0 {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
                           :niputuspvm "2021-12-15"}
