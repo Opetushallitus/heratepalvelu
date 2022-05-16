@@ -317,8 +317,14 @@
                                 :options options})))
 
 (defn- mock-retrieve-and-update-jaksot [nippu]
-  ;; TODO
-  )
+  (add-to-test-niputa-results {:type "mock-retrieve-and-update-jaksot"
+                               :nippu nippu})
+  ; ;TODO some conditional stuff here no doubt
+  (if (not= (:ohjaaja_ytunnus_kj_tutkinto nippu) "test-id-0")
+    [{:tunnus "ABCDEF"
+      :tyopaikan_nimi "Testi Työ Paikka"
+      :viimeinen_vastauspvm "2022-02-02"}]
+    []))
 
 (deftest test-niputa
   (testing "Varmista, että niputa-funktio tekee oikeita kutsuja"
@@ -349,22 +355,30 @@
                           :ytunnus "111111-1"
                           :koulutuksenjarjestaja "12111"
                           :tutkinto "aaaa"}
-            results [{:type "mock-niputa-query-items"
-                      :pvm "2021-12-31"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-0"
-                      :niputuspvm "2021-12-15"}
-                     {:type "mock-update-nippu"
-                      :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
-                              :niputuspvm "2021-12-15"}
-                      :updates
-                      {:kasittelytila [:s (:ei-jaksoja c/kasittelytilat)]
-                       :request_id [:s "test-uuid"]
-                       :kasittelypvm [:s "2021-12-31"]}
-                      :options {}}
-                     {:type "mock-niputa-query-items"
-                      :pvm "2021-12-31"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
-                      :niputuspvm "2021-12-15"}
+            results [{:type "mock-retrieve-and-update-jaksot"
+                      :nippu test-nippu-0}
+
+                     
+        ;             {:type "mock-niputa-query-items"
+        ;              :pvm "2021-12-31"
+        ;              :ohjaaja_ytunnus_kj_tutkinto "test-id-0"
+        ;              :niputuspvm "2021-12-15"}
+        ;             {:type "mock-update-nippu"
+        ;              :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
+        ;                      :niputuspvm "2021-12-15"}
+        ;              :updates
+        ;              {:kasittelytila [:s (:ei-jaksoja c/kasittelytilat)]
+        ;               :request_id [:s "test-uuid"]
+        ;               :kasittelypvm [:s "2021-12-31"]}
+        ;              :options {}}
+        ;             {:type "mock-niputa-query-items"
+        ;              :pvm "2021-12-31"
+        ;              :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
+        ;              :niputuspvm "2021-12-15"}
+                     
+                     
+                     {:type "mock-retrieve-and-update-jaksot"
+                      :nippu test-nippu-1} 
                      {:type "mock-create-nippu-kyselylinkki"
                       :niputus-request-body
                       {:tunniste "testi_tyo_paikka_2021-12-31_abcdef"
@@ -390,10 +404,12 @@
                        :kasittelypvm [:s "2021-12-31"]}
                       :options
                       {:cond-expr "attribute_not_exists(kyselylinkki)"}}
-                     {:type "mock-niputa-query-items"
-                      :pvm "2021-12-31"
-                      :ohjaaja_ytunnus_kj_tutkinto "test-id-2"
-                      :niputuspvm "2021-12-15"}
+              ;       {:type "mock-niputa-query-items"
+              ;        :pvm "2021-12-31"
+               ;       :ohjaaja_ytunnus_kj_tutkinto "test-id-2"
+                ;      :niputuspvm "2021-12-15"}
+                     {:type "mock-retrieve-and-update-jaksot"
+                      :nippu test-nippu-2}
                      {:type "mock-create-nippu-kyselylinkki"
                       :niputus-request-body
                       {:tunniste "testi_tyo_paikka_2021-12-31_abcdef"
