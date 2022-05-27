@@ -97,7 +97,7 @@
                       "\"tutkintotunnus\":\"test-tutkinto-1\","
                       "\"tyonantaja\":\"123456-1\","
                       "\"tyopaikka\":\"Testi Työpaikka 1\","
-                      "\"tunnukset\":[\"AAjunk\"],"
+                      "\"tunnukset\":[\"AAjunk\",\"ACjunk\"],"
                       "\"voimassa_alkupvm\":\"2022-02-18\","
                       "\"request_id\":\"test-uuid\"}")}
                 {:body {:nippulinkki "kysely.linkki/123"
