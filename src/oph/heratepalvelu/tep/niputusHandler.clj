@@ -104,7 +104,7 @@
                             last-end-date)
         oo-map (reduce #(assoc %1 %2 (koski/get-opiskeluoikeus-catch-404 %2))
                        {}
-                       (set (map :opiskeluoikeus_oid jaksot)))
+                       (set (map :opiskeluoikeus_oid concurrent-jaksot)))
         do-one #(add-to-jaksot-by-day %1
                                       %2
                                       (get oo-map (:opiskeluoikeus_oid %2)))]

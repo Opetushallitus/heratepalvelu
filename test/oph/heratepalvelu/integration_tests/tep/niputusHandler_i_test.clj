@@ -11,11 +11,14 @@
 (def mock-env {:jaksotunnus-table "jaksotunnus-table-name"
                :nippu-table "nippu-table-name"
                :arvo-url "https://oph-arvo.com/"
-               :arvo-user "arvo-user"})
+               :arvo-user "arvo-user"
+               :ehoks-url "https://oph-ehoks.com/"
+               :ehoks-user "ehoks-user"
+               :koski-url "https://oph-koski.com"
+               :koski-user "koski-user"})
 
 ;; TODO mock koski calls (näistä pitäisi olla... 3?)
 ;; TODO mock ehoks calls (get-tyoelamajaksot-active-between) (2)
-;; TODO alku ja loppu jokaiseen jaksoon
 
 (def starting-jaksotunnus-table [{:hankkimistapa_id [:n 11]
                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
@@ -23,6 +26,7 @@
                                   :viimeinen_vastauspvm [:s "2022-03-31"]
                                   :tunnus [:s "AAjunk"]
                                   :oppija_oid [:s "aaa"]
+                                  :opiskeluoikeus_oid [:s "oo-aaa"]
                                   :jakso_alkupvm [:s "2022-01-01"]
                                   :jakso_loppupvm [:s "2022-01-25"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
@@ -32,6 +36,7 @@
                                   :viimeinen_vastauspvm [:s "2022-02-16"]
                                   :tunnus [:s "ABjunk"]
                                   :oppija_oid [:s "aaa"]
+                                  :opiskeluoikeus_oid [:s "oo-aaa"]
                                   :jakso_alkupvm [:s "2022-01-15"]
                                   :jakso_loppupvm [:s "2022-01-31"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
@@ -41,6 +46,7 @@
                                   :viimeinen_vastauspvm [:s "2022-02-25"]
                                   :tunnus [:s "ACjunk"]
                                   :oppija_oid [:s "aaa"]
+                                  :opiskeluoikeus_oid [:s "oo-aaa"]
                                   :jakso_alkupvm [:s "2022-01-20"]
                                   :jakso_loppupvm [:s "2022-01-31"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
@@ -50,6 +56,7 @@
                                   :viimeinen_vastauspvm [:s "2022-03-31"]
                                   :tunnus [:s "BAjunk"]
                                   :oppija_oid [:s "bbb"]
+                                  :opiskeluoikeus_oid [:s "oo-bbb"]
                                   :jakso_alkupvm [:s "2022-01-10"]
                                   :jakso_loppupvm [:s "2022-01-20"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 2"]}])
@@ -110,6 +117,96 @@
                       "\"voimassa_alkupvm\":\"2022-02-18\","
                       "\"request_id\":\"test-uuid\"}")}
                 {:body {:errors "Jokin meni pieleen"}})
+  (mhc/bind-url :get
+                (str (:ehoks-url mock-env)
+                     "heratepalvelu/tyoelamajaksot-active-between")
+                {:as :json
+                 :headers
+                 {:ticket
+                  "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+                 :query-params {:oppija "aaa"
+                                :start "2022-01-01"
+                                :end "2022-01-31"}}
+                [{:hankkimistapa_id 11
+                  :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
+                  :niputuspvm "2022-02-01"
+                  :viimeinen_vastauspvm "2022-03-31"
+                  :tunnus "AAjunk"
+                  :oppija_oid "aaa"
+                  :opiskeluoikeus_oid "oo-aaa"
+                  :jakso_alkupvm "2022-01-01"
+                  :jakso_loppupvm "2022-01-25"
+                  :tyopaikan_nimi "Testi Työpaikka 1"}
+                 {:hankkimistapa_id 12
+                  :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
+                  :niputuspvm "2022-02-01"
+                  :viimeinen_vastauspvm "2022-02-16"
+                  :tunnus "ABjunk"
+                  :oppija_oid "aaa"
+                  :opiskeluoikeus_oid "oo-aaa"
+                  :jakso_alkupvm "2022-01-15"
+                  :jakso_loppupvm "2022-01-31"
+                  :tyopaikan_nimi "Testi Työpaikka 1"}
+                 {:hankkimistapa_id 13
+                  :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
+                  :niputuspvm "2022-02-01"
+                  :viimeinen_vastauspvm "2022-02-25"
+                  :tunnus "ACjunk"
+                  :oppija_oid "aaa"
+                  :opiskeluoikeus_oid "oo-aaa"
+                  :jakso_alkupvm "2022-01-20"
+                  :jakso_loppupvm "2022-01-31"
+                  :tyopaikan_nimi "Testi Työpaikka 1"}])
+  (mhc/bind-url :get
+                (str (:ehoks-url mock-env)
+                     "heratepalvelu/tyoelamajaksot-active-between")
+                {:as :json
+                 :headers
+                 {:ticket
+                  "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+                 :query-params {:oppija "bbb"
+                                :start "2022-01-10"
+                                :end "2022-01-20"}}
+                [{:hankkimistapa_id 21
+                  :ohjaaja_ytunnus_kj_tutkinto "oykt-2"
+                  :niputuspvm "2022-02-01"
+                  :viimeinen_vastauspvm "2022-03-31"
+                  :tunnus "BAjunk"
+                  :oppija_oid "bbb"
+                  :opiskeluoikeus_oid "oo-bbb"
+                  :keskeytymisajanjaksot [{:alku "2022-01-12"
+                                           :loppu "2022-01-14"}]
+                  :jakso_alkupvm "2022-01-10"
+                  :jakso_loppupvm "2022-01-20"
+                  :tyopaikan_nimi "Testi Työpaikka 2"}
+                 {:hankkimistapa_id 22
+                  :ohjaaja_ytunnus_kj_tutkinto "oykt-2"
+                  :tunnus "BBjunk"
+                  :oppija_oid "bbb"
+                  :opiskeluoikeus_oid "oo-bbb"
+                  :keskeytymisajanjaksot [{:alku "2022-01-03"
+                                           :loppu "2022-01-08"}]
+                  :jakso_alkupvm "2022-01-01"
+                  :jakso_loppupvm "2022-01-30"
+                  :tyopaikan_nimi "Testi Työpaikka 2"}])
+  (mhc/bind-url :get
+                (str (:koski-url mock-env) "/opiskeluoikeus/oo-aaa")
+                {:as         :json
+                 :basic-auth [(:koski-user mock-env) "koski-pwd"]}
+                {:body {:tila
+                        {:opiskeluoikeusjaksot
+                         [{:alku "2021-09-01" :tila {:koodiarvo "lasna"}}
+                          {:alku "2022-01-24" :tila {:koodiarvo "loma"}}
+                          {:alku "2022-01-28" :tila {:koodiarvo "lasna"}}]}}})
+  (mhc/bind-url :get
+                (str (:koski-url mock-env) "/opiskeluoikeus/oo-bbb")
+                {:as         :json
+                 :basic-auth [(:koski-user mock-env) "koski-pwd"]}
+                {:body {:tila
+                        {:opiskeluoikeusjaksot
+                         [{:alku "2021-09-01" :tila {:koodiarvo "lasna"}}
+                          {:alku "2022-01-17" :tila {:koodiarvo "loma"}}
+                          {:alku "2022-01-31" :tila {:koodiarvo "lasna"}}]}}})
   (mdb/clear-mock-db)
   (mdb/create-table (:jaksotunnus-table mock-env)
                     {:primary-key :hankkimistapa_id})
@@ -170,7 +267,20 @@
      :kasittelytila [:s (:ei-jaksoja c/kasittelytilat)]}})
 
 (def expected-http-results
-  [{:method :post
+  [{:method :get
+    :url "https://oph-ehoks.com/heratepalvelu/tyoelamajaksot-active-between"
+    :options {:headers
+              {:ticket
+               "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+              :as :json
+              :query-params {:oppija "aaa"
+                             :start "2022-01-01"
+                             :end "2022-01-31"}}}
+   {:method :get
+    :url "https://oph-koski.com/opiskeluoikeus/oo-aaa"
+    :options {:basic-auth ["koski-user" "koski-pwd"]
+              :as :json}}
+   {:method :post
     :url "https://oph-arvo.com/tyoelamapalaute/v1/nippu"
     :options {:content-type "application/json"
               :body (str "{\"tunniste\":\"testi_tyopaikka_1_2022-02-18_test6\","
@@ -182,6 +292,19 @@
                          "\"voimassa_alkupvm\":\"2022-02-18\","
                          "\"request_id\":\"test-uuid\"}")
               :basic-auth ["arvo-user" "arvo-pwd"] :as :json}}
+   {:method :get
+    :url "https://oph-ehoks.com/heratepalvelu/tyoelamajaksot-active-between"
+    :options {:headers
+              {:ticket
+               "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+              :as :json
+              :query-params {:oppija "bbb"
+                             :start "2022-01-10"
+                             :end "2022-01-20"}}}
+   {:method :get
+    :url "https://oph-koski.com/opiskeluoikeus/oo-bbb"
+    :options {:basic-auth ["koski-user" "koski-pwd"]
+              :as :json}}
    {:method :post
     :url "https://oph-arvo.com/tyoelamapalaute/v1/nippu"
     :options {:content-type "application/json"
