@@ -17,9 +17,6 @@
                :koski-url "https://oph-koski.com"
                :koski-user "koski-user"})
 
-;; TODO mock koski calls (näistä pitäisi olla... 3?)
-;; TODO mock ehoks calls (get-tyoelamajaksot-active-between) (2)
-
 (def starting-jaksotunnus-table [{:hankkimistapa_id [:n 11]
                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                   :niputuspvm [:s "2022-02-01"]
@@ -232,7 +229,49 @@
   (mhc/clear-url-bindings)
   (mdb/clear-mock-db))
 
-(def expected-jaksotunnus-table (into #{} starting-jaksotunnus-table))
+(def expected-jaksotunnus-table #{{:hankkimistapa_id [:n 11]
+                                   :kesto [:n 12.167]
+                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+                                   :niputuspvm [:s "2022-02-01"]
+                                   :viimeinen_vastauspvm [:s "2022-03-31"]
+                                   :tunnus [:s "AAjunk"]
+                                   :oppija_oid [:s "aaa"]
+                                   :opiskeluoikeus_oid [:s "oo-aaa"]
+                                   :jakso_alkupvm [:s "2022-01-01"]
+                                   :jakso_loppupvm [:s "2022-01-25"]
+                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
+                                  {:hankkimistapa_id [:n 12]
+                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+                                   :niputuspvm [:s "2022-02-01"]
+                                   :viimeinen_vastauspvm [:s "2022-02-16"]
+                                   :tunnus [:s "ABjunk"]
+                                   :oppija_oid [:s "aaa"]
+                                   :opiskeluoikeus_oid [:s "oo-aaa"]
+                                   :jakso_alkupvm [:s "2022-01-15"]
+                                   :jakso_loppupvm [:s "2022-01-31"]
+                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
+                                  {:hankkimistapa_id [:n 13]
+                                   :kesto [:n 1.667]
+                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+                                   :niputuspvm [:s "2022-02-01"]
+                                   :viimeinen_vastauspvm [:s "2022-02-25"]
+                                   :tunnus [:s "ACjunk"]
+                                   :oppija_oid [:s "aaa"]
+                                   :opiskeluoikeus_oid [:s "oo-aaa"]
+                                   :jakso_alkupvm [:s "2022-01-20"]
+                                   :jakso_loppupvm [:s "2022-01-31"]
+                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
+                                  {:hankkimistapa_id [:n 21]
+                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
+                                   :kesto [:n 1.0]
+                                   :niputuspvm [:s "2022-02-01"]
+                                   :viimeinen_vastauspvm [:s "2022-03-31"]
+                                   :tunnus [:s "BAjunk"]
+                                   :oppija_oid [:s "bbb"]
+                                   :opiskeluoikeus_oid [:s "oo-bbb"]
+                                   :jakso_alkupvm [:s "2022-01-10"]
+                                   :jakso_loppupvm [:s "2022-01-20"]
+                                   :tyopaikan_nimi [:s "Testi Työpaikka 2"]}})
 
 (def expected-nippu-table
   #{{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
@@ -288,7 +327,7 @@
                          "\"tutkintotunnus\":\"test-tutkinto-1\","
                          "\"tyonantaja\":\"123456-1\","
                          "\"tyopaikka\":\"Testi Työpaikka 1\","
-                         "\"tunnukset\":[\"AAjunk\"],"
+                         "\"tunnukset\":[\"AAjunk\",\"ACjunk\"],"
                          "\"voimassa_alkupvm\":\"2022-02-18\","
                          "\"request_id\":\"test-uuid\"}")
               :basic-auth ["arvo-user" "arvo-pwd"] :as :json}}

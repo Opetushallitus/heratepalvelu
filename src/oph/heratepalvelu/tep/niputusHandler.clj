@@ -133,13 +133,15 @@
      :expr-attr-vals {":pvm" [:s (str (c/local-date-now))]}}
     (:jaksotunnus-table env)))
 
+;; TODO kesto lasketaan vain niille, joilla on tunnus
 (defn retrieve-and-update-jaksot
   "Hakee nippuun kuuluvat jaksot tietokannasta, laskee niiden kestot, päivittää
   kestotiedot tietokantaan, ja palauttaa päivitetyt jaksot."
   [nippu]
   (let [jaksot (query-jaksot nippu)
         kestot (group-jaksot-and-compute-kestot jaksot)]
-    (map #(let [kesto (get kestot (:hankkimistapa_id %) 0.0)]
+    (map #(let [kesto (get kestot (:hankkimistapa_id %) 0.0)
+                kesto (/ (Math/round (* kesto 1000)) 1000.0)]
             (tc/update-jakso % {:kesto [:n kesto]})
             ;; TODO välitä Arvoon
             (assoc % :kesto kesto))
