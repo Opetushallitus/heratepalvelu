@@ -57,10 +57,8 @@
   -objektissa, jolloin jakso on voimassa eikä ole keskeytynyt. Objekti
   jaksot-by-day on map LocalDate-päivämääristä sekvensseihin jaksoista, jotka
   ovat voimassa ja keskeytymättömiä sinä päivänä."
-  [jaksot-by-day jakso]
-  (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
-                         (:opiskeluoikeus_oid jakso))
-        oo-tilat (reduce #(cons
+  [jaksot-by-day jakso opiskeluoikeus]
+  (let [oo-tilat (reduce #(cons
                             (if (first %1)
                               (assoc %2 :loppu (.minusDays (LocalDate/parse
                                                              (:alku (first %1)))
@@ -104,16 +102,15 @@
                             (:oppija_oid (first jaksot))
                             first-start-date
                             last-end-date)
-
-        ;; TODO ehkä olisi tehokkaampi hakea OO tässä. Se riippuu siitä, 
-        ;; yksilöidäänkö jaksot OO:n tai oppijan perusteella. Jos ne yksilöidään
-        ;; oppijan perusteella, meidän kannattaa memoisoida ne haut, koska
-        ;; muuten niistä tulee todella kalliit.
-        ]
+        oo-map (reduce #(assoc %1 %2 (koski/get-opiskeluoikeus-catch-404 %2))
+                       {}
+                       (set (map :opiskeluoikeus_oid jaksot)))
+        do-one #(add-to-jaksot-by-day %1
+                                      %2
+                                      (get oo-map (:opiskeluoikeus_oid %2)))]
     (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
             {}
-            (map handle-one-day
-                 (vals (reduce add-to-jaksot-by-day {} concurrent-jaksot))))))
+            (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))))
 
 (defn group-jaksot-and-compute-kestot
   "Ryhmittää jaksot oppija_oid:n perusteella ja laskee niiden kestot."

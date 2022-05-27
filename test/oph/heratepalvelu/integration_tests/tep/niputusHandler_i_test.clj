@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.integration-tests.tep.niputusHandler-i-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.integration-tests.mock-cas-client :as mcc]
             [oph.heratepalvelu.integration-tests.mock-db :as mdb]
             [oph.heratepalvelu.integration-tests.mock-http-client :as mhc]
             [oph.heratepalvelu.tep.niputusHandler :as nh]
@@ -12,23 +13,45 @@
                :arvo-url "https://oph-arvo.com/"
                :arvo-user "arvo-user"})
 
+;; TODO mock koski calls (näistä pitäisi olla... 3?)
+;; TODO mock ehoks calls (get-tyoelamajaksot-active-between) (2)
+;; TODO alku ja loppu jokaiseen jaksoon
+
 (def starting-jaksotunnus-table [{:hankkimistapa_id [:n 11]
                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                   :niputuspvm [:s "2022-02-01"]
                                   :viimeinen_vastauspvm [:s "2022-03-31"]
                                   :tunnus [:s "AAjunk"]
+                                  :oppija_oid [:s "aaa"]
+                                  :jakso_alkupvm [:s "2022-01-01"]
+                                  :jakso_loppupvm [:s "2022-01-25"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                  {:hankkimistapa_id [:n 12]
                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                   :niputuspvm [:s "2022-02-01"]
                                   :viimeinen_vastauspvm [:s "2022-02-16"]
                                   :tunnus [:s "ABjunk"]
+                                  :oppija_oid [:s "aaa"]
+                                  :jakso_alkupvm [:s "2022-01-15"]
+                                  :jakso_loppupvm [:s "2022-01-31"]
+                                  :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
+                                 {:hankkimistapa_id [:n 13]
+                                  :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
+                                  :niputuspvm [:s "2022-02-01"]
+                                  :viimeinen_vastauspvm [:s "2022-02-25"]
+                                  :tunnus [:s "ACjunk"]
+                                  :oppija_oid [:s "aaa"]
+                                  :jakso_alkupvm [:s "2022-01-20"]
+                                  :jakso_loppupvm [:s "2022-01-31"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                  {:hankkimistapa_id [:n 21]
                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
                                   :niputuspvm [:s "2022-02-01"]
                                   :viimeinen_vastauspvm [:s "2022-03-31"]
                                   :tunnus [:s "BAjunk"]
+                                  :oppija_oid [:s "bbb"]
+                                  :jakso_alkupvm [:s "2022-01-10"]
+                                  :jakso_loppupvm [:s "2022-01-20"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 2"]}])
 
 (def starting-nippu-table [{:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
@@ -106,6 +129,8 @@
                              :sort-key :niputuspvm}))
 
 (defn- teardown-test []
+  (mcc/clear-results)
+  (mcc/clear-url-bindings)
   (mhc/clear-results)
   (mhc/clear-url-bindings)
   (mdb/clear-mock-db))
@@ -180,7 +205,11 @@
                   oph.heratepalvelu.db.dynamodb/query-items mdb/query-items
                   oph.heratepalvelu.db.dynamodb/update-item mdb/update-item
                   oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
-                  oph.heratepalvelu.external.http-client/post mhc/mock-post]
+                  oph.heratepalvelu.external.cas-client/get-service-ticket
+                  mcc/mock-get-service-ticket
+                  oph.heratepalvelu.external.http-client/get mhc/mock-get
+                  oph.heratepalvelu.external.http-client/post mhc/mock-post
+                  oph.heratepalvelu.external.koski/pwd (delay "koski-pwd")]
       (setup-test)
       (nh/-handleNiputus {}
                          (tu/mock-handler-event :scheduledherate)

@@ -55,36 +55,35 @@
 
 (deftest test-add-to-jaksot-by-day
   (testing "Varmistaa, että add-to-jaksot-by-day toimii oikein."
-    (with-redefs
-      [oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
-       (fn [oo-oid]
-         {:tila
-          {:opiskeluoikeusjaksot
-           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
-            {:alku "2022-01-17" :tila {:koodiarvo "loma"}}
-            {:alku "2022-01-19" :tila {:koodiarvo "lasna"}}
-            {:alku "2022-01-21" :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}
-            {:alku "2022-02-25" :tila {:koodiarvo "lasna"}}]}})]
-      (let [existing-jakso {:jakso_alkupvm "2022-01-10"
-                            :jakso_loppupvm "2022-01-16"}
-            jaksot-by-day {(LocalDate/of 2022 1 10) (seq [existing-jakso])
-                           (LocalDate/of 2022 1 11) (seq [existing-jakso])
-                           (LocalDate/of 2022 1 12) (seq [existing-jakso])
-                           (LocalDate/of 2022 1 13) (seq [existing-jakso])
-                           (LocalDate/of 2022 1 14) (seq [existing-jakso])}
-            jakso {:jakso_alkupvm "2022-01-09"
-                   :jakso_loppupvm "2022-01-24"
-                   :keskeytymisajanjaksot [{:alku "2022-01-12"
-                                            :loppu "2022-01-12"}]
-                   :opiskeluoikeus_oid "asdf"}
-            results {(LocalDate/of 2022 1 10) (seq [jakso existing-jakso])
-                     (LocalDate/of 2022 1 11) (seq [jakso existing-jakso])
-                     (LocalDate/of 2022 1 12) (seq [existing-jakso])
-                     (LocalDate/of 2022 1 13) (seq [jakso existing-jakso])
-                     (LocalDate/of 2022 1 14) (seq [jakso existing-jakso])
-                     (LocalDate/of 2022 1 19) (seq [jakso])
-                     (LocalDate/of 2022 1 20) (seq [jakso])}]
-        (is (= (nh/add-to-jaksot-by-day jaksot-by-day jakso) results))))))
+    (let [opiskeluoikeus {:tila
+                          {:opiskeluoikeusjaksot
+                           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
+                            {:alku "2022-01-17" :tila {:koodiarvo "loma"}}
+                            {:alku "2022-01-19" :tila {:koodiarvo "lasna"}}
+                            {:alku "2022-01-21"
+                             :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}
+                            {:alku "2022-02-25" :tila {:koodiarvo "lasna"}}]}}
+          existing-jakso {:jakso_alkupvm "2022-01-10"
+                          :jakso_loppupvm "2022-01-16"}
+          jaksot-by-day {(LocalDate/of 2022 1 10) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 11) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 12) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 13) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 14) (seq [existing-jakso])}
+          jakso {:jakso_alkupvm "2022-01-09"
+                 :jakso_loppupvm "2022-01-24"
+                 :keskeytymisajanjaksot [{:alku "2022-01-12"
+                                          :loppu "2022-01-12"}]
+                 :opiskeluoikeus_oid "asdf"}
+          results {(LocalDate/of 2022 1 10) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 11) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 12) (seq [existing-jakso])
+                   (LocalDate/of 2022 1 13) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 14) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 19) (seq [jakso])
+                   (LocalDate/of 2022 1 20) (seq [jakso])}]
+      (is (= (nh/add-to-jaksot-by-day jaksot-by-day jakso opiskeluoikeus)
+             results)))))
 
 (deftest test-handle-one-day
   (testing "Varmistaa, että handle-one-day toimii oikein."
@@ -159,7 +158,7 @@
 
        ]
       (let [jaksot [{:jakso_alkupvm "2022-01-05"
-                     :Jakso_loppupvm "2022-03-03"}
+                     :jakso_loppupvm "2022-03-03"}
                     {:jakso_alkupvm "2022-01-10"
                      :jakso_loppupvm "2022-02-28"}]
             
