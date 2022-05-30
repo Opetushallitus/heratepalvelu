@@ -135,7 +135,7 @@
                                (:oid opiskeluoikeus))
                              (catch ExceptionInfo e
                                (if (= 404 (:status (ex-data e)))
-                                 (log/warn "Opiskeluoikeudella"
+                                 (log/info "Opiskeluoikeudella"
                                            (:oid opiskeluoikeus)
                                            "ei HOKSia. Koulutustoimija:"
                                            koulutustoimija)
