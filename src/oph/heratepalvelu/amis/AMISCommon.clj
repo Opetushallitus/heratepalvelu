@@ -105,8 +105,8 @@
                  :voimassa-loppupvm     loppupvm}))
             (catch ConditionalCheckFailedException _
               (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle"
-                        oppija "koulutustoimijalla" koulutustoimija "(tyyppi"
-                        kyselytyyppi "kausi" laskentakausi "request-id" uuid ")"))
+                        oppija "koulutustoimijalla:" koulutustoimija "tyyppi:"
+                        kyselytyyppi "kausi:" laskentakausi "request-id:" uuid))
             (catch AwsServiceException e
               (log/error "Virhe tietokantaan tallennettaessa" uuid)
               (throw e))
