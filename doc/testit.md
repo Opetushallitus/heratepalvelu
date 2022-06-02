@@ -16,7 +16,7 @@ komennolla `lein test` projektin juuresta.
 Yksikkötestit löytyvät kansiosta `test/oph/heratepalvelu/`, joissa on joitakin
 alakansioita. Yksikkötesteillä yritetään kattaa lähes joka projektin funktio,
 vaikka se olisi yksinkertainen apufunktio, jota käytetään vain pari kertaa. Jos
-lisäät uuden uuden funktion, lisää myös vastaava yksikkötesti. Jos muutat jotain
+lisäät uuden funktion, lisää myös vastaava yksikkötesti. Jos muutat jotain
 koodistossa, varmista, että olet päivittänyt myös siihen liittyvät testit. Jos
 muuttaa toiminnallisuutta ja olemassa olevat testit eivät kaadu ilman muutoksia,
 kannattaa harkita testien laajentamista tai ainakin joidenkin testitapauksien
