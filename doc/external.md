@@ -11,6 +11,11 @@ Tiedostossa `src/oph/heratepalvelu/external/arvo.clj` on useita apufunktioita,
 joilla haetaan linkkejä, haetaan tai päivitetään niiden metatiedot, tai
 poistetaan ne; tai joilla näiden funktioiden argumentit saadaan oikeaan muotoon.
 
+Jos kutsu Arvoon palauttaa 404-virheen viestillä `Ei kyselykertaa annetuille
+tiedoille`, kannattaa pyytää apua Arvo-tiimiltä. Tämä ei viittaa
+haavoittavuuteen meidän puolella, vaan tarkoittaa, että Arvo-tiimi ei ole vielä
+avannut palveluaan tuon aikavälin kyselyjen luomiseen.
+
 
 ## eHOKS
 
@@ -19,6 +24,9 @@ hankkimistapoja, joista TEP-jaksot luodaan. Kyselylinkit lähetetään myös
 eHOKSiin sen jälkeen, että ne on luotu herätepalvelussa. Tiedosto
 `src/oph/heratepalvelu/external/ehoks.clj` sisältää funktioita, joilla haetaan
 tietoja HOKSeista ja linkkitiedot takaisin palveluun.
+
+Monet muutokset ja toiminnallisuuden lisäykset vaativat muutoksia sekä
+Herätepalveluun että eHOKS-palveluun.
 
 
 ## Elisa

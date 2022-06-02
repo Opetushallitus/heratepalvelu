@@ -3,7 +3,7 @@
 ## Asentaminen
 
 Git-repon juuressa on asennusskripti nimeltä `deploy.sh`, jota voit käyttää
-asentamaaan palvelun. Anna ensimmäisenä argumenttina ympäristön nimi (esim.
+asentamaan palvelun. Anna ensimmäisenä argumenttina ympäristön nimi (esim.
 `pallero` tai `sade`) ja toisena argumenttina palvelun osio, jonka haluat
 asentaa (`amis`, `tep` tai `tpk`):
 

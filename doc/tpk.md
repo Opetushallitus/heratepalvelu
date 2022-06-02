@@ -32,3 +32,10 @@ ottaa vastaan kyselylinkkipyyntöjä vain tiettyihin aikoihin, ja funktiota on
 turhaa ajaa ennen tiedonkeruukauden viimeistä kuukautta, mutta linkkien pitäisi
 toisaalta olla olemassa ennen vastausajan alkua, ja kaikki jaksot täytyy
 käsitellä, vaikka ne saapuisivat vasta tiedonkeruukauden viimeisenä päivänä.
+
+Funktiot (ja erityisesti tpkArvoCallHandler) täytyy usein ajaa monta kertaa.
+Voit tarkistaa DynamoDB:stä, onko kaikki jaksot tai niput käsitelty:
+tpkNiputusHandlerin ajo täytyy toistaa, kunnes ei löydy enää
+jaksotunnusTable:sta jaksoja, joissa `tpk-niputuspvm`-kentässä on arvo
+`ei_maaritelty`, ja tpkArvoCallHandlerin ajo täytyy toistaa, kunnes jokaisella
+tpkNippuTablen rivillä on kyselylinkki ja tunnus.
