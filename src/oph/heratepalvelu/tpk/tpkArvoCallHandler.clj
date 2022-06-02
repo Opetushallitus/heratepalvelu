@@ -74,10 +74,14 @@
               (catch AwsServiceException e
                 (log/error "Virhe DynamoDBissa (TPK Arvo Calls). Nippu:"
                            (:nippu-id nippu)
+                           "Request ID:"
+                           request-id
                            "Virhe:"
                            e)))
             (log/error "Kyselylinkkiä ei saatu Arvolta. Nippu:"
-                       (:nippu-id nippu))))))
+                       (:nippu-id nippu)
+                       "Request ID:"
+                       request-id)))))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key scan-results))
       (recur (do-scan (:last-evaluated-key scan-results))))))
