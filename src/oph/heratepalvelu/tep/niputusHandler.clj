@@ -143,7 +143,6 @@
     (map #(let [kesto (get kestot (:hankkimistapa_id %) 0.0)
                 kesto (/ (Math/round (* kesto 1000)) 1000.0)]
             (tc/update-jakso % {:kesto [:n kesto]})
-            ;; TODO välitä Arvoon
             (assoc % :kesto kesto))
          jaksot)))
 
@@ -154,9 +153,10 @@
   (log/info "Niputetaan " nippu)
   (let [request-id (c/generate-uuid)
         jaksot (retrieve-and-update-jaksot nippu)
-        tunnukset (map :tunnus jaksot)]
+        tunnukset (map #(do {:tunnus (:tunnus %)
+                             :tyopaikkajakson_kesto (:kesto %)})
+                       jaksot)]
     (if (not-empty tunnukset)
-      ;; TODO vai välitetäänkö ne kestot Arvoon tässä?
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))
             arvo-resp (arvo/create-nippu-kyselylinkki
                         (arvo/build-niputus-request-body
