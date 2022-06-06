@@ -295,6 +295,7 @@
                                :nippu nippu})
   (if (not= (:ohjaaja_ytunnus_kj_tutkinto nippu) "test-id-0")
     [{:tunnus "ABCDEF"
+      :kesto 1.5
       :tyopaikan_nimi "Testi Työ Paikka"
       :viimeinen_vastauspvm "2022-02-02"}]
     []))
@@ -346,7 +347,8 @@
                        :tutkintotunnus "asdf"
                        :tyonantaja "123456-7"
                        :tyopaikka "Testityöpaikka"
-                       :tunnukset (seq ["ABCDEF"])
+                       :tunnukset [{:tunnus "ABCDEF"
+                                    :tyopaikkajakson_kesto 1.5}]
                        :voimassa_alkupvm "2021-12-31"
                        :request_id "test-uuid"}}
                      {:type "mock-update-nippu"
@@ -373,7 +375,8 @@
                        :tutkintotunnus "aaaa"
                        :tyonantaja "111111-1"
                        :tyopaikka nil
-                       :tunnukset (seq ["ABCDEF"])
+                       :tunnukset [{:tunnus "ABCDEF"
+                                    :tyopaikkajakson_kesto 1.5}]
                        :voimassa_alkupvm "2021-12-31"
                        :request_id "test-uuid"}}
                      {:type "mock-update-nippu"

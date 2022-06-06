@@ -153,9 +153,9 @@
   (log/info "Niputetaan " nippu)
   (let [request-id (c/generate-uuid)
         jaksot (retrieve-and-update-jaksot nippu)
-        tunnukset (map #(do {:tunnus (:tunnus %)
+        tunnukset (vec (map #(do {:tunnus (:tunnus %)
                              :tyopaikkajakson_kesto (:kesto %)})
-                       jaksot)]
+                            jaksot))]
     (if (not-empty tunnukset)
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))
             arvo-resp (arvo/create-nippu-kyselylinkki
