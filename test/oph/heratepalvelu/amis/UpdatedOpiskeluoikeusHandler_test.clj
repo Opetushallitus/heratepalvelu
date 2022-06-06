@@ -224,13 +224,10 @@
       {:key "opiskeluoikeus-last-page"
        :value "0"})))
 
-(defn- mock-get-updated-opiskeluoikeudet [last-checked last-page]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results
-               last-checked
-               " "
-               last-page
-               " "))
+(defn- mock-get-completed-opiskeluoikeudet [start end page]
+  (reset!
+    test-handleUpdatedOpiskeluoikeus-results
+    (str @test-handleUpdatedOpiskeluoikeus-results start " " end " " page " "))
   [{:oid "1.2.3"}])
 
 (defn- mock-get-koulutustoimija-oid [opiskeluoikeus]
@@ -312,7 +309,8 @@
 (deftest test-handleUpdatedOpiskeluoikeus
   (testing "Varmista, että -handleUpdatedOpiskeluoikeus tekee kutsuja oikein"
     (with-redefs
-      [environ.core/env {:metadata-table "metadata-table-name"}
+      [clj-time.coerce/from-long (fn [x] "2021-12-30T01:00:00.00Z")
+       environ.core/env {:metadata-table "metadata-table-name"}
        oph.heratepalvelu.amis.AMISCommon/save-herate mock-save-herate
        oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/check-tila
        mock-check-tila
@@ -333,12 +331,12 @@
        oph.heratepalvelu.db.dynamodb/get-item mock-get-item
        oph.heratepalvelu.external.ehoks/get-hoks-by-opiskeluoikeus
        mock-get-hoks-by-opiskeluoikeus
-       oph.heratepalvelu.external.koski/get-updated-opiskeluoikeudet
-       mock-get-updated-opiskeluoikeudet]
+       oph.heratepalvelu.external.koski/get-completed-opiskeluoikeudet
+       mock-get-completed-opiskeluoikeudet]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
-            expected (str "2021-12-14T10:30:00.000Z 0 {:oid \"1.2.3\"} "
-                          "{:oid \"1.2.3\"} 2021-10-10 "
+            expected (str "2021-12-14T10:30:00.000Z 2021-12-30T01:00:00.00Z "
+                          "0 {:oid \"1.2.3\"} {:oid \"1.2.3\"} 2021-10-10 "
                           "test-koulutustoimija-oid 1633824000000 "
                           "{:oid \"1.2.3\"} 2021-10-10 "
                           "get-hoks-by-opiskeluoikeus: 1.2.3 "

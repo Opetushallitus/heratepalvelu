@@ -105,7 +105,7 @@
   tietokantaan."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus" event context)
-  (let [start-time (System/currentTimeMillis)
+  (let [start-time (c/from-long (System/currentTimeMillis))
         last-checked (:value (ddb/get-item
                                {:key [:s "opiskeluoikeus-last-checked"]}
                                (:metadata-table env)))
@@ -114,8 +114,10 @@
                                       {:key [:s "opiskeluoikeus-last-page"]}
                                       (:metadata-table env))))]
     (log/info "Käsitellään" last-checked "jälkeen muuttuneet opiskeluoikeudet")
-    (loop [opiskeluoikeudet (k/get-updated-opiskeluoikeudet last-checked
-                                                            last-page)
+    (loop [opiskeluoikeudet (k/get-completed-opiskeluoikeudet
+                              last-checked
+                              start-time
+                              last-page)
            next-page (inc last-page)]
       (if (seq opiskeluoikeudet)
         (do (doseq [opiskeluoikeus opiskeluoikeudet]
@@ -155,8 +157,10 @@
             (update-last-page next-page)
             (when (< 120000 (.getRemainingTimeInMillis context))
               (recur
-                (k/get-updated-opiskeluoikeudet last-checked next-page)
+                (k/get-completed-opiskeluoikeudet last-checked
+                                                  start-time
+                                                  next-page)
                 (inc next-page))))
         (do
           (update-last-page 0)
-          (update-last-checked (c/from-long start-time)))))))
+          (update-last-checked start-time))))))
