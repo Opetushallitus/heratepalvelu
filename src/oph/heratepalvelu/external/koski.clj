@@ -31,15 +31,15 @@
                         (= 404 (:status (ex-data e))))
            (throw e)))))
 
-(defn get-updated-opiskeluoikeudet
+(defn get-completed-opiskeluoikeudet
   "Hakee opiskeluoikeudet, joihin on tehty päivityksiä datetime-str:n jälkeen."
-  [datetime-str page]
-  (let [resp (koski-get
-               "/oppija/"
-               {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
-                               "muuttunutJälkeen"       datetime-str
-                               "pageSize"               100
-                               "pageNumber"             page}
-                :as           :json-strict})]
+  [start end page]
+  (let [params {"opiskeluoikeudenTyyppi"              "ammatillinenkoulutus"
+                "opiskeluoikeusPäättynytAikaisintaan" start
+                "opiskeluoikeusPäättynytViimeistään"  end
+                "pageSize"                            100
+                "pageNumber"                          page}
+        resp (koski-get "/oppija/" {:query-params params
+                                    :as :json-strict})]
     (sort-by :aikaleima
              (reduce #(into %1 (:opiskeluoikeudet %2)) [] (:body resp)))))
