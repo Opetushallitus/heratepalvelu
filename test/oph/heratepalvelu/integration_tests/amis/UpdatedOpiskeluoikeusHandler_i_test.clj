@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.integration-tests.amis.UpdatedOpiskeluoikeusHandler-i-test
-  (:require [clojure.test :refer :all]
+  (:require [clj-time.coerce :as ctime]
+            [clojure.test :refer :all]
             [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :as uoh]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.integration-tests.mock-cas-client :as mcc]
@@ -34,17 +35,21 @@
   (mhc/clear-url-bindings)
   (mhc/bind-url :get
                 (str (:koski-url mock-env) "/oppija/")
-                {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
-                                "muuttunutJälkeen" "2022-02-02T00:00:00.000Z"
-                                "pageSize" 100
-                                "pageNumber" 0}
+                {:query-params
+                 {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
+                  "opiskeluoikeusPäättynytAikaisintaan"
+                  "2022-02-02T00:00:00.000Z"
+                  "opiskeluoikeusPäättynytViimeistään"
+                  "2022-02-04T00:05:00.000Z"
+                  "pageSize" 100
+                  "pageNumber" 0}
                  :basic-auth [(:koski-user mock-env) "koski-pwd"]
                  :as :json-strict}
                 {:body [{:opiskeluoikeudet
                          [{:oid "12345"
                            :aikaleima "2022-01-05"
                            :koulutustoimija {:oid "test-ktid"}
-                           :suoritukset [{:vahvistus {:päivä "2022-01-05"}
+                           :suoritukset [{:vahvistus {:päivä "2022-02-02"}
                                           :tyyppi {:koodiarvo
                                                    "ammatillinentutkinto"}
                                           :suorituskieli {:koodiarvo "fi"}}]
@@ -57,7 +62,7 @@
                          [{:oid "99999"
                            :aikaleima "2022-01-07"
                            :koulutustoimija {:oid "test-ktid2"}
-                           :suoritukset [{:vahvistus {:päivä "2022-01-07"}
+                           :suoritukset [{:vahvistus {:päivä "2022-02-03"}
                                           :tyyppi {:koodiarvo
                                                    "ammatillinentutkinto"}
                                           :suorituskieli {:koodiarvo "fi"}}]
@@ -65,6 +70,19 @@
                            :tila {:opiskeluoikeusjaksot
                                   [{:alku "2022-01-07"
                                     :tila {:koodiarvo "lasna"}}]}}]}]})
+  (mhc/bind-url :get
+                (str (:koski-url mock-env) "/oppija/")
+                {:query-params
+                 {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
+                  "opiskeluoikeusPäättynytAikaisintaan"
+                  "2022-02-02T00:00:00.000Z"
+                  "opiskeluoikeusPäättynytViimeistään"
+                  "2022-02-04T00:05:00.000Z"
+                  "pageSize" 100
+                  "pageNumber" 1}
+                 :basic-auth [(:koski-user mock-env) "koski-pwd"]
+                 :as :json-strict}
+                {:body []})
   (mhc/bind-url :get
                 (str (:ehoks-url mock-env) "hoks/opiskeluoikeus/12345")
                 {:headers {:ticket (str "service-ticket"
@@ -120,9 +138,9 @@
   (mdb/clear-mock-db))
 
 (def expected-table-contents #{{:key [:s "opiskeluoikeus-last-checked"]
-                                :value [:s "2022-02-02T00:00:00.000Z"]}
+                                :value [:s "2022-02-04T00:00:00.000Z"]}
                                {:key [:s "opiskeluoikeus-last-page"]
-                                :value [:s "1"]}})
+                                :value [:s "0"]}})
 
 (def expected-ow-table (into #{} starting-ow-table))
 
@@ -131,19 +149,19 @@
      :tyyppi_kausi [:s "tutkinnon_suorittaneet/2021-2022"]
      :kyselytyyppi [:s "tutkinnon_suorittaneet"]
      :request-id [:s "test-uuid"]
-     :voimassa-loppupvm [:s "2022-03-03"]
+     :voimassa-loppupvm [:s "2022-03-05"]
      :hankintakoulutuksen-toteuttaja [:s ""]
      :suorituskieli [:s "fi"]
      :sahkoposti [:s "test@example.com"]
      :osaamisala [:s ""]
-     :heratepvm [:s "2022-01-05"]
+     :heratepvm [:s "2022-02-02"]
      :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
-     :tallennuspvm [:s "2022-02-02"]
+     :tallennuspvm [:s "2022-02-04"]
      :oppilaitos [:s nil]
      :toimipiste-oid [:s ""]
      :viestintapalvelu-id [:n "-1"]
      :opiskeluoikeus-oid [:s "12345"]
-     :alkupvm [:s "2022-02-02"]
+     :alkupvm [:s "2022-02-04"]
      :koulutustoimija [:s "test-ktid"]
      :tutkintotunnus [:s ""]
      :oppija-oid [:s "1.2.3"]
@@ -153,10 +171,12 @@
 (def expected-http-results
   [{:method :get
     :url (str (:koski-url mock-env) "/oppija/")
-    :options {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
-                             "muuttunutJälkeen" "2022-02-02T00:00:00.000Z"
-                             "pageSize" 100
-                             "pageNumber" 0}
+    :options {:query-params
+              {"opiskeluoikeudenTyyppi"              "ammatillinenkoulutus"
+               "opiskeluoikeusPäättynytAikaisintaan" "2022-02-02T00:00:00.000Z"
+               "opiskeluoikeusPäättynytViimeistään"  "2022-02-04T00:05:00.000Z"
+               "pageSize"                            100
+               "pageNumber"                          0}
               :basic-auth [(:koski-user mock-env) "koski-pwd"]
               :as :json-strict}}
    {:method :get
@@ -187,7 +207,17 @@
     :options
     {:headers
      {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"}
-     :as :json}}])
+     :as :json}}
+   {:method :get
+    :url (str (:koski-url mock-env) "/oppija/")
+    :options {:query-params
+              {"opiskeluoikeudenTyyppi"              "ammatillinenkoulutus"
+               "opiskeluoikeusPäättynytAikaisintaan" "2022-02-02T00:00:00.000Z"
+               "opiskeluoikeusPäättynytViimeistään"  "2022-02-04T00:05:00.000Z"
+               "pageSize"                            100
+               "pageNumber"                          1}
+              :basic-auth [(:koski-user mock-env) "koski-pwd"]
+              :as :json-strict}}])
 
 (def expected-cas-client-results [{:type :get-service-ticket
                                    :service "/ehoks-virkailija-backend"
@@ -204,24 +234,27 @@
 
 (deftest test-UpdatedOpiskeluoikeusHandler-integration
   (testing "UpdatedOpiskeluoikeusHandler integraatiotesti"
-    (with-redefs [environ.core/env mock-env
-                  oph.heratepalvelu.common/generate-uuid (fn [] "test-uuid")
-                  oph.heratepalvelu.common/local-date-now
-                  (fn [] (LocalDate/of 2022 2 2))
-                  oph.heratepalvelu.db.dynamodb/get-item mdb/get-item
-                  oph.heratepalvelu.db.dynamodb/put-item mdb/put-item
-                  oph.heratepalvelu.db.dynamodb/update-item mdb/update-item
-                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
-                  oph.heratepalvelu.external.cas-client/get-service-ticket
-                  mcc/mock-get-service-ticket
-                  oph.heratepalvelu.external.http-client/get mhc/mock-get
-                  oph.heratepalvelu.external.http-client/patch mhc/mock-patch
-                  oph.heratepalvelu.external.http-client/post mhc/mock-post
-                  oph.heratepalvelu.external.koski/pwd (delay "koski-pwd")]
+    (with-redefs
+      [environ.core/env mock-env
+       oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/current-time-millis
+       (fn [] (ctime/from-long 1643933100000)) ; 2022-02-04 00:05:00
+       oph.heratepalvelu.common/generate-uuid (fn [] "test-uuid")
+       oph.heratepalvelu.common/local-date-now
+       (fn [] (LocalDate/of 2022 2 4))
+       oph.heratepalvelu.db.dynamodb/get-item mdb/get-item
+       oph.heratepalvelu.db.dynamodb/put-item mdb/put-item
+       oph.heratepalvelu.db.dynamodb/update-item mdb/update-item
+       oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+       oph.heratepalvelu.external.cas-client/get-service-ticket
+       mcc/mock-get-service-ticket
+       oph.heratepalvelu.external.http-client/get mhc/mock-get
+       oph.heratepalvelu.external.http-client/patch mhc/mock-patch
+       oph.heratepalvelu.external.http-client/post mhc/mock-post
+       oph.heratepalvelu.external.koski/pwd (delay "koski-pwd")]
       (setup-test)
       (uoh/-handleUpdatedOpiskeluoikeus {}
                                         (tu/mock-handler-event :scheduledherate)
-                                        (tu/mock-handler-context))
+                                        (tu/mock-handler-context 150000))
       (is (= (mdb/get-table-values (:metadata-table mock-env))
              expected-table-contents))
       (is (= (mdb/get-table-values (:orgwhitelist-table mock-env))

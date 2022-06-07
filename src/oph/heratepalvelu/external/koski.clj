@@ -35,8 +35,8 @@
   "Hakee opiskeluoikeudet, joihin on tehty päivityksiä datetime-str:n jälkeen."
   [start end page]
   (let [params {"opiskeluoikeudenTyyppi"              "ammatillinenkoulutus"
-                "opiskeluoikeusPäättynytAikaisintaan" start
-                "opiskeluoikeusPäättynytViimeistään"  end
+                "opiskeluoikeusPäättynytAikaisintaan" (str start)
+                "opiskeluoikeusPäättynytViimeistään"  (str end)
                 "pageSize"                            100
                 "pageNumber"                          page}
         resp (koski-get "/oppija/" {:query-params params

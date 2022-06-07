@@ -100,12 +100,17 @@
                     ". Odotettu arvo on 'valmistunut' tai 'läsnä'.")
           false))))
 
+(defn- current-time-millis
+  "Hakee nykyisen ajan millisekunneilla."
+  []
+  (c/from-long (System/currentTimeMillis)))
+
 (defn -handleUpdatedOpiskeluoikeus
   "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
   tietokantaan."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus" event context)
-  (let [start-time (c/from-long (System/currentTimeMillis))
+  (let [start-time (current-time-millis)
         last-checked (:value (ddb/get-item
                                {:key [:s "opiskeluoikeus-last-checked"]}
                                (:metadata-table env)))
