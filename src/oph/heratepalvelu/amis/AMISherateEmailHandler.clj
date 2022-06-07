@@ -25,40 +25,48 @@
   [herate]
   (if (:kyselylinkki herate)
     herate
-    (let [opiskeluoikeus (k/get-opiskeluoikeus-catch-404
-                           (:opiskeluoikeus-oid herate))
-          req-body (arvo/build-arvo-request-body
-                     herate
-                     opiskeluoikeus
-                     (:request-id herate)
-                     (:koulutustoimija herate)
-                     (c/get-suoritus opiskeluoikeus)
-                     (:alkupvm herate)
-                     (:voimassa-loppupvm herate))
-          arvo-resp (try
-                      (if (= (:kyselytyyppi herate) "aloittaneet")
-                        (arvo/create-amis-kyselylinkki req-body)
-                        (arvo/create-amis-kyselylinkki-catch-404 req-body))
-                      (catch Exception e
-                        (log/error "Virhe kyselylinkin hakemisessa Arvosta:" e)
-                        (throw e)))]
-      (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
-        (do (ac/update-herate herate {:kyselylinkki [:s kyselylinkki]})
-            (try
-              (ehoks/add-kyselytunnus-to-hoks
-                (:ehoks-id herate)
-                {:kyselylinkki kyselylinkki
-                 :tyyppi       (:kyselytyyppi herate)
-                 :alkupvm      (:alkupvm herate)
-                 :lahetystila  (:ei-lahetetty c/kasittelytilat)})
-              (catch Exception e
-                (log/error "Virhe linkin lähetyksessä eHOKSiin " e)
-                (throw e)))
-            (assoc herate :kyselylinkki kyselylinkki))
-        (do (log/error "Kyselylinkkiä ei palautettu Arvosta. Request ID:"
-                       (:request-id herate))
-            (throw (ex-info "Kyselylinkkiä ei palautettu Arvosta."
-                            {:request-id (:request-id herate)})))))))
+    (if-let [opiskeluoikeus ; Hakee OO yhdellä retryllä
+             (if-let [oo (k/get-opiskeluoikeus-catch-404
+                           (:opiskeluoikeus-oid herate))]
+               oo
+               (k/get-opiskeluoikeus-catch-404 (:opiskeluoikeus-oid herate)))]
+      (let [req-body (arvo/build-arvo-request-body
+                       herate
+                       opiskeluoikeus
+                       (:request-id herate)
+                       (:koulutustoimija herate)
+                       (c/get-suoritus opiskeluoikeus)
+                       (:alkupvm herate)
+                       (:voimassa-loppupvm herate))
+            arvo-resp (try
+                        (if (= (:kyselytyyppi herate) "aloittaneet")
+                          (arvo/create-amis-kyselylinkki req-body)
+                          (arvo/create-amis-kyselylinkki-catch-404 req-body))
+                        (catch Exception e
+                          (log/error "Virhe kyselylinkin hakemisessa Arvosta:"
+                                     e)
+                          (throw e)))]
+        (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
+          (do (ac/update-herate herate {:kyselylinkki [:s kyselylinkki]})
+              (try
+                (ehoks/add-kyselytunnus-to-hoks
+                  (:ehoks-id herate)
+                  {:kyselylinkki kyselylinkki
+                   :tyyppi       (:kyselytyyppi herate)
+                   :alkupvm      (:alkupvm herate)
+                   :lahetystila  (:ei-lahetetty c/kasittelytilat)})
+                (catch Exception e
+                  (log/error "Virhe linkin lähetyksessä eHOKSiin " e)
+                  (throw e)))
+              (assoc herate :kyselylinkki kyselylinkki))
+          (do (log/error "Kyselylinkkiä ei palautettu Arvosta. Request ID:"
+                         (:request-id herate))
+              (throw (ex-info "Kyselylinkkiä ei palautettu Arvosta."
+                              {:request-id (:request-id herate)})))))
+      (do (ac/update-herate
+            herate
+            {:lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]})
+          nil))))
 
 (defn save-email-to-db
   "Tallentaa sähköpostin tiedot tietokantaan, kun sähköposti on lähetetty

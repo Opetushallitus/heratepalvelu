@@ -38,6 +38,7 @@
    :ei-niputeta "ei_niputeta"
    :niputusvirhe "niputusvirhe"
    :ei-laheteta "ei_laheteta"
+   :ei-laheteta-oo-ei-loydy "ei_laheteta_opiskeluoikeus_ei_loydy"
    :ei-yhteystietoja "ei_kelvollisia_yhteystietoja"
    :ei-jaksoja "ei-jaksoja"
    :no-email "no-email"
