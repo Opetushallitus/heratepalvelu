@@ -1,8 +1,6 @@
 (ns oph.heratepalvelu.common
   "Yhteiset funktiot herätepalvelulle."
-  (:require [clj-time.coerce :as c]
-            [clj-time.format :as f]
-            [clojure.string :as str]
+  (:require [clojure.string :as str]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -11,7 +9,7 @@
             [schema.core :as s])
   (:import (clojure.lang ExceptionInfo)
            (java.text Normalizer Normalizer$Form)
-           (java.time LocalDate)
+           (java.time Instant LocalDate)
            (java.util UUID)))
 
 (s/defschema herate-schema
@@ -63,6 +61,11 @@
   ^LocalDate []
   (LocalDate/now))
 
+(defn instant-now
+  "Abstraktio Instant/now:n ympäri, joka helpottaa testaamista."
+  ^Instant []
+  (Instant/now))
+
 (defn has-time-to-answer?
   "Tarkistaa, onko aikaa jäljellä ennen annettua päivämäärää."
   [loppupvm]
@@ -90,14 +93,6 @@
                 (log/warn "Ei hoksia " (:ehoks-id item))
                 (throw e)))))
         (throw e)))))
-
-(defn date-string-to-timestamp
-  "Muuttaa stringinä olevan päivämäärän timestampiksi (long)."
-  ([date-str fmt]
-   (c/to-long (f/parse (fmt f/formatters)
-                       date-str)))
-  ([date-str]
-   (date-string-to-timestamp date-str :date)))
 
 (defn get-koulutustoimija-oid
   "Hakee koulutustoimijan OID:n opiskeluoikeudesta, tai organisaatiopalvelusta
@@ -198,19 +193,16 @@
   [koulutustoimija timestamp]
   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                            (:orgwhitelist-table env))]
-    (if (or (.isBefore (LocalDate/of 2021 6 30)
-                       (LocalDate/ofEpochDay (/ timestamp 86400000)))
+    ; 1625086799 = 2021-06-30 12:59:59
+    (if (or (.isBefore (Instant/ofEpochSecond 1625086799) timestamp)
             (and (:kayttoonottopvm item)
-                 (<= (c/to-long (f/parse (:date f/formatters)
-                                         (:kayttoonottopvm item)))
-                     timestamp)
-                 (<= (c/to-long (f/parse (:date f/formatters)
-                                         (:kayttoonottopvm item)))
-                     (c/to-long (local-date-now)))))
+                 (.isBefore (Instant/parse (:kayttoonottopvm item)) timestamp)
+                 (.isBefore (Instant/parse (:kayttoonottopvm item))
+                            (instant-now))))
       true
       (log/info "Koulutustoimija" koulutustoimija
                 "ei ole mukana automaatiossa, tai herätepvm"
-                (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
+                (first (str/split (str timestamp) #"T"))
                 "on ennen käyttöönotto päivämäärää"))))
 
 (defn check-duplicate-herate?

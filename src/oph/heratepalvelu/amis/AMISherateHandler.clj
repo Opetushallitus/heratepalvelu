@@ -10,7 +10,8 @@
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage)
            (com.fasterxml.jackson.core JsonParseException)
-           (clojure.lang ExceptionInfo)))
+           (clojure.lang ExceptionInfo)
+           (java.time Instant)))
 
 (gen-class
   :name "oph.heratepalvelu.amis.AMISherateHandler"
@@ -34,7 +35,8 @@
                   (if (and (check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
                            (check-organisaatio-whitelist?
                              koulutustoimija
-                             (date-string-to-timestamp (:alkupvm herate)))
+                             (Instant/parse (str (:alkupvm herate)
+                                                 "T00:00:00Z")))
                            (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
                     (ac/save-herate herate opiskeluoikeus koulutustoimija)
                     (log/info "Ei tallenneta kantaan"

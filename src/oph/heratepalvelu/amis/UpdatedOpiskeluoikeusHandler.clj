@@ -1,9 +1,7 @@
 (ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler
   "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
   tietokantaan."
-  (:require [clj-time.coerce :as c]
-            [clj-time.core :as t]
-            [clojure.string :as s]
+  (:require [clojure.string :as s]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
@@ -12,7 +10,8 @@
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as k]
             [oph.heratepalvelu.log.caller-log :refer :all])
-  (:import (clojure.lang ExceptionInfo)))
+  (:import (clojure.lang ExceptionInfo)
+           (java.time Instant)))
 
 (gen-class
   :name "oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler"
@@ -50,9 +49,7 @@
    tallentua aikaleimoja menneisyyteen. Hakemalla 1 min bufferilla
    varmistetaan että kaikki muutokset käsitellään vähintään 1 kerran."
   [datetime]
-  (let [time-with-buffer
-        (t/minus datetime
-                 (t/minutes 5))]
+  (let [time-with-buffer (.minusSeconds datetime 300)]
     (ddb/update-item
       {:key [:s "opiskeluoikeus-last-checked"]}
       (create-update-item-options {:value [:s (str time-with-buffer)]})
@@ -101,17 +98,12 @@
                     ". Odotettu arvo on 'valmistunut' tai 'läsnä'.")
           false))))
 
-(defn- current-time-millis
-  "Hakee nykyisen ajan millisekunneilla."
-  []
-  (c/from-long (System/currentTimeMillis)))
-
 (defn -handleUpdatedOpiskeluoikeus
   "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
   tietokantaan."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus" event context)
-  (let [start-time (current-time-millis)
+  (let [start-time (instant-now)
         last-checked (:value (ddb/get-item
                                {:key [:s "opiskeluoikeus-last-checked"]}
                                (:metadata-table env)))
@@ -138,8 +130,7 @@
                            (check-valid-herate-date vahvistus-pvm)
                            (check-organisaatio-whitelist?
                              koulutustoimija
-                             (date-string-to-timestamp
-                               vahvistus-pvm))
+                             (Instant/parse (str vahvistus-pvm "T00:00:00Z")))
                            (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus))
                            (check-tila opiskeluoikeus vahvistus-pvm))
                   (if-let [hoks
