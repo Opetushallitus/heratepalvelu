@@ -7,7 +7,6 @@
                  [environ "1.1.0"]
                  [clj-http "3.10.0"]
                  [cheshire "5.8.1"]
-                 [clj-time "0.15.1"]
                  [com.amazonaws/aws-xray-recorder-sdk-core "2.4.0"]
                  [com.amazonaws/aws-xray-recorder-sdk-aws-sdk-v2 "2.4.0"]
                  [com.amazonaws/aws-lambda-java-core "1.2.0"]
