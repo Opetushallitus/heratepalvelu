@@ -3,6 +3,7 @@
   tietokantaan."
   (:require [clj-time.coerce :as c]
             [clj-time.core :as t]
+            [clojure.string :as s]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
@@ -117,8 +118,13 @@
         last-page (Integer/valueOf
                     ^String (:value (ddb/get-item
                                       {:key [:s "opiskeluoikeus-last-page"]}
-                                      (:metadata-table env))))]
-    (log/info "Käsitellään" last-checked "jälkeen muuttuneet opiskeluoikeudet")
+                                      (:metadata-table env))))
+        get-date #(first (s/split (str %) #"T"))]
+    (log/info "Käsitellään"
+              (get-date last-checked)
+              "ja"
+              (get-date start-time)
+              "välillä päättyneet opiskeluoikeudet")
     (loop [opiskeluoikeudet (k/get-completed-opiskeluoikeudet
                               last-checked
                               start-time
