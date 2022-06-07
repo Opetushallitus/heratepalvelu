@@ -1,8 +1,9 @@
 (ns oph.heratepalvelu.external.koski
   "Wrapperit Kosken REST-rajapinnan ympäri."
-  (:require [oph.heratepalvelu.external.http-client :as client]
+  (:require [clojure.string :as s]
+            [environ.core :refer [env]]
             [oph.heratepalvelu.external.aws-ssm :as ssm]
-            [environ.core :refer [env]])
+            [oph.heratepalvelu.external.http-client :as client])
   (:import (clojure.lang ExceptionInfo)))
 
 (def ^:private pwd
@@ -34,9 +35,10 @@
 (defn get-completed-opiskeluoikeudet
   "Hakee opiskeluoikeudet, joihin on tehty päivityksiä datetime-str:n jälkeen."
   [start end page]
-  (let [params {"opiskeluoikeudenTyyppi"              "ammatillinenkoulutus"
-                "opiskeluoikeusPäättynytAikaisintaan" (str start)
-                "opiskeluoikeusPäättynytViimeistään"  (str end)
+  (let [get-date #(first (s/split (str %) #"T"))
+        params {"opiskeluoikeudenTyyppi"              "ammatillinenkoulutus"
+                "opiskeluoikeusPäättynytAikaisintaan" (get-date start)
+                "opiskeluoikeusPäättynytViimeistään"  (get-date end)
                 "pageSize"                            100
                 "pageNumber"                          page}
         resp (koski-get "/oppija/" {:query-params params

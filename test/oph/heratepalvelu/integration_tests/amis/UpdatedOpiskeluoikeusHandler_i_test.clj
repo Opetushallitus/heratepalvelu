@@ -37,10 +37,8 @@
                 (str (:koski-url mock-env) "/oppija/")
                 {:query-params
                  {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
-                  "opiskeluoikeusPäättynytAikaisintaan"
-                  "2022-02-02T00:00:00.000Z"
-                  "opiskeluoikeusPäättynytViimeistään"
-                  "2022-02-04T00:05:00.000Z"
+                  "opiskeluoikeusPäättynytAikaisintaan" "2022-02-02"
+                  "opiskeluoikeusPäättynytViimeistään" "2022-02-04"
                   "pageSize" 100
                   "pageNumber" 0}
                  :basic-auth [(:koski-user mock-env) "koski-pwd"]
@@ -74,10 +72,8 @@
                 (str (:koski-url mock-env) "/oppija/")
                 {:query-params
                  {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
-                  "opiskeluoikeusPäättynytAikaisintaan"
-                  "2022-02-02T00:00:00.000Z"
-                  "opiskeluoikeusPäättynytViimeistään"
-                  "2022-02-04T00:05:00.000Z"
+                  "opiskeluoikeusPäättynytAikaisintaan" "2022-02-02"
+                  "opiskeluoikeusPäättynytViimeistään" "2022-02-04"
                   "pageSize" 100
                   "pageNumber" 1}
                  :basic-auth [(:koski-user mock-env) "koski-pwd"]
@@ -173,8 +169,8 @@
     :url (str (:koski-url mock-env) "/oppija/")
     :options {:query-params
               {"opiskeluoikeudenTyyppi"              "ammatillinenkoulutus"
-               "opiskeluoikeusPäättynytAikaisintaan" "2022-02-02T00:00:00.000Z"
-               "opiskeluoikeusPäättynytViimeistään"  "2022-02-04T00:05:00.000Z"
+               "opiskeluoikeusPäättynytAikaisintaan" "2022-02-02"
+               "opiskeluoikeusPäättynytViimeistään"  "2022-02-04"
                "pageSize"                            100
                "pageNumber"                          0}
               :basic-auth [(:koski-user mock-env) "koski-pwd"]
@@ -212,8 +208,8 @@
     :url (str (:koski-url mock-env) "/oppija/")
     :options {:query-params
               {"opiskeluoikeudenTyyppi"              "ammatillinenkoulutus"
-               "opiskeluoikeusPäättynytAikaisintaan" "2022-02-02T00:00:00.000Z"
-               "opiskeluoikeusPäättynytViimeistään"  "2022-02-04T00:05:00.000Z"
+               "opiskeluoikeusPäättynytAikaisintaan" "2022-02-02"
+               "opiskeluoikeusPäättynytViimeistään"  "2022-02-04"
                "pageSize"                            100
                "pageNumber"                          1}
               :basic-auth [(:koski-user mock-env) "koski-pwd"]
