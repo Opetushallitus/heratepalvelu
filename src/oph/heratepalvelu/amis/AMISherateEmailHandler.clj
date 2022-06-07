@@ -63,9 +63,10 @@
                          (:request-id herate))
               (throw (ex-info "Kyselylinkkiä ei palautettu Arvosta."
                               {:request-id (:request-id herate)})))))
-      (ac/update-herate
-        herate
-        {:lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]}))))
+      (do (ac/update-herate
+            herate
+            {:lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]})
+          nil))))
 
 (defn save-email-to-db
   "Tallentaa sähköpostin tiedot tietokantaan, kun sähköposti on lähetetty
