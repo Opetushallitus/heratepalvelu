@@ -1,13 +1,12 @@
 (ns oph.heratepalvelu.integration-tests.amis.UpdatedOpiskeluoikeusHandler-i-test
-  (:require [clj-time.coerce :as ctime]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :as uoh]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.integration-tests.mock-cas-client :as mcc]
             [oph.heratepalvelu.integration-tests.mock-db :as mdb]
             [oph.heratepalvelu.integration-tests.mock-http-client :as mhc]
             [oph.heratepalvelu.test-util :as tu])
-  (:import (java.time LocalDate)))
+  (:import (java.time Instant LocalDate)))
 
 (def mock-env {:orgwhitelist-table "orgwhitelist-table-name"
                :metadata-table "metadata-table-name"
@@ -134,7 +133,7 @@
   (mdb/clear-mock-db))
 
 (def expected-table-contents #{{:key [:s "opiskeluoikeus-last-checked"]
-                                :value [:s "2022-02-04T00:00:00.000Z"]}
+                                :value [:s "2022-02-04T00:00:00Z"]}
                                {:key [:s "opiskeluoikeus-last-page"]
                                 :value [:s "0"]}})
 
@@ -232,9 +231,9 @@
   (testing "UpdatedOpiskeluoikeusHandler integraatiotesti"
     (with-redefs
       [environ.core/env mock-env
-       oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/current-time-millis
-       (fn [] (ctime/from-long 1643933100000)) ; 2022-02-04 00:05:00
        oph.heratepalvelu.common/generate-uuid (fn [] "test-uuid")
+       oph.heratepalvelu.common/instant-now
+       (fn [] (Instant/ofEpochSecond 1643933100)) ; 2022-02-04 00:05:00
        oph.heratepalvelu.common/local-date-now
        (fn [] (LocalDate/of 2022 2 4))
        oph.heratepalvelu.db.dynamodb/get-item mdb/get-item

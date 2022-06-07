@@ -49,11 +49,6 @@
                 {:suoritukset [{:tyyppi {:koodiarvo "valma"}}
                                {:tyyppi {:koodiarvo "telma"}}]})))))
 
-(deftest test-date-string-to-timestamp
-  (testing "Transforming date-string to timestamp"
-    (is (= (date-string-to-timestamp "1970-01-01") 0))
-    (is (= (date-string-to-timestamp "2019-08-01") 1564617600000))))
-
 (deftest test-has-time-to-answer
   (let [date1 (t/today)
         date2 (t/plus (t/now) (t/days 1))

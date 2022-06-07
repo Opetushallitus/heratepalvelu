@@ -1,8 +1,8 @@
 (ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler-test
-  (:require [clj-time.coerce :as ctc]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :refer :all]
-            [oph.heratepalvelu.test-util :as tu]))
+            [oph.heratepalvelu.test-util :as tu])
+  (:import (java.time Instant)))
 
 (deftest test-get-vahvistus-pvm
   (testing "Get vahvistus pvm"
@@ -187,8 +187,8 @@
     (with-redefs [environ.core/env {:metadata-table "metadata-table-name"}
                   oph.heratepalvelu.db.dynamodb/update-item
                   mock-update-last-checked-update-item]
-      (let [datetime (ctc/from-long 1639478100000)
-            expected {:time-with-buffer "2021-12-14T10:30:00.000Z"
+      (let [datetime (Instant/ofEpochMilli 1639478100000)
+            expected {:time-with-buffer "2021-12-14T10:30:00Z"
                       :table "metadata-table-name"}]
         (update-last-checked datetime)
         (is (= @test-update-last-checked-results expected))))))
@@ -309,8 +309,7 @@
 (deftest test-handleUpdatedOpiskeluoikeus
   (testing "Varmista, että -handleUpdatedOpiskeluoikeus tekee kutsuja oikein"
     (with-redefs
-      [clj-time.coerce/from-long (fn [x] "2021-12-30T01:00:00.00Z")
-       environ.core/env {:metadata-table "metadata-table-name"}
+      [environ.core/env {:metadata-table "metadata-table-name"}
        oph.heratepalvelu.amis.AMISCommon/save-herate mock-save-herate
        oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/check-tila
        mock-check-tila
@@ -328,6 +327,8 @@
        mock-check-valid-herate-date
        oph.heratepalvelu.common/get-koulutustoimija-oid
        mock-get-koulutustoimija-oid
+       oph.heratepalvelu.common/instant-now
+       (fn [] (Instant/parse "2021-12-30T01:00:00.00Z"))
        oph.heratepalvelu.db.dynamodb/get-item mock-get-item
        oph.heratepalvelu.external.ehoks/get-hoks-by-opiskeluoikeus
        mock-get-hoks-by-opiskeluoikeus
@@ -335,7 +336,7 @@
        mock-get-completed-opiskeluoikeudet]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
-            expected (str "2021-12-14T10:30:00.000Z 2021-12-30T01:00:00.00Z "
+            expected (str "2021-12-14T10:30:00.000Z 2021-12-30T01:00:00Z "
                           "0 {:oid \"1.2.3\"} {:oid \"1.2.3\"} 2021-10-10 "
                           "test-koulutustoimija-oid 1633824000000 "
                           "{:oid \"1.2.3\"} 2021-10-10 "
