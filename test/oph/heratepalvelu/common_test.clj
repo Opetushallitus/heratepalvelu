@@ -1,9 +1,8 @@
 (ns oph.heratepalvelu.common-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.string :as str]
+            [clojure.test :refer :all]
             [oph.heratepalvelu.common :refer :all]
-            [oph.heratepalvelu.test-util :refer :all]
-            [clj-time.core :as t]
-            [clojure.string :as str])
+            [oph.heratepalvelu.test-util :refer :all])
   (:import (java.time LocalDate)))
 
 (deftest test-get-koulutustoimija-oid
@@ -50,15 +49,9 @@
                                {:tyyppi {:koodiarvo "telma"}}]})))))
 
 (deftest test-has-time-to-answer
-  (let [date1 (t/today)
-        date2 (t/plus (t/now) (t/days 1))
-        date3 (t/minus  (t/now) (t/days 1))]
-    (is (true? (has-time-to-answer?
-                 (str date1))))
-    (is (true? (has-time-to-answer?
-                 (str date2))))
-    (is (false? (has-time-to-answer?
-                  (str date3))))))
+  (is (true? (has-time-to-answer? (str (LocalDate/now)))))
+  (is (true? (has-time-to-answer? (str (.plusDays (LocalDate/now) 1)))))
+  (is (false? (has-time-to-answer? (str (.minusDays (LocalDate/now) 1))))))
 
 (deftest test-create-nipputunniste
   (testing "Create normalized nipputunniste"

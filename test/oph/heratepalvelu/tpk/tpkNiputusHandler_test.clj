@@ -1,6 +1,5 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler-test
-  (:require [clj-time.core :as t]
-            [clojure.test :refer :all]
+  (:require [clojure.test :refer :all]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.tpk.tpkNiputusHandler :as tpk]
             [oph.heratepalvelu.test-util :as tu])
@@ -106,7 +105,7 @@
               :koulutustoimija-oid          "1.2.246.562.10.346830761110"
               :tiedonkeruu-alkupvm          "2021-07-01"
               :tiedonkeruu-loppupvm         "2021-12-31"
-              :niputuspvm                   (str (t/today))})))))
+              :niputuspvm                   (str (LocalDate/now))})))))
 
 (deftest test-get-existing-nippu
   (testing "Varmistaa, että get-existing-nippu kutsuu get-item oikein"
