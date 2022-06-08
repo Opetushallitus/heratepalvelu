@@ -1,11 +1,11 @@
 (ns oph.heratepalvelu.test-util
   (:require [cheshire.core :refer :all]
             [clojure.java.io :as io]
-            [clojure.string :as string]
-            [clj-time.core :as t])
+            [clojure.string :as string])
   (:import (com.amazonaws.services.lambda.runtime.events SQSEvent)
            (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage
                                                          ScheduledEvent)
+           (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
@@ -47,11 +47,11 @@
     (= "1.2.246.562.10.346830761111"
        (last (:organisaatio-oid conds)))
     {:organisaatio-oid "1.2.246.562.10.346830761111"
-     :kayttoonottopvm (str (t/plus (t/today) (t/days 1)))}
+     :kayttoonottopvm (str (.plusDays (LocalDate/now) 1))}
     (= "1.2.246.562.10.346830761112"
        (last (:organisaatio-oid conds)))
     {:organisaatio-oid "1.2.246.562.10.346830761112"
-     :kayttoonottopvm  (str (t/today))}))
+     :kayttoonottopvm  (str (LocalDate/now))}))
 
 (def dummy-opiskeluoikeus-oid "1.2.246.562.24.10442483592")
 (def dummy-request-id "1d6c30bb-a2d9-5540-aa1a-65410fc2f8f5")

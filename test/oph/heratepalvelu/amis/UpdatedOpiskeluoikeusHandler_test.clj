@@ -338,7 +338,7 @@
             context (tu/mock-handler-context)
             expected (str "2021-12-14T10:30:00.000Z 2021-12-30T01:00:00Z "
                           "0 {:oid \"1.2.3\"} {:oid \"1.2.3\"} 2021-10-10 "
-                          "test-koulutustoimija-oid 1633824000000 "
+                          "test-koulutustoimija-oid 2021-10-10T00:00:00Z "
                           "{:oid \"1.2.3\"} 2021-10-10 "
                           "get-hoks-by-opiskeluoikeus: 1.2.3 "
                           "get-kysely-type save-herate: "
