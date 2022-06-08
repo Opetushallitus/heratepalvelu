@@ -99,7 +99,8 @@
   (testing "Get next niputus date"
     (is (= (LocalDate/of 2021 12 16) (next-niputus-date "2021-12-03")))
     (is (= (LocalDate/of 2022 1 1) (next-niputus-date "2021-12-27")))
-    (is (= (LocalDate/of 2021 5 1) (next-niputus-date "2021-04-25")))))
+    (is (= (LocalDate/of 2021 5 1) (next-niputus-date "2021-04-25")))
+    (is (= (LocalDate/of 2022 6 30) (next-niputus-date "2022-06-24")))))
 
 (deftest test-create-update-item-options
   (testing "Create update item options"
