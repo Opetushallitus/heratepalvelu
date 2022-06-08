@@ -48,7 +48,7 @@
    aloituksen aikoja, joten muutoksien hakuhetken jälkeen tietokantaan voi
    tallentua aikaleimoja menneisyyteen. Hakemalla 1 min bufferilla
    varmistetaan että kaikki muutokset käsitellään vähintään 1 kerran."
-  [datetime]
+  [^Instant datetime]
   (let [time-with-buffer (.minusSeconds datetime 300)]
     (ddb/update-item
       {:key [:s "opiskeluoikeus-last-checked"]}
