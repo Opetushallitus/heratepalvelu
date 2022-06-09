@@ -44,15 +44,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         name: "niputuspvm",
         type: dynamodb.AttributeType.STRING
       },
-      nonKeyAttributes: [
-        "tunnus",
-        "oppilaitos",
-        "tyopaikan_nimi",
-        "ohjaaja_email",
-        "viimeinen_vastauspvm",
-        "ohjaaja_puhelinnumero"
-      ],
-      projectionType: dynamodb.ProjectionType.INCLUDE
+      projectionType: dynamodb.ProjectionType.ALL
     });
 
     jaksotunnusTable.addGlobalSecondaryIndex({
