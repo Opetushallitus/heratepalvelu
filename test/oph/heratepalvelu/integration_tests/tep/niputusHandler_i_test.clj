@@ -94,7 +94,10 @@
                       "\"tutkintotunnus\":\"test-tutkinto-1\","
                       "\"tyonantaja\":\"123456-1\","
                       "\"tyopaikka\":\"Testi Työpaikka 1\","
-                      "\"tunnukset\":[\"AAjunk\",\"ACjunk\"],"
+                      "\"tunnukset\":[{\"tunnus\":\"AAjunk\","
+                      "\"tyopaikkajakson_kesto\":12.167},"
+                      "{\"tunnus\":\"ACjunk\","
+                      "\"tyopaikkajakson_kesto\":1.667}],"
                       "\"voimassa_alkupvm\":\"2022-02-18\","
                       "\"request_id\":\"test-uuid\"}")}
                 {:body {:nippulinkki "kysely.linkki/123"
@@ -110,7 +113,8 @@
                       "\"tutkintotunnus\":\"test-tutkinto-2\","
                       "\"tyonantaja\":\"123456-2\","
                       "\"tyopaikka\":\"Testi Työpaikka 2\","
-                      "\"tunnukset\":[\"BAjunk\"],"
+                      "\"tunnukset\":[{\"tunnus\":\"BAjunk\","
+                      "\"tyopaikkajakson_kesto\":1.0}],"
                       "\"voimassa_alkupvm\":\"2022-02-18\","
                       "\"request_id\":\"test-uuid\"}")}
                 {:body {:errors "Jokin meni pieleen"}})
@@ -327,7 +331,10 @@
                          "\"tutkintotunnus\":\"test-tutkinto-1\","
                          "\"tyonantaja\":\"123456-1\","
                          "\"tyopaikka\":\"Testi Työpaikka 1\","
-                         "\"tunnukset\":[\"AAjunk\",\"ACjunk\"],"
+                         "\"tunnukset\":[{\"tunnus\":\"AAjunk\","
+                         "\"tyopaikkajakson_kesto\":12.167},"
+                         "{\"tunnus\":\"ACjunk\","
+                         "\"tyopaikkajakson_kesto\":1.667}],"
                          "\"voimassa_alkupvm\":\"2022-02-18\","
                          "\"request_id\":\"test-uuid\"}")
               :basic-auth ["arvo-user" "arvo-pwd"] :as :json}}
@@ -352,7 +359,8 @@
                          "\"tutkintotunnus\":\"test-tutkinto-2\","
                          "\"tyonantaja\":\"123456-2\","
                          "\"tyopaikka\":\"Testi Työpaikka 2\","
-                         "\"tunnukset\":[\"BAjunk\"],"
+                         "\"tunnukset\":[{\"tunnus\":\"BAjunk\","
+                         "\"tyopaikkajakson_kesto\":1.0}],"
                          "\"voimassa_alkupvm\":\"2022-02-18\","
                          "\"request_id\":\"test-uuid\"}")
               :basic-auth ["arvo-user" "arvo-pwd"] :as :json}}])
