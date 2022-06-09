@@ -352,7 +352,6 @@
                        [:s "Testi Ojaaja/765432-1/koulutustoimija-id/"]
                        :tutkinnonosa_id [:n "test-tutkinnonosa-id"]
                        :niputuspvm [:s "2021-12-16"]
-                       :kesto [:n -1]
                        :tyopaikan_normalisoitu_nimi [:s "testityopaikka"]
                        :toimipiste_oid [:s "test-toimipiste"]
                        :tutkinto [:s nil]
@@ -387,7 +386,6 @@
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "765432-1"
                              :oppisopimuksen_perusta nil
-                             :tyopaikkajakson_kesto -1
                              :osaamisala nil
                              :koulutustoimija_oid "koulutustoimija-id"
                              :paikallinen_tutkinnon_osa nil
@@ -411,7 +409,6 @@
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "111111-1"
                              :oppisopimuksen_perusta nil
-                             :tyopaikkajakson_kesto -1
                              :osaamisala nil
                              :koulutustoimija_oid "koulutustoimija-id"
                              :paikallinen_tutkinnon_osa nil
@@ -435,7 +432,6 @@
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "123456-7"
                              :oppisopimuksen_perusta nil
-                             :tyopaikkajakson_kesto -1
                              :osaamisala nil
                              :koulutustoimija_oid "koulutustoimija-id"
                              :paikallinen_tutkinnon_osa nil
@@ -466,7 +462,6 @@
                        [:s "Testi Ojaaja/123456-7/koulutustoimija-id/"]
                        :tutkinnonosa_id [:n "test-tutkinnonosa-id"]
                        :niputuspvm [:s "2021-12-16"]
-                       :kesto [:n -1]
                        :tyopaikan_normalisoitu_nimi [:s "testityopaikka"]
                        :toimipiste_oid [:s "test-toimipiste"]
                        :tutkinto [:s nil]

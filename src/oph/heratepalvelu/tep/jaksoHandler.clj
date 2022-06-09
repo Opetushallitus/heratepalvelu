@@ -169,7 +169,6 @@
                        :ohjaaja_nimi      [:s (:tyopaikkaohjaaja-nimi herate)]
                        :jakso_alkupvm        [:s (:alkupvm herate)]
                        :jakso_loppupvm       [:s (:loppupvm herate)]
-                       :kesto                [:n -1]
                        :request_id           [:s request-id]
                        :tutkinto             [:s tutkinto]
                        :oppilaitos    [:s (:oid (:oppilaitos opiskeluoikeus))]
@@ -250,7 +249,6 @@
                               (arvo/build-jaksotunnus-request-body
                                 herate
                                 (c/normalize-string (:tyopaikan-nimi herate))
-                                -1
                                 opiskeluoikeus
                                 request-id
                                 koulutustoimija

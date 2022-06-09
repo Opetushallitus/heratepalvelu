@@ -171,7 +171,6 @@
   "Luo dataobjektin TEP-jaksotunnuksen luomisrequestille."
   [herate
    tyopaikka-normalisoitu
-   kesto
    opiskeluoikeus
    request-id
    koulutustoimija
@@ -198,7 +197,6 @@
    :osaamisala                (get-osaamisalat suoritus (:oid opiskeluoikeus))
    :tyopaikkajakson_alkupvm   (:alkupvm herate)
    :tyopaikkajakson_loppupvm  (:loppupvm herate)
-   :tyopaikkajakson_kesto     kesto
    :osa_aikaisuus             (:osa-aikaisuus herate)
    :sopimustyyppi             (last
                                 (str/split
