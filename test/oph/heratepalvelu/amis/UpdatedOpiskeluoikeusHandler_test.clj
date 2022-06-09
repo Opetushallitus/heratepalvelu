@@ -118,9 +118,7 @@
                          {:suorituskieli {:koodiarvo "FI"}
                           :tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}
                           :vahvistus {:päivä "2019-07-23"}}]
-           :tila {:opiskeluoikeusjaksot [{:alku "2019-07-24"
-                                          :tila {:koodiarvo "lasna"}}
-                                         {:alku "2019-07-23"
+           :tila {:opiskeluoikeusjaksot [{:alku "2019-07-23"
                                           :tila {:koodiarvo "valmistunut"}}]}}
           "2019-07-23"))
     (is (check-tila
@@ -134,9 +132,9 @@
                           :tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}
                           :vahvistus {:päivä "2019-07-23"}}]
            :tila {:opiskeluoikeusjaksot [{:alku "2019-07-24"
-                                          :tila {:koodiarvo "lasna"}}
+                                          :tila {:koodiarvo "valmistunut"}}
                                          {:alku "2019-07-23"
-                                          :tila {:koodiarvo "valmistunut"}}]}}
+                                          :tila {:koodiarvo "keskeytynyt"}}]}}
           "2019-07-24"))
     (is (not (check-tila
                {:oid "1.2.246.562.15.82039738925"

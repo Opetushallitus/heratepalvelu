@@ -53,7 +53,7 @@
                            :sisältyyOpiskeluoikeuteen nil
                            :tila {:opiskeluoikeusjaksot
                                   [{:alku "2022-01-05"
-                                    :tila {:koodiarvo "lasna"}}]}}]}
+                                    :tila {:koodiarvo "valmistunut"}}]}}]}
 
                         {:opiskeluoikeudet
                          [{:oid "99999"
@@ -66,7 +66,7 @@
                            :sisältyyOpiskeluoikeuteen nil
                            :tila {:opiskeluoikeusjaksot
                                   [{:alku "2022-01-07"
-                                    :tila {:koodiarvo "lasna"}}]}}]}]})
+                                    :tila {:koodiarvo "valmistunut"}}]}}]}]})
   (mhc/bind-url :get
                 (str (:koski-url mock-env) "/oppija/")
                 {:query-params
