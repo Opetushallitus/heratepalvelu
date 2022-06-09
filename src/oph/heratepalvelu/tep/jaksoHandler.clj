@@ -125,66 +125,6 @@
     (and (seq kjaksot)
          (not (:loppu (last kjaksot))))))
 
-(defn kesto
-  "Laskee TEP-jakson keston, ottaen huomioon keskeytymisajanjaksot ja
-  osa-aikaisuustiedot. Parametri oo-tilat on opiskeluoikeuden tilan
-  opiskeluoikeusjaksot."
-  [herate oo-tilat]
-  (let [alku-date (LocalDate/parse (:alkupvm herate))
-        loppu-date (LocalDate/parse (:loppupvm herate))
-        sorted-tilat (map #(assoc %1
-                                  :alku (LocalDate/parse (:alku %1))
-                                  :tila (:koodiarvo (:tila %1)))
-                          (sort-by :alku oo-tilat))
-        voimassa (reduce
-                   (fn [res next]
-                     (if (and (c/is-before (:alku (first res)) alku-date)
-                              (not (c/is-after (:alku next) alku-date)))
-                       (rest res)
-                       (reduced res)))
-                   sorted-tilat
-                   (rest sorted-tilat))
-        sorted-keskeytymisajanjaksot (sort-process-keskeytymisajanjaksot
-                                       herate)]
-    (loop [kesto 0
-           pvm alku-date
-           tilat voimassa
-           keskeytymisajanjaksot sorted-keskeytymisajanjaksot]
-      (if-not (c/is-after pvm loppu-date)
-        (let [first-kjakso (first keskeytymisajanjaksot)
-              new-kesto (if (or (= (.getDayOfWeek pvm) DayOfWeek/SATURDAY)
-                                (= (.getDayOfWeek pvm) DayOfWeek/SUNDAY)
-                                (= "valiaikaisestikeskeytynyt"
-                                   (:tila (first tilat)))
-                                (= "loma" (:tila (first tilat)))
-                                (and
-                                  (some? first-kjakso)
-                                  (not (c/is-before pvm (:alku first-kjakso)))
-                                  (or (nil? (:loppu first-kjakso))
-                                      (not (c/is-after
-                                             pvm
-                                             (:loppu first-kjakso))))))
-                          kesto
-                          (inc kesto))
-              new-pvm (.plusDays pvm 1)]
-          (recur new-kesto
-                 new-pvm
-                 (if (and (some? (second tilat))
-                          (not (c/is-after (:alku (second tilat)) new-pvm)))
-                   (rest tilat)
-                   tilat)
-                 (if (and (some? (second keskeytymisajanjaksot))
-                          (not (c/is-after
-                                 (:alku (second keskeytymisajanjaksot))
-                                 new-pvm)))
-                   (rest keskeytymisajanjaksot)
-                   keskeytymisajanjaksot)))
-        (if (and (some? (:osa-aikaisuus herate))
-                 (pos?  (:osa-aikaisuus herate))
-                 (> 100 (:osa-aikaisuus herate)))
-          (int (Math/ceil (/ (* kesto (:osa-aikaisuus herate)) 100)))
-          kesto)))))
-
 (defn save-to-tables
   "Tallentaa jakso ja nipun tietokantaan."
   [jaksotunnus-table-data nippu-table-data]
@@ -217,8 +157,6 @@
               niputuspvm (c/next-niputus-date (str (c/local-date-now)))
               alkupvm    (c/next-niputus-date (:loppupvm herate))
               suoritus   (c/get-suoritus opiskeluoikeus)
-              kesto      (kesto herate
-                                (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))
               tutkinto   (get-in suoritus [:koulutusmoduuli
                                            :tunniste
                                            :koodiarvo])
@@ -231,7 +169,7 @@
                        :ohjaaja_nimi      [:s (:tyopaikkaohjaaja-nimi herate)]
                        :jakso_alkupvm        [:s (:alkupvm herate)]
                        :jakso_loppupvm       [:s (:loppupvm herate)]
-                       :kesto                [:n kesto]
+                       :kesto                [:n -1]
                        :request_id           [:s request-id]
                        :tutkinto             [:s tutkinto]
                        :oppilaitos    [:s (:oid (:oppilaitos opiskeluoikeus))]
@@ -312,7 +250,7 @@
                               (arvo/build-jaksotunnus-request-body
                                 herate
                                 (c/normalize-string (:tyopaikan-nimi herate))
-                                kesto
+                                -1
                                 opiskeluoikeus
                                 request-id
                                 koulutustoimija
