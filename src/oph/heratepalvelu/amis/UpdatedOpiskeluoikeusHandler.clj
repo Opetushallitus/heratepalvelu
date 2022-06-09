@@ -88,15 +88,14 @@
     (:koodiarvo (:tila voimassa))))
 
 (defn check-tila
-  "Varmistaa, että opiskeluoikeuden tila on 'valmistunut' tai 'läsnä'."
+  "Varmistaa, että opiskeluoikeuden tila on 'valmistunut'."
   [opiskeluoikeus vahvistus-pvm]
   (let [tila (get-tila opiskeluoikeus vahvistus-pvm)]
-    (if (or (= tila "valmistunut") (= tila "lasna"))
-      true
-      (do (log/info "Opiskeluoikeuden" (:oid opiskeluoikeus)
-                    "(vahvistuspäivämäärä:" vahvistus-pvm ") tila on" tila
-                    ". Odotettu arvo on 'valmistunut' tai 'läsnä'.")
-          false))))
+    (or (= tila "valmistunut")
+        (do (log/info "Opiskeluoikeuden" (:oid opiskeluoikeus)
+                      "(vahvistuspäivämäärä:" vahvistus-pvm ") tila on" tila
+                      ". Heräte luodaan vain, jos tila on 'valmistunut'.")
+            false))))
 
 (defn -handleUpdatedOpiskeluoikeus
   "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
