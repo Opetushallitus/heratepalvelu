@@ -301,7 +301,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     new events.Rule(this, "niputusHandlerScheduleRule", {
       schedule: events.Schedule.expression(
-        `rate(20 minutes)`
+        `cron(${this.getParameterFromSsm("tep-niputus-cron")})`
       ),
       targets: [new targets.LambdaFunction(niputusHandler)]
     });
