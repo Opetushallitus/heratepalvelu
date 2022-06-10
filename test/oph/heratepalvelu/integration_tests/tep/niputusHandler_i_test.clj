@@ -128,36 +128,36 @@
                  :query-params {:oppija "aaa"
                                 :start "2022-01-01"
                                 :end "2022-01-31"}}
-                [{:hankkimistapa_id 11
-                  :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
-                  :niputuspvm "2022-02-01"
-                  :viimeinen_vastauspvm "2022-03-31"
-                  :tunnus "AAjunk"
-                  :oppija_oid "aaa"
-                  :opiskeluoikeus_oid "oo-aaa"
-                  :jakso_alkupvm "2022-01-01"
-                  :jakso_loppupvm "2022-01-25"
-                  :tyopaikan_nimi "Testi Työpaikka 1"}
-                 {:hankkimistapa_id 12
-                  :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
-                  :niputuspvm "2022-02-01"
-                  :viimeinen_vastauspvm "2022-02-16"
-                  :tunnus "ABjunk"
-                  :oppija_oid "aaa"
-                  :opiskeluoikeus_oid "oo-aaa"
-                  :jakso_alkupvm "2022-01-15"
-                  :jakso_loppupvm "2022-01-31"
-                  :tyopaikan_nimi "Testi Työpaikka 1"}
-                 {:hankkimistapa_id 13
-                  :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
-                  :niputuspvm "2022-02-01"
-                  :viimeinen_vastauspvm "2022-02-25"
-                  :tunnus "ACjunk"
-                  :oppija_oid "aaa"
-                  :opiskeluoikeus_oid "oo-aaa"
-                  :jakso_alkupvm "2022-01-20"
-                  :jakso_loppupvm "2022-01-31"
-                  :tyopaikan_nimi "Testi Työpaikka 1"}])
+                {:body {:data [{:hankkimistapa_id 11
+                                :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
+                                :niputuspvm "2022-02-01"
+                                :viimeinen_vastauspvm "2022-03-31"
+                                :tunnus "AAjunk"
+                                :oppija_oid "aaa"
+                                :opiskeluoikeus_oid "oo-aaa"
+                                :jakso_alkupvm "2022-01-01"
+                                :jakso_loppupvm "2022-01-25"
+                                :tyopaikan_nimi "Testi Työpaikka 1"}
+                               {:hankkimistapa_id 12
+                                :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
+                                :niputuspvm "2022-02-01"
+                                :viimeinen_vastauspvm "2022-02-16"
+                                :tunnus "ABjunk"
+                                :oppija_oid "aaa"
+                                :opiskeluoikeus_oid "oo-aaa"
+                                :jakso_alkupvm "2022-01-15"
+                                :jakso_loppupvm "2022-01-31"
+                                :tyopaikan_nimi "Testi Työpaikka 1"}
+                               {:hankkimistapa_id 13
+                                :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
+                                :niputuspvm "2022-02-01"
+                                :viimeinen_vastauspvm "2022-02-25"
+                                :tunnus "ACjunk"
+                                :oppija_oid "aaa"
+                                :opiskeluoikeus_oid "oo-aaa"
+                                :jakso_alkupvm "2022-01-20"
+                                :jakso_loppupvm "2022-01-31"
+                                :tyopaikan_nimi "Testi Työpaikka 1"}]}})
   (mhc/bind-url :get
                 (str (:ehoks-url mock-env)
                      "heratepalvelu/tyoelamajaksot-active-between")
@@ -168,28 +168,28 @@
                  :query-params {:oppija "bbb"
                                 :start "2022-01-10"
                                 :end "2022-01-20"}}
-                [{:hankkimistapa_id 21
-                  :ohjaaja_ytunnus_kj_tutkinto "oykt-2"
-                  :niputuspvm "2022-02-01"
-                  :viimeinen_vastauspvm "2022-03-31"
-                  :tunnus "BAjunk"
-                  :oppija_oid "bbb"
-                  :opiskeluoikeus_oid "oo-bbb"
-                  :keskeytymisajanjaksot [{:alku "2022-01-12"
-                                           :loppu "2022-01-14"}]
-                  :jakso_alkupvm "2022-01-10"
-                  :jakso_loppupvm "2022-01-20"
-                  :tyopaikan_nimi "Testi Työpaikka 2"}
-                 {:hankkimistapa_id 22
-                  :ohjaaja_ytunnus_kj_tutkinto "oykt-2"
-                  :tunnus "BBjunk"
-                  :oppija_oid "bbb"
-                  :opiskeluoikeus_oid "oo-bbb"
-                  :keskeytymisajanjaksot [{:alku "2022-01-03"
-                                           :loppu "2022-01-08"}]
-                  :jakso_alkupvm "2022-01-01"
-                  :jakso_loppupvm "2022-01-30"
-                  :tyopaikan_nimi "Testi Työpaikka 2"}])
+                {:body {:data [{:hankkimistapa_id 21
+                                :ohjaaja_ytunnus_kj_tutkinto "oykt-2"
+                                :niputuspvm "2022-02-01"
+                                :viimeinen_vastauspvm "2022-03-31"
+                                :tunnus "BAjunk"
+                                :oppija_oid "bbb"
+                                :opiskeluoikeus_oid "oo-bbb"
+                                :keskeytymisajanjaksot [{:alku "2022-01-12"
+                                                         :loppu "2022-01-14"}]
+                                :jakso_alkupvm "2022-01-10"
+                                :jakso_loppupvm "2022-01-20"
+                                :tyopaikan_nimi "Testi Työpaikka 2"}
+                               {:hankkimistapa_id 22
+                                :ohjaaja_ytunnus_kj_tutkinto "oykt-2"
+                                :tunnus "BBjunk"
+                                :oppija_oid "bbb"
+                                :opiskeluoikeus_oid "oo-bbb"
+                                :keskeytymisajanjaksot [{:alku "2022-01-03"
+                                                         :loppu "2022-01-08"}]
+                                :jakso_alkupvm "2022-01-01"
+                                :jakso_loppupvm "2022-01-30"
+                                :tyopaikan_nimi "Testi Työpaikka 2"}]}})
   (mhc/bind-url :get
                 (str (:koski-url mock-env) "/opiskeluoikeus/oo-aaa")
                 {:as         :json
