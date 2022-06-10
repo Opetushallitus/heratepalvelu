@@ -89,7 +89,7 @@
   [jaksot]
   (let [fraction (/ 1.0 (count jaksot))]
     (into {} (map #(do [(:hankkimistapa_id %)
-                        (/ (* fraction (get % :osa_aikaisuus 100)) 100)])
+                        (/ (* fraction (or (get % :osa_aikaisuus) 100)) 100)])
                   jaksot))))
 
 (defn compute-kestot
