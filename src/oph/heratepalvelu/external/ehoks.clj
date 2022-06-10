@@ -98,8 +98,10 @@
   "Pyytää eHOKS-palvelusta työelämäjaksot, jotka ovat tai olivat voimassa tietyn
   aikavälin sisällä ja jotka kuuluvat tietylle oppijalle."
   [oppija start end]
-  (ehoks-get "heratepalvelu/tyoelamajaksot-active-between"
-             {:query-params {:oppija oppija :start start :end end}}))
+  (:data (:body (ehoks-get "heratepalvelu/tyoelamajaksot-active-between"
+                           {:query-params {:oppija oppija
+                                           :start start
+                                           :end end}}))))
 
 (defn patch-amis-aloitusherate-kasitelty
   "Merkitsee HOKSin aloitusherätteen käsitellyksi."
