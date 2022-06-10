@@ -298,7 +298,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(niputusHandler)]
     });
 
-    jaksotunnusTable.grantReadData(niputusHandler);
+    jaksotunnusTable.grantReadWriteData(niputusHandler);
     nippuTable.grantReadWriteData(niputusHandler);
 
     // emailHandler
