@@ -11,6 +11,7 @@
             [oph.heratepalvelu.tep.tepCommon :as tc])
   (:import (clojure.lang ExceptionInfo)
            (com.amazonaws.services.lambda.runtime Context)
+           (java.lang Math)
            (java.time DayOfWeek LocalDate)
            (java.time.temporal ChronoUnit)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
@@ -25,21 +26,26 @@
 
 (defn not-in-keskeytymisajanjakso?
   "Varmistaa, että annettu päivämäärä ei kuulu keskeytymisajanjaksoon."
-  [date keskeytymisajanjaksot]
+  [^LocalDate date keskeytymisajanjaksot]
   (or (empty? keskeytymisajanjaksot)
       (every? #(or (and (:alku %) (.isBefore date (:alku %)))
                    (and (:loppu %) (.isAfter date (:loppu %))))
               keskeytymisajanjaksot)))
 
+(defn is-weekday?
+  "Tarkistaa, onko annettu päivämäärä arkipäivä."
+  [^LocalDate date]
+  (not (or (= (.getDayOfWeek date) DayOfWeek/SATURDAY)
+           (= (.getDayOfWeek date) DayOfWeek/SUNDAY))))
+
 (defn filtered-jakso-days
   "Luo listan jakson arkipäivistä LocalDate:ina."
   [jakso]
-  (filter #(not (or (= (.getDayOfWeek %) DayOfWeek/SATURDAY)
-                    (= (.getDayOfWeek %) DayOfWeek/SUNDAY)))
+  (filter is-weekday?
           (let [start (LocalDate/parse (:jakso_alkupvm jakso))
                 end (LocalDate/parse (:jakso_loppupvm jakso))]
             (map #(.plusDays start %)
-                 (range (+ 1 (.between ChronoUnit/DAYS start end)))))))
+                 (range (inc (.between ChronoUnit/DAYS start end)))))))
 
 (defn convert-keskeytymisajanjakso
   "Muuntaa keskeytymisajanjakson alku- ja loppupäivät LocalDate:iksi."
@@ -88,8 +94,8 @@
   "Jakaa yhden päivän aikaa silloin keskeytymättömien jaksojen välillä."
   [jaksot]
   (let [fraction (/ 1.0 (count jaksot))]
-    (into {} (map #(do [(:hankkimistapa_id %)
-                        (/ (* fraction (or (get % :osa_aikaisuus) 100)) 100)])
+    (into {} (map #(vector (:hankkimistapa_id %)
+                           (/ (* fraction (or (get % :osa_aikaisuus) 100)) 100))
                   jaksot))))
 
 (defn compute-kestot
@@ -151,8 +157,8 @@
   (log/info "Niputetaan " nippu)
   (let [request-id (c/generate-uuid)
         jaksot (retrieve-and-update-jaksot nippu)
-        tunnukset (vec (map #(do {:tunnus (:tunnus %)
-                                  :tyopaikkajakson_kesto (:kesto %)})
+        tunnukset (vec (map (fn [x] {:tunnus                (:tunnus x)
+                                     :tyopaikkajakson_kesto (:kesto x)})
                             jaksot))]
     (if (not-empty tunnukset)
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))

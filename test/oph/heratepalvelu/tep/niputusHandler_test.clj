@@ -5,7 +5,7 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
-(deftest not-in-keskeytymisajanjakso?
+(deftest test-not-in-keskeytymisajanjakso?
   (testing "Varmistaa, että not-in-keskeytymisajanjakso? toimii oikein."
     (let [kjaksot [{:loppu (LocalDate/of 2022 4 1)}
                    {:alku  (LocalDate/of 2022 4 4)
@@ -24,6 +24,13 @@
                                                    kjaksot)))
       (is (false? (nh/not-in-keskeytymisajanjakso? (LocalDate/of 2022 4 10)
                                                    kjaksot))))))
+
+(deftest test-is-weekday?
+  (testing "Varmistaa, että is-weekday? palauttaa true jos kyse on arkipäivästä"
+    (is (true? (nh/is-weekday? (LocalDate/of 2022 6 13))))
+    (is (true? (nh/is-weekday? (LocalDate/of 2022 6 10))))
+    (is (false? (nh/is-weekday? (LocalDate/of 2022 6 4))))
+    (is (false? (nh/is-weekday? (LocalDate/of 2022 6 5))))))
 
 (deftest test-filtered-jakso-days
   (testing "Varmistaa, että filtered-jakso-days toimii oikein."
@@ -161,7 +168,6 @@
                      :jakso_loppupvm "2022-03-03"}
                     {:jakso_alkupvm "2022-01-10"
                      :jakso_loppupvm "2022-02-28"}]
-            
             results {1 22.5
                      2 18.0
                      3 0.0
@@ -339,7 +345,7 @@
                        :kasittelypvm [:s "2021-12-31"]}
                       :options {}}
                      {:type "mock-retrieve-and-update-jaksot"
-                      :nippu test-nippu-1} 
+                      :nippu test-nippu-1}
                      {:type "mock-create-nippu-kyselylinkki"
                       :niputus-request-body
                       {:tunniste "testi_tyo_paikka_2021-12-31_abcdef"
