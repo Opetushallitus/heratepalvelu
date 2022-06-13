@@ -108,15 +108,15 @@
 
 (defn- mock-get-opiskeluoikeus-catch-404 [oo-oid]
   (cond
-    (= oo-oid "5.5.5.5") {:tila
+    (= oo-oid "1.2.3.4") {:tila
                           {:opiskeluoikeusjaksot
                            [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
                             {:alku "2022-01-30" :tila {:koodiarvo "loma"}}
                             {:alku "2022-02-10" :tila {:koodiarvo "lasna"}}]}}
-    (= oo-oid "6.6.6.6") {:tila
+    (= oo-oid "1.2.3.5") {:tila
                           {:opiskeluoikeusjaksot
                            [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
-                            {:alku "2022-04-30"
+                            {:alku "2022-02-02"
                              :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}]}}
     :else {}))
 
@@ -134,30 +134,33 @@
                 :jakso_alkupvm "2022-01-03"
                 :jakso_loppupvm "2022-02-05"
                 :keskeytymisajanjaksot []
-                :opiskeluoikeus-oid "1.2.3.1"}
+                :opiskeluoikeus_oid "1.2.3.1"}
                {:hankkimistapa_id 2
                 :oppija_oid "4.4.4.4"
                 :osa_aikaisuus 50
                 :jakso_alkupvm "2022-02-07"
                 :jakso_loppupvm "2022-04-04"
-                :opiskeluoikeus-oid "1.2.3.2"}
+                :opiskeluoikeus_oid "1.2.3.2"}
                {:hankkimistapa_id 3
                 :oppija_oid "4.4.4.4"
                 :osa_aikaisuus 0
                 :jakso_alkupvm "2022-01-31"
                 :jakso_loppupvm "2022-02-20"
-                :keskeytymisajanjaksot []
-                :opiskeluoikeus "1.2.3.3"}
-
-
-
-               ]))
+                :keskeytymisajanjaksot [{:alku "2022-02-16"
+                                         :loppu "2022-02-18"}]
+                :opiskeluoikeus_oid "1.2.3.3"}
+               {:hankkimistapa_id 4
+                :oppija_oid "4.4.4.4"
+                :jakso_alkupvm "2022-01-17"
+                :jakso_loppupvm "2022-02-20"
+                :opiskeluoikeus_oid "1.2.3.4"}
+               {:hankkimistapa_id 5
+                :oppija_oid "4.4.4.4"
+                :jakso_alkupvm "2022-01-01"
+                :jakso_loppupvm "2022-04-01"
+                :opiskeluoikeus_oid "1.2.3.5"}]))
        oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
-       mock-get-opiskeluoikeus-catch-404
-
-       ;; TODO koski redef
-
-       ]
+       mock-get-opiskeluoikeus-catch-404]
       (let [jaksot [{:oppija_oid "4.4.4.4"
                      :jakso_alkupvm "2022-01-05"
                      :jakso_loppupvm "2022-02-28"}
@@ -167,8 +170,8 @@
             results {1 22.5
                      2 18.0
                      3 0.0
+                     ;; TODO
                      }
-
             call-results [{:type "gtab"
                            :start "2022-01-05"
                            :end "2022-03-03"
