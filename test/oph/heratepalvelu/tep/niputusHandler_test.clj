@@ -251,16 +251,16 @@
                                {:hankkimistapa_id 3}]}
                      {:type "update-jakso"
                       :jakso {:hankkimistapa_id 1}
-                      :updates {:kesto [:n 0.0]}}
+                      :updates {:kesto [:n 0]}}
                      {:type "update-jakso"
                       :jakso {:hankkimistapa_id 2}
-                      :updates {:kesto [:n 0.3]}}
+                      :updates {:kesto [:n 0]}}
                      {:type "update-jakso"
                       :jakso {:hankkimistapa_id 3}
-                      :updates {:kesto [:n 0.5]}}]
-            updated-jaksot [{:hankkimistapa_id 1 :kesto 0.0}
-                            {:hankkimistapa_id 2 :kesto 0.3}
-                            {:hankkimistapa_id 3 :kesto 0.5}]]
+                      :updates {:kesto [:n 1]}}]
+            updated-jaksot [{:hankkimistapa_id 1 :kesto 0}
+                            {:hankkimistapa_id 2 :kesto 0}
+                            {:hankkimistapa_id 3 :kesto 1}]]
         (is (= (nh/retrieve-and-update-jaksot nippu) updated-jaksot))
         (is (= @trauj-results results))))))
 

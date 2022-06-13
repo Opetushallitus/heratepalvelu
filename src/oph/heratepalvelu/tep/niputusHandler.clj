@@ -140,8 +140,7 @@
   [nippu]
   (let [jaksot (query-jaksot nippu)
         kestot (group-jaksot-and-compute-kestot jaksot)]
-    (map #(let [kesto (get kestot (:hankkimistapa_id %) 0.0)
-                kesto (/ (Math/round (* kesto 1000)) 1000.0)]
+    (map #(let [kesto (Math/round (get kestot (:hankkimistapa_id %) 0.0))]
             (tc/update-jakso % {:kesto [:n kesto]})
             (assoc % :kesto kesto))
          jaksot)))
