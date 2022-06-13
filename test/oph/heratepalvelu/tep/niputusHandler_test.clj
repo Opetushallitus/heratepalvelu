@@ -124,7 +124,7 @@
   (testing "Varmistaa, että compute-kestot laskee kestot oikein."
     (with-redefs
       [oph.heratepalvelu.external.ehoks/get-tyoelamajaksot-active-between
-       (fn [oppija-oid start end];; TODO
+       (fn [oppija-oid start end]
          (reset! test-compute-kestot-results
                  (cons {:type "gtab" :start start :end end :oppija oppija-oid}
                        @test-compute-kestot-results))
@@ -134,26 +134,20 @@
                 :jakso_alkupvm "2022-01-03"
                 :jakso_loppupvm "2022-02-05"
                 :keskeytymisajanjaksot []
-                :opiskeluoikeus-oid "1.2.3.1"
-                }
+                :opiskeluoikeus-oid "1.2.3.1"}
                {:hankkimistapa_id 2
                 :oppija_oid "4.4.4.4"
                 :osa_aikaisuus 50
                 :jakso_alkupvm "2022-02-07"
                 :jakso_loppupvm "2022-04-04"
-                ;; ei keskeytymisajanjaksoja ollenkaan
-                :opiskeluoikeus-oid "1.2.3.2"
-                }
+                :opiskeluoikeus-oid "1.2.3.2"}
                {:hankkimistapa_id 3
-                :oppija_oid "5.5.5.5"
+                :oppija_oid "4.4.4.4"
                 :osa_aikaisuus 0
                 :jakso_alkupvm "2022-01-31"
                 :jakso_loppupvm "2022-02-20"
-                ;; TODO keskeytymisajanjaksot
-        ;        :opiskeluoikeus
-
-
-                }
+                :keskeytymisajanjaksot []
+                :opiskeluoikeus "1.2.3.3"}
 
 
 
@@ -164,27 +158,23 @@
        ;; TODO koski redef
 
        ]
-      (let [jaksot [{:jakso_alkupvm "2022-01-05"
-                     :jakso_loppupvm "2022-03-03"}
-                    {:jakso_alkupvm "2022-01-10"
-                     :jakso_loppupvm "2022-02-28"}]
+      (let [jaksot [{:oppija_oid "4.4.4.4"
+                     :jakso_alkupvm "2022-01-05"
+                     :jakso_loppupvm "2022-02-28"}
+                    {:oppija_oid "4.4.4.4"
+                     :jakso_alkupvm "2022-01-10"
+                     :jakso_loppupvm "2022-03-03"}]
             results {1 22.5
                      2 18.0
                      3 0.0
-                     ;; TODO
-
                      }
 
-            call-results [
-
-                          ;; TODO
-
-                          ]]
+            call-results [{:type "gtab"
+                           :start "2022-01-05"
+                           :end "2022-03-03"
+                           :oppija "4.4.4.4"}]]
         (is (= (nh/compute-kestot jaksot) results))
-        ;; TODO tarkista tallennetut hommat
-      ;; TODO
-
-      ))))
+        (is (= (vec (reverse @test-compute-kestot-results)) call-results))))))
 
 (defn- mock-compute-kestot [jaksot] {(:oppija_oid (first jaksot)) (vec jaksot)})
 

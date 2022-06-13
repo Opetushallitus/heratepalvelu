@@ -139,13 +139,15 @@
      :expr-attr-vals {":pvm" [:s (str (c/local-date-now))]}}
     (:jaksotunnus-table env)))
 
+(defn math-round "Wrapper Math/round:in ympäri" [^double x] (Math/round x))
+
 (defn retrieve-and-update-jaksot
   "Hakee nippuun kuuluvat jaksot tietokannasta, laskee niiden kestot, päivittää
   kestotiedot tietokantaan, ja palauttaa päivitetyt jaksot."
   [nippu]
   (let [jaksot (query-jaksot nippu)
         kestot (group-jaksot-and-compute-kestot jaksot)]
-    (map #(let [kesto (Math/round (get kestot (:hankkimistapa_id %) 0.0))]
+    (map #(let [kesto (math-round (get kestot (:hankkimistapa_id %) 0.0))]
             (tc/update-jakso % {:kesto [:n kesto]})
             (assoc % :kesto kesto))
          jaksot)))
