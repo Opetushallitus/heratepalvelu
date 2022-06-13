@@ -133,7 +133,6 @@
      :expr-attr-vals {":pvm" [:s (str (c/local-date-now))]}}
     (:jaksotunnus-table env)))
 
-;; TODO kesto lasketaan vain niille, joilla on tunnus
 (defn retrieve-and-update-jaksot
   "Hakee nippuun kuuluvat jaksot tietokannasta, laskee niiden kestot, päivittää
   kestotiedot tietokantaan, ja palauttaa päivitetyt jaksot."
@@ -153,16 +152,15 @@
   (let [request-id (c/generate-uuid)
         jaksot (retrieve-and-update-jaksot nippu)
         tunnukset (vec (map #(do {:tunnus (:tunnus %)
-                             :tyopaikkajakson_kesto (:kesto %)})
+                                  :tyopaikkajakson_kesto (:kesto %)})
                             jaksot))]
     (if (not-empty tunnukset)
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))
             arvo-resp (arvo/create-nippu-kyselylinkki
-                        (arvo/build-niputus-request-body
-                          tunniste
-                          nippu
-                          tunnukset
-                          request-id))]
+                        (arvo/build-niputus-request-body tunniste
+                                                         nippu
+                                                         tunnukset
+                                                         request-id))]
         (if (some? (:nippulinkki arvo-resp))
           (try
             (tc/update-nippu
