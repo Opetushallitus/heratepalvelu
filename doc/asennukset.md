@@ -32,3 +32,8 @@ Git-repossa on uncommitted muutoksia tai (tuotantoasennuksen tapauksessa) jos
 et ole master-haarassa. Jos joudut tekemään asennuksen, joka olisi näillä
 ehdoilla hyväksymättömän hankala, voit tilapäisesti muokata esim. `canDeploy`
 -muuttujan arvon, mutta tämä kannattaa välttää jos on mahdollista.
+
+Jos joudut muokkaamaan indexin, sitä ei voi asentaa saman tien. Täytyy ensin
+poistaa olemassa oleva index ja sitten luoda uusi. Yksinkertaisin tapa tehdä
+tämä on kommentoida index pois, asentaa palvelu, palauttaa (uusi) index, ja
+sitten asentaa palvelu uudestaan.
