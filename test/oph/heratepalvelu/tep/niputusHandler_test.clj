@@ -106,6 +106,9 @@
 
 (def test-compute-kestot-results (atom []))
 
+(defn- do-rounding [values]
+  (reduce-kv #(assoc %1 %2 (/ (Math/round (* %3 1000.0)) 1000.0)) {} values))
+
 (defn- mock-get-opiskeluoikeus-catch-404 [oo-oid]
   (cond
     (= oo-oid "1.2.3.4") {:tila
@@ -167,16 +170,16 @@
                     {:oppija_oid "4.4.4.4"
                      :jakso_alkupvm "2022-01-10"
                      :jakso_loppupvm "2022-03-03"}]
-            results {1 22.5
-                     2 18.0
+            results {1 10.5
+                     2 17.667
                      3 0.0
-                     ;; TODO
-                     }
+                     4 6.167
+                     5 9.0}
             call-results [{:type "gtab"
                            :start "2022-01-05"
                            :end "2022-03-03"
                            :oppija "4.4.4.4"}]]
-        (is (= (nh/compute-kestot jaksot) results))
+        (is (= (do-rounding (nh/compute-kestot jaksot)) results))
         (is (= (vec (reverse @test-compute-kestot-results)) call-results))))))
 
 (defn- mock-compute-kestot [jaksot] {(:oppija_oid (first jaksot)) (vec jaksot)})
