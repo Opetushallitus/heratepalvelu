@@ -153,17 +153,15 @@
   (let [tapa-id (:hankkimistapa-id herate)]
     (when (check-duplicate-hankkimistapa tapa-id)
       (try
-        (let [request-id (c/generate-uuid)
-              niputuspvm (c/next-niputus-date (str (c/local-date-now)))
-              alkupvm    (c/next-niputus-date (:loppupvm herate))
-              suoritus   (c/get-suoritus opiskeluoikeus)
-              tutkinto   (get-in suoritus [:koulutusmoduuli
-                                           :tunniste
-                                           :koodiarvo])
-              oppija     (koski/get-oppija (:oppija-oid herate))
-              maksuton   (c/is-maksuton? opiskeluoikeus alkupvm)
-              erityinen-tuki (c/erityinen-tuki-voimassa? opiskeluoikeus alkupvm)
-              alle-21    (c/is-under-21-on? oppija alkupvm)
+        (let [request-id    (c/generate-uuid)
+              niputuspvm    (c/next-niputus-date (str (c/local-date-now)))
+              alkupvm       (c/next-niputus-date (:loppupvm herate))
+              suoritus      (c/get-suoritus opiskeluoikeus)
+              tutkinto      (get-in suoritus [:koulutusmoduuli
+                                              :tunniste
+                                              :koodiarvo])
+              oppija        (koski/get-oppija (:oppija-oid herate))
+              rahoitusryhma (c/get-rahoitusryhma oppija opiskeluoikeus alkupvm)
               db-data {:hankkimistapa_id     [:n tapa-id]
                        :hankkimistapa_tyyppi
                        [:s (last (str/split (:hankkimistapa-tyyppi herate)
@@ -202,9 +200,7 @@
                                 koulutustoimija "/" tutkinto)]
                        :tyopaikan_normalisoitu_nimi
                        [:s (c/normalize-string (:tyopaikan-nimi herate))]
-                       :maksuton             [:bool maksuton]
-                       :erityinen_tuki       [:bool erityinen-tuki]
-                       :alle_21              [:bool alle-21]}
+                       :rahoitusryhma        [:n rahoitusryhma]}
               jaksotunnus-table-data
               (cond-> db-data
                 (not-empty (:tyopaikkaohjaaja-email herate))
@@ -260,7 +256,8 @@
                                 request-id
                                 koulutustoimija
                                 suoritus
-                                (str alkupvm)))
+                                (str alkupvm)
+                                rahoitusryhma))
                   tunnus (:tunnus (:body arvo-resp))]
               (try
                 (when (and (some? tunnus) (check-duplicate-tunnus tunnus))

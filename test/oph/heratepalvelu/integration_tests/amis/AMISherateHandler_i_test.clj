@@ -114,9 +114,7 @@
      :oppija-oid [:s "3.4.5"]
      :ehoks-id [:n "456"]
      :rahoituskausi [:s "2021-2022"]
-     :maksuton [:bool true]
-     :erityinen-tuki [:bool true]
-     :alle-21 [:bool true]
+     :rahoitusryhma [:n 1]
      :herate-source [:s (:ehoks c/herate-sources)]}})
 
 (def expected-http-results

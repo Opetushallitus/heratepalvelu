@@ -370,9 +370,7 @@
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
                        :viimeinen_vastauspvm [:s "2022-02-14"]
-                       :maksuton [:bool false]
-                       :erityinen_tuki [:bool false]
-                       :alle_21 [:bool true]}
+                       :rahoitusryhma [:n 1]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]
@@ -486,9 +484,7 @@
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
                        :viimeinen_vastauspvm [:s "2022-02-14"]
-                       :maksuton [:bool false]
-                       :erityinen_tuki [:bool false]
-                       :alle_21 [:bool true]}
+                       :rahoitusryhma [:n 1]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]

@@ -43,7 +43,10 @@
           uuid (c/generate-uuid)
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
           suorituskieli (str/lower-case
-                          (:koodiarvo (:suorituskieli suoritus)))]
+                          (:koodiarvo (:suorituskieli suoritus)))
+          rahoitusryhma (c/get-rahoitusryhma oppija-obj
+                                             opiskeluoikeus
+                                             herate-date)]
       (if (c/check-duplicate-herate? oppija
                                      koulutustoimija
                                      laskentakausi
@@ -57,7 +60,8 @@
                          koulutustoimija
                          suoritus
                          alkupvm
-                         loppupvm)]
+                         loppupvm
+                         rahoitusryhma)]
           (try
             (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
                       (str kyselytyyppi "/" laskentakausi) ", request-id:"
@@ -86,14 +90,7 @@
                :hankintakoulutuksen-toteuttaja
                [:s (str (:hankintakoulutuksen_toteuttaja req-body))]
                :tallennuspvm        [:s (str (c/local-date-now))]
-               :maksuton            [:bool (c/is-maksuton? opiskeluoikeus
-                                                           heratepvm)]
-               :erityinen-tuki      [:bool (c/erityinen-tuki-voimassa?
-                                             opiskeluoikeus
-                                             heratepvm)]
-               :alle-21             [:bool (c/is-under-21-on? oppija-obj
-                                                              (LocalDate/parse
-                                                                heratepvm))]
+               :rahoitusryhma       [:n rahoitusryhma]
                :herate-source       [:s herate-source]}
               (if (= herate-source (:ehoks c/herate-sources))
                 {:cond-expr "attribute_not_exists(kyselylinkki)"}
