@@ -96,11 +96,11 @@
   (testing "Varmistaa, että handle-one-day toimii oikein."
     (let [jaksot (seq [{:hankkimistapa_id 1 :osa_aikaisuus 100}
                        {:hankkimistapa_id 2 :osa_aikaisuus 50}
-                       {:hankkimistapa_id 3 :osa_aikaisuus 0}
+                       {:hankkimistapa_id 3 :osa_aikaisuus 10}
                        {:hankkimistapa_id 4}])
           results {1 0.25
                    2 0.125
-                   3 0.0
+                   3 0.025
                    4 0.25}]
       (is (= (nh/handle-one-day jaksot) results)))))
 
@@ -172,7 +172,7 @@
                      :jakso_loppupvm "2022-03-03"}]
             results {1 10.5
                      2 17.667
-                     3 0.0
+                     3 5.0
                      4 6.167
                      5 9.0}
             call-results [{:type "gtab"

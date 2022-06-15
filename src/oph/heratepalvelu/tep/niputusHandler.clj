@@ -90,12 +90,22 @@
             jaksot-by-day
             (filtered-jakso-days jakso))))
 
+(defn get-osa-aikaisuus
+  "Hakee osa-aikaisuutta jaksosta ja varmistaa, että se on sallittujen rajojen
+  sisällä."
+  [jakso]
+  (if (and (some? (:osa_aikaisuus jakso))
+           (pos? (:osa_aikaisuus jakso))
+           (> 100 (:osa_aikaisuus jakso)))
+    (:osa_aikaisuus jakso)
+    100))
+
 (defn handle-one-day
   "Jakaa yhden päivän aikaa silloin keskeytymättömien jaksojen välillä."
   [jaksot]
   (let [fraction (/ 1.0 (count jaksot))]
     (into {} (map #(vector (:hankkimistapa_id %)
-                           (/ (* fraction (or (get % :osa_aikaisuus) 100)) 100))
+                           (/ (* fraction (get-osa-aikaisuus %)) 100))
                   jaksot))))
 
 (defn compute-kestot
