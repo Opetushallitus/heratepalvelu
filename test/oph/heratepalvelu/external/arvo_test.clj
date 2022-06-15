@@ -233,7 +233,6 @@
                     :hankkimistapa-tyyppi "osaamisenhankkimistapa_oppisopimus"
                     :oppisopimuksen-perusta "oppisopimuksenperusta_01"}
             tyopaikka-normalisoitu "tyo_paikka"
-            kesto 34
             opiskeluoikeus {:oid "test-oo"
                             :oppilaitos {:oid "test-laitos"}}
             request-id "test-request-id"
@@ -245,7 +244,6 @@
             niputuspvm "2022-03-16"]
         (is (= (arvo/build-jaksotunnus-request-body herate
                                                     tyopaikka-normalisoitu
-                                                    kesto
                                                     opiskeluoikeus
                                                     request-id
                                                     koulutustoimija
@@ -262,7 +260,6 @@
                 :osaamisala "osaamisala: test-suoritus test-oo"
                 :tyopaikkajakson_alkupvm "2022-01-01"
                 :tyopaikkajakson_loppupvm "2022-03-01"
-                :tyopaikkajakson_kesto 34
                 :osa_aikaisuus 90
                 :sopimustyyppi "oppisopimus"
                 :oppisopimuksen_perusta "01"

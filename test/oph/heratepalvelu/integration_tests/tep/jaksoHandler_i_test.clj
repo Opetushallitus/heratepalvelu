@@ -90,7 +90,6 @@
                             "\"vastaamisajan_alkupvm\":\"2022-02-16\","
                             "\"tyonantaja\":\"123456-7\","
                             "\"oppisopimuksen_perusta\":\"01\","
-                            "\"tyopaikkajakson_kesto\":8,"
                             "\"osaamisala\":[\"test-osaamisala\"],"
                             "\"koulutustoimija_oid\":\"koulutustoimija-oid\","
                             "\"paikallinen_tutkinnon_osa\":\"Test Kurssi\","
@@ -147,7 +146,6 @@
      :oppilaitos [:s "testilaitos"]
      :tunnus [:s "ABCDEF"]
      :tutkinnonosa_id [:n 1]
-     :kesto [:n 8]
      :tyopaikan_normalisoitu_nimi [:s "testi_oy"]
      :toimipiste_oid [:s "test-toimipiste"]
      :tutkinto [:s "testitutkinto"]
@@ -192,7 +190,6 @@
                          "\"vastaamisajan_alkupvm\":\"2022-02-16\","
                          "\"tyonantaja\":\"123456-7\","
                          "\"oppisopimuksen_perusta\":\"01\","
-                         "\"tyopaikkajakson_kesto\":8,"
                          "\"osaamisala\":[\"test-osaamisala\"],"
                          "\"koulutustoimija_oid\":\"koulutustoimija-oid\","
                          "\"paikallinen_tutkinnon_osa\":\"Test Kurssi\","

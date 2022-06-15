@@ -35,43 +35,6 @@
       (is (some? (jh/tep-herate-checker bad1)))
       (is (some? (jh/tep-herate-checker bad2))))))
 
-(deftest kesto-test
-  (testing "Keston laskenta ottaa huomioon osa-aikaisuuden, opiskeluoikeuden
-           väliaikaisen keskeytymisen ja lomat"
-    (let [herate {:alkupvm "2021-06-01" :loppupvm "2021-06-30"}
-          herate-osa-aikainen {:alkupvm       "2021-06-01"
-                               :loppupvm      "2021-06-30"
-                               :osa-aikaisuus 75}
-          oo-tilat [{:alku "2021-05-01" :tila {:koodiarvo "lasna"}}]
-          oo-tilat-kesk [{:alku "2021-06-15"
-                          :tila {:koodiarvo "lasna"}}
-                         {:alku "2021-06-10"
-                          :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}
-                         {:alku "2021-05-01"
-                          :tila {:koodiarvo "lasna"}}]
-          oo-tilat-kesk-loppuun-asti [{:alku "2021-06-10"
-                                       :tila
-                                       {:koodiarvo "valiaikaisestikeskeytynyt"}}
-                                      {:alku "2021-05-01"
-                                       :tila {:koodiarvo "lasna"}}]
-          oo-tilat-loma [{:alku "2021-06-20" :tila {:koodiarvo "loma"}}
-                         {:alku "2021-05-01" :tila {:koodiarvo "lasna"}}
-                         {:alku "2021-06-25" :tila {:koodiarvo "lasna"}}]
-          oo-tilat-kesk-loma [{:alku "2021-06-14"
-                               :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}
-                              {:alku "2021-05-01" :tila {:koodiarvo "loma"}}
-                              {:alku "2021-06-20" :tila {:koodiarvo "loma"}}
-                              {:alku "2021-06-02" :tila {:koodiarvo "lasna"}}
-                              {:alku "2021-06-27" :tila {:koodiarvo "lasna"}}
-                              {:alku "2021-06-16" :tila {:koodiarvo "lasna"}}]]
-      (is (= 22 (jh/kesto herate oo-tilat)))
-      (is (= 17 (jh/kesto herate-osa-aikainen oo-tilat)))
-      (is (= 7  (jh/kesto herate oo-tilat-kesk-loppuun-asti)))
-      (is (= 19 (jh/kesto herate oo-tilat-kesk)))
-      (is (= 18 (jh/kesto herate oo-tilat-loma)))
-      (is (= 14 (jh/kesto herate oo-tilat-kesk-loma)))
-      (is (= 11 (jh/kesto herate-osa-aikainen oo-tilat-kesk-loma))))))
-
 (deftest check-opiskeluoikeus-tila-test
   (testing "Opiskeluoikeuden tilan tarkastus. Keskeytetty opiskeluoikeus estää
            jakson käsittelyn. Jakson päättymispäivänä keskeytetty opiskeluoikeus
@@ -389,7 +352,6 @@
                        [:s "Testi Ojaaja/765432-1/koulutustoimija-id/"]
                        :tutkinnonosa_id [:n "test-tutkinnonosa-id"]
                        :niputuspvm [:s "2021-12-16"]
-                       :kesto [:n 4]
                        :tyopaikan_normalisoitu_nimi [:s "testityopaikka"]
                        :toimipiste_oid [:s "test-toimipiste"]
                        :tutkinto [:s nil]
@@ -424,7 +386,6 @@
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "765432-1"
                              :oppisopimuksen_perusta nil
-                             :tyopaikkajakson_kesto 70
                              :osaamisala nil
                              :koulutustoimija_oid "koulutustoimija-id"
                              :paikallinen_tutkinnon_osa nil
@@ -448,7 +409,6 @@
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "111111-1"
                              :oppisopimuksen_perusta nil
-                             :tyopaikkajakson_kesto 70
                              :osaamisala nil
                              :koulutustoimija_oid "koulutustoimija-id"
                              :paikallinen_tutkinnon_osa nil
@@ -472,7 +432,6 @@
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "123456-7"
                              :oppisopimuksen_perusta nil
-                             :tyopaikkajakson_kesto 70
                              :osaamisala nil
                              :koulutustoimija_oid "koulutustoimija-id"
                              :paikallinen_tutkinnon_osa nil
@@ -503,7 +462,6 @@
                        [:s "Testi Ojaaja/123456-7/koulutustoimija-id/"]
                        :tutkinnonosa_id [:n "test-tutkinnonosa-id"]
                        :niputuspvm [:s "2021-12-16"]
-                       :kesto [:n 70]
                        :tyopaikan_normalisoitu_nimi [:s "testityopaikka"]
                        :toimipiste_oid [:s "test-toimipiste"]
                        :tutkinto [:s nil]
