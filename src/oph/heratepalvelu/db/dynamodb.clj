@@ -175,6 +175,8 @@
                                            (.indexName (:index options))
                                            (:limit options)
                                            (.limit (int (:limit options)))
+                                           (:consistent-read options)
+                                           (.consistentRead true)
                                            (:filter-expression options)
                                            (.filterExpression
                                              (:filter-expression options))

@@ -221,7 +221,8 @@
   (ddb/query-items {:kasittelytila [:eq [:s (:ei-niputettu c/kasittelytilat)]]
                     :niputuspvm    [:le [:s (str (c/local-date-now))]]}
                    {:index "niputusIndex"
-                    :limit 10}
+                    :limit 10
+                    :consistent-read true}
                    (:nippu-table env)))
 
 (defn -handleNiputus
