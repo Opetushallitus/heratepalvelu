@@ -234,13 +234,13 @@
   "Hakee ja niputtaa niputtamattomat jaksot."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleNiputus" event context)
-  (let [memo (atom {})]
+  (let [processed-niput (atom {})]
     (loop [niputettavat (sort-by :niputuspvm #(- (compare %1 %2)) (do-query))]
       (log/info "Käsitellään" (count niputettavat) "niputusta.")
       (when (seq niputettavat)
         (doseq [nippu niputettavat]
-          (when-not (get @memo (get-nippu-key nippu))
+          (when-not (get @processed-niput (get-nippu-key nippu))
             (niputa nippu)
-            (swap! memo assoc (get-nippu-key nippu) true)))
+            (swap! processed-niput assoc (get-nippu-key nippu) true)))
         (when (< 120000 (.getRemainingTimeInMillis context))
           (recur (do-query)))))))
