@@ -224,18 +224,23 @@
                     :limit 10}
                    (:nippu-table env)))
 
+(defn get-nippu-key
+  "Luo memoisointiavaimen nipulle."
+  [nippu]
+  {:ohjaaja_ytunnus_kj_tutkinto (:ohjaaja_ytunnus_kj_tutkinto nippu)
+   :niputuspvm                  (:niputuspvm nippu)})
+
 (defn -handleNiputus
   "Hakee ja niputtaa niputtamattomat jaksot."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleNiputus" event context)
-  (loop [niputettavat
-         (sort-by
-           :niputuspvm
-           #(* -1 (compare %1 %2))
-           (do-query))]
-    (log/info "Käsitellään" (count niputettavat) "niputusta.")
-    (when (seq niputettavat)
-      (doseq [nippu niputettavat]
-        (niputa nippu))
-      (when (< 120000 (.getRemainingTimeInMillis context))
-        (recur (do-query))))))
+  (let [memo (atom {})]
+    (loop [niputettavat (sort-by :niputuspvm #(- (compare %1 %2)) (do-query))]
+      (log/info "Käsitellään" (count niputettavat) "niputusta.")
+      (when (seq niputettavat)
+        (doseq [nippu niputettavat]
+          (when-not (get @memo (get-nippu-key nippu))
+            (niputa nippu)
+            (swap! memo assoc (get-nippu-key nippu) true)))
+        (when (< 120000 (.getRemainingTimeInMillis context))
+          (recur (do-query)))))))
