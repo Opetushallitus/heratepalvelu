@@ -132,13 +132,8 @@
 
 (defn mock-patch-amis-paattoherate-kasitelty [_] nil)
 
-(defn mock-put-item-aws-exception [_ _]
+(defn mock-put-item-aws-exception [_]
   (throw (-> (AwsServiceException/builder)
-             (.message "exception")
-             (.build))))
-
-(defn mock-put-item-cond-check-exception [_ _]
-  (throw (-> (ConditionalCheckFailedException/builder)
              (.message "exception")
              (.build))))
 

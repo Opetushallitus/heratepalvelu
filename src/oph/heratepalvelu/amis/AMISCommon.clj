@@ -82,9 +82,11 @@
                :toimipiste-oid      [:s (str (:toimipiste_oid req-body))]
                :hankintakoulutuksen-toteuttaja
                [:s (str (:hankintakoulutuksen_toteuttaja req-body))]
-               :tallennuspvm        [:s (str (c/local-date-now))]}
-              {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
-                               "attribute_not_exists(tyyppi_kausi)")})
+               :tallennuspvm        [:s (str (c/local-date-now))]})
+            (c/delete-other-paattoherate oppija
+                                         koulutustoimija
+                                         laskentakausi
+                                         kyselytyyppi)
             (try
               (if (= kyselytyyppi "aloittaneet")
                 (ehoks/patch-amis-aloitusherate-kasitelty (:ehoks-id herate))
@@ -103,10 +105,6 @@
                                                           :tunniste
                                                           :koodiarvo])
                  :voimassa-loppupvm     loppupvm}))
-            (catch ConditionalCheckFailedException _
-              (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle"
-                        oppija "koulutustoimijalla:" koulutustoimija "tyyppi:"
-                        kyselytyyppi "kausi:" laskentakausi "request-id:" uuid))
             (catch AwsServiceException e
               (log/error "Virhe tietokantaan tallennettaessa" uuid)
               (throw e))

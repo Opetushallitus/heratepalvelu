@@ -49,8 +49,8 @@
                         :req-body req-body})
   {:kysely_linkki "kysely.linkki/123"})
 
-(defn- mock-put-item [item options]
-  (add-to-test-results {:type "mock-put-item" :item item :options options}))
+(defn- mock-put-item [item]
+  (add-to-test-results {:type "mock-put-item" :item item}))
 
 (defn- mock-add-kyselytunnus-to-hoks [ehoks-id data]
   (add-to-test-results {:type "mock-add-kyselytunnus-to-hoks"
@@ -167,10 +167,7 @@
                              :toimipiste-oid [:s "abc"]
                              :hankintakoulutuksen-toteuttaja
                              [:s "test-hankintakoulutuksen-toteuttaja"]
-                             :tallennuspvm [:s "2021-12-17"]}
-                      :options {:cond-expr
-                                (str "attribute_not_exists(toimija_oppija) AND "
-                                     "attribute_not_exists(tyyppi_kausi)")}}
+                             :tallennuspvm [:s "2021-12-17"]}}
                      {:type "mock-patch-amis-aloitusherate-kasitelty"
                       :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"
@@ -221,10 +218,7 @@
                              :toimipiste-oid [:s "abc"]
                              :hankintakoulutuksen-toteuttaja
                              [:s "test-hankintakoulutuksen-toteuttaja"]
-                             :tallennuspvm [:s "2021-12-17"]}
-                      :options {:cond-expr
-                                (str "attribute_not_exists(toimija_oppija) AND "
-                                     "attribute_not_exists(tyyppi_kausi)")}}
+                             :tallennuspvm [:s "2021-12-17"]}}
                      {:type "mock-patch-amis-paattoherate-kasitelty"
                       :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"

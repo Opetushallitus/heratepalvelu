@@ -208,6 +208,7 @@
                   oph.heratepalvelu.common/generate-uuid (fn [] "test-uuid")
                   oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2022 2 2))
+                  oph.heratepalvelu.db.dynamodb/delete-item mdb/delete-item
                   oph.heratepalvelu.db.dynamodb/get-item mdb/get-item
                   oph.heratepalvelu.db.dynamodb/put-item mdb/put-item
                   oph.heratepalvelu.db.dynamodb/update-item mdb/update-item

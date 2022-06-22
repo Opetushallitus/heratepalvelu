@@ -232,6 +232,17 @@
               oppija " koulutustoimijalla " koulutustoimija
               "(tyyppi '" kyselytyyppi "' kausi " laskentakausi ")")))
 
+(defn delete-other-paattoherate
+  "";; TODO
+  [oppija koulutustoimija laskentakausi kyselytyyppi]
+  (when (or (= kyselytyyppi "tutkinnon_suorittaneet")
+            (= kyselytyyppi "tutkinnon_osia_suorittaneet"))
+    (let [tyyppi (if (= kyselytyyppi "tutkinnon_suorittaneet")
+                   "tutkinnon_osia_suorittaneet"
+                   "tutkinnon_suorittaneet")]
+      (ddb/delete-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                        :tyyppi_kausi   [:s (str tyyppi "/" laskentakausi)]}))))
+
 (defn check-valid-herate-date
   "Varmistaa, että herätteen päivämäärä ei ole ennen 1.7.2021."
   [heratepvm]

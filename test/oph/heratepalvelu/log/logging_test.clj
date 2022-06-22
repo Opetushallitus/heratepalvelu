@@ -60,36 +60,3 @@
                                            (mock-handler-event :ehoksherate)
                                            (mock-handler-context))))
         (is (true? (did-log? "Virhe tietokantaan tallennettaessa" "ERROR")))))))
-
-(deftest test-ehoksherate-cond-check-exception
-  (testing "Failed conditional check throws exception and logs warn"
-    (with-redefs
-      [oph.heratepalvelu.external.organisaatio/get-organisaatio
-       mock-get-organisaatio
-       oph.heratepalvelu.common/get-koulutustoimija-oid
-       mock-get-koulutustoimija-oid
-       oph.heratepalvelu.external.koski/get-opiskeluoikeus
-       mock-get-opiskeluoikeus
-       oph.heratepalvelu.common/check-duplicate-herate?
-       mock-check-duplicate-herate-true?
-       oph.heratepalvelu.common/check-organisaatio-whitelist?
-       mock-check-organisaatio-whitelist-true?
-       oph.heratepalvelu.db.dynamodb/put-item
-       mock-put-item-cond-check-exception
-       oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
-       mock-get-kyselylinkki
-       oph.heratepalvelu.external.arvo/delete-amis-kyselylinkki
-       mock-deactivate-kyselylinkki
-       oph.heratepalvelu.external.ehoks/get-hankintakoulutus-oids
-       mock-get-hankintakoulutus-oids-empty
-       oph.heratepalvelu.external.ehoks/patch-amis-aloitusherate-kasitelty
-       mock-patch-amis-aloitusherate-kasitelty
-       oph.heratepalvelu.external.ehoks/patch-amis-paattoherate-kasitelty
-       mock-patch-amis-paattoherate-kasitelty]
-      (do
-        (-handleAMISherate nil
-                           (mock-handler-event :ehoksherate)
-                           (mock-handler-context))
-        (is (true? (did-log?
-                     "Tämän kyselyn linkki on jo toimituksessa oppilaalle"
-                     "WARN")))))))

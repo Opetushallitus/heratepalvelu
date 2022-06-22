@@ -59,6 +59,7 @@
 (defn- strip-attr-vals [item] (into {} (map (fn [[k v]] [k (second v)]) item)))
 
 (defn put-item
+  ([item] (put-item item {} (:herate-table env)))
   ([item options] (put-item item options (:herate-table env)))
   ([item options table-name]
    (let [item-key (get-item-key (get-table-key-fields table-name) item)
