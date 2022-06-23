@@ -24,7 +24,7 @@
 
 (defn save-herate
   "Tarkistaa herätteen ja tallentaa sen tietokantaan."
-  [herate opiskeluoikeus koulutustoimija]
+  [herate opiskeluoikeus koulutustoimija herate-source]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
   (if (some? (c/herate-checker herate))
     (log/error {:herate herate :msg (c/herate-checker herate)})
@@ -82,7 +82,16 @@
                :toimipiste-oid      [:s (str (:toimipiste_oid req-body))]
                :hankintakoulutuksen-toteuttaja
                [:s (str (:hankintakoulutuksen_toteuttaja req-body))]
-               :tallennuspvm        [:s (str (c/local-date-now))]})
+               :tallennuspvm        [:s (str (c/local-date-now))]
+               :herate-source       [:s herate-source]}
+              (if (= herate-source (:ehoks c/herate-sources))
+                {:cond-expr "attribute_not_exists(kyselylinkki)"}
+                {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
+                                 "attribute_not_exists(tyyppi_kausi) OR "
+                                 "attribute_not_exists(kyselylinkki) AND "
+                                 "#source = :koski")
+                 :expr-attr-names {"#source" "herate-source"}
+                 :expr-attr-values {":koski" [:s (:koski c/herate-sources)]}}))
             (c/delete-other-paattoherate oppija
                                          koulutustoimija
                                          laskentakausi
@@ -105,6 +114,12 @@
                                                           :tunniste
                                                           :koodiarvo])
                  :voimassa-loppupvm     loppupvm}))
+
+            (catch ConditionalCheckFailedException e
+              (log/warn "Estetty ylikirjoittamasta olemassaolevaa herätettä."
+                        "Oppija:" oppija "koulutustoimijalla:" koulutustoimija
+                        "tyyppi:" kyselytyyppi "kausi:" laskentakausi
+                        "request-id:" uuid "Conditional check exception:" e))
             (catch AwsServiceException e
               (log/error "Virhe tietokantaan tallennettaessa" uuid)
               (throw e))
