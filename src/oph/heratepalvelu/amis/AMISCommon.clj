@@ -92,7 +92,7 @@
                                  "attribute_not_exists(kyselylinkki) AND "
                                  "#source = :koski")
                  :expr-attr-names {"#source" "herate-source"}
-                 :expr-attr-values {":koski" [:s (:koski c/herate-sources)]}}))
+                 :expr-attr-vals {":koski" [:s (:koski c/herate-sources)]}}))
             (c/delete-other-paattoherate oppija
                                          koulutustoimija
                                          laskentakausi

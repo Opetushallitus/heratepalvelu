@@ -233,7 +233,7 @@
                                        "OR attribute_not_exists(kyselylinkki) "
                                        "AND #source = :koski")
                        :expr-attr-names {"#source" "herate-source"}
-                       :expr-attr-values
+                       :expr-attr-vals
                        {":koski" [:s (:koski c/herate-sources)]}}}
                      {:type "mock-patch-amis-paattoherate-kasitelty"
                       :ehoks-id 98}
