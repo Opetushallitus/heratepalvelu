@@ -245,7 +245,9 @@
               "koulutustoimija:" toimija ";" kyselytyyppi kausi)))
 
 (defn delete-other-paattoherate
-  "";; TODO
+  "Jos heräte on päättöheräte, poistaa tietokannasta kaikki eri tyyppiset
+  päättöherätteet (esim. jos heräte on tutkinnon_suorittaneet; poistaa olemassa
+  olevan tutkinnon_osia_suorittaneet -herätteen)."
   [oppija koulutustoimija laskentakausi kyselytyyppi]
   (when (or (= kyselytyyppi "tutkinnon_suorittaneet")
             (= kyselytyyppi "tutkinnon_osia_suorittaneet"))
