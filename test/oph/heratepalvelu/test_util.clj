@@ -120,9 +120,9 @@
 
 (defn mock-check-organisaatio-whitelist-true? [_ _] true)
 
-(defn mock-check-duplicate-herate-true? [_ _ _ _] true)
+(defn mock-check-duplicate-herate-true? [_ _ _ _ _] true)
 
-(defn mock-check-duplicate-herate-false? [_ _ _ _] false)
+(defn mock-check-duplicate-herate-false? [_ _ _ _ _] false)
 
 (defn mock-get-kyselylinkki [_] {:kysely_linkki "https://kysely.linkki/12345"})
 
@@ -132,8 +132,13 @@
 
 (defn mock-patch-amis-paattoherate-kasitelty [_] nil)
 
-(defn mock-put-item-aws-exception [_]
+(defn mock-put-item-aws-exception [_ _]
   (throw (-> (AwsServiceException/builder)
+             (.message "exception")
+             (.build))))
+
+(defn mock-put-item-cond-check-exception [_ _]
+  (throw (-> (ConditionalCheckFailedException/builder)
              (.message "exception")
              (.build))))
 

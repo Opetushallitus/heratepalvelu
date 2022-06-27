@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.amis.AMISherateHandler-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISherateHandler :as hh]
+            [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.test-util :as tu]))
 
 (def call-log (atom ""))
@@ -30,10 +31,11 @@
   (reset! call-log (str @call-log "check-sisaltyy-opiskeluoikeuteen? "))
   true)
 
-(defn- mock-save-herate [herate opiskeluoikeus koulutustoimija]
+(defn- mock-save-herate [herate opiskeluoikeus koulutustoimija herate-source]
   (reset! results {:herate herate
                    :opiskeluoikeus opiskeluoikeus
-                   :koulutustoimija koulutustoimija}))
+                   :koulutustoimija koulutustoimija
+                   :herate-source herate-source}))
 
 (deftest test-handleAMISherate
   (testing "Varmista, että -handleAMISherate toimii oikein"
@@ -67,7 +69,8 @@
                                     :kyselytyyppi "aloittaneet"}
                            :opiskeluoikeus {:opiskeluoikeus-oid "1234.5.6678"
                                             :koulutustoimija-oid "1234"}
-                           :koulutustoimija "1234"})))
+                           :koulutustoimija "1234"
+                           :herate-source (:ehoks c/herate-sources)})))
         (reset! call-log "")
         (reset! results {})
         (with-redefs [oph.heratepalvelu.common/check-valid-herate-date

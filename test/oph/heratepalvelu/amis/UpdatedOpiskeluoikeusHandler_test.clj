@@ -284,7 +284,7 @@
           (str @test-handleUpdatedOpiskeluoikeus-results "get-kysely-type "))
   "tutkinnon_suorittaneet")
 
-(defn- mock-save-herate [herate opiskeluoikeus koulutustoimija]
+(defn- mock-save-herate [herate opiskeluoikeus koulutustoimija herate-source]
   (reset! test-handleUpdatedOpiskeluoikeus-results
           (str @test-handleUpdatedOpiskeluoikeus-results
                "save-herate: "
@@ -293,6 +293,8 @@
                opiskeluoikeus
                " "
                koulutustoimija
+               " "
+               herate-source
                " ")))
 
 (defn- mock-update-last-page [last-page]
@@ -348,6 +350,7 @@
                           ":opiskeluoikeus-oid \"1.2.3\", "
                           ":oppija-oid \"7.8.9\", :sahkoposti \"a@b.com\", "
                           ":alkupvm \"2021-10-10\"} {:oid \"1.2.3\"} "
-                          "test-koulutustoimija-oid update-last-page: 1 ")]
+                          "test-koulutustoimija-oid tiedot_muuttuneet_koskessa "
+                          "update-last-page: 1 ")]
         (-handleUpdatedOpiskeluoikeus {} event context)
         (is (= @test-handleUpdatedOpiskeluoikeus-results expected))))))

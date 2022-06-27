@@ -31,12 +31,14 @@
 (defn- mock-check-duplicate-herate? [oppija
                                      koulutustoimija
                                      laskentakausi
-                                     kyselytyyppi]
+                                     kyselytyyppi
+                                     herate-source]
   (add-to-test-results {:type "mock-check-duplicate-herate?"
                         :oppija oppija
                         :koulutustoimija koulutustoimija
                         :laskentakausi laskentakausi
-                        :kyselytyyppi kyselytyyppi})
+                        :kyselytyyppi kyselytyyppi
+                        :herate-source herate-source})
   true)
 
 (defn- mock-create-amis-kyselylinkki [req-body]
@@ -49,8 +51,8 @@
                         :req-body req-body})
   {:kysely_linkki "kysely.linkki/123"})
 
-(defn- mock-put-item [item]
-  (add-to-test-results {:type "mock-put-item" :item item}))
+(defn- mock-put-item [item options]
+  (add-to-test-results {:type "mock-put-item" :item item :options options}))
 
 (defn- mock-add-kyselytunnus-to-hoks [ehoks-id data]
   (add-to-test-results {:type "mock-add-kyselytunnus-to-hoks"
@@ -132,7 +134,8 @@
                       :oppija "34.56.78"
                       :koulutustoimija "3.4.5.6"
                       :laskentakausi "2021-2022"
-                      :kyselytyyppi "aloittaneet"}
+                      :kyselytyyppi "aloittaneet"
+                      :herate-source (:ehoks c/herate-sources)}
                      {:type "mock-get-osaamisalat"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}
                                  :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
@@ -167,7 +170,10 @@
                              :toimipiste-oid [:s "abc"]
                              :hankintakoulutuksen-toteuttaja
                              [:s "test-hankintakoulutuksen-toteuttaja"]
-                             :tallennuspvm [:s "2021-12-17"]}}
+                             :tallennuspvm [:s "2021-12-17"]
+                             :herate-source [:s (:ehoks c/herate-sources)]}
+                      :options
+                      {:cond-expr "attribute_not_exists(kyselylinkki)"}}
                      {:type "mock-patch-amis-aloitusherate-kasitelty"
                       :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"
@@ -182,7 +188,8 @@
                       :oppija "56.78.34"
                       :koulutustoimija "3.4.5.6"
                       :laskentakausi "2021-2022"
-                      :kyselytyyppi "tutkinnonsuorittaneet"}
+                      :kyselytyyppi "tutkinnonsuorittaneet"
+                      :herate-source (:koski c/herate-sources)}
                      {:type "mock-get-osaamisalat"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}
                                  :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
@@ -218,7 +225,16 @@
                              :toimipiste-oid [:s "abc"]
                              :hankintakoulutuksen-toteuttaja
                              [:s "test-hankintakoulutuksen-toteuttaja"]
-                             :tallennuspvm [:s "2021-12-17"]}}
+                             :tallennuspvm [:s "2021-12-17"]
+                             :herate-source [:s (:koski c/herate-sources)]}
+                      :options
+                      {:cond-expr (str "attribute_not_exists(toimija_oppija) "
+                                       "AND attribute_not_exists(tyyppi_kausi) "
+                                       "OR attribute_not_exists(kyselylinkki) "
+                                       "AND #source = :koski")
+                       :expr-attr-names {"#source" "herate-source"}
+                       :expr-attr-values
+                       {":koski" [:s (:koski c/herate-sources)]}}}
                      {:type "mock-patch-amis-paattoherate-kasitelty"
                       :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"
@@ -229,8 +245,14 @@
                        [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
                          :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
                          :suorituskieli {:koodiarvo "fi"}}]}}]]
-        (ac/save-herate herate-1 opiskeluoikeus koulutustoimija)
-        (ac/save-herate herate-2 opiskeluoikeus koulutustoimija)
+        (ac/save-herate herate-1
+                        opiskeluoikeus
+                        koulutustoimija
+                        (:ehoks c/herate-sources))
+        (ac/save-herate herate-2
+                        opiskeluoikeus
+                        koulutustoimija
+                        (:koski c/herate-sources))
         (is (= results (vec (reverse @test-results))))))))
 
 ;; Testaa update-herate

@@ -45,7 +45,8 @@
       (if (c/check-duplicate-herate? oppija
                                      koulutustoimija
                                      laskentakausi
-                                     kyselytyyppi)
+                                     kyselytyyppi
+                                     herate-source)
         ; Vaikka Arvokyselyä ei tässä tehdä, body-objektia käytetään muuten.
         (let [req-body (arvo/build-arvo-request-body
                          herate
