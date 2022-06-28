@@ -34,7 +34,7 @@
     :options
     {:headers {:ticket
                "service-ticket/ehoks-virkailija-backend/cas-security-check"}
-     :query-params {:start "2021-07-01" :end "2022-02-02" :limit 120}
+     :query-params {:start "2021-07-01" :end "2022-02-02" :limit 50}
      :as :json}}])
 
 (def expected-cas-client-results [{:type :get-service-ticket
