@@ -29,4 +29,4 @@
                       :message "Käynnistetään jaksojen lähetys"})))
         (is (true? (tu/logs-contain?
                      {:level :info
-                      :message "Lähetetty 50 viestiä"})))))))
+                      :message "Lähetetty 1000 viestiä"})))))))
