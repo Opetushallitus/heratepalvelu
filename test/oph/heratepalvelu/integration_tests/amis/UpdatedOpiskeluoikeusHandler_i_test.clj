@@ -148,7 +148,8 @@
      :tutkintotunnus [:s ""]
      :oppija-oid [:s "1.2.3"]
      :ehoks-id [:n "123"]
-     :rahoituskausi [:s "2021-2022"]}})
+     :rahoituskausi [:s "2021-2022"]
+     :herate-source [:s (:koski c/herate-sources)]}})
 
 (def expected-http-results
   [{:method :get
@@ -208,6 +209,7 @@
                   oph.heratepalvelu.common/generate-uuid (fn [] "test-uuid")
                   oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2022 2 2))
+                  oph.heratepalvelu.db.dynamodb/delete-item mdb/delete-item
                   oph.heratepalvelu.db.dynamodb/get-item mdb/get-item
                   oph.heratepalvelu.db.dynamodb/put-item mdb/put-item
                   oph.heratepalvelu.db.dynamodb/update-item mdb/update-item

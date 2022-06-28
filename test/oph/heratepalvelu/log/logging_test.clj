@@ -91,5 +91,5 @@
                            (mock-handler-event :ehoksherate)
                            (mock-handler-context))
         (is (true? (did-log?
-                     "Tämän kyselyn linkki on jo toimituksessa oppilaalle"
+                     "Estetty ylikirjoittamasta olemassaolevaa herätettä."
                      "WARN")))))))

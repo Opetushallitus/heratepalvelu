@@ -48,6 +48,11 @@
    :phone-invalid "phone-invalid"
    :queued "queued"})
 
+(def herate-sources
+  "Heräteviestien mahdolliset lähteet"
+  {:ehoks "sqs_viesti_ehoksista"
+   :koski "tiedot_muuttuneet_koskessa"})
+
 (defn rand-str
   "Luo stringin, jossa on len randomisti valittua isoa kirjainta."
   [len]
@@ -215,22 +220,42 @@
 
 (defn check-duplicate-herate?
   "Palauttaa true, jos ei ole vielä herätettä tallennettua tietokantaan samoilla
-  koulutustoimijalla, oppijalla, tyypillä ja laskentakaudella."
-  [oppija koulutustoimija laskentakausi kyselytyyppi]
+  koulutustoimijalla, oppijalla, tyypillä ja laskentakaudella, tai jos olemassa
+  olevan herätteen saa ylikirjoittaa uuden herätteen tiedoilla. Heräte
+  ylikirjoitetaan, jos uudet tiedot tulevat ehoksista, tai jos olemassaolevan
+  herätteen tiedot tulivat Koskesta. Herätettä ei ylikirjoiteta, jos
+  kyselylinkki on jo muodostunut."
+  [oppija toimija kausi kyselytyyppi herate-source]
   (if (let [check-db?
             (fn [tyyppi]
-              (empty? (ddb/get-item
-                        {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
-                         :tyyppi_kausi [:s (str tyyppi "/" laskentakausi)]})))]
+              (let [existing (ddb/get-item
+                               {:toimija_oppija [:s (str toimija "/" oppija)]
+                                :tyyppi_kausi [:s (str tyyppi "/" kausi)]})]
+                (and (or (empty? existing)
+                         (= (:herate-source existing) (:koski herate-sources))
+                         (= herate-source (:ehoks herate-sources)))
+                     (nil? (:kyselylinkki existing)))))]
         (if (or (= kyselytyyppi "tutkinnon_suorittaneet")
                 (= kyselytyyppi "tutkinnon_osia_suorittaneet"))
           (and (check-db? "tutkinnon_suorittaneet")
                (check-db? "tutkinnon_osia_suorittaneet"))
           (check-db? kyselytyyppi)))
     true
-    (log/info "Tämän kyselyn linkki on jo toimituksessa oppilaalle "
-              oppija " koulutustoimijalla " koulutustoimija
-              "(tyyppi '" kyselytyyppi "' kausi " laskentakausi ")")))
+    (log/info "Ei ylikirjoiteta olemassaolevaa herätettä. Oppija:" oppija
+              "koulutustoimija:" toimija ";" kyselytyyppi kausi)))
+
+(defn delete-other-paattoherate
+  "Jos heräte on päättöheräte, poistaa tietokannasta kaikki eri tyyppiset
+  päättöherätteet (esim. jos heräte on tutkinnon_suorittaneet; poistaa olemassa
+  olevan tutkinnon_osia_suorittaneet -herätteen)."
+  [oppija koulutustoimija laskentakausi kyselytyyppi]
+  (when (or (= kyselytyyppi "tutkinnon_suorittaneet")
+            (= kyselytyyppi "tutkinnon_osia_suorittaneet"))
+    (let [tyyppi (if (= kyselytyyppi "tutkinnon_suorittaneet")
+                   "tutkinnon_osia_suorittaneet"
+                   "tutkinnon_suorittaneet")]
+      (ddb/delete-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
+                        :tyyppi_kausi   [:s (str tyyppi "/" laskentakausi)]}))))
 
 (defn check-valid-herate-date
   "Varmistaa, että herätteen päivämäärä ei ole ennen 1.7.2021."

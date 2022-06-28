@@ -36,7 +36,10 @@
                              koulutustoimija
                              (date-string-to-timestamp (:alkupvm herate)))
                            (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
-                    (ac/save-herate herate opiskeluoikeus koulutustoimija)
+                    (ac/save-herate herate
+                                    opiskeluoikeus
+                                    koulutustoimija
+                                    (:ehoks herate-sources))
                     (log/info "Ei tallenneta kantaan"
                               (str koulutustoimija "/" (:oppija-oid herate))
                               (str (:kyselytyyppi herate)))))

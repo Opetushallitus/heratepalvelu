@@ -120,9 +120,9 @@
 
 (defn mock-check-organisaatio-whitelist-true? [_ _] true)
 
-(defn mock-check-duplicate-herate-true? [_ _ _ _] true)
+(defn mock-check-duplicate-herate-true? [_ _ _ _ _] true)
 
-(defn mock-check-duplicate-herate-false? [_ _ _ _] false)
+(defn mock-check-duplicate-herate-false? [_ _ _ _ _] false)
 
 (defn mock-get-kyselylinkki [_] {:kysely_linkki "https://kysely.linkki/12345"})
 

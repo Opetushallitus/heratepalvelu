@@ -147,7 +147,8 @@
                           (get-kysely-type opiskeluoikeus)
                           vahvistus-pvm)
                         opiskeluoikeus
-                        koulutustoimija)
+                        koulutustoimija
+                        (:koski herate-sources))
                       (log/info "Ei osaamisen hankkimisen tarvetta hoksissa"
                                 (:id hoks)))))))
             (log/info "Käsitelty" (count opiskeluoikeudet)

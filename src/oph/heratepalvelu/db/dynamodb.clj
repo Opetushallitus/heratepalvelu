@@ -142,7 +142,14 @@
                             (.item (map-vals-to-attribute-values item))
                             (cond->
                               (:cond-expr options)
-                              (.conditionExpression (:cond-expr options)))
+                              (.conditionExpression (:cond-expr options))
+                              (:expr-attr-names options)
+                              (.expressionAttributeNames
+                                (:expr-attr-names options))
+                              (:expr-attr-vals options)
+                              (.expressionAttributeValues
+                                (map-vals-to-attribute-values
+                                  (:expr-attr-vals options))))
                             ^PutItemRequest (.build)))))
 
 (defn query-items

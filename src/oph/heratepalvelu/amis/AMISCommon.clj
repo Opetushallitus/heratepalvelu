@@ -24,7 +24,7 @@
 
 (defn save-herate
   "Tarkistaa herätteen ja tallentaa sen tietokantaan."
-  [herate opiskeluoikeus koulutustoimija]
+  [herate opiskeluoikeus koulutustoimija herate-source]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
   (if (some? (c/herate-checker herate))
     (log/error {:herate herate :msg (c/herate-checker herate)})
@@ -45,7 +45,8 @@
       (if (c/check-duplicate-herate? oppija
                                      koulutustoimija
                                      laskentakausi
-                                     kyselytyyppi)
+                                     kyselytyyppi
+                                     herate-source)
         ; Vaikka Arvokyselyä ei tässä tehdä, body-objektia käytetään muuten.
         (let [req-body (arvo/build-arvo-request-body
                          herate
@@ -82,9 +83,20 @@
                :toimipiste-oid      [:s (str (:toimipiste_oid req-body))]
                :hankintakoulutuksen-toteuttaja
                [:s (str (:hankintakoulutuksen_toteuttaja req-body))]
-               :tallennuspvm        [:s (str (c/local-date-now))]}
-              {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
-                               "attribute_not_exists(tyyppi_kausi)")})
+               :tallennuspvm        [:s (str (c/local-date-now))]
+               :herate-source       [:s herate-source]}
+              (if (= herate-source (:ehoks c/herate-sources))
+                {:cond-expr "attribute_not_exists(kyselylinkki)"}
+                {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
+                                 "attribute_not_exists(tyyppi_kausi) OR "
+                                 "attribute_not_exists(kyselylinkki) AND "
+                                 "#source = :koski")
+                 :expr-attr-names {"#source" "herate-source"}
+                 :expr-attr-vals {":koski" [:s (:koski c/herate-sources)]}}))
+            (c/delete-other-paattoherate oppija
+                                         koulutustoimija
+                                         laskentakausi
+                                         kyselytyyppi)
             (try
               (if (= kyselytyyppi "aloittaneet")
                 (ehoks/patch-amis-aloitusherate-kasitelty (:ehoks-id herate))
@@ -103,10 +115,12 @@
                                                           :tunniste
                                                           :koodiarvo])
                  :voimassa-loppupvm     loppupvm}))
-            (catch ConditionalCheckFailedException _
-              (log/warn "Tämän kyselyn linkki on jo toimituksessa oppilaalle"
-                        oppija "koulutustoimijalla:" koulutustoimija "tyyppi:"
-                        kyselytyyppi "kausi:" laskentakausi "request-id:" uuid))
+
+            (catch ConditionalCheckFailedException e
+              (log/warn "Estetty ylikirjoittamasta olemassaolevaa herätettä."
+                        "Oppija:" oppija "koulutustoimijalla:" koulutustoimija
+                        "tyyppi:" kyselytyyppi "kausi:" laskentakausi
+                        "request-id:" uuid "Conditional check exception:" e))
             (catch AwsServiceException e
               (log/error "Virhe tietokantaan tallennettaessa" uuid)
               (throw e))
