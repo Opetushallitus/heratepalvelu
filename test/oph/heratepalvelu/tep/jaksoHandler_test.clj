@@ -263,10 +263,6 @@
 
 (defn- mock-check-duplicate-tunnus [tunnus] (not= tunnus "DUPTNS"))
 
-(defn- mock-get-oppija [oid]
-  (add-to-test-save-jaksotunnus-results {:type "mock-get-oppija" :oid oid})
-  {:henkilö {:syntymäaika "2002-02-03"}})
-
 (deftest test-save-jaksotunnus
   (testing "Varmista, että save-jaksotunnus kutsuu funktioita oikein"
     (with-redefs
@@ -277,8 +273,6 @@
        mock-delete-jaksotunnus
        oph.heratepalvelu.external.arvo/get-toimipiste
        mock-get-toimipiste
-       oph.heratepalvelu.external.koski/get-oppija
-       mock-get-oppija
        oph.heratepalvelu.tep.jaksoHandler/check-duplicate-hankkimistapa
        mock-check-duplicate-hankkimistapa
        oph.heratepalvelu.tep.jaksoHandler/check-duplicate-tunnus
@@ -338,7 +332,6 @@
                          :hankkimistapa-id 4
                          :hankkimistapa-tyyppi "koulutussopimus_01"}
             results [{:type "mock-check-duplicate-hankkimistapa" :tapa-id 1}
-                     {:type "mock-get-oppija" :oid "123.456.789"}
                      {:type "mock-get-toimipiste"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}}}
                      {:type "mock-save-to-tables"
@@ -370,7 +363,7 @@
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
                        :viimeinen_vastauspvm [:s "2022-02-14"]
-                       :rahoitusryhma [:n 1]}
+                       :rahoitusryhma [:n 2]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]
@@ -383,7 +376,6 @@
                        :tutkinto [:s nil]
                        :kasittelytila [:s "ei_niputeta"]}}
                      {:type "mock-check-duplicate-hankkimistapa" :tapa-id 2}
-                     {:type "mock-get-oppija" :oid "123.456.789"}
                      {:type "mock-get-toimipiste"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}}}
                      {:type "mock-get-toimipiste"
@@ -407,7 +399,6 @@
                              :tutkintonimike ()
                              :tutkinnon_osa nil}}
                      {:type "mock-check-duplicate-hankkimistapa" :tapa-id 3}
-                     {:type "mock-get-oppija" :oid "123.456.789"}
                      {:type "mock-get-toimipiste"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}}}
                      {:type "mock-get-toimipiste"
@@ -431,7 +422,6 @@
                              :tutkintonimike ()
                              :tutkinnon_osa nil}}
                      {:type "mock-check-duplicate-hankkimistapa" :tapa-id 4}
-                     {:type "mock-get-oppija" :oid "123.456.789"}
                      {:type "mock-get-toimipiste"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}}}
                      {:type "mock-get-toimipiste"
@@ -484,7 +474,7 @@
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
                        :viimeinen_vastauspvm [:s "2022-02-14"]
-                       :rahoitusryhma [:n 1]}
+                       :rahoitusryhma [:n 2]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]

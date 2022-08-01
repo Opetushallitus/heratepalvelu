@@ -160,8 +160,7 @@
               tutkinto      (get-in suoritus [:koulutusmoduuli
                                               :tunniste
                                               :koodiarvo])
-              oppija        (koski/get-oppija (:oppija-oid herate))
-              rahoitusryhma (c/get-rahoitusryhma oppija opiskeluoikeus alkupvm)
+              rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus alkupvm)
               db-data {:hankkimistapa_id     [:n tapa-id]
                        :hankkimistapa_tyyppi
                        [:s (last (str/split (:hankkimistapa-tyyppi herate)

@@ -53,9 +53,7 @@
                   oph.heratepalvelu.external.arvo/delete-amis-kyselylinkki
                   mock-deactivate-kyselylinkki
                   oph.heratepalvelu.external.ehoks/get-hankintakoulutus-oids
-                  mock-get-hankintakoulutus-oids-empty
-                  oph.heratepalvelu.external.koski/get-oppija
-                  (fn [oid] {:henkilö {:syntymäaika "2000-01-01"}})]
+                  mock-get-hankintakoulutus-oids-empty]
       (do
         (is (thrown? AwsServiceException (-handleAMISherate
                                            nil
@@ -87,9 +85,7 @@
        oph.heratepalvelu.external.ehoks/patch-amis-aloitusherate-kasitelty
        mock-patch-amis-aloitusherate-kasitelty
        oph.heratepalvelu.external.ehoks/patch-amis-paattoherate-kasitelty
-       mock-patch-amis-paattoherate-kasitelty
-       oph.heratepalvelu.external.koski/get-oppija
-       (fn [oid] {:henkilö {:syntymäaika "2000-01-01"}})]
+       mock-patch-amis-paattoherate-kasitelty]
       (do
         (-handleAMISherate nil
                            (mock-handler-event :ehoksherate)

@@ -86,13 +86,6 @@
       (is (true? (erityinen-tuki-voimassa? opiskeluoikeus "2022-02-02")))
       (is (false? (erityinen-tuki-voimassa? opiskeluoikeus "2022-08-09"))))))
 
-(deftest test-is-under-21-on?
-  (testing "Check whether student is under 21 on given date."
-    (let [oppija {:henkilö {:syntymäaika "2000-01-01"}}]
-      (is (true? (is-under-21-on? oppija (LocalDate/of 2020 3 3))))
-      (is (false? (is-under-21-on? oppija (LocalDate/of 2022 12 31))))
-      (is (false? (is-under-21-on? oppija (LocalDate/of 2021 1 1)))))))
-
 (deftest test-has-time-to-answer
   (let [date1 (t/today)
         date2 (t/plus (t/now) (t/days 1))

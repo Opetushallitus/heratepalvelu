@@ -178,9 +178,6 @@
     :url "https://oph-koski.com/opiskeluoikeus/test-oo-oid"
     :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
    {:method :get
-    :url "https://oph-koski.com/oppija/test-oppija-oid"
-    :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
-   {:method :get
     :url "https://oph-organisaatio.com/test-toimipiste"
     :options {:as :json}}
    {:method :get

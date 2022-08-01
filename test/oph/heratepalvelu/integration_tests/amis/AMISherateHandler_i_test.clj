@@ -49,10 +49,6 @@
                           :suorituskieli {:koodiarvo "fi"}
                           :toimipiste {:oid "test-toimipiste-oid"}}]}})
   (mhc/bind-url :get
-                (str (:koski-url mock-env) "/oppija/3.4.5")
-                {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
-                {:body {:henkilö {:syntymäaika "2003-01-01"}}})
-  (mhc/bind-url :get
                 (str (:organisaatio-url mock-env) "test-toimipiste-oid")
                 {:as :json}
                 {:body {:tyypit ["organisaatiotyyppi_03"]}})
@@ -120,10 +116,6 @@
 (def expected-http-results
   [{:method :get
     :url "https://oph-koski.com/opiskeluoikeus/123.5.9876"
-    :options {:basic-auth ["koski-user" "koski-pwd"]
-              :as :json}}
-   {:method :get
-    :url "https://oph-koski.com/oppija/3.4.5"
     :options {:basic-auth ["koski-user" "koski-pwd"]
               :as :json}}
    {:method :get

@@ -38,14 +38,12 @@
           loppupvm  (str loppu-date)
           suoritus (c/get-suoritus opiskeluoikeus)
           oppija (str (:oppija-oid herate))
-          oppija-obj (koski/get-oppija oppija)
           laskentakausi (c/kausi heratepvm)
           uuid (c/generate-uuid)
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
           suorituskieli (str/lower-case
                           (:koodiarvo (:suorituskieli suoritus)))
-          rahoitusryhma (c/get-rahoitusryhma oppija-obj
-                                             opiskeluoikeus
+          rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                              herate-date)]
       (if (c/check-duplicate-herate? oppija
                                      koulutustoimija

@@ -89,19 +89,13 @@
   [opiskeluoikeus date]
   (period-contains-date? (:erityinenTuki (:lisätiedot opiskeluoikeus)) date))
 
-(defn is-under-21-on?
-  "Tarkistaa, onko oppija alle 21-vuotias."
-  [oppija ^LocalDate date]
-  (pos? (compare (:syntymäaika (:henkilö oppija)) (str (.minusYears date 21)))))
-
 (defn get-rahoitusryhma
   "Päättää, mihin rahoitusryhmään oppilas kuuluu. Oppilas kuuluu rahoitusryhmään
-  1 jos hänen opinnot ovat maksuttomia, hän on erityisen tuen opiskelijan, tai
-  hän on alle 21-vuotias herätepäivänä."
-  [oppija opiskeluoikeus ^LocalDate herate-date]
+  1 jos hänen opinnot ovat maksuttomia tai hän on erityisen tuen opiskelijan."
+  [opiskeluoikeus ^LocalDate herate-date]
+  (println opiskeluoikeus)
   (if (or (is-maksuton? opiskeluoikeus (str herate-date))
-          (erityinen-tuki-voimassa? opiskeluoikeus (str herate-date))
-          (is-under-21-on? oppija herate-date))
+          (erityinen-tuki-voimassa? opiskeluoikeus (str herate-date)))
     1
     2))
 

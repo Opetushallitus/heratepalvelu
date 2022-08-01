@@ -66,10 +66,6 @@
                                   [{:alku "2022-01-07"
                                     :tila {:koodiarvo "lasna"}}]}}]}]})
   (mhc/bind-url :get
-                (str (:koski-url mock-env) "/oppija/1.2.3")
-                {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
-                {:body {:henkilö {:syntymäaika "2000-01-01"}}})
-  (mhc/bind-url :get
                 (str (:ehoks-url mock-env) "hoks/opiskeluoikeus/12345")
                 {:headers {:ticket (str "service-ticket"
                                         "/ehoks-virkailija-backend"
@@ -171,10 +167,6 @@
     {:headers
      {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"}
      :as :json}}
-   {:method :get
-    :url (str (:koski-url mock-env) "/oppija/1.2.3")
-    :options {:basic-auth [(:koski-user mock-env) "koski-pwd"]
-              :as :json}}
    {:method :get
     :url (:organisaatio-url mock-env)
     :options {:as :json}}
