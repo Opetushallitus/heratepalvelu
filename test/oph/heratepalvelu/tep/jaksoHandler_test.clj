@@ -383,6 +383,7 @@
                      {:type "mock-create-jaksotunnus"
                       :body {:osa_aikaisuus nil
                              :tyopaikka "Testityöpaikka"
+                             :rahoitusryhma 2
                              :tyopaikka_normalisoitu "testityopaikka"
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "765432-1"
@@ -406,6 +407,7 @@
                      {:type "mock-create-jaksotunnus"
                       :body {:osa_aikaisuus nil
                              :tyopaikka "Testityöpaikka"
+                             :rahoitusryhma 2
                              :tyopaikka_normalisoitu "testityopaikka"
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "111111-1"
@@ -429,6 +431,7 @@
                      {:type "mock-create-jaksotunnus"
                       :body {:osa_aikaisuus nil
                              :tyopaikka "Testityöpaikka"
+                             :rahoitusryhma 2
                              :tyopaikka_normalisoitu "testityopaikka"
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "123456-7"

@@ -93,7 +93,6 @@
   "Päättää, mihin rahoitusryhmään oppilas kuuluu. Oppilas kuuluu rahoitusryhmään
   1 jos hänen opinnot ovat maksuttomia tai hän on erityisen tuen opiskelijan."
   [opiskeluoikeus ^LocalDate herate-date]
-  (println opiskeluoikeus)
   (if (or (is-maksuton? opiskeluoikeus (str herate-date))
           (erityinen-tuki-voimassa? opiskeluoikeus (str herate-date)))
     1

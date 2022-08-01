@@ -100,8 +100,8 @@
 (defn build-arvo-request-body
   "Luo AMISin Arvo-requestin dataobjektin."
   [herate oo request-id koulutustoimija suoritus alkupvm loppupvm rahoitusryhma]
-  ;; TODO käytä rahoitusryhmää
-  {:vastaamisajan_alkupvm          alkupvm
+  {:rahoitusryhma                  rahoitusryhma
+   :vastaamisajan_alkupvm          alkupvm
    :heratepvm                      (:alkupvm herate)
    :vastaamisajan_loppupvm         loppupvm
    :kyselyn_tyyppi                 (:kyselytyyppi herate)
@@ -177,8 +177,8 @@
    suoritus
    niputuspvm
    rahoitusryhma]
-  ; TODO add rahoitusryhmä
-  {:koulutustoimija_oid       koulutustoimija
+  {:rahoitusryhma             rahoitusryhma
+   :koulutustoimija_oid       koulutustoimija
    :tyonantaja                (:tyopaikan-ytunnus herate)
    :tyopaikka                 (:tyopaikan-nimi herate)
    :tyopaikka_normalisoitu    tyopaikka-normalisoitu

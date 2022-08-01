@@ -112,7 +112,8 @@
                       :oppilaitos_oid "test-laitos"
                       :request_id "test-request-id"
                       :toimipiste_oid "test-toimipiste"
-                      :hankintakoulutuksen_toteuttaja "hkt for: 123"}] ;; TODO rahoitusryhmä
+                      :hankintakoulutuksen_toteuttaja "hkt for: 123"
+                      :rahoitusryhma 2}]
         (is (= (arvo/build-arvo-request-body herate
                                              opiskeluoikeus
                                              request-id
@@ -120,7 +121,7 @@
                                              suoritus
                                              alkupvm
                                              loppupvm
-                                             1)
+                                             2)
                expected))))))
 
 (defn- mock-http [method]
@@ -268,7 +269,8 @@
                 :vastaamisajan_alkupvm "2022-03-16"
                 :oppilaitos_oid "test-laitos"
                 :toimipiste_oid "test-toimipiste"
-                :request_id "test-request-id"})))))) ;; TODO rahoitusryhmä
+                :request_id "test-request-id"
+                :rahoitusryhma 2}))))))
 
 (deftest test-create-jaksotunnus
   (testing "Create jaksotunnus"
