@@ -88,7 +88,7 @@
                :hankintakoulutuksen-toteuttaja
                [:s (str (:hankintakoulutuksen_toteuttaja req-body))]
                :tallennuspvm        [:s (str (c/local-date-now))]
-               :rahoitusryhma       [:n rahoitusryhma]
+               :rahoitusryhma       [:s rahoitusryhma]
                :herate-source       [:s herate-source]}
               (if (= herate-source (:ehoks c/herate-sources))
                 {:cond-expr "attribute_not_exists(kyselylinkki)"}

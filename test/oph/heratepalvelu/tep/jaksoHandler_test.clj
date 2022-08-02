@@ -363,7 +363,7 @@
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
                        :viimeinen_vastauspvm [:s "2022-02-14"]
-                       :rahoitusryhma [:n 2]}
+                       :rahoitusryhma [:s "02"]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]
@@ -383,7 +383,7 @@
                      {:type "mock-create-jaksotunnus"
                       :body {:osa_aikaisuus nil
                              :tyopaikka "Testityöpaikka"
-                             :rahoitusryhma 2
+                             :rahoitusryhma "02"
                              :tyopaikka_normalisoitu "testityopaikka"
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "765432-1"
@@ -407,7 +407,7 @@
                      {:type "mock-create-jaksotunnus"
                       :body {:osa_aikaisuus nil
                              :tyopaikka "Testityöpaikka"
-                             :rahoitusryhma 2
+                             :rahoitusryhma "02"
                              :tyopaikka_normalisoitu "testityopaikka"
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "111111-1"
@@ -431,7 +431,7 @@
                      {:type "mock-create-jaksotunnus"
                       :body {:osa_aikaisuus nil
                              :tyopaikka "Testityöpaikka"
-                             :rahoitusryhma 2
+                             :rahoitusryhma "02"
                              :tyopaikka_normalisoitu "testityopaikka"
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "123456-7"
@@ -477,7 +477,7 @@
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
                        :viimeinen_vastauspvm [:s "2022-02-14"]
-                       :rahoitusryhma [:n 2]}
+                       :rahoitusryhma [:s "02"]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]

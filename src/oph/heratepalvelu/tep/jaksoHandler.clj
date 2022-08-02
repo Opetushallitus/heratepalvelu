@@ -199,7 +199,7 @@
                                 koulutustoimija "/" tutkinto)]
                        :tyopaikan_normalisoitu_nimi
                        [:s (c/normalize-string (:tyopaikan-nimi herate))]
-                       :rahoitusryhma        [:n rahoitusryhma]}
+                       :rahoitusryhma        [:s rahoitusryhma]}
               jaksotunnus-table-data
               (cond-> db-data
                 (not-empty (:tyopaikkaohjaaja-email herate))

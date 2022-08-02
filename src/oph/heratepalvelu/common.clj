@@ -95,8 +95,8 @@
   [opiskeluoikeus ^LocalDate herate-date]
   (if (or (is-maksuton? opiskeluoikeus (str herate-date))
           (erityinen-tuki-voimassa? opiskeluoikeus (str herate-date)))
-    1
-    2))
+    "01"
+    "02"))
 
 (defn has-time-to-answer?
   "Tarkistaa, onko aikaa jäljellä ennen annettua päivämäärää."

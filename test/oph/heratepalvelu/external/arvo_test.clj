@@ -113,7 +113,7 @@
                       :request_id "test-request-id"
                       :toimipiste_oid "test-toimipiste"
                       :hankintakoulutuksen_toteuttaja "hkt for: 123"
-                      :rahoitusryhma 2}]
+                      :rahoitusryhma "02"}]
         (is (= (arvo/build-arvo-request-body herate
                                              opiskeluoikeus
                                              request-id
@@ -121,7 +121,7 @@
                                              suoritus
                                              alkupvm
                                              loppupvm
-                                             2)
+                                             "02")
                expected))))))
 
 (defn- mock-http [method]
@@ -270,7 +270,7 @@
                 :oppilaitos_oid "test-laitos"
                 :toimipiste_oid "test-toimipiste"
                 :request_id "test-request-id"
-                :rahoitusryhma 2}))))))
+                :rahoitusryhma 02}))))))
 
 (deftest test-create-jaksotunnus
   (testing "Create jaksotunnus"
