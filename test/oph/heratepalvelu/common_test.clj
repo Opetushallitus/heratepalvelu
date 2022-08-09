@@ -54,6 +54,38 @@
     (is (= (date-string-to-timestamp "1970-01-01") 0))
     (is (= (date-string-to-timestamp "2019-08-01") 1564617600000))))
 
+(deftest test-period-contains-date?
+  (testing "Check whether a given date falls within one of a list of periods."
+    (let [normal [{:alku "2022-03-03" :loppu "2022-03-07"}
+                  {:alku "2022-04-01" :loppu "2022-05-01"}]
+          no-alku [{:loppu "2022-06-06"}]
+          no-loppu [{:alku "2022-01-01"}]]
+      (is (true? (period-contains-date? normal "2022-03-05")))
+      (is (true? (period-contains-date? normal "2022-04-04")))
+      (is (false? (period-contains-date? normal "2022-03-10")))
+      (is (true? (period-contains-date? no-alku "2022-01-03")))
+      (is (false? (period-contains-date? no-alku "2022-07-07")))
+      (is (true? (period-contains-date? no-loppu "2025-07-07")))
+      (is (false? (period-contains-date? no-loppu "2021-12-31"))))))
+
+(deftest test-is-maksuton?
+  (testing "Check whether opiskeluoikeus is free (maksuton)."
+    (let [opiskeluoikeus {:lisätiedot {:maksuttomuus [{:alku "2022-01-01"
+                                                       :loppu "2022-06-30"
+                                                       :maksuton true}
+                                                      {:alku "2022-07-01"
+                                                       :loppu "2022-12-31"
+                                                       :maksuton false}]}}]
+      (is (true? (is-maksuton? opiskeluoikeus "2022-02-02")))
+      (is (false? (is-maksuton? opiskeluoikeus "2022-08-09"))))))
+
+(deftest test-erityinen-tuki-voimassa?
+  (testing "Check whether opiskeluoikeus has erityinen tuki."
+    (let [opiskeluoikeus {:lisätiedot {:erityinenTuki [{:alku "2022-01-01"
+                                                        :loppu "2022-06-30"}]}}]
+      (is (true? (erityinen-tuki-voimassa? opiskeluoikeus "2022-02-02")))
+      (is (false? (erityinen-tuki-voimassa? opiskeluoikeus "2022-08-09"))))))
+
 (deftest test-has-time-to-answer
   (let [date1 (t/today)
         date2 (t/plus (t/now) (t/days 1))

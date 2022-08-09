@@ -39,6 +39,11 @@
                 {:body {:oid "123.5.9876"
                         :koulutustoimija {:oid "test-koulutustoimija-oid"}
                         :oppilaitos {:oid "test-oppilaitos-oid"}
+                        :lisätiedot {:maksuttomuus [{:alku "2020-01-01"
+                                                     :loppu "2022-12-31"
+                                                     :maksuton true}]
+                                     :erityinenTuki [{:alku "2020-01-01"
+                                                      :loppu "2022-12-31"}]}
                         :suoritukset
                         [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
                           :suorituskieli {:koodiarvo "fi"}
@@ -105,6 +110,7 @@
      :oppija-oid [:s "3.4.5"]
      :ehoks-id [:n "456"]
      :rahoituskausi [:s "2021-2022"]
+     :rahoitusryhma [:s "01"]
      :herate-source [:s (:ehoks c/herate-sources)]}})
 
 (def expected-http-results

@@ -6,7 +6,8 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.ehoks :as ehoks])
+            [oph.heratepalvelu.external.ehoks :as ehoks]
+            [oph.heratepalvelu.external.koski :as koski])
   (:import (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
@@ -41,7 +42,9 @@
           uuid (c/generate-uuid)
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
           suorituskieli (str/lower-case
-                          (:koodiarvo (:suorituskieli suoritus)))]
+                          (:koodiarvo (:suorituskieli suoritus)))
+          rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
+                                             herate-date)]
       (if (c/check-duplicate-herate? oppija
                                      koulutustoimija
                                      laskentakausi
@@ -55,7 +58,8 @@
                          koulutustoimija
                          suoritus
                          alkupvm
-                         loppupvm)]
+                         loppupvm
+                         rahoitusryhma)]
           (try
             (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
                       (str kyselytyyppi "/" laskentakausi) ", request-id:"
@@ -84,6 +88,7 @@
                :hankintakoulutuksen-toteuttaja
                [:s (str (:hankintakoulutuksen_toteuttaja req-body))]
                :tallennuspvm        [:s (str (c/local-date-now))]
+               :rahoitusryhma       [:s rahoitusryhma]
                :herate-source       [:s herate-source]}
               (if (= herate-source (:ehoks c/herate-sources))
                 {:cond-expr "attribute_not_exists(kyselylinkki)"}

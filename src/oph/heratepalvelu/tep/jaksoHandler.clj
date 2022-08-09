@@ -153,13 +153,14 @@
   (let [tapa-id (:hankkimistapa-id herate)]
     (when (check-duplicate-hankkimistapa tapa-id)
       (try
-        (let [request-id (c/generate-uuid)
-              niputuspvm (c/next-niputus-date (str (c/local-date-now)))
-              alkupvm    (c/next-niputus-date (:loppupvm herate))
-              suoritus   (c/get-suoritus opiskeluoikeus)
-              tutkinto   (get-in suoritus [:koulutusmoduuli
-                                           :tunniste
-                                           :koodiarvo])
+        (let [request-id    (c/generate-uuid)
+              niputuspvm    (c/next-niputus-date (str (c/local-date-now)))
+              alkupvm       (c/next-niputus-date (:loppupvm herate))
+              suoritus      (c/get-suoritus opiskeluoikeus)
+              tutkinto      (get-in suoritus [:koulutusmoduuli
+                                              :tunniste
+                                              :koodiarvo])
+              rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus alkupvm)
               db-data {:hankkimistapa_id     [:n tapa-id]
                        :hankkimistapa_tyyppi
                        [:s (last (str/split (:hankkimistapa-tyyppi herate)
@@ -197,7 +198,8 @@
                                 (:tyopaikan-ytunnus herate) "/"
                                 koulutustoimija "/" tutkinto)]
                        :tyopaikan_normalisoitu_nimi
-                       [:s (c/normalize-string (:tyopaikan-nimi herate))]}
+                       [:s (c/normalize-string (:tyopaikan-nimi herate))]
+                       :rahoitusryhma        [:s rahoitusryhma]}
               jaksotunnus-table-data
               (cond-> db-data
                 (not-empty (:tyopaikkaohjaaja-email herate))
@@ -253,7 +255,8 @@
                                 request-id
                                 koulutustoimija
                                 suoritus
-                                (str alkupvm)))
+                                (str alkupvm)
+                                rahoitusryhma))
                   tunnus (:tunnus (:body arvo-resp))]
               (try
                 (when (and (some? tunnus) (check-duplicate-tunnus tunnus))

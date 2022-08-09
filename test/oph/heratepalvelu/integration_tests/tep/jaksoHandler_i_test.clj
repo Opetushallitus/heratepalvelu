@@ -86,6 +86,7 @@
                 (str (:arvo-url mock-env) "tyoelamapalaute/v1/vastaajatunnus")
                 {:content-type "application/json"
                  :body (str "{\"osa_aikaisuus\":50,\"tyopaikka\":\"Testi Oy\","
+                            "\"rahoitusryhma\":\"02\","
                             "\"tyopaikka_normalisoitu\":\"testi_oy\","
                             "\"vastaamisajan_alkupvm\":\"2022-02-16\","
                             "\"tyonantaja\":\"123456-7\","
@@ -158,7 +159,8 @@
      :rahoituskausi [:s "2021-2022"]
      :tutkintonimike [:s "(\"test-tutkintonimike\")"]
      :viimeinen_vastauspvm [:s "2022-04-17"]
-     :request_id [:s "test-uuid"]}})
+     :request_id [:s "test-uuid"]
+     :rahoitusryhma [:s "02"]}})
 
 (def expected-nippu-table
   #{{:ohjaaja_ytunnus_kj_tutkinto
@@ -186,6 +188,7 @@
     :url "https://oph-arvo.com/tyoelamapalaute/v1/vastaajatunnus"
     :options {:content-type "application/json"
               :body (str "{\"osa_aikaisuus\":50,\"tyopaikka\":\"Testi Oy\","
+                         "\"rahoitusryhma\":\"02\","
                          "\"tyopaikka_normalisoitu\":\"testi_oy\","
                          "\"vastaamisajan_alkupvm\":\"2022-02-16\","
                          "\"tyonantaja\":\"123456-7\","

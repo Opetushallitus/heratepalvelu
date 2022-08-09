@@ -99,8 +99,9 @@
 
 (defn build-arvo-request-body
   "Luo AMISin Arvo-requestin dataobjektin."
-  [herate opiskeluoikeus request-id koulutustoimija suoritus alkupvm loppupvm]
-  {:vastaamisajan_alkupvm          alkupvm
+  [herate oo request-id koulutustoimija suoritus alkupvm loppupvm rahoitusryhma]
+  {:rahoitusryhma                  rahoitusryhma
+   :vastaamisajan_alkupvm          alkupvm
    :heratepvm                      (:alkupvm herate)
    :vastaamisajan_loppupvm         loppupvm
    :kyselyn_tyyppi                 (:kyselytyyppi herate)
@@ -109,10 +110,9 @@
                                                      :koodiarvo])
    :tutkinnon_suorituskieli        (str/lower-case
                                      (:koodiarvo (:suorituskieli suoritus)))
-   :osaamisala                     (get-osaamisalat suoritus
-                                                    (:oid opiskeluoikeus))
+   :osaamisala                     (get-osaamisalat suoritus (:oid oo))
    :koulutustoimija_oid            koulutustoimija
-   :oppilaitos_oid                 (:oid (:oppilaitos opiskeluoikeus))
+   :oppilaitos_oid                 (:oid (:oppilaitos oo))
    :request_id                     request-id
    :toimipiste_oid                 (get-toimipiste suoritus)
    :hankintakoulutuksen_toteuttaja (get-hankintakoulutuksen-toteuttaja
@@ -175,8 +175,10 @@
    request-id
    koulutustoimija
    suoritus
-   niputuspvm]
-  {:koulutustoimija_oid       koulutustoimija
+   niputuspvm
+   rahoitusryhma]
+  {:rahoitusryhma             rahoitusryhma
+   :koulutustoimija_oid       koulutustoimija
    :tyonantaja                (:tyopaikan-ytunnus herate)
    :tyopaikka                 (:tyopaikan-nimi herate)
    :tyopaikka_normalisoitu    tyopaikka-normalisoitu
