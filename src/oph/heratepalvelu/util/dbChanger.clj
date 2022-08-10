@@ -2,7 +2,8 @@
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [environ.core :refer [env]]
             [clj-time.core :as t]
-            [clojure.tools.logging :as log])
+            [clojure.tools.logging :as log]
+            [oph.heratepalvelu.common :as c])
   (:import (software.amazon.awssdk.services.dynamodb.model ScanRequest AttributeValue)))
 
 (gen-class
@@ -32,18 +33,11 @@
                      :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
-        (let [rahoitusryhma (c/get-rah item)]
-          (println rahoitusryhma)
-          (if rahoitusryhma
-            (ddb/update-item
-              {:hankkimistapa_id [:n (:hankkimistapa_id item)]}
-              {:update-expr "SET #value1 = :value1"
-               :expr-attr-names {"#value1" "rahoitusryhma"}
-               :expr-attr-vals {":value1" [:s rahoitusryhma]}}
-              (:jaksotunnus-table env))
-            (arvo/patch-vastaajatunnus (:tunnus item) {:rahoitusryhma rahoitusryhma})
-            (catch Exception e
-              (log/error e))))
+        (let [opiskeluoikeus (get-opiskeluoikeus-catch-404
+                               (:opiskeluoikeus-oid item))
+              rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
+                                                 (LocalDate/parse (:alkupvm item)))]
+          (println (str (:alkupvm item) " - " rahoitusryhma)))
         (when (.hasLastEvaluatedKey resp)
           (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
                         :filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
@@ -54,6 +48,6 @@
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
                {filter-expression (str "attribute_not_exists(rahoitusryhma) "
-                                       "AND loppupvm >= :pvm ")
-                :expr-attr-vals {":value1" (.build (.s (AttributeValue/builder) "phone-mismatch"))}
+                                       "AND alkupvm >= :pvm ")
+                :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
