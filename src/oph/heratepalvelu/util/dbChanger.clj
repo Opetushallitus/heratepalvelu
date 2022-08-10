@@ -38,13 +38,8 @@
               rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                                  (LocalDate/parse (:alkupvm item)))]
           (println (str (:alkupvm item) " - " rahoitusryhma)))
-        (when (.hasLastEvaluatedKey resp)
-          (recur (scan {:exclusive-start-key (.lastEvaluatedKey resp)
-                        :filter-expression (str "attribute_not_exists(oppisopimuksen_perusta) "
-                                                "AND hankkimistapa_tyyppi = :htp "
-                                                "AND jakso_loppupvm >= :pvm "
-                                                "AND dbchangerin_kasittelema <> :dbc")
-                        :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}}))))
+        (catch Exception e
+          (log/error e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
                {filter-expression (str "attribute_not_exists(rahoitusryhma) "
