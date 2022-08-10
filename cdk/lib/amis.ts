@@ -481,7 +481,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         table: AMISherateTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-dbChanger`
       },
-      handler: "oph.heratepalvelu.util.dbChanger::dbChanger",
+      handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
       memorySize: 1024,
       reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(900),
