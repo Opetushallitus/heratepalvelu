@@ -3,8 +3,10 @@
             [environ.core :refer [env]]
             [clj-time.core :as t]
             [clojure.tools.logging :as log]
-            [oph.heratepalvelu.common :as c])
-  (:import (software.amazon.awssdk.services.dynamodb.model ScanRequest AttributeValue)))
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.external.koski :as koski])
+  (:import (software.amazon.awssdk.services.dynamodb.model ScanRequest AttributeValue)
+           (java.time LocalDate)))
 
 (gen-class
   :name "oph.heratepalvelu.util.dbChanger"
@@ -33,7 +35,7 @@
                      :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
-        (let [opiskeluoikeus (get-opiskeluoikeus-catch-404
+        (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
                                (:opiskeluoikeus-oid item))
               rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                                  (LocalDate/parse (:alkupvm item)))]
@@ -42,7 +44,7 @@
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
-               {filter-expression (str "attribute_not_exists(rahoitusryhma) "
+               {:filter-expression (str "attribute_not_exists(rahoitusryhma) "
                                        "AND alkupvm >= :pvm ")
                 :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
