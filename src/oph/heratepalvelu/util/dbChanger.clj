@@ -40,7 +40,7 @@
               rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                                  (LocalDate/parse (:alkupvm item)))]
           (println item)
-          (println rahoitusryhma)
+          (println rahoitusryhma))
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
