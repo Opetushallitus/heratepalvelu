@@ -8,7 +8,7 @@
 
 (gen-class
   :name "oph.heratepalvelu.util.dbChanger"
-  :methods [[^:static handleDBUpdate
+  :methods [[^:static dbChanger
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
