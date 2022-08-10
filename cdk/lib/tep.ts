@@ -518,23 +518,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     nippuTable.grantReadWriteData(archiveNippuTable);
     nippuArchive2021_2022Table.grantReadWriteData(archiveNippuTable);*/
 
-    const rahoitusryhmaJalkiajo = new lambda.Function(this, "rahoitusryhmaJalkiajo", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        jaksotunnus_table: jaksotunnusTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-rahoitusryhmaJalkiajo`,
-      },
-      memorySize: Token.asNumber(1024),
-      reservedConcurrentExecutions: 1,
-      timeout: Duration.seconds(900),
-      handler: "oph.heratepalvelu.tep.archiveJaksoTable::handleRahoitusRyhmaJalkiajo",
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    jaksotunnusTable.grantReadWriteData(rahoitusryhmaJalkiajo);
-
     // IAM
 
     [
