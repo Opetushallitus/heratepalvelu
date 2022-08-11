@@ -33,7 +33,9 @@
 (defn -handleDBUpdate [this event context]
   (loop [resp (scan {:filter-expression (str "attribute_not_exists(rahoitusryhma) "
                                              "AND lahetystila = :tila")
-                     :expr-attr-vals {":tila" [:s "ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"]}})]
+                     :expr-attr-vals    {":tila" (.build (.s
+                                                           (AttributeValue/builder)
+                                                           "phone-ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
@@ -52,5 +54,7 @@
       (recur (scan
                {:filter-expression (str "attribute_not_exists(rahoitusryhma) "
                                         "AND lahetystila = :tila")
-                :expr-attr-vals {":tila" [:s "ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"]}
+                :expr-attr-vals    {":tila" (.build (.s
+                                                      (AttributeValue/builder)
+                                                      "phone-ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"))}
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
