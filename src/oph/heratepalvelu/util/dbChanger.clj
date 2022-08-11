@@ -24,7 +24,7 @@
                   (.exclusiveStartKey (:exclusive-start-key options))
                   (:expr-attr-vals options)
                   (.expressionAttributeValues (:expr-attr-vals options)))
-                (.tableName (:herate_table env))
+                (.tableName (:herate-table env))
                 (.build))
         response (.scan ddb/ddb-client req)]
     (log/info (count (.items response)))
