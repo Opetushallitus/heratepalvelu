@@ -35,7 +35,7 @@
                                              "AND lahetystila = :tila")
                      :expr-attr-vals    {":tila" (.build (.s
                                                            (AttributeValue/builder)
-                                                           "phone-ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"))}})]
+                                                           "ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
@@ -56,5 +56,5 @@
                                         "AND lahetystila = :tila")
                 :expr-attr-vals    {":tila" (.build (.s
                                                       (AttributeValue/builder)
-                                                      "phone-ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"))}
+                                                      "ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"))}
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
