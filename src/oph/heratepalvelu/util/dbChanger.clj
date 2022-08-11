@@ -64,7 +64,7 @@
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
-                               (:opiskeluoikeus-oid item))
+                               (:opiskeluoikeus_oid item))
               rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                                  (LocalDate/parse (:jakso_loppupvm item)))]
           (println (str rahoitusryhma " " (:jakso_loppupvm item))))
