@@ -479,6 +479,23 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       enabled: false
     });
 
+    const dbChanger = new lambda.Function(this, "dbChanger", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        table: jaksotunnusTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-dbChanger`
+      },
+      handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdateTep",
+      memorySize: 1024,
+      reservedConcurrentExecutions: 1,
+      timeout: Duration.seconds(900),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    jaksotunnusTable.grantReadWriteData(dbChanger);
+
  /*   // Arkistointifunktiot
     const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,

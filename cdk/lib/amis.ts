@@ -478,7 +478,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       code: lambdaCode,
       environment: {
         ...this.envVars,
-        herate_table: AMISherateTable.tableName,
+        table: AMISherateTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-dbChanger`
       },
       handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
