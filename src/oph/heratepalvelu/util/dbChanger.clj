@@ -40,7 +40,11 @@
                                (:opiskeluoikeus-oid item))
               rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                                  (LocalDate/parse (:alkupvm item)))]
-          (println (str rahoitusryhma " " (:alkupvm item))))
+          (println rahoitusryhma)
+          (when (some? rahoitusryhma)
+            (ac/update-herate
+              item
+              {:rahoitusryhma [:s rahoitusryhma]})))
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
