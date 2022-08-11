@@ -59,8 +59,7 @@
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
 
 (defn -handleDBUpdateTep [this event context]
-  (loop [resp (scan {:filter-expression (str "attribute_not_exists(rahoitusryhma) "
-                                             "AND jakso_loppupvm = :pvm")
+  (loop [resp (scan {:filter-expression (str "jakso_loppupvm >= :pvm")
                      :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
@@ -73,8 +72,7 @@
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
-               {:filter-expression (str "attribute_not_exists(rahoitusryhma) "
-                                        "AND jakso_loppupvm = :pvm")
+               {:filter-expression (str "jakso_loppupvm >= :pvm")
                 :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
 

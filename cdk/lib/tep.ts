@@ -479,13 +479,13 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       enabled: false
     });
 
-    const dbChanger = new lambda.Function(this, "dbChanger", {
+    const dbChangerTep = new lambda.Function(this, "dbChangerTep", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       environment: {
         ...this.envVars,
         table: jaksotunnusTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-dbChanger`
+        caller_id: `1.2.246.562.10.00000000001.${id}-dbChangerTep`
       },
       handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdateTep",
       memorySize: 1024,
@@ -494,7 +494,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE
     });
 
-    jaksotunnusTable.grantReadWriteData(dbChanger);
+    jaksotunnusTable.grantReadWriteData(dbChangerTep);
 
  /*   // Arkistointifunktiot
     const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {
@@ -546,6 +546,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tepSmsHandler,
       SmsMuistutusHandler,
       EmailMuistutusHandler,
+      dbChangerTep,
   //    archiveJaksoTable,
   //    archiveNippuTable,
     ].forEach(
