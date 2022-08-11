@@ -32,29 +32,20 @@
 
 (defn -handleDBUpdate [this event context]
   (loop [resp (scan {:filter-expression (str "attribute_not_exists(rahoitusryhma) "
-                                             "AND lahetystila = :tila")
-                     :expr-attr-vals    {":tila" (.build (.s
-                                                           (AttributeValue/builder)
-                                                           "ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"))}})]
+                                             "AND alkupvm >= :pvm ")
+                     :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-08-11"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
                                (:opiskeluoikeus-oid item))
               rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                                  (LocalDate/parse (:alkupvm item)))]
-          (println rahoitusryhma)
-          (when (some? rahoitusryhma)
-            (ac/update-herate
-              item
-              {:rahoitusryhma [:s rahoitusryhma]
-               :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]})))
+          (println (str rahoitusryhma " " (:alkupvm item))))
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
                {:filter-expression (str "attribute_not_exists(rahoitusryhma) "
-                                        "AND lahetystila = :tila")
-                :expr-attr-vals    {":tila" (.build (.s
-                                                      (AttributeValue/builder)
-                                                      "ei_lahetetty_TEMP_RAHOITUSRYHMA_FIX"))}
+                                        "AND alkupvm >= :pvm ")
+                :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-08-11"))}
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
