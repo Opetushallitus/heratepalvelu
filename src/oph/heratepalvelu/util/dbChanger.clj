@@ -6,7 +6,8 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
-            [oph.heratepalvelu.tep.tepCommon :as tc])
+            [oph.heratepalvelu.tep.tepCommon :as tc]
+            [oph.heratepalvelu.external.arvo :as arvo])
   (:import (software.amazon.awssdk.services.dynamodb.model ScanRequest AttributeValue)
            (java.time LocalDate)))
 
@@ -67,7 +68,12 @@
                                (:opiskeluoikeus_oid item))
               rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                                  (LocalDate/parse (:jakso_loppupvm item)))]
-          (println (str rahoitusryhma " " (:jakso_loppupvm item))))
+          (println (str rahoitusryhma " " (:jakso_loppupvm item)))
+          (when (some? rahoitusryhma)
+            (tc/update-jakso
+              item
+              {:rahoitusryhma [:s rahoitusryhma]})
+            (arvo/patch-vastaajatunnus (:tunnus item) {:rahoitusryhma rahoitusryhma})))
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
@@ -75,4 +81,3 @@
                {:filter-expression (str "jakso_loppupvm >= :pvm")
                 :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
-
