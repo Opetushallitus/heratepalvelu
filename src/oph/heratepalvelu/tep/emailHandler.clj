@@ -121,7 +121,14 @@
             (when (some? osoite)
               (let [id (:id (send-survey-email nippu oppilaitokset osoite))
                     lahetyspvm (str (c/local-date-now))]
-                (email-sent-update-item nippu id lahetyspvm osoite)))
+                (email-sent-update-item nippu id lahetyspvm osoite)
+                (when-not (= (:niputuspvm nippu) lahetyspvm)
+                  (log/warn
+                    (str "Nipun "
+                         (:ohjaaja_ytunnus_kj_tutkinto nippu)
+                         " niputuspvm " (:niputuspvm nippu)
+                         " ja lahetyspvm " lahetyspvm
+                         " eroavat toisistaan.")))))
             (no-time-to-answer-update-item nippu))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (do-nippu-query))))))

@@ -40,10 +40,10 @@
 (defn update-status-to-db
   "Päivittää tiedot tietokantaan, kun SMS-viesti on lähetetty
   viestintäpalveluun. Parametrin status pitäisi olla string."
-  [status puhelinnumero nippu new-loppupvm]
+  [status puhelinnumero nippu new-loppupvm lahetyspvm]
   (try
     (let [updates {:sms_kasittelytila [:s status]
-                   :sms_lahetyspvm    [:s (str (c/local-date-now))]
+                   :sms_lahetyspvm    [:s lahetyspvm]
                    :sms_muistutukset  [:n 0]
                    :lahetettynumeroon [:s puhelinnumero]}
           updates (if new-loppupvm
@@ -146,11 +146,20 @@
                                                 :messages
                                                 (keyword puhelinnumero)
                                                 :converted])
-                        new-loppupvm (tc/get-new-loppupvm nippu)]
+                        new-loppupvm (tc/get-new-loppupvm nippu)
+                        lahetyspvm (str (c/local-date-now))]
                     (update-status-to-db status
                                          (or converted puhelinnumero)
                                          nippu
-                                         new-loppupvm)
+                                         new-loppupvm
+                                         lahetyspvm)
+                    (when-not (= (:niputuspvm nippu) lahetyspvm)
+                      (log/warn
+                        (str "Nipun "
+                             (:ohjaaja_ytunnus_kj_tutkinto nippu)
+                             " niputuspvm " (:niputuspvm nippu)
+                             " ja sms-lahetyspvm " lahetyspvm
+                             " eroavat toisistaan.")))
                     (arvo/patch-nippulinkki (:kyselylinkki nippu)
                                             (update-arvo-obj-sms status
                                                                  new-loppupvm)))
