@@ -69,10 +69,11 @@
                                 [:s (:success c/kasittelytilat)]
                                 :sms_lahetyspvm [:s "2021-12-20"]
                                 :lahetettynumeroon [:s "+358 12 345 6789"]
-                                :sms_muistutukset [:n 0]}}]
-        (sh/update-status-to-db status puhelinnumero nippu new-loppupvm)
+                                :sms_muistutukset [:n 0]}}
+            lahetyspvm (str (c/local-date-now))]
+        (sh/update-status-to-db status puhelinnumero nippu new-loppupvm lahetyspvm)
         (is (= results1 @test-update-status-to-db-results))
-        (sh/update-status-to-db status puhelinnumero nippu nil)
+        (sh/update-status-to-db status puhelinnumero nippu nil lahetyspvm)
         (is (= results2 @test-update-status-to-db-results))))))
 
 (def test-ohjaaja-puhnro-results (atom []))
