@@ -36,6 +36,12 @@ tai sitä ei löydy. Tämän voi yleensä korjata asentamalla kyseisen palvelun 
 uudestaan.
 
 
+## Nipun (:ohjaaja_ytunnus_kj_tutkinto nippu) niputuspvm ja lahetyspvm eroavat toisistaan
+
+Tätä virhettä on hyvä etsiä niputuspäivien jälkeen logeilta. Jos virhe löytyy, niin kannattaa tarkastaa
+että kaikki on sujunut normaalisti ja mahdollinen syy, miksi nuo päivät eroavat toisistaan.
+
+
 ## Muu huomioitava
 
 Valvontakanaviin tulee jatkuvasti tosi paljon viestejä, jotka eivät liity
