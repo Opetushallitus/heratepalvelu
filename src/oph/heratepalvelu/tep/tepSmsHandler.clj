@@ -153,16 +153,16 @@
                                          nippu
                                          new-loppupvm
                                          lahetyspvm)
+                    (arvo/patch-nippulinkki (:kyselylinkki nippu)
+                                            (update-arvo-obj-sms status
+                                                                 new-loppupvm))
                     (when-not (= (:niputuspvm nippu) lahetyspvm)
                       (log/warn
                         (str "Nipun "
                              (:ohjaaja_ytunnus_kj_tutkinto nippu)
                              " niputuspvm " (:niputuspvm nippu)
                              " ja sms-lahetyspvm " lahetyspvm
-                             " eroavat toisistaan.")))
-                    (arvo/patch-nippulinkki (:kyselylinkki nippu)
-                                            (update-arvo-obj-sms status
-                                                                 new-loppupvm)))
+                             " eroavat toisistaan."))))
                   (catch AwsServiceException e
                     (log/error "SMS-viestin lähetysvaiheen kantapäivityksessä"
                                "tapahtui virhe!")
