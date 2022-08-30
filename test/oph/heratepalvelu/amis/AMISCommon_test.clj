@@ -1,7 +1,8 @@
 (ns oph.heratepalvelu.amis.AMISCommon-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
-            [oph.heratepalvelu.common :as c])
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.integration-tests.mock-db :as mdb])
   (:import (java.time LocalDate)))
 
 ;; Testaa get-item-by-kyselylinkki
@@ -97,6 +98,7 @@
        mock-has-nayttotutkintoonvalmistavakoulutus?
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 17))
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item
+       oph.heratepalvelu.db.dynamodb/delete-item mdb/delete-item
        oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
        mock-create-amis-kyselylinkki
        oph.heratepalvelu.external.arvo/create-amis-kyselylinkki-catch-404
@@ -194,7 +196,7 @@
                       :oppija "56.78.34"
                       :koulutustoimija "3.4.5.6"
                       :laskentakausi "2021-2022"
-                      :kyselytyyppi "tutkinnonsuorittaneet"
+                      :kyselytyyppi "tutkinnon_suorittaneet"
                       :herate-source (:koski c/herate-sources)}
                      {:type "mock-get-osaamisalat"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}
