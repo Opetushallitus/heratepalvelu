@@ -41,9 +41,11 @@
           (if (c/valid-number? (:puhelinnumero herate))
             (try
               (let [numero (:puhelinnumero herate)
-                    body (elisa/amis-msg-body (:kyselylinkki herate))
+                    oppilaitos (c/get-oppilaitokset (:oppilaitos herate))
+                    body (elisa/amis-msg-body (:kyselylinkki herate) oppilaitos)
                     resp (elisa/send-sms numero body)
                     results (get-in resp [:body :messages (keyword numero)])]
+                (println body)
                 (ac/update-herate
                   herate ;; TODO onko meillä uusi loppupvm välitettävä Arvoon?
                   {:sms-lahetystila   [:s (:status results)]

@@ -46,10 +46,12 @@
                 "https://viestipalvelu-api.elisa.fi/api/v1/"
                 {:headers {:Authorization "apikey elisa-apikey"
                            :content-type "application/json"}
+                 ;; TODO korjaa testi mockaamaan oppilaitoksen haku
                  :body    (generate-string {:sender "OPH"
                                             :destination ["12345"]
                                             :text (elisa/amis-msg-body
-                                                    "kysely.linkki/4")})
+                                                    "kysely.linkki/4"
+                                                    {:fi ""})})
                  :as      :json}
                 {:body {:messages {:12345 {:converted "+358 12345"
                                            :status "CREATED"}}}})
@@ -106,7 +108,7 @@
                :content-type "application/json"}
      :body    (generate-string {:sender "OPH"
                                 :destination ["12345"]
-                                :text (elisa/amis-msg-body "kysely.linkki/4")})
+                                :text (elisa/amis-msg-body "kysely.linkki/4" {:fi ""})})
      :as      :json}}])
 
 (deftest test-AMISSMSHerate-integration

@@ -31,7 +31,7 @@
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (try
           (let [jaksot (tc/get-jaksot-for-nippu nippu)
-                laitokset (tc/get-oppilaitokset jaksot)
+                laitokset (c/get-oppilaitokset jaksot)
                 body (elisa/tep-muistutus-msg-body (:kyselylinkki nippu)
                                                    laitokset)
                 resp (elisa/send-sms (:lahetettynumeroon nippu) body)

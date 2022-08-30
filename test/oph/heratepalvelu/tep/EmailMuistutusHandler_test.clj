@@ -149,7 +149,7 @@
        mock-update-item-cannot-answer
        oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
        mock-get-jaksot-for-nippu
-       oph.heratepalvelu.tep.tepCommon/get-oppilaitokset
+       oph.heratepalvelu.common/get-oppilaitokset
        mock-get-oppilaitokset]
       (let [muistutettavat [{:kyselylinkki "kysely.linkki/vastattu_QWERTY"}
                             {:kyselylinkki "kysely.linkki/ei_vastattu_YUOIOP"}

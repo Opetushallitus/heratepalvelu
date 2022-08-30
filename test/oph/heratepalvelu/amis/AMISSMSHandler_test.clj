@@ -68,9 +68,10 @@
                        :options {:sms-lahetyspvm [:s "2022-03-03"]
                                  :sms-lahetystila
                                  [:s (:phone-invalid c/kasittelytilat)]}}
+                      ;; TODO korjaa testi mockaamaan oppilaitoksen haku
                       {:type "mock-send-sms"
                        :numero "12345"
-                       :body (elisa/amis-msg-body "kysely.linkki/123")}
+                       :body (elisa/amis-msg-body "kysely.linkki/123" {:fi ""})}
                       {:type "mock-update-herate"
                        :herate {:voimassa-loppupvm "2022-04-04"
                                 :puhelinnumero "12345"

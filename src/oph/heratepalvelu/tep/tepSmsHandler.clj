@@ -102,7 +102,7 @@
         (when-not (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
           (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
             (let [jaksot (tc/get-jaksot-for-nippu nippu)
-                  oppilaitokset (tc/get-oppilaitokset jaksot)
+                  oppilaitokset (c/get-oppilaitokset jaksot)
                   puhelinnumero (ohjaaja-puhnro nippu jaksot)
                   sms-kasittelytila (:sms_kasittelytila nippu)]
               (when (and (some? puhelinnumero)

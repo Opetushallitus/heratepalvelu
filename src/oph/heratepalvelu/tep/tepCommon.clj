@@ -45,16 +45,6 @@
           nil
           items))
 
-(defn get-oppilaitokset
-  "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaiton-kentän
-  perusteella."
-  [jaksot]
-  (try
-    (seq (set (map #(:nimi (org/get-organisaatio (:oppilaitos %1))) jaksot)))
-    (catch Exception e
-      (log/error "Virhe kutsussa organisaatiopalveluun")
-      (log/error e))))
-
 (defn update-nippu
   "Wrapper update-itemin ympäri, joka yksinkertaistaa tietokantapäivitykset."
   ([nippu updates] (update-nippu nippu updates {}))
