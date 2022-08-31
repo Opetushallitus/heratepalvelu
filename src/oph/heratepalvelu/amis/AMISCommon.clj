@@ -59,16 +59,11 @@
                          suoritus
                          alkupvm
                          loppupvm
-                         rahoitusryhma)]
-          (try
-            (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
-                      (str kyselytyyppi "/" laskentakausi) ", request-id:"
-                      uuid)
-            (ddb/put-item
+                         rahoitusryhma)
+              db-data
               {:toimija_oppija      [:s (str koulutustoimija "/" oppija)]
                :tyyppi_kausi        [:s (str kyselytyyppi "/" laskentakausi)]
                :sahkoposti          [:s (:sahkoposti herate)]
-               :puhelinnumero       [:s (:puhelinnumero herate)]
                :suorituskieli       [:s suorituskieli]
                :lahetystila         [:s (:ei-lahetetty c/kasittelytilat)]
                :sms-lahetystila     [:s (if (or
@@ -98,6 +93,17 @@
                :tallennuspvm        [:s (str (c/local-date-now))]
                :rahoitusryhma       [:s rahoitusryhma]
                :herate-source       [:s herate-source]}
+              db-data-cond-values
+              (cond-> db-data
+                      (not-empty (:puhelinnumero herate))
+                      (assoc :puhelinnumero [:s (:puhelinnumero herate)]))]
+          (try
+            (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
+                      (str kyselytyyppi "/" laskentakausi) ", request-id:"
+                      uuid)
+
+            (ddb/put-item
+              db-data-cond-values
               (if (= herate-source (:ehoks c/herate-sources))
                 {:cond-expr "attribute_not_exists(kyselylinkki)"}
                 {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
