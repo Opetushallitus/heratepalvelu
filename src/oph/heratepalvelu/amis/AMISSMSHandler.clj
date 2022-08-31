@@ -5,7 +5,8 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.elisa :as elisa]
-            [oph.heratepalvelu.log.caller-log :as cl])
+            [oph.heratepalvelu.log.caller-log :as cl]
+            [oph.heratepalvelu.external.organisaatio :as org])
   (:import (clojure.lang ExceptionInfo)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
@@ -41,10 +42,13 @@
           (if (c/valid-number? (:puhelinnumero herate))
             (try
               (let [numero (:puhelinnumero herate)
-                    oppilaitos (c/get-oppilaitokset (:oppilaitos herate))
-                    body (elisa/amis-msg-body (:kyselylinkki herate) oppilaitos)
+                    oppilaitos (org/get-organisaatio (:oppilaitos herate))
+                    oppilaitos-nimi (:fi (:nimi oppilaitos))
+                    body (elisa/amis-msg-body (:kyselylinkki herate) oppilaitos-nimi)
                     resp (elisa/send-sms numero body)
                     results (get-in resp [:body :messages (keyword numero)])]
+                (println oppilaitos)
+                (println oppilaitos-nimi)
                 (println body)
                 (ac/update-herate
                   herate ;; TODO onko meillä uusi loppupvm välitettävä Arvoon?

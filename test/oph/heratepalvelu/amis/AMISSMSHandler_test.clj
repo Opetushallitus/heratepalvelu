@@ -40,6 +40,11 @@
 (defn- mock-update-herate [herate options]
   (add-to-results {:type "mock-update-herate" :herate herate :options options}))
 
+(defn- mock-get-organisaatio [oppilaitos]
+  (add-to-results {:type "mock-get-organisaatio"
+                                         :oppilaitos oppilaitos})
+  {:nimi {:fi "Testilaitos" :en "Test Dept." :sv "Testanstalt"}})
+
 (defn- mock-send-sms [numero body]
   (add-to-results {:type "mock-send-sms" :numero numero :body body})
   {:body {:messages {:12345 {:status "test-status" :converted "+358 12345"}}}})
@@ -55,6 +60,8 @@
                   oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2022 3 3))
                   oph.heratepalvelu.common/valid-number? mock-valid-number?
+                  oph.heratepalvelu.external.organisaatio/get-organisaatio
+                  mock-get-organisaatio
                   oph.heratepalvelu.external.elisa/send-sms mock-send-sms]
       (let [expected [{:type "mock-query-lahetettavat" :limit 20}
                       {:type "mock-update-herate"
@@ -68,10 +75,12 @@
                        :options {:sms-lahetyspvm [:s "2022-03-03"]
                                  :sms-lahetystila
                                  [:s (:phone-invalid c/kasittelytilat)]}}
-                      ;; TODO korjaa testi mockaamaan oppilaitoksen haku
+                      ;; TODO korjaa testi
+                      {:type "mock-get-organisaatio"
+                       :oppilaitos nil}
                       {:type "mock-send-sms"
                        :numero "12345"
-                       :body (elisa/amis-msg-body "kysely.linkki/123" {:fi ""})}
+                       :body (elisa/amis-msg-body "kysely.linkki/123" "Testilaitos")}
                       {:type "mock-update-herate"
                        :herate {:voimassa-loppupvm "2022-04-04"
                                 :puhelinnumero "12345"

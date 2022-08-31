@@ -83,7 +83,7 @@
        "\n\n"
        linkki
        "\n\n"
-       (str/join ", " (map :fi oppilaitos))
+       oppilaitos
        "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
