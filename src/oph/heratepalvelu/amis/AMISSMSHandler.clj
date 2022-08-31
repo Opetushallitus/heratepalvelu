@@ -47,11 +47,8 @@
                     body (elisa/amis-msg-body (:kyselylinkki herate) oppilaitos-nimi)
                     resp (elisa/send-sms numero body)
                     results (get-in resp [:body :messages (keyword numero)])]
-                (println oppilaitos)
-                (println oppilaitos-nimi)
-                (println body)
                 (ac/update-herate
-                  herate ;; TODO onko meillä uusi loppupvm välitettävä Arvoon?
+                  herate ;; TODO uuden alkupvm asettaminen
                   {:sms-lahetystila   [:s (:status results)]
                    :sms-lahetyspvm    [:s (str (c/local-date-now))]
                    :lahetettynumeroon [:s (or (:converted results) numero)]}))
