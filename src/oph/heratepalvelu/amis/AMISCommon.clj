@@ -97,7 +97,6 @@
               (cond-> db-data
                       (not-empty (:puhelinnumero herate))
                       (assoc :puhelinnumero [:s (:puhelinnumero herate)]))]
-          (println db-data-cond-values)
           (try
             (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
                       (str kyselytyyppi "/" laskentakausi) ", request-id:"
