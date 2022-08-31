@@ -246,7 +246,7 @@
        mock-no-time-to-answer-update-item
        oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
        mock-get-jaksot-for-nippu
-       oph.heratepalvelu.tep.tepCommon/get-oppilaitokset
+       oph.heratepalvelu.common/get-oppilaitokset
        mock-get-oppilaitokset]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)

@@ -161,7 +161,8 @@
     (let [hoks {:id "1234.15.67890"
                 :opiskeluoikeus-oid "123.456.789"
                 :oppija-oid "987.654.321"
-                :sahkoposti "a@b.com"}
+                :sahkoposti "a@b.com"
+                :puhelinnumero "1234567"}
           kyselytyyppi "aloittaneet"
           alkupvm "2021-10-10"
           expected {:ehoks-id "1234.15.67890"
@@ -169,6 +170,7 @@
                     :opiskeluoikeus-oid "123.456.789"
                     :oppija-oid "987.654.321"
                     :sahkoposti "a@b.com"
+                    :puhelinnumero "1234567"
                     :alkupvm "2021-10-10"}]
       (is (= (parse-herate hoks kyselytyyppi alkupvm) expected)))))
 
@@ -272,12 +274,12 @@
                "get-hoks-by-opiskeluoikeus: "
                opiskeluoikeus-oid
                " "))
-
   {:osaamisen-hankkimisen-tarve true
    :id "123.456.789"
    :opiskeluoikeus-oid "1.2.3"
    :oppija-oid "7.8.9"
-   :sahkoposti "a@b.com"})
+   :sahkoposti "a@b.com"
+   :puhelinnumero "1234567"})
 
 (defn- mock-get-kysely-type [_]
   (reset! test-handleUpdatedOpiskeluoikeus-results
@@ -349,6 +351,7 @@
                           ":kyselytyyppi \"tutkinnon_suorittaneet\", "
                           ":opiskeluoikeus-oid \"1.2.3\", "
                           ":oppija-oid \"7.8.9\", :sahkoposti \"a@b.com\", "
+                          ":puhelinnumero \"1234567\", "
                           ":alkupvm \"2021-10-10\"} {:oid \"1.2.3\"} "
                           "test-koulutustoimija-oid tiedot_muuttuneet_koskessa "
                           "update-last-page: 1 ")]

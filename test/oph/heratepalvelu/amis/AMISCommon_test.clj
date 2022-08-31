@@ -1,7 +1,8 @@
 (ns oph.heratepalvelu.amis.AMISCommon-test
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
-            [oph.heratepalvelu.common :as c])
+            [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.integration-tests.mock-db :as mdb])
   (:import (java.time LocalDate)))
 
 ;; Testaa get-item-by-kyselylinkki
@@ -97,6 +98,7 @@
        mock-has-nayttotutkintoonvalmistavakoulutus?
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 17))
        oph.heratepalvelu.db.dynamodb/put-item mock-put-item
+       oph.heratepalvelu.db.dynamodb/delete-item mdb/delete-item
        oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
        mock-create-amis-kyselylinkki
        oph.heratepalvelu.external.arvo/create-amis-kyselylinkki-catch-404
@@ -116,13 +118,15 @@
                       :oppija-oid "34.56.78"
                       :opiskeluoikeus-oid "123.456.789"
                       :ehoks-id 98
-                      :sahkoposti "a@b.com"}
-            herate-2 {:kyselytyyppi "tutkinnonsuorittaneet"
+                      :sahkoposti "a@b.com"
+                      :puhelinnumero "1234567"}
+            herate-2 {:kyselytyyppi "tutkinnon_suorittaneet"
                       :alkupvm "2021-12-15"
                       :oppija-oid "56.78.34"
                       :opiskeluoikeus-oid "123.456.789"
                       :ehoks-id 98
-                      :sahkoposti "a@b.com"}
+                      :sahkoposti "a@b.com"
+                      :puhelinnumero "1234567"}
             opiskeluoikeus {:oppilaitos {:oid "test-laitos-id"}
                             :oid "123.456.789"
                             :suoritukset
@@ -151,8 +155,11 @@
                       :item {:toimija_oppija [:s "3.4.5.6/34.56.78"]
                              :tyyppi_kausi [:s "aloittaneet/2021-2022"]
                              :sahkoposti [:s "a@b.com"]
+                             :puhelinnumero [:s "1234567"]
                              :suorituskieli [:s "fi"]
                              :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+                             :sms-lahetystila
+                             [:s (:ei-laheteta c/kasittelytilat)]
                              :alkupvm [:s "2021-12-17"]
                              :heratepvm [:s "2021-12-15"]
                              :request-id [:s "test-uuid"]
@@ -189,7 +196,7 @@
                       :oppija "56.78.34"
                       :koulutustoimija "3.4.5.6"
                       :laskentakausi "2021-2022"
-                      :kyselytyyppi "tutkinnonsuorittaneet"
+                      :kyselytyyppi "tutkinnon_suorittaneet"
                       :herate-source (:koski c/herate-sources)}
                      {:type "mock-get-osaamisalat"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}
@@ -205,10 +212,13 @@
                      {:type "mock-put-item"
                       :item {:toimija_oppija [:s "3.4.5.6/56.78.34"]
                              :tyyppi_kausi
-                             [:s "tutkinnonsuorittaneet/2021-2022"]
+                             [:s "tutkinnon_suorittaneet/2021-2022"]
                              :sahkoposti [:s "a@b.com"]
+                             :puhelinnumero [:s "1234567"]
                              :suorituskieli [:s "fi"]
                              :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+                             :sms-lahetystila
+                             [:s (:ei-lahetetty c/kasittelytilat)]
                              :alkupvm [:s "2021-12-17"]
                              :heratepvm [:s "2021-12-15"]
                              :request-id [:s "test-uuid"]
@@ -217,7 +227,7 @@
                              :opiskeluoikeus-oid [:s "123.456.789"]
                              :oppija-oid [:s "56.78.34"]
                              :koulutustoimija [:s "3.4.5.6"]
-                             :kyselytyyppi [:s "tutkinnonsuorittaneet"]
+                             :kyselytyyppi [:s "tutkinnon_suorittaneet"]
                              :rahoituskausi [:s "2021-2022"]
                              :viestintapalvelu-id [:n "-1"]
                              :voimassa-loppupvm [:s "2022-01-15"]

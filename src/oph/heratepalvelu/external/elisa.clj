@@ -14,7 +14,7 @@
     (ssm/get-secret
       (str "/" (:stage env) "/services/heratepalvelu/elisa-sms-dialogi-key"))))
 
-(defn msg-body
+(defn tep-msg-body
   "Luo työpaikkaohjaajakyselyn viestin tekstin."
   [linkki oppilaitokset]
   (str "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - "
@@ -40,7 +40,7 @@
        (str/join ", " (map :fi oppilaitokset)) "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
-(defn muistutus-msg-body
+(defn tep-muistutus-msg-body
   "Luo työpaikkaohjaajakyselyn muistutuksen viestin tekstin."
   [linkki oppilaitokset]
   (str "Muistutus-påminnelse-reminder: Työpaikkaohjaajakysely - "
@@ -63,7 +63,31 @@
        "\n\n"
        "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
 
-(defn send-tep-sms
+(defn amis-msg-body
+  "Luo opiskelijapalauteviestin tekstin."
+  [linkki oppilaitos]
+  (str "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
+       "\n\n"
+       "Kokemuksesi koulutuksesta ovat tärkeitä. "
+       "Vastaa tähän kyselyyn (10-15 min) ja kerro meille, "
+       "missä olemme onnistuneet ja mitä voisimme tehdä vielä paremmin. Palaute annetaan nimettömänä."
+       "\n\n"
+       "Dina erfarenheter av utbildningen är viktiga för oss. "
+       "Vi hoppas att du vill svara på den här enkäten (10–15 min) "
+       "och berätta hur vi har lyckats och vad vi kunde göra bättre. "
+       "Responsen ges anonymt."
+       "\n\n"
+       "Your experiences in education and training matter. "
+       "Respond to this survey (10-15 min) and tell us what we did well and what we could do even better. "
+       "Your feedback is collected anonymously."
+       "\n\n"
+       linkki
+       "\n\n"
+       oppilaitos
+       "\n\n"
+       "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
+
+(defn send-sms
   "Lähettää SMS-viestin viestintäpalveluun."
   [number message]
   (if (= "true" (:send-messages env))
@@ -76,7 +100,7 @@
                                                :text message})
                     :as      :json})
       (catch ExceptionInfo e
-        (log/error "Virhe send-tep-sms -funktiossa")
+        (log/error "Virhe send-sms -funktiossa")
         (log/error e)
         (throw e)))
     (do

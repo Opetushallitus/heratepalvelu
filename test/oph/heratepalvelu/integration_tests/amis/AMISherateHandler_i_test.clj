@@ -28,6 +28,7 @@
              :opiskeluoikeus-oid "123.5.9876"
              :oppija-oid "3.4.5"
              :sahkoposti "foo@bar.com"
+             :puhelinnumero "1234567"
              :alkupvm "2022-01-05"})
 
 (defn- setup-test []
@@ -96,9 +97,11 @@
      :hankintakoulutuksen-toteuttaja [:s ""]
      :suorituskieli [:s "fi"]
      :sahkoposti [:s "foo@bar.com"]
+     :puhelinnumero [:s "1234567"]
      :osaamisala [:s ""]
      :heratepvm [:s "2022-01-05"]
      :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+     :sms-lahetystila [:s (:ei-laheteta c/kasittelytilat)]
      :tallennuspvm [:s "2022-02-02"]
      :oppilaitos [:s "test-oppilaitos-oid"]
      :toimipiste-oid [:s "test-toimipiste-oid"]

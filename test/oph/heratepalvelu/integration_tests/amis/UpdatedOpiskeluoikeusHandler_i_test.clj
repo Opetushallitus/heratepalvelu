@@ -75,7 +75,8 @@
                                :oppija-oid "1.2.3"
                                :opiskeluoikeus-oid "12345"
                                :osaamisen-hankkimisen-tarve true
-                               :sahkoposti "test@example.com"}}})
+                               :sahkoposti "test@example.com"
+                               :puhelinnumero "1234567"}}})
   (mhc/bind-url :get
                 (str (:ehoks-url mock-env) "hoks/opiskeluoikeus/99999")
                 {:headers {:ticket (str "service-ticket"
@@ -86,7 +87,8 @@
                                :oppija-oid "9.9.9"
                                :opiskeluoikeus-oid "99999"
                                :osaamisen-hankkimisen-tarve false
-                               :sahkoposti "foo@example.com"}}})
+                               :sahkoposti "foo@example.com"
+                               :puhelinnumero "1234567"}}})
   (mhc/bind-url :post
                 (str (:arvo-url mock-env) "vastauslinkki/v1")
                 {:content-type "application/json"
@@ -135,9 +137,11 @@
      :hankintakoulutuksen-toteuttaja [:s ""]
      :suorituskieli [:s "fi"]
      :sahkoposti [:s "test@example.com"]
+     :puhelinnumero [:s "1234567"]
      :osaamisala [:s ""]
      :heratepvm [:s "2022-01-05"]
      :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+     :sms-lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
      :tallennuspvm [:s "2022-02-02"]
      :oppilaitos [:s nil]
      :toimipiste-oid [:s ""]

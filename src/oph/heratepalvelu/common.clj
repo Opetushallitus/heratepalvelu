@@ -10,6 +10,7 @@
             [oph.heratepalvelu.external.organisaatio :as org]
             [schema.core :as s])
   (:import (clojure.lang ExceptionInfo)
+           (com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException)
            (java.text Normalizer Normalizer$Form)
            (java.time LocalDate)
            (java.util UUID)))
@@ -344,3 +345,37 @@
   "Wrapper .isAfter-metodin ympäri, jolla on tyyppianotaatiot."
   [^LocalDate one-date ^LocalDate other-date]
   (.isAfter one-date other-date))
+
+(defn valid-number?
+  "Sallii vain numeroita, jotka kirjasto luokittelee mobiilinumeroiksi tai
+  mahdollisiksi mobiilinumeroiksi (FIXED_LINE_OR_MOBILE). Jos funktio ei hyväksy
+  numeroa, jonka tiedät olevan validi, tarkista, miten kirjasto luokittelee sen:
+  https://libphonenumber.appspot.com/."
+  [number]
+  (try
+    (let [utilobj (PhoneNumberUtil/getInstance)
+          numberobj (.parse utilobj number "FI")]
+      (and (empty? (filter (fn [^Character x] (Character/isLetter x)) number))
+           (.isValidNumber utilobj numberobj)
+           (let [numtype (str (.getNumberType utilobj numberobj))]
+             (or (= numtype "FIXED_LINE_OR_MOBILE") (= numtype "MOBILE")))))
+    (catch NumberParseException e
+      (log/error "PhoneNumberUtils failed to parse phonenumber")
+      (log/error e)
+      false)))
+
+(defn client-error?
+  "Tarkistaa, onko virheen statuskoodi 4xx-haitarissa."
+  [e]
+  (and (> (:status (ex-data e)) 399)
+       (< (:status (ex-data e)) 500)))
+
+(defn get-oppilaitokset
+  "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaiton-kentän
+  perusteella."
+  [jaksot]
+  (try
+    (seq (set (map #(:nimi (org/get-organisaatio (:oppilaitos %1))) jaksot)))
+    (catch Exception e
+      (log/error "Virhe kutsussa organisaatiopalveluun")
+      (log/error e))))

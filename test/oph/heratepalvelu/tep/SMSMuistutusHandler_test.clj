@@ -33,8 +33,8 @@
                                          :oppilaitos oppilaitos})
   {:nimi {:fi "Testilaitos" :en "Test Dept." :sv "Testanstalt"}})
 
-(defn- mock-send-tep-sms [numero body]
-  (add-to-test-sendSmsMuistutus-results {:type "mock-send-tep-sms"
+(defn- mock-send-sms [numero body]
+  (add-to-test-sendSmsMuistutus-results {:type "mock-send-sms"
                                          :numero numero
                                          :body body})
   {:body {:messages {(keyword numero) {:status "mock-lahetys"}}}})
@@ -53,8 +53,8 @@
                   (fn [] (LocalDate/of 2021 12 16))
                   oph.heratepalvelu.external.arvo/get-nippulinkki-status
                   mock-get-nippulinkki-status
-                  oph.heratepalvelu.external.elisa/send-tep-sms
-                  mock-send-tep-sms
+                  oph.heratepalvelu.external.elisa/send-sms
+                  mock-send-sms
                   oph.heratepalvelu.external.organisaatio/get-organisaatio
                   mock-get-organisaatio
                   oph.heratepalvelu.tep.tepCommon/get-jaksot-for-nippu
@@ -82,12 +82,13 @@
                               :lahetettynumeroon "+358401234567"}}
                      {:type "mock-get-organisaatio"
                       :oppilaitos "1234"}
-                     {:type "mock-send-tep-sms"
+                     {:type "mock-send-sms"
                       :numero "+358401234567"
-                      :body (elisa/muistutus-msg-body "kysely.linkki/1"
-                                                      [{:fi "Testilaitos"
-                                                        :en "Test Dept."
-                                                        :sv "Testanstalt"}])}
+                      :body (elisa/tep-muistutus-msg-body
+                              "kysely.linkki/1"
+                              [{:fi "Testilaitos"
+                                :en "Test Dept."
+                                :sv "Testanstalt"}])}
                      {:type "mock-update-nippu"
                       :nippu {:kyselylinkki "kysely.linkki/1"
                               :ohjaaja_ytunnus_kj_tutkinto "test-id-1"

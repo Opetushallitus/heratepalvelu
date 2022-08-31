@@ -80,7 +80,7 @@
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (let [jaksot (tc/get-jaksot-for-nippu nippu)
-              oppilaitokset (tc/get-oppilaitokset jaksot)
+              oppilaitokset (c/get-oppilaitokset jaksot)
               id (:id (send-reminder-email nippu oppilaitokset))]
           (update-item-email-sent nippu id))
         (update-item-cannot-answer nippu status)))))

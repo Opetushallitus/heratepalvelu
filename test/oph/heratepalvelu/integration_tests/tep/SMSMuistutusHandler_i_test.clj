@@ -74,10 +74,11 @@
                  :body (generate-string
                          {:sender "OPH"
                           :destination ["+358401234567"]
-                          :text (elisa/muistutus-msg-body "kysely.linkki/AAAAAA"
-                                                          [{:fi "Testilaitos"
-                                                            :sv "Testanstalt"
-                                                            :en "Test AMK"}])})
+                          :text (elisa/tep-muistutus-msg-body
+                                  "kysely.linkki/AAAAAA"
+                                  [{:fi "Testilaitos"
+                                    :sv "Testanstalt"
+                                    :en "Test AMK"}])})
                  :as :json}
                 {:body {:messages
                         {:+358401234567
@@ -131,39 +132,39 @@
      :sms_kasittelytila [:s (:vastattu c/kasittelytilat)]
      :sms_lahetyspvm [:s "2022-01-27"]}})
 
-(def expected-http-results [{:method :get
-                             :url (str (:arvo-url mock-env)
-                                       "tyoelamapalaute/v1/status/AAAAAA")
-                             :options {:basic-auth ["arvo-user" "arvo-pwd"]
-                                       :as :json}}
-                            {:method :get
-                             :url (str (:organisaatio-url mock-env)
-                                       "testilaitos")
-                             :options {:as :json}}
-                            {:method :post
-                             :url "https://viestipalvelu-api.elisa.fi/api/v1/"
-                             :options {:headers
-                                       {:Authorization "apikey elisa-apikey"
-                                        :content-type "application/json"}
-                                       :body (generate-string
-                                               {:sender "OPH"
-                                                :destination ["+358401234567"]
-                                                :text (elisa/muistutus-msg-body
-                                                        "kysely.linkki/AAAAAA"
-                                                        [{:fi "Testilaitos"
-                                                          :sv "Testanstalt"
-                                                          :en "Test AMK"}])})
-                                       :as :json}}
-                            {:method :get
-                             :url (str (:arvo-url mock-env)
-                                       "tyoelamapalaute/v1/status/BBBBBB")
-                             :options {:basic-auth ["arvo-user" "arvo-pwd"]
-                                       :as :json}}
-                            {:method :get
-                             :url (str (:arvo-url mock-env)
-                                       "tyoelamapalaute/v1/status/CCCCCC")
-                             :options {:basic-auth ["arvo-user" "arvo-pwd"]
-                                       :as :json}}])
+(def expected-http-results
+  [{:method :get
+    :url (str (:arvo-url mock-env) "tyoelamapalaute/v1/status/AAAAAA")
+    :options {:basic-auth ["arvo-user" "arvo-pwd"]
+              :as :json}}
+   {:method :get
+    :url (str (:organisaatio-url mock-env)
+              "testilaitos")
+    :options {:as :json}}
+   {:method :post
+    :url "https://viestipalvelu-api.elisa.fi/api/v1/"
+    :options {:headers
+              {:Authorization "apikey elisa-apikey"
+               :content-type "application/json"}
+              :body (generate-string
+                      {:sender "OPH"
+                       :destination ["+358401234567"]
+                       :text (elisa/tep-muistutus-msg-body
+                               "kysely.linkki/AAAAAA"
+                               [{:fi "Testilaitos"
+                                 :sv "Testanstalt"
+                                 :en "Test AMK"}])})
+              :as :json}}
+   {:method :get
+    :url (str (:arvo-url mock-env)
+              "tyoelamapalaute/v1/status/BBBBBB")
+    :options {:basic-auth ["arvo-user" "arvo-pwd"]
+              :as :json}}
+   {:method :get
+    :url (str (:arvo-url mock-env)
+              "tyoelamapalaute/v1/status/CCCCCC")
+    :options {:basic-auth ["arvo-user" "arvo-pwd"]
+              :as :json}}])
 
 (deftest test-SMSMuistutusHandler-integration
   (testing "SMSMuistutusHandler integraatiotesti"

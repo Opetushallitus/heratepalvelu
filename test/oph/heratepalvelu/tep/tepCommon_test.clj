@@ -79,7 +79,7 @@
                             :fi "Testilaitos"
                             :sv "Testanstalt"}])
             expected-call-log (seq ["123.456.789"])]
-        (is (= (tc/get-oppilaitokset jaksot) expected))
+        (is (= (c/get-oppilaitokset jaksot) expected))
         (is (= @test-get-oppilaitokset-result expected-call-log))))))
 
 ;; Testaa update-nippu

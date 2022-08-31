@@ -115,7 +115,7 @@
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
         (let [jaksot (tc/get-jaksot-for-nippu nippu)
-              oppilaitokset (tc/get-oppilaitokset jaksot)
+              oppilaitokset (c/get-oppilaitokset jaksot)
               osoite (lahetysosoite nippu jaksot)]
           (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
             (when (some? osoite)
