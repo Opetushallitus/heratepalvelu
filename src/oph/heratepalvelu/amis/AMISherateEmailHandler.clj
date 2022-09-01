@@ -25,7 +25,7 @@
   [herate]
   (if (:kyselylinkki herate)
     herate
-    (if-let [opiskeluoikeus ; Hakee OO yhdellä retryllä
+    (if-let [opiskeluoikeus
              (if-let [oo (k/get-opiskeluoikeus-catch-404
                            (:opiskeluoikeus-oid herate))]
                oo

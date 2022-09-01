@@ -44,8 +44,6 @@
                                (:opiskeluoikeus-oid item))
               rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                                  (LocalDate/parse (:alkupvm item)))]
-          (println rahoitusryhma)
-          (when (some? rahoitusryhma)
             (ac/update-herate
               item
               {:rahoitusryhma [:s rahoitusryhma]})))
