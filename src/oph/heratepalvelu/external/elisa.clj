@@ -73,7 +73,7 @@
        "missä olemme onnistuneet ja mitä voisimme tehdä vielä paremmin. Palaute annetaan nimettömänä."
        "\n\n"
        "Dina erfarenheter av utbildningen är viktiga för oss. "
-       "Vi hoppas att du vill svara på den här enkäten (10–15 min) "
+       "Vi hoppas att du vill svara på den här enkäten (10-15 min) "
        "och berätta hur vi har lyckats och vad vi kunde göra bättre. "
        "Responsen ges anonymt."
        "\n\n"
