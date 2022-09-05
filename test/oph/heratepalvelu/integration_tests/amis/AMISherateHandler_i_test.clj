@@ -17,7 +17,7 @@
                :organisaatio-url "https://oph-organisaatio.com/"})
 
 (def starting-table-contents [{:toimija_oppija [:s "abc/123"]
-                               :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+                               :tyyppi_kausi [:s "aloittaneet/2022-2023"]
                                :muistutukset [:n 2]
                                :kyselylinkki [:s "kysely.linkki/123"]
                                :sahkoposti [:s "sahko.posti@esimerkki.fi"]
@@ -29,7 +29,7 @@
              :oppija-oid "3.4.5"
              :sahkoposti "foo@bar.com"
              :puhelinnumero "1234567"
-             :alkupvm "2022-01-05"})
+             :alkupvm "2022-07-05"})
 
 (defn- setup-test []
   (mhc/clear-results)
@@ -84,22 +84,22 @@
 
 (def expected-table-contents
   #{{:toimija_oppija [:s "abc/123"]
-     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+     :tyyppi_kausi [:s "aloittaneet/2022-2023"]
      :muistutukset [:n 2]
      :kyselylinkki [:s "kysely.linkki/123"]
      :sahkoposti [:s "sahko.posti@esimerkki.fi"]
      :viestintapalvelu-id [:n 123]}
     {:toimija_oppija [:s "test-koulutustoimija-oid/3.4.5"]
-     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+     :tyyppi_kausi [:s "aloittaneet/2022-2023"]
      :kyselytyyppi [:s "aloittaneet"]
      :request-id [:s "test-uuid"]
-     :voimassa-loppupvm [:s "2022-03-03"]
+     :voimassa-loppupvm [:s "2022-08-03"]
      :hankintakoulutuksen-toteuttaja [:s ""]
      :suorituskieli [:s "fi"]
      :sahkoposti [:s "foo@bar.com"]
      :puhelinnumero [:s "1234567"]
      :osaamisala [:s ""]
-     :heratepvm [:s "2022-01-05"]
+     :heratepvm [:s "2022-07-05"]
      :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
      :sms-lahetystila [:s (:ei-laheteta c/kasittelytilat)]
      :tallennuspvm [:s "2022-02-02"]
@@ -107,12 +107,12 @@
      :toimipiste-oid [:s "test-toimipiste-oid"]
      :viestintapalvelu-id [:n "-1"]
      :opiskeluoikeus-oid [:s "123.5.9876"]
-     :alkupvm [:s "2022-02-02"]
+     :alkupvm [:s "2022-07-05"]
      :koulutustoimija [:s "test-koulutustoimija-oid"]
      :tutkintotunnus [:s ""]
      :oppija-oid [:s "3.4.5"]
      :ehoks-id [:n "456"]
-     :rahoituskausi [:s "2021-2022"]
+     :rahoituskausi [:s "2022-2023"]
      :rahoitusryhma [:s "01"]
      :herate-source [:s (:ehoks c/herate-sources)]}})
 

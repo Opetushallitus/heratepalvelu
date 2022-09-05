@@ -42,28 +42,28 @@
                  :as :json-strict}
                 {:body [{:opiskeluoikeudet
                          [{:oid "12345"
-                           :aikaleima "2022-01-05"
+                           :aikaleima "2022-07-05"
                            :koulutustoimija {:oid "test-ktid"}
-                           :suoritukset [{:vahvistus {:päivä "2022-01-05"}
+                           :suoritukset [{:vahvistus {:päivä "2022-07-05"}
                                           :tyyppi {:koodiarvo
                                                    "ammatillinentutkinto"}
                                           :suorituskieli {:koodiarvo "fi"}}]
                            :sisältyyOpiskeluoikeuteen nil
                            :tila {:opiskeluoikeusjaksot
-                                  [{:alku "2022-01-05"
+                                  [{:alku "2022-07-05"
                                     :tila {:koodiarvo "lasna"}}]}}]}
 
                         {:opiskeluoikeudet
                          [{:oid "99999"
-                           :aikaleima "2022-01-07"
+                           :aikaleima "2022-07-07"
                            :koulutustoimija {:oid "test-ktid2"}
-                           :suoritukset [{:vahvistus {:päivä "2022-01-07"}
+                           :suoritukset [{:vahvistus {:päivä "2022-07-07"}
                                           :tyyppi {:koodiarvo
                                                    "ammatillinentutkinto"}
                                           :suorituskieli {:koodiarvo "fi"}}]
                            :sisältyyOpiskeluoikeuteen nil
                            :tila {:opiskeluoikeusjaksot
-                                  [{:alku "2022-01-07"
+                                  [{:alku "2022-07-07"
                                     :tila {:koodiarvo "lasna"}}]}}]}]})
   (mhc/bind-url :get
                 (str (:ehoks-url mock-env) "hoks/opiskeluoikeus/12345")
@@ -130,16 +130,16 @@
 
 (def expected-herate-table
   #{{:toimija_oppija [:s "test-ktid/1.2.3"]
-     :tyyppi_kausi [:s "tutkinnon_suorittaneet/2021-2022"]
+     :tyyppi_kausi [:s "tutkinnon_suorittaneet/2022-2023"]
      :kyselytyyppi [:s "tutkinnon_suorittaneet"]
      :request-id [:s "test-uuid"]
-     :voimassa-loppupvm [:s "2022-03-03"]
+     :voimassa-loppupvm [:s "2022-08-03"]
      :hankintakoulutuksen-toteuttaja [:s ""]
      :suorituskieli [:s "fi"]
      :sahkoposti [:s "test@example.com"]
      :puhelinnumero [:s "1234567"]
      :osaamisala [:s ""]
-     :heratepvm [:s "2022-01-05"]
+     :heratepvm [:s "2022-07-05"]
      :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
      :sms-lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
      :tallennuspvm [:s "2022-02-02"]
@@ -147,12 +147,12 @@
      :toimipiste-oid [:s ""]
      :viestintapalvelu-id [:n "-1"]
      :opiskeluoikeus-oid [:s "12345"]
-     :alkupvm [:s "2022-02-02"]
+     :alkupvm [:s "2022-07-05"]
      :koulutustoimija [:s "test-ktid"]
      :tutkintotunnus [:s ""]
      :oppija-oid [:s "1.2.3"]
      :ehoks-id [:n "123"]
-     :rahoituskausi [:s "2021-2022"]
+     :rahoituskausi [:s "2022-2023"]
      :rahoitusryhma [:s "02"]
      :herate-source [:s (:koski c/herate-sources)]}})
 

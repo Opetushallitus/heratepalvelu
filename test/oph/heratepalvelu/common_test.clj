@@ -105,11 +105,11 @@
                           "arvizturo_tukorfurogep"))))
 
 (deftest test-check-valid-herate-date
-  (testing "True if heratepvm is >= 2021-07-01"
-    (is (true? (check-valid-herate-date "2021-07-02")))
-    (is (true? (check-valid-herate-date "2021-07-01")))
-    (is (not (true? (check-valid-herate-date "2021-06-01"))))
-    (is (not (true? (check-valid-herate-date "2021-07-01xxxx"))))
+  (testing "True if heratepvm is >= 2022-07-01"
+    (is (true? (check-valid-herate-date "2022-07-02")))
+    (is (true? (check-valid-herate-date "2022-07-01")))
+    (is (not (true? (check-valid-herate-date "2022-06-01"))))
+    (is (not (true? (check-valid-herate-date "2022-07-01xxxx"))))
     (is (not (true? (check-valid-herate-date ""))))
     (is (not (true? (check-valid-herate-date nil))))))
 
