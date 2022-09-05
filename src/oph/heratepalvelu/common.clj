@@ -289,10 +289,10 @@
                         :tyyppi_kausi   [:s (str tyyppi "/" laskentakausi)]}))))
 
 (defn check-valid-herate-date
-  "Varmistaa, että herätteen päivämäärä ei ole ennen 1.7.2021."
+  "Varmistaa, että herätteen päivämäärä ei ole ennen 1.7.2022."
   [heratepvm]
   (try
-    (not (.isAfter (LocalDate/of 2021 7 1) (LocalDate/parse heratepvm)))
+    (not (.isAfter (LocalDate/of 2022 7 1) (LocalDate/parse heratepvm)))
     (catch Exception e
       (log/error e))))
 
