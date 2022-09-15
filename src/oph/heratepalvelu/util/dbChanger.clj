@@ -58,20 +58,26 @@
                 :exclusive-start-key (.lastEvaluatedKey resp)})))))
 
 (defn -handleDBUpdateTep [this event context]
-  (loop [resp (scan {:filter-expression (str "jakso_loppupvm >= :pvm")
-                     :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}})]
+  (loop [resp (scan {:filter-expression (str "jakso_loppupvm >= :start "
+                                             "AND jakso_loppupvm >= :end "
+                                             "AND attribute_not_exists(uudelleenlaskettu-kesto)")
+                     :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-07-01"))
+                                      ":end" (.build (.s (AttributeValue/builder) "2022-06-30"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
-        (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
-                               (:opiskeluoikeus_oid item))
-              rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
-                                                 (LocalDate/parse (:jakso_loppupvm item)))]
-          (println (str rahoitusryhma " " (:jakso_loppupvm item))))
+        (let [jakso (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto item)]]}
+                                     {:index "niputusIndex"}
+                                     (:jaksotunnus-table env))
+              kesto (:kesto jakso)]
+          (println (str kesto " " (:kesto jakso)))
+          (println (str kesto " " (:uudelleenlaskettu-kesto jakso))))
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
-               {:filter-expression (str "jakso_loppupvm >= :pvm")
-                :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-07-01"))}
-                :exclusive-start-key (.lastEvaluatedKey resp)})))))
+               {:filter-expression (str "jakso_loppupvm >= :start "
+                                        "AND jakso_loppupvm >= :end "
+                                        "AND attribute_not_exists(uudelleenlaskettu-kesto)")
+                :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-07-01"))
+                                 ":end" (.build (.s (AttributeValue/builder) "2022-06-30"))}})))))
 
