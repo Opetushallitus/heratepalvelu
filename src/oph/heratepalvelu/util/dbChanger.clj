@@ -65,9 +65,10 @@
                                       ":end" (.build (.s (AttributeValue/builder) "2022-06-30"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
-        (let [jakso (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto item)]]}
+        (let [dbjakso (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto item)]]}
                                      {:index "niputusIndex"}
                                      (:table env))
+              jakso (first dbjakso)
               kesto (:kesto jakso)
               uudelleenlaskettu_kesto (:uudelleenlaskettu_kesto jakso)]
           (println item)
