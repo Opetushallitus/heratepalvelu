@@ -74,7 +74,7 @@
                                       {:oppija_oid
                                        [:eq [:s (:oppija_oid jakso)]]
                                        :niputuspvm [:eq [:s (:niputuspvm jakso)]]}
-                                      {:index "niputusIndex"
+                                      {:index "tepDbChangerIndex"
                                        :filter-expression "#pvm >= :pvm AND attribute_exists(#tunnus)"
                                        :expr-attr-names {"#pvm"    "viimeinen_vastauspvm"
                                                          "#tunnus" "tunnus"}
