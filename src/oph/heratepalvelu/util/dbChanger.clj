@@ -60,7 +60,7 @@
 (defn -handleDBUpdateTep [this event context]
   (loop [resp (scan {:filter-expression (str "jakso_loppupvm >= :start "
                                              "AND jakso_loppupvm >= :end "
-                                             "AND attribute_not_exists(uudelleenlaskettu-kesto)")
+                                             "AND attribute_not_exists(uudelleenlaskettu_kesto)")
                      :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-07-01"))
                                       ":end" (.build (.s (AttributeValue/builder) "2022-06-30"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
@@ -77,7 +77,7 @@
       (recur (scan
                {:filter-expression (str "jakso_loppupvm >= :start "
                                         "AND jakso_loppupvm >= :end "
-                                        "AND attribute_not_exists(uudelleenlaskettu-kesto)")
+                                        "AND attribute_not_exists(uudelleenlaskettu_kesto)")
                 :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-07-01"))
                                  ":end" (.build (.s (AttributeValue/builder) "2022-06-30"))}})))))
 
