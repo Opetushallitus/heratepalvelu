@@ -67,7 +67,7 @@
       (try
         (let [jakso (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto item)]]}
                                      {:index "niputusIndex"}
-                                     (:jaksotunnus-table env))
+                                     (:table env))
               kesto (:kesto jakso)]
           (println (str kesto " " (:kesto jakso)))
           (println (str kesto " " (:uudelleenlaskettu-kesto jakso))))
