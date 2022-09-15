@@ -68,7 +68,7 @@
       (try
         (let [dbjakso (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto item)]]}
                                      {:index "niputusIndex"}
-                                     (:c env))
+                                     (:table env))
               jakso (first dbjakso)
               oppijan-kaikki-jaksot (ddb/query-items
                                       {:oppija_oid
