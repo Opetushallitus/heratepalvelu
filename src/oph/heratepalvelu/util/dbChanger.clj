@@ -68,9 +68,12 @@
         (let [jakso (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto item)]]}
                                      {:index "niputusIndex"}
                                      (:table env))
-              kesto (:kesto jakso)]
-          (println (str kesto " " (:kesto jakso)))
-          (println (str kesto " " (:uudelleenlaskettu-kesto jakso))))
+              kesto (:kesto jakso)
+              uudelleenlaskettu_kesto (:uudelleenlaskettu_kesto jakso)]
+          (println item)
+          (println jakso)
+          (println (str "kesto" " " kesto))
+          (println (str "uudelleenlaskettu_kesto" " " uudelleenlaskettu_kesto)))
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
