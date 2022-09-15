@@ -89,11 +89,14 @@
                                          :expr-attr-vals {":pvm" [:s (:niputuspvm jakso)]}}
                                         (:table env))
                 uudelleenlasketut-kestot (nip/compute-kestot oppijan-kaikki-jaksot)]
-              (map #(let [kesto (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id %) 0.0))]
-                      (ddb/update-item {:hankkimistapa_id [:n (:hankkimistapa_id %)]}
-                                       (merge (c/create-update-item-options {:uudelleenlaskettu_kesto [:n kesto]}) {})
-                                       (:table env)))
-                   oppijan-kaikki-jaksot)))))
+              (doseq [jakso oppijan-kaikki-jaksot]
+                (println (str "Päivitetään jaksolle "
+                              (:hankkimistapa_id jakso)
+                              " uudelleenlaskettu_kesto."))
+                (let [uusi-kesto (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id jakso) 0.0))]
+                  (ddb/update-item {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+                                   (merge (c/create-update-item-options {:uudelleenlaskettu_kesto [:n uusi-kesto]}) {})
+                                   (:table env))))))))
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
