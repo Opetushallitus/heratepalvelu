@@ -6,7 +6,8 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
-            [oph.heratepalvelu.tep.tepCommon :as tc])
+            [oph.heratepalvelu.tep.tepCommon :as tc]
+            [oph.heratepalvelu.tep.niputusHandler :as nip])
   (:import (software.amazon.awssdk.services.dynamodb.model ScanRequest AttributeValue)
            (java.time LocalDate)))
 
@@ -67,12 +68,24 @@
       (try
         (let [dbjakso (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto item)]]}
                                      {:index "niputusIndex"}
-                                     (:table env))
+                                     (:c env))
               jakso (first dbjakso)
+              oppijan-kaikki-jaksot (ddb/query-items
+                                      {:oppija_oid
+                                       [:eq [:s (:oppija_oid jakso)]]
+                                       :niputuspvm [:eq [:s (:niputuspvm jakso)]]}
+                                      {:index "niputusIndex"
+                                       :filter-expression "#pvm >= :pvm AND attribute_exists(#tunnus)"
+                                       :expr-attr-names {"#pvm"    "viimeinen_vastauspvm"
+                                                         "#tunnus" "tunnus"}
+                                       :expr-attr-vals {":pvm" [:s (:niputuspvm jakso)]}}
+                                      (:table env))
               kesto (:kesto jakso)
               uudelleenlaskettu_kesto (:uudelleenlaskettu_kesto jakso)]
           (println item)
           (println jakso)
+          (println oppijan-kaikki-jaksot)
+          (println (nip/compute-kestot oppijan-kaikki-jaksot))
           (println (str "kesto" " " kesto))
           (println (str "uudelleenlaskettu_kesto" " " uudelleenlaskettu_kesto)))
         (catch Exception e
