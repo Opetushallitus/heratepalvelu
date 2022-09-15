@@ -89,6 +89,7 @@
                                          :expr-attr-vals {":pvm" [:s (:niputuspvm jakso)]}}
                                         (:table env))
                 uudelleenlasketut-kestot (nip/compute-kestot oppijan-kaikki-jaksot)]
+              (println uudelleenlasketut-kestot)
               (doseq [jakso oppijan-kaikki-jaksot]
                 (println (str "Päivitetään jaksolle "
                               (:hankkimistapa_id jakso)
