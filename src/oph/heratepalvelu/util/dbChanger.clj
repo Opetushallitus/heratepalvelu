@@ -63,7 +63,7 @@
                                              "AND jakso_loppupvm <= :end "
                                              "AND attribute_not_exists(uudelleenlaskettu_kesto)")
                      :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
-                                      ":end" (.build (.s (AttributeValue/builder) "2022-01-01"))}})]
+                                      ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
         (let [dbjakso (ddb/query-items {:ohjaaja_ytunnus_kj_tutkinto [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto item)]]}
@@ -110,5 +110,5 @@
                                         "AND jakso_loppupvm >= :end "
                                         "AND attribute_not_exists(uudelleenlaskettu_kesto)")
                 :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
-                                 ":end" (.build (.s (AttributeValue/builder) "2022-01-01"))}})))))
+                                 ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}})))))
 
