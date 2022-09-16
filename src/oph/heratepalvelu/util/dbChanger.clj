@@ -60,7 +60,7 @@
 
 (defn -handleDBUpdateTep [this event context]
   (loop [resp (scan {:filter-expression (str "jakso_loppupvm >= :start "
-                                             "AND jakso_loppupvm >= :end "
+                                             "AND jakso_loppupvm <= :end "
                                              "AND attribute_not_exists(uudelleenlaskettu_kesto)")
                      :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-07-01"))
                                       ":end" (.build (.s (AttributeValue/builder) "2022-06-30"))}})]
@@ -70,7 +70,7 @@
                                      {:index "niputusIndex"}
                                      (:table env))
               jakso (first dbjakso)
-              kesto (:kesto jakso)
+              ;;kesto (:kesto jakso)
               uudelleenlaskettu_kesto (:uudelleenlaskettu_kesto jakso)]
           (when (nil? uudelleenlaskettu_kesto)
             (do
@@ -94,10 +94,15 @@
                 (println (str "Päivitetään jaksolle "
                               (:hankkimistapa_id jakso)
                               " uudelleenlaskettu_kesto."))
-                (let [uusi-kesto (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id jakso) 0.0))]
-                  (ddb/update-item {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
-                                   (merge (c/create-update-item-options {:uudelleenlaskettu_kesto [:n uusi-kesto]}) {})
-                                   (:table env))))))))
+                (println (str "Vanha kesto "
+                              (:kesto jakso)
+                              " - Uudelleen laskettu kesto "
+                              (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id jakso) 0.0))))
+                ;(let [uusi-kesto (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id jakso) 0.0))]
+                ;  (ddb/update-item {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+                ;                   (merge (c/create-update-item-options {:uudelleenlaskettu_kesto [:n uusi-kesto]}) {})
+                ;                   (:table env)))
+                )))))
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)
