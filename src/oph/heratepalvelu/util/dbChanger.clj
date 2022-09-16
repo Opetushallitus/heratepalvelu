@@ -80,15 +80,17 @@
                           (:niputuspvm jakso)))
             (let [oppijan-kaikki-jaksot (ddb/query-items
                                         {:oppija_oid
-                                         [:eq [:s (:oppija_oid jakso)]]
-                                         :niputuspvm [:eq [:s (:niputuspvm jakso)]]}
+                                         [:eq [:s (:oppija_oid jakso)]]}
                                         {:index "tepDbChangerIndex"
-                                         :filter-expression "#pvm >= :pvm AND attribute_exists(#tunnus)"
-                                         :expr-attr-names {"#pvm"    "viimeinen_vastauspvm"
-                                                           "#tunnus" "tunnus"}
-                                         :expr-attr-vals {":pvm" [:s (:niputuspvm jakso)]}}
+                                         :filter-expression (str "jakso_loppupvm >= :start "
+                                                                 "jakso_loppupvm <= :end"
+                                                                 "AND attribute_exists(#tunnus)")
+                                         :expr-attr-names {"#tunnus" "tunnus"}
+                                         :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
+                                                          ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}}
                                         (:table env))
                 uudelleenlasketut-kestot (nip/compute-kestot oppijan-kaikki-jaksot)]
+              (println uudelleenlasketut-kestot)
               (doseq [jakso oppijan-kaikki-jaksot]
                 (println (str "Päivitetään jaksolle "
                               (:hankkimistapa_id jakso)
