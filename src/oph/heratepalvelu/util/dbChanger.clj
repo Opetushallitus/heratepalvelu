@@ -109,7 +109,7 @@
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
                {:filter-expression (str "jakso_loppupvm >= :start "
-                                        "AND jakso_loppupvm >= :end "
+                                        "AND jakso_loppupvm <= :end "
                                         "AND attribute_not_exists(uudelleenlaskettu_kesto)")
                 :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
                                  ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}})))))
