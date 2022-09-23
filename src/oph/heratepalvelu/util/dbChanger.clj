@@ -73,23 +73,29 @@
               ;;kesto (:kesto jakso)
               uudelleenlaskettu_kesto (:uudelleenlaskettu_kesto jakso)]
           (when (nil? uudelleenlaskettu_kesto)
+            (println "itemi")
+            (println item)
+            (println "dbjakso")
+            (println dbjakso)
             (do
               (println (str "Lasketaan oppijan "
                             (:oppija_oid jakso)
-                            " jaksojen kestot uudelleen niputuksessa "
-                            (:niputuspvm jakso)))
+                            " kestot."))
               (let [oppijan-kaikki-jaksot (ddb/query-items
                                             {:oppija_oid
                                              [:eq [:s (:oppija_oid jakso)]]}
                                             {:index "tepDbChangerIndex"
                                              :filter-expression (str "jakso_loppupvm >= :start "
-                                                                     "jakso_loppupvm <= :end"
+                                                                     "AND jakso_loppupvm <= :end "
                                                                      "AND attribute_exists(#tunnus)")
                                              :expr-attr-names {"#tunnus" "tunnus"}
-                                             :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
-                                                              ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}}
+                                             :expr-attr-vals {":start" [:s "2021-11-01"]
+                                                              ":end" [:s "2021-12-31"]}}
                                             (:table env))
                     uudelleenlasketut-kestot (nip/compute-kestot oppijan-kaikki-jaksot)]
+                (println "kaikki jaksot")
+                (println oppijan-kaikki-jaksot)
+                (println "uudelleenlasketut kestot")
                 (println uudelleenlasketut-kestot)
                 (doseq [jakso oppijan-kaikki-jaksot]
                   (println (str "Päivitetään jaksolle "
@@ -105,11 +111,4 @@
                   ;                   (:table env)))
                   )))))
         (catch Exception e
-          (log/error e))))
-    (when (.hasLastEvaluatedKey resp)
-      (recur (scan
-               {:filter-expression (str "jakso_loppupvm >= :start "
-                                        "AND jakso_loppupvm <= :end "
-                                        "AND attribute_not_exists(uudelleenlaskettu_kesto)")
-                :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
-                                 ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}})))))
+          (log/error e))))))
