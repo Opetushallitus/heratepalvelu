@@ -131,3 +131,8 @@
   "Päivittää aktiivisten hoksien opiskeluoikeudet Koskesta"
   []
   (ehoks-post "heratepalvelu/opiskeluoikeus-update" {}))
+
+(defn post-henkilomodify-event
+  "Lähettää tiedon henkilön tietojen muutoksesta eHOKS-palveluun."
+  [oppija-oid]
+  (ehoks-post (str "heratepalvelu/onrmodify") {:query-params {:oid oppija-oid}}))

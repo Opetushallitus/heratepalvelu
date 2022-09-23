@@ -5,6 +5,8 @@ import targets = require("@aws-cdk/aws-events-targets");
 import lambda = require("@aws-cdk/aws-lambda");
 import s3assets = require("@aws-cdk/aws-s3-assets");
 import sqs = require("@aws-cdk/aws-sqs");
+import sns = require("@aws-cdk/aws-sns");
+import snsSubs = require("@aws-cdk/aws-sns-subscriptions")
 import iam = require("@aws-cdk/aws-iam");
 import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
 import { Duration, Token } from "@aws-cdk/core";
@@ -130,6 +132,26 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       retentionPeriod: Duration.days(14)
     });
 
+    const ONRhenkilomodifyDLQ = new sqs.Queue(this, "ONRhenkilomodifyDLQ", {
+      retentionPeriod: Duration.days(14),
+      visibilityTimeout: (Duration.seconds(60))
+    });
+
+    const ONRhenkilomodifyQueue = new sqs.Queue(this, "ONRhenkilomodifyQueue", {
+      queueName: `${id}-ehokshenkilomodify`,
+      deadLetterQueue: {
+        queue: ONRhenkilomodifyDLQ,
+        maxReceiveCount: 5
+      },
+      visibilityTimeout: Duration.seconds(60),
+      retentionPeriod: Duration.days(14)
+    });
+
+    const ONRhenkilomodifyTopic = sns.Topic.fromTopicArn(this, "ONRhenkilomodifyTopic",
+        this.getParameterFromSsm("ONRhenkilomodifyARN"));
+
+    ONRhenkilomodifyTopic.addSubscription(new snsSubs.SqsSubscription(ONRhenkilomodifyQueue));
+
     const ehoksAmisResendDLQueue = new sqs.Queue(this, "AmisResendDLQueue", {
       retentionPeriod: Duration.days(14)
     });
@@ -192,6 +214,36 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     AMISHerateHandler.addEventSource(new SqsEventSource(ehoksHerateQueue, { batchSize: 1, }));
     organisaatioWhitelistTable.grantReadData(AMISHerateHandler);
+
+    const ONRhenkilomodifyHandler = new lambda.Function(this, "ONRhenkilomodifyHandler", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        caller_id: `1.2.246.562.10.00000000001.${id}-ONRhenkilomodifyHandler`,
+      },
+      handler: "oph.heratepalvelu.util.ONRhenkilomodify::handleONRhenkilomodify",
+      memorySize: Token.asNumber(this.getParameterFromSsm("ehokshandler-memory")),
+      reservedConcurrentExecutions:
+          Token.asNumber(this.getParameterFromSsm("ehokshandler-concurrency")),
+      timeout: Duration.seconds(
+          Token.asNumber(this.getParameterFromSsm("ehokshandler-timeout"))
+      ),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    ONRhenkilomodifyHandler.addEventSource(new SqsEventSource(ONRhenkilomodifyQueue, { batchSize: 1, }));
+
+    ONRhenkilomodifyHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [ONRhenkilomodifyQueue.queueArn, herateDeadLetterQueue.queueArn],
+      actions: [
+        "sqs:GetQueueUrl",
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ]}));
 
     const AMISherateEmailHandler = new lambda.Function(this, "AMISHerateEmailHandler", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
@@ -561,6 +613,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISTimedOperationsHandler,
       AMISMassHerateResendHandler,
       EhoksOpiskeluoikeusUpdateHandler,
+      ONRhenkilomodifyHandler,
       dbChanger
      // dbArchiver,
     ].forEach(
