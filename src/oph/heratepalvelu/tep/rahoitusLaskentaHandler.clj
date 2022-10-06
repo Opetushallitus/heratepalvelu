@@ -134,8 +134,10 @@
 
 (defn save-results-to-ddb
   [results]
+  (let [table (:results-table env)]
+    (log/info (str "Saving results to table " table ": " results)))
   (ddb/put-item results
-                ;{:cond-expr (str "attribute_not_exists(hankkimistapa_id)")} fixme? tarvitaankohan tätä tulostaulun tapauksessa?
+                {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")} ;fixme? tarvitaankohan tätä tulostaulun tapauksessa?
                 (:results-table env)))
 
 (defn save-results
@@ -156,6 +158,7 @@
             tutkinto      (get-in suoritus [:koulutusmoduuli
                                             :tunniste
                                             :koodiarvo])
+            existing-arvo-tunnus (:tunnus (read-previously-processed-hankkimistapa tapa-id))
             rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus (LocalDate/parse (:loppupvm herate)))
             db-data {:hankkimistapa_id     [:n tapa-id]
                      :hankkimistapa_tyyppi
@@ -195,7 +198,8 @@
                                                     koulutustoimija "/" tutkinto)]
                      :tyopaikan_normalisoitu_nimi
                                            [:s (c/normalize-string (:tyopaikan-nimi herate))]
-                     :rahoitusryhma        [:s rahoitusryhma]}
+                     :rahoitusryhma        [:s rahoitusryhma]
+                     :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]}
             results-table-data
             (cond-> db-data
                     (not-empty (:tyopaikkaohjaaja-email herate))
@@ -216,20 +220,18 @@
                                    (:oppisopimuksen-perusta herate)
                                    #"_"))]))
             ]
-        (if (check-open-keskeytymisajanjakso herate)
-          (try
-            (save-results-to-ddb results-table-data) ;näille ei normaalikäsittelyssä luotu arvo-tunnusta.
-            (catch ConditionalCheckFailedException e
-              (log/warn "Osaamisenhankkimistapa id:llä"
-                        tapa-id
-                        "on jo käsitelty."))
-            (catch AwsServiceException e
-              (log/error "Virhe tietokantaan tallennettaessa, request-id"
-                         request-id)
-              (throw e)))
-          (let [existing-arvo-tunnus "unknown"] ;fixme todo yritetään päätellä dynamosta mahdollisesti jo löytyvä arvo-tunnus
-            (log/info "Heräte with non-open-keskeytymisajanjakso - fixme, needs implementation " tapa-id)
-            )))
+        (when (check-open-keskeytymisajanjakso herate)
+          (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
+        (try
+          (save-results-to-ddb results-table-data) ;näille ei normaalikäsittelyssä luotu arvo-tunnusta.
+          (catch ConditionalCheckFailedException e
+            (log/warn "Osaamisenhankkimistapa id:llä"
+                      tapa-id
+                      "on jo käsitelty."))
+          (catch AwsServiceException e
+            (log/error "Virhe tietokantaan tallennettaessa, request-id"
+                       request-id)
+            (throw e))))
       (catch Exception e
         (log/error "Unknown error" e)
         (throw e)))
@@ -248,7 +250,7 @@
         (let [herate (parse-string (.getBody msg) true)
               opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
                                (:opiskeluoikeus-oid herate))]
-          (when (some? opiskeluoikeus)
+          (if (some? opiskeluoikeus)
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
               (if (some? (tep-herate-checker herate))
                 (log/error {:herate herate :msg (tep-herate-checker herate)})
@@ -258,12 +260,11 @@
                            (c/check-opiskeluoikeus-suoritus-types?
                              opiskeluoikeus)
                            (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
-                  (save-results herate opiskeluoikeus koulutustoimija)))))
-          (do
-            (log/info "No opiskeluoikeus found for oid " (:opiskeluoikeus-oid herate))
-            (log/info "Not setting tep-kasitelty - FIXME - hankkimistapa-id " (:hankkimistapa-id herate))
-            ;(ehoks/patch-oht-tep-kasitelty (:hankkimistapa-id herate)))
-            ))
+                  (save-results herate opiskeluoikeus koulutustoimija))))
+            (do
+              (log/info "No opiskeluoikeus found for oid " (:opiskeluoikeus-oid herate))
+              (log/info "Not saving heräte - hankkimistapa-id " (:hankkimistapa-id herate))
+              )))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa:" e))
         (catch ExceptionInfo e
