@@ -23,7 +23,7 @@
              ConditionalCheckFailedException)))
 
 (gen-class
-  :name "oph.heratepalvelu.tep.jaksoHandler"
+  :name "oph.heratepalvelu.tep.rahoitusLaskentaHandler"
   :methods [[^:static handleRahoitusHerate
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])

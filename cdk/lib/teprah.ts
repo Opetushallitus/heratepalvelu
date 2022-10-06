@@ -81,7 +81,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
                 results_table: resultsTable.tableName,
                 caller_id: `1.2.246.562.10.00000000001.${id}-JaksoHandler`,
             },
-            handler: "oph.heratepalvelu.tep.jaksoHandler::handleRahoitusHerate", //needs to be actually implemented
+            handler: "oph.heratepalvelu.tep.rahoitusLaskentaHandler::handleRahoitusHerate",
             memorySize: Token.asNumber(this.getParameterFromSsm("jaksohandler-memory")),
             reservedConcurrentExecutions: 1, //fixme, parametrit kuntoon
             timeout: Duration.seconds(10),
