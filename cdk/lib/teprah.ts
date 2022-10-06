@@ -86,7 +86,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             handler: "oph.heratepalvelu.tep.rahoitusLaskentaHandler::handleRahoitusHerate",
             memorySize: 1024,
             reservedConcurrentExecutions: 1, //fixme, parametrit kuntoon
-            timeout: Duration.seconds(10),
+            timeout: Duration.seconds(40),
             //tracing: lambda.Tracing.ACTIVE
         });
 
