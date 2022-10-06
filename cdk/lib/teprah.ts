@@ -92,6 +92,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
 
         rahoitusResultsHandler.addEventSource(new SqsEventSource(tepRahoitusQueue, { batchSize: 1 }));
         resultsTable.grantReadWriteData(rahoitusResultsHandler);
+        tepJaksotunnusTable.grantReadData(rahoitusResultsHandler);
 
         [
             rahoitusResultsHandler
