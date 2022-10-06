@@ -17,6 +17,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
         id: string,
         envName: string,
         version: string,
+        tepJaksotunnusTable: dynamodb.Table,
         props?: cdk.StackProps
     ) {
         super(scope, id, envName, version, props);
@@ -79,6 +80,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             environment: {
                 ...this.envVars,
                 results_table: resultsTable.tableName,
+                jaksotunnus_table: tepJaksotunnusTable.tableName, //this should only be read from by the handler...
                 caller_id: `1.2.246.562.10.00000000001.${id}-rahoitusLaskentaHandler`,
             },
             handler: "oph.heratepalvelu.tep.rahoitusLaskentaHandler::handleRahoitusHerate",

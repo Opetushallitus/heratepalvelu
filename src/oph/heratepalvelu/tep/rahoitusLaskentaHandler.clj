@@ -60,6 +60,12 @@
   "TEP-herätescheman tarkistusfunktio."
   (s/checker tep-herate-schema))
 
+(defn read-previously-processed-hankkimistapa
+  "Palauttaa true, jos ei ole vielä jaksoa tietokannassa annetulla ID:llä."
+  [id]
+  (ddb/get-item {:hankkimistapa_id [:n id]}
+                (:jaksotunnus-table env)))
+
 (defn check-duplicate-hankkimistapa
   "Palauttaa true, jos ei ole vielä jaksoa tietokannassa annetulla ID:llä."
   [id]
@@ -126,103 +132,108 @@
     (and (seq kjaksot)
          (not (:loppu (last kjaksot))))))
 
-(defn save-results-to-table
+(defn save-results-to-ddb
   [results]
   (ddb/put-item results
-                {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
-                (or (:jaksotunnus-table env)
-                    (:jaksotunnus_table env))))
+                ;{:cond-expr (str "attribute_not_exists(hankkimistapa_id)")} fixme? tarvitaankohan tätä tulostaulun tapauksessa?
+                (:results-table env)))
 
 (defn save-results
-  "Käsittelee herätteen, varmistaa, että se tulee tallentaa ja tallentaa dynamoon."
+  "Käsittelee herätteen ja tallentaa dynamoon."
   [herate opiskeluoikeus koulutustoimija]
   (let [tapa-id (:hankkimistapa-id herate)]
-    (when (check-duplicate-hankkimistapa tapa-id)
-      (try
-        (let [request-id    (c/generate-uuid)
-              niputuspvm    (c/next-niputus-date (str (c/local-date-now)))
-              alkupvm       (c/next-niputus-date (:loppupvm herate))
-              suoritus      (c/get-suoritus opiskeluoikeus)
-              tutkinto      (get-in suoritus [:koulutusmoduuli
-                                              :tunniste
-                                              :koodiarvo])
-              rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus (LocalDate/parse (:loppupvm herate)))
-              db-data {:hankkimistapa_id     [:n tapa-id]
-                       :hankkimistapa_tyyppi
-                                             [:s (last (str/split (:hankkimistapa-tyyppi herate)
-                                                                  #"_"))]
-                       :tyopaikan_nimi       [:s (:tyopaikan-nimi herate)]
-                       :tyopaikan_ytunnus    [:s (:tyopaikan-ytunnus herate)]
-                       :ohjaaja_nimi      [:s (:tyopaikkaohjaaja-nimi herate)]
-                       :jakso_alkupvm        [:s (:alkupvm herate)]
-                       :jakso_loppupvm       [:s (:loppupvm herate)]
-                       :request_id           [:s request-id]
-                       :tutkinto             [:s tutkinto]
-                       :oppilaitos    [:s (:oid (:oppilaitos opiskeluoikeus))]
-                       :hoks_id              [:n (:hoks-id herate)]
-                       :opiskeluoikeus_oid   [:s (:oid opiskeluoikeus)]
-                       :oppija_oid           [:s (:oppija-oid herate)]
-                       :koulutustoimija      [:s koulutustoimija]
-                       :niputuspvm           [:s (str niputuspvm)]
-                       :tpk-niputuspvm       [:s "ei_maaritelty"]
-                       :alkupvm              [:s (str alkupvm)]
-                       :viimeinen_vastauspvm [:s (str (.plusDays alkupvm 60))]
-                       :rahoituskausi        [:s (c/kausi (:loppupvm herate))]
-                       :tallennuspvm         [:s (str (c/local-date-now))]
-                       :tutkinnonosa_tyyppi  [:s (:tyyppi herate)]
-                       :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]
-                       :tutkintonimike
-                                             [:s (str (seq (map :koodiarvo
-                                                                (:tutkintonimike suoritus))))]
-                       :osaamisala
-                                             [:s (str (seq (arvo/get-osaamisalat
-                                                             suoritus
-                                                             (:oid opiskeluoikeus))))]
-                       :toimipiste_oid [:s (str (arvo/get-toimipiste suoritus))]
-                       :ohjaaja_ytunnus_kj_tutkinto
-                                             [:s (str (:tyopaikkaohjaaja-nimi herate) "/"
-                                                      (:tyopaikan-ytunnus herate) "/"
-                                                      koulutustoimija "/" tutkinto)]
-                       :tyopaikan_normalisoitu_nimi
-                                             [:s (c/normalize-string (:tyopaikan-nimi herate))]
-                       :rahoitusryhma        [:s rahoitusryhma]}
-              jaksotunnus-table-data
-              (cond-> db-data
-                      (not-empty (:tyopaikkaohjaaja-email herate))
-                      (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
-                      (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
-                      (assoc :ohjaaja_puhelinnumero
-                             [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
-                      (not-empty (:tutkinnonosa-koodi herate))
-                      (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
-                      (not-empty (:tutkinnonosa-nimi herate))
-                      (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
-                      (some? (:osa-aikaisuus herate))
-                      (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)])
-                      (some? (:oppisopimuksen-perusta herate))
-                      (assoc :oppisopimuksen_perusta
-                             [:s (last
-                                   (str/split
-                                     (:oppisopimuksen-perusta herate)
-                                     #"_"))]))
-             ]
-          (if (check-open-keskeytymisajanjakso herate)
-            (try
-              (save-results-to-table jaksotunnus-table-data) ;näille ei normaalikäsittelyssä luotu arvo-tunnusta.
-              (catch ConditionalCheckFailedException e
-                (log/warn "Osaamisenhankkimistapa id:llä"
-                          tapa-id
-                          "on jo käsitelty."))
-              (catch AwsServiceException e
-                (log/error "Virhe tietokantaan tallennettaessa, request-id"
-                           request-id)
-                (throw e)))
-            (let [existing-arvo-tunnus "unknown"] ;fixme todo yritetään päätellä dynamosta mahdollisesti jo löytyvä arvo-tunnus
-              (log/info "Heräte with non-open-keskeytymisajanjakso - fixme, needs implementation " tapa-id)
-              )))
-        (catch Exception e
-          (log/error "Unknown error" e)
-          (throw e))))))
+    (log/info "saving results for tapa-id " tapa-id)
+    (try (let [existing (read-previously-processed-hankkimistapa tapa-id)]
+           (log/info "Existing " existing))
+         (catch Exception e
+           (log/error "Aiemman käsittelyn luku jaksotunnustaulusta ei onnistunut:" e)
+           (throw e)))
+    (try
+      (let [request-id    (c/generate-uuid)
+            niputuspvm    (c/next-niputus-date (str (c/local-date-now)))
+            alkupvm       (c/next-niputus-date (:loppupvm herate))
+            suoritus      (c/get-suoritus opiskeluoikeus)
+            tutkinto      (get-in suoritus [:koulutusmoduuli
+                                            :tunniste
+                                            :koodiarvo])
+            rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus (LocalDate/parse (:loppupvm herate)))
+            db-data {:hankkimistapa_id     [:n tapa-id]
+                     :hankkimistapa_tyyppi
+                                           [:s (last (str/split (:hankkimistapa-tyyppi herate)
+                                                                #"_"))]
+                     :tyopaikan_nimi       [:s (:tyopaikan-nimi herate)]
+                     :tyopaikan_ytunnus    [:s (:tyopaikan-ytunnus herate)]
+                     :ohjaaja_nimi      [:s (:tyopaikkaohjaaja-nimi herate)]
+                     :jakso_alkupvm        [:s (:alkupvm herate)]
+                     :jakso_loppupvm       [:s (:loppupvm herate)]
+                     :request_id           [:s request-id]
+                     :tutkinto             [:s tutkinto]
+                     :oppilaitos    [:s (:oid (:oppilaitos opiskeluoikeus))]
+                     :hoks_id              [:n (:hoks-id herate)]
+                     :opiskeluoikeus_oid   [:s (:oid opiskeluoikeus)]
+                     :oppija_oid           [:s (:oppija-oid herate)]
+                     :koulutustoimija      [:s koulutustoimija]
+                     :niputuspvm           [:s (str niputuspvm)]
+                     :tpk-niputuspvm       [:s "ei_maaritelty"]
+                     :alkupvm              [:s (str alkupvm)]
+                     :viimeinen_vastauspvm [:s (str (.plusDays alkupvm 60))]
+                     :rahoituskausi        [:s (c/kausi (:loppupvm herate))]
+                     :tallennuspvm         [:s (str (c/local-date-now))]
+                     :tutkinnonosa_tyyppi  [:s (:tyyppi herate)]
+                     :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]
+                     :tutkintonimike
+                                           [:s (str (seq (map :koodiarvo
+                                                              (:tutkintonimike suoritus))))]
+                     :osaamisala
+                                           [:s (str (seq (arvo/get-osaamisalat
+                                                           suoritus
+                                                           (:oid opiskeluoikeus))))]
+                     :toimipiste_oid [:s (str (arvo/get-toimipiste suoritus))]
+                     :ohjaaja_ytunnus_kj_tutkinto
+                                           [:s (str (:tyopaikkaohjaaja-nimi herate) "/"
+                                                    (:tyopaikan-ytunnus herate) "/"
+                                                    koulutustoimija "/" tutkinto)]
+                     :tyopaikan_normalisoitu_nimi
+                                           [:s (c/normalize-string (:tyopaikan-nimi herate))]
+                     :rahoitusryhma        [:s rahoitusryhma]}
+            results-table-data
+            (cond-> db-data
+                    (not-empty (:tyopaikkaohjaaja-email herate))
+                    (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
+                    (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
+                    (assoc :ohjaaja_puhelinnumero
+                           [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
+                    (not-empty (:tutkinnonosa-koodi herate))
+                    (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
+                    (not-empty (:tutkinnonosa-nimi herate))
+                    (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
+                    (some? (:osa-aikaisuus herate))
+                    (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)])
+                    (some? (:oppisopimuksen-perusta herate))
+                    (assoc :oppisopimuksen_perusta
+                           [:s (last
+                                 (str/split
+                                   (:oppisopimuksen-perusta herate)
+                                   #"_"))]))
+            ]
+        (if (check-open-keskeytymisajanjakso herate)
+          (try
+            (save-results-to-ddb results-table-data) ;näille ei normaalikäsittelyssä luotu arvo-tunnusta.
+            (catch ConditionalCheckFailedException e
+              (log/warn "Osaamisenhankkimistapa id:llä"
+                        tapa-id
+                        "on jo käsitelty."))
+            (catch AwsServiceException e
+              (log/error "Virhe tietokantaan tallennettaessa, request-id"
+                         request-id)
+              (throw e)))
+          (let [existing-arvo-tunnus "unknown"] ;fixme todo yritetään päätellä dynamosta mahdollisesti jo löytyvä arvo-tunnus
+            (log/info "Heräte with non-open-keskeytymisajanjakso - fixme, needs implementation " tapa-id)
+            )))
+      (catch Exception e
+        (log/error "Unknown error" e)
+        (throw e)))
+    ))
 
 (defn -handleRahoitusHerate
   "Käsittelee jaksoherätteet, jotka eHOKS-palvelu lähettää SQS:in kautta. Tekee
