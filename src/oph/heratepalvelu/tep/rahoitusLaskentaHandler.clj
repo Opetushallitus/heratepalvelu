@@ -229,6 +229,7 @@
   joitakin tarkistaksia ja tallentaa herätteen tietokantaan, jos testit
   läpäistään."
   [_ ^SQSEvent event context]
+  (log/info "handling rahoitusheräte " event)
   (log-caller-details-sqs "-handleRahoitusHerate" context)
   (let [messages (seq (.getRecords event))]
     (doseq [^SQSEvent$SQSMessage msg messages]

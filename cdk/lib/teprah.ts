@@ -79,13 +79,13 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             environment: {
                 ...this.envVars,
                 results_table: resultsTable.tableName,
-                caller_id: `1.2.246.562.10.00000000001.${id}-JaksoHandler`,
+                caller_id: `1.2.246.562.10.00000000001.${id}-rahoitusLaskentaHandler`,
             },
             handler: "oph.heratepalvelu.tep.rahoitusLaskentaHandler::handleRahoitusHerate",
-            memorySize: Token.asNumber(this.getParameterFromSsm("jaksohandler-memory")),
+            memorySize: 1024,
             reservedConcurrentExecutions: 1, //fixme, parametrit kuntoon
             timeout: Duration.seconds(10),
-            tracing: lambda.Tracing.ACTIVE
+            //tracing: lambda.Tracing.ACTIVE
         });
 
         rahoitusResultsHandler.addEventSource(new SqsEventSource(tepRahoitusQueue, { batchSize: 1 }));
