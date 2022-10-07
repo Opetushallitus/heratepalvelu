@@ -141,6 +141,8 @@
                 {}
                 (:results-table env)))
 
+(defn math-round "Wrapper Math/round:in ympäri" [^double x] (Math/round x))
+
 (defn save-results
   "Käsittelee herätteen ja tallentaa dynamoon."
   [herate opiskeluoikeus koulutustoimija]
@@ -204,7 +206,7 @@
                                            [:s (c/normalize-string (:tyopaikan-nimi herate))]
                      :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
-                     :uudelleenlaskettu-kesto [:n (or (get uudelleenlaskettu-kesto tapa-id) 0.0)]}
+                     :uudelleenlaskettu-kesto [:n (math-round (get uudelleenlaskettu-kesto tapa-id 0.0))]}
             results-table-data
             (cond-> db-data
                     (not-empty (:tyopaikkaohjaaja-email herate))
