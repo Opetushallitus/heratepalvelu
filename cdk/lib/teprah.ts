@@ -87,7 +87,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             memorySize: 1024,
             reservedConcurrentExecutions: 1, //fixme, parametrit kuntoon
             timeout: Duration.seconds(40),
-            //tracing: lambda.Tracing.ACTIVE
+            tracing: lambda.Tracing.ACTIVE
         });
 
         rahoitusResultsHandler.addEventSource(new SqsEventSource(tepRahoitusQueue, { batchSize: 1 }));
