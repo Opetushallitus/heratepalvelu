@@ -138,7 +138,7 @@
   (let [table (:results-table env)]
     (log/info (str "Saving results to table " table ": " results)))
   (ddb/put-item results
-                {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")} ;fixme? tarvitaankohan tätä tulostaulun tapauksessa?
+                {}
                 (:results-table env)))
 
 (defn save-results
@@ -204,7 +204,7 @@
                                            [:s (c/normalize-string (:tyopaikan-nimi herate))]
                      :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
-                     :uudelleenlaskettu-kesto [:s (get uudelleenlaskettu-kesto tapa-id)]}
+                     :uudelleenlaskettu-kesto [:n (or (get uudelleenlaskettu-kesto tapa-id) 0.0)]}
             results-table-data
             (cond-> db-data
                     (not-empty (:tyopaikkaohjaaja-email herate))
