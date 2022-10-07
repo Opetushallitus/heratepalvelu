@@ -166,6 +166,7 @@
   "Laskee jaksojen kestot ja palauttaa mapin OHT ID:stä kestoihin. Olettaa, että
   kaikki jaksot kuuluvat samalle oppilaalle."
   [jaksot]
+  (log/info "compute-kestot-new for " jaksot)
   (let [first-start-date  (first (sort (map :jakso_alkupvm jaksot)))
         last-end-date     (first (reverse (sort (map :jakso_loppupvm jaksot))))
         concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between
