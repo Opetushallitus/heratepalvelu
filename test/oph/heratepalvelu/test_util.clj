@@ -150,12 +150,12 @@
   (let [logs (map #(parse-string % true)
                   (line-seq (clojure.java.io/reader
                               (str (System/getProperty "java.io.tmpdir")
-                                   "herate/herate-test.log"))))]
+                                   "/herate/herate-test.log"))))]
     (some #(log-row-has-message-and-level % msg lvl) logs)))
 
 (defn delete-test-log-file []
   (io/delete-file (str (System/getProperty "java.io.tmpdir")
-                       "herate/herate-test.log")
+                       "/herate/herate-test.log")
                   true))
 
 (defn clean-logs [f]
