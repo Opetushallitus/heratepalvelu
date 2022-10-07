@@ -161,7 +161,7 @@
                                             :koodiarvo])
             existing-arvo-tunnus (:tunnus (read-previously-processed-hankkimistapa tapa-id))
             rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus (LocalDate/parse (:loppupvm herate)))
-            uudelleenlaskettu-kesto (compute-kestot-new [{:oppija-oid (:oppija-oid herate)
+            uudelleenlaskettu-kesto (compute-kestot-new [{:oppija_oid (:oppija-oid herate)
                                                           :jakso_alkupvm (:alkupvm herate)
                                                           :jakso_loppupvm (:loppupvm herate)}])
             db-data {:hankkimistapa_id     [:n tapa-id]
