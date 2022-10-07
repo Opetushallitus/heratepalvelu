@@ -92,6 +92,45 @@
       (is (= (nh/add-to-jaksot-by-day jaksot-by-day jakso opiskeluoikeus)
              results)))))
 
+(deftest test-add-to-jaksot-by-day-new
+  (testing "Varmistaa, että add-to-jaksot-by-day-new toimii oikein."
+    (let [opiskeluoikeus {:tila
+                          {:opiskeluoikeusjaksot
+                           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
+                            {:alku "2022-01-17" :tila {:koodiarvo "loma"}}
+                            {:alku "2022-01-19" :tila {:koodiarvo "lasna"}}
+                            {:alku "2022-01-21"
+                             :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}
+                            {:alku "2022-02-25" :tila {:koodiarvo "lasna"}}]}}
+          existing-jakso {:jakso_alkupvm "2022-01-10"
+                          :jakso_loppupvm "2022-01-16"}
+          jaksot-by-day {(LocalDate/of 2022 1 10) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 11) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 12) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 13) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 14) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 15) (seq [existing-jakso])
+                         (LocalDate/of 2022 1 16) (seq [existing-jakso])}
+          jakso {:jakso_alkupvm "2022-01-09"
+                 :jakso_loppupvm "2022-01-28"
+                 :keskeytymisajanjaksot [{:alku "2022-01-12"
+                                          :loppu "2022-01-12"}]
+                 :opiskeluoikeus_oid "asdf"}
+          results {(LocalDate/of 2022 1  9) (seq [jakso])
+                   (LocalDate/of 2022 1 10) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 11) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 12) (seq [existing-jakso])
+                   (LocalDate/of 2022 1 13) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 14) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 15) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 16) (seq [jakso existing-jakso])
+                   (LocalDate/of 2022 1 17) (seq [jakso])
+                   (LocalDate/of 2022 1 18) (seq [jakso])
+                   (LocalDate/of 2022 1 19) (seq [jakso])
+                   (LocalDate/of 2022 1 20) (seq [jakso])}]
+      (is (= (nh/add-to-jaksot-by-day-new jaksot-by-day jakso opiskeluoikeus)
+             results)))))
+
 (deftest test-handle-one-day
   (testing "Varmistaa, että handle-one-day toimii oikein."
     (let [jaksot (seq [{:hankkimistapa_id 1 :osa_aikaisuus 100}
@@ -105,6 +144,7 @@
       (is (= (nh/handle-one-day jaksot) results)))))
 
 (def test-compute-kestot-results (atom []))
+(def test-compute-kestot-new-results (atom []))
 
 (defn- do-rounding [values]
   (reduce-kv #(assoc %1 %2 (/ (Math/round (* %3 1000.0)) 1000.0)) {} values))
@@ -181,6 +221,65 @@
                            :oppija "4.4.4.4"}]]
         (is (= (do-rounding (nh/compute-kestot jaksot)) results))
         (is (= (vec (reverse @test-compute-kestot-results)) call-results))))))
+
+(deftest test-compute-kestot-new
+  (testing "Varmistaa, että compute-kestot laskee kestot oikein."
+    (with-redefs
+      [oph.heratepalvelu.external.ehoks/get-tyoelamajaksot-active-between
+       (fn [oppija-oid start end]
+         (reset! test-compute-kestot-new-results
+                 (cons {:type "gtab" :start start :end end :oppija oppija-oid}
+                       @test-compute-kestot-new-results))
+         (seq [{:hankkimistapa_id 1
+                :oppija_oid "4.4.4.4"
+                :osa_aikaisuus 100
+                :jakso_alkupvm "2022-01-03"
+                :jakso_loppupvm "2022-02-05"
+                :keskeytymisajanjaksot []
+                :opiskeluoikeus_oid "1.2.3.1"}
+               {:hankkimistapa_id 2
+                :oppija_oid "4.4.4.4"
+                :osa_aikaisuus 50
+                :jakso_alkupvm "2022-02-07"
+                :jakso_loppupvm "2022-04-04"
+                :opiskeluoikeus_oid "1.2.3.2"}
+               {:hankkimistapa_id 3
+                :oppija_oid "4.4.4.4"
+                :osa_aikaisuus 0
+                :jakso_alkupvm "2022-01-31"
+                :jakso_loppupvm "2022-02-20"
+                :keskeytymisajanjaksot [{:alku "2022-02-16"
+                                         :loppu "2022-02-18"}]
+                :opiskeluoikeus_oid "1.2.3.3"}
+               {:hankkimistapa_id 4
+                :oppija_oid "4.4.4.4"
+                :jakso_alkupvm "2022-01-17"
+                :jakso_loppupvm "2022-02-20"
+                :opiskeluoikeus_oid "1.2.3.4"}
+               {:hankkimistapa_id 5
+                :oppija_oid "4.4.4.4"
+                :jakso_alkupvm "2022-01-01"
+                :jakso_loppupvm "2022-04-01"
+                :opiskeluoikeus_oid "1.2.3.5"}]))
+       oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
+       mock-get-opiskeluoikeus-catch-404]
+      (let [jaksot [{:oppija_oid "4.4.4.4"
+                     :jakso_alkupvm "2022-01-05"
+                     :jakso_loppupvm "2022-02-28"}
+                    {:oppija_oid "4.4.4.4"
+                     :jakso_alkupvm "2022-01-10"
+                     :jakso_loppupvm "2022-03-03"}]
+            expected {1 13.5
+                      2 24.083
+                      3 6.0
+                      4 12.167
+                      5 14.167}
+            call-results [{:type "gtab"
+                           :start "2022-01-05"
+                           :end "2022-03-03"
+                           :oppija "4.4.4.4"}]]
+        (is (= (do-rounding (nh/compute-kestot-new jaksot)) expected))
+        (is (= (vec (reverse @test-compute-kestot-new-results)) call-results))))))
 
 (defn- mock-compute-kestot [jaksot] {(:oppija_oid (first jaksot)) (vec jaksot)})
 
