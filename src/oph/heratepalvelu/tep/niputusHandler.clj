@@ -179,7 +179,7 @@
         do-one #(add-to-jaksot-by-day-new %1
                                       %2
                                       (get oo-map (:opiskeluoikeus_oid %2)))]
-    (log/info (str "compute kestot new jaksot " jaksot ", concurrent " concurrent-jaksot ", oos " oo-map ))
+    (log/info (str "compute kestot new jaksot " jaksot ", concurrent " concurrent-jaksot))
     (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
             {}
             (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))))
