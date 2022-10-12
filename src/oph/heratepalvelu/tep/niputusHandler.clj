@@ -90,6 +90,40 @@
             jaksot-by-day
             (filtered-jakso-days jakso))))
 
+(defn add-to-jaksot-by-day-new
+  "Lisää jaksoon viittaavan referenssin jokaiselle päivälle jaksot-by-day
+  -objektissa, jolloin jakso on voimassa eikä ole keskeytynyt. Objekti
+  jaksot-by-day on map LocalDate-päivämääristä sekvensseihin jaksoista, jotka
+  ovat voimassa ja keskeytymättömiä sinä päivänä."
+  [jaksot-by-day jakso opiskeluoikeus]
+  (let [oo-tilat (reduce #(cons
+                            (if (first %1)
+                              (assoc %2 :loppu (.minusDays (LocalDate/parse
+                                                             (:alku (first %1)))
+                                                           1))
+                              %2)
+                            %1)
+                         []
+                         (reverse
+                           (sort-by
+                             :alku
+                             (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))))
+        kjaksot-parsed (map convert-keskeytymisajanjakso
+                            (:keskeytymisajanjaksot jakso))
+        kjaksot-oo (map convert-keskeytymisajanjakso
+                        (filter #(= "valiaikaisestikeskeytynyt"
+                                        (:koodiarvo (:tila %)))
+                                oo-tilat))
+        kjaksot (concat kjaksot-parsed kjaksot-oo)]
+    (reduce #(if (not-in-keskeytymisajanjakso? %2 kjaksot)
+               (assoc %1 %2 (cons jakso (get %1 %2)))
+               %1)
+            jaksot-by-day
+            (let [start (LocalDate/parse (:jakso_alkupvm jakso))
+                  end (LocalDate/parse (:jakso_loppupvm jakso))]
+              (map #(.plusDays start %)
+                   (range (inc (.between ChronoUnit/DAYS start end))))))))
+
 (defn get-osa-aikaisuus
   "Hakee osa-aikaisuutta jaksosta ja varmistaa, että se on sallittujen rajojen
   sisällä."
@@ -124,6 +158,30 @@
         do-one #(add-to-jaksot-by-day %1
                                       %2
                                       (get oo-map (:opiskeluoikeus_oid %2)))]
+    (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
+            {}
+            (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))))
+
+(defn compute-kestot-new
+  "Laskee jaksojen kestot ja palauttaa mapin OHT ID:stä kestoihin. Olettaa, että
+  kaikki jaksot kuuluvat samalle oppilaalle."
+  [jaksot opiskeluoikeus]
+  (log/info "compute-kestot-new for " jaksot)
+  (let [first-start-date  (first (sort (map :jakso_alkupvm jaksot)))
+        last-end-date     (first (reverse (sort (map :jakso_loppupvm jaksot))))
+        concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between
+                            (:oppija_oid (first jaksot))
+                            first-start-date
+                            last-end-date)
+        oo-map (reduce #(assoc %1 %2 (if (= (:oid opiskeluoikeus) %2)
+                                       opiskeluoikeus
+                                       (koski/get-opiskeluoikeus-catch-404 %2)))
+                       {}
+                       (set (map :opiskeluoikeus_oid concurrent-jaksot)))
+        do-one #(add-to-jaksot-by-day-new %1
+                                      %2
+                                      (get oo-map (:opiskeluoikeus_oid %2)))]
+    (log/info (str "compute kestot new jaksot " jaksot ", concurrent " concurrent-jaksot))
     (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
             {}
             (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))))
