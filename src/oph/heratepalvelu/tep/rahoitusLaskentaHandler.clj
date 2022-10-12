@@ -146,13 +146,9 @@
 (defn save-results
   "Käsittelee herätteen ja tallentaa dynamoon."
   [herate opiskeluoikeus koulutustoimija]
-  (let [tapa-id (:hankkimistapa-id herate)]
+  (let [tapa-id (:hankkimistapa-id herate)
+        start-time (System/currentTimeMillis)]
     (log/info "saving results for tapa-id " tapa-id)
-    (try (let [existing (read-previously-processed-hankkimistapa tapa-id)]
-           (log/info "Existing " existing))
-         (catch Exception e
-           (log/error "Aiemman käsittelyn luku jaksotunnustaulusta ei onnistunut:" e)
-           (throw e)))
     (try
       (let [request-id    (c/generate-uuid)
             niputuspvm    (c/next-niputus-date (str (c/local-date-now)))
@@ -207,7 +203,8 @@
                                            [:s (c/normalize-string (:tyopaikan-nimi herate))]
                      :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
-                     :uudelleenlaskettu-kesto [:n (math-round (get uudelleenlaskettu-kesto tapa-id 0.0))]}
+                     :uudelleenlaskettu-kesto [:n (math-round (get uudelleenlaskettu-kesto tapa-id 0.0))]
+                     :save-timestamp [:s (str start-time)]}
             results-table-data
             (cond-> db-data
                     (not-empty (:tyopaikkaohjaaja-email herate))
