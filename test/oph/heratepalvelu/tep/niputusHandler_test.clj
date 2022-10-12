@@ -278,7 +278,7 @@
                            :start "2022-01-05"
                            :end "2022-03-03"
                            :oppija "4.4.4.4"}]]
-        (is (= (do-rounding (nh/compute-kestot-new jaksot)) expected))
+        (is (= (do-rounding (nh/compute-kestot-new jaksot nil)) expected))
         (is (= (vec (reverse @test-compute-kestot-new-results)) call-results))))))
 
 (defn- mock-compute-kestot [jaksot] {(:oppija_oid (first jaksot)) (vec jaksot)})

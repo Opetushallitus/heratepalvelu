@@ -165,7 +165,7 @@
 (defn compute-kestot-new
   "Laskee jaksojen kestot ja palauttaa mapin OHT ID:stä kestoihin. Olettaa, että
   kaikki jaksot kuuluvat samalle oppilaalle."
-  [jaksot]
+  [jaksot opiskeluoikeus]
   (log/info "compute-kestot-new for " jaksot)
   (let [first-start-date  (first (sort (map :jakso_alkupvm jaksot)))
         last-end-date     (first (reverse (sort (map :jakso_loppupvm jaksot))))
@@ -173,7 +173,9 @@
                             (:oppija_oid (first jaksot))
                             first-start-date
                             last-end-date)
-        oo-map (reduce #(assoc %1 %2 (koski/get-opiskeluoikeus-catch-404 %2))
+        oo-map (reduce #(assoc %1 %2 (if (= (:oid opiskeluoikeus) %2)
+                                       opiskeluoikeus
+                                       (koski/get-opiskeluoikeus-catch-404 %2)))
                        {}
                        (set (map :opiskeluoikeus_oid concurrent-jaksot)))
         do-one #(add-to-jaksot-by-day-new %1

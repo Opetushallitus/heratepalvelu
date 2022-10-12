@@ -165,7 +165,8 @@
             rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus (LocalDate/parse (:loppupvm herate)))
             uudelleenlaskettu-kesto (compute-kestot-new [{:oppija_oid (:oppija-oid herate)
                                                           :jakso_alkupvm (:alkupvm herate)
-                                                          :jakso_loppupvm (:loppupvm herate)}])
+                                                          :jakso_loppupvm (:loppupvm herate)}]
+                                                        opiskeluoikeus)
             db-data {:hankkimistapa_id     [:n tapa-id]
                      :hankkimistapa_tyyppi
                                            [:s (last (str/split (:hankkimistapa-tyyppi herate)
