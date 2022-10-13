@@ -145,10 +145,9 @@
   "Jakaa yhden päivän aikaa silloin keskeytymättömien jaksojen välillä."
   [jaksot]
   (let [fraction (/ 1.0 (count jaksot))]
-    (into {} (map #(vector (:hankkimistapa_id %)
-                           (vector
-                             (/ (* fraction (get-osa-aikaisuus %)) 100)
-                             fraction)) ; ilman osa-aikaisuustietoa
+    (into {} (map #(assoc {} (:hankkimistapa_id %)
+                           {:with-oa (/ (* fraction (get-osa-aikaisuus %)) 100)
+                            :without-oa fraction}) ; ilman osa-aikaisuustietoa
                   jaksot))))
 
 (defn compute-kestot
@@ -171,16 +170,8 @@
             {}
             (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))))
 
-(defn get-concurrent-jaksot
-  "TODO"
-  [jakso]
-  (ehoks/get-tyoelamajaksot-active-between
-    (:oppija_oid jakso)
-    (:jakso_alkupvm jakso)
-    (:jakso_loppupvm jakso)))
-
 (defn get-jaksojen-opiskeluoikeudet
-  "TODO. Funktiossa kokeillaan ensin hakea jaksojen opiskeluoikeuksia `opiskeluoikeudet` mapista. Jos niitä ei löydy tästä, ne haetaan Koskesta."
+  "Funktiossa kokeillaan ensin hakea jaksojen opiskeluoikeuksia `opiskeluoikeudet` mapista. Jos niitä ei löydy tästä, ne haetaan Koskesta."
   [opiskeluoikeudet opiskeluoikeus-oidt]
   (reduce
     (fn [jaksojen-opiskeluoikeudet oid]
@@ -188,64 +179,59 @@
              oid
              (if-let [opiskeluoikeus (get opiskeluoikeudet oid)]
                opiskeluoikeus
-               (koski/get-opiskeluoikeus-catch-404 oid))))
+               (koski/get-opiskeluoikeus oid))))
     {}
     opiskeluoikeus-oidt))
 
-; (defn compute-kesto
-;   "Laskee yksittäisen jakson keston." 
-;   [jakso concurrent-jaksot opiskeluoikeudet]
-;   (let [do-one #(add-to-jaksot-by-day-new
-;                   %1
-;                   %2
-;                   (get opiskeluoikeudet (:opiskeluoikeus_oid %2)))]
-;     (get (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (mapv + %3 (get %1 %2 [0 0]))) acc m))
-;             {}
-;             (map handle-one-day-new (vals (reduce do-one {} concurrent-jaksot))))
-;          :hankkimistapa_id)))
+(defn compute-kesto-old
+  "Laskee yksittäisen jakson keston." 
+  [jakso concurrent-jaksot opiskeluoikeudet]
+  (let [do-one #(add-to-jaksot-by-day
+                  %1
+                  %2
+                  (get opiskeluoikeudet (:opiskeluoikeus_oid %2)))]
+    (get (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
+            {}
+            (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))
+         (:hankkimistapa_id jakso))))
 
-; (defn compute-kestot-new
-;   "TODO. Laskee kestot kaikille jaksoille `jaksot` listassa."
-;   [jaksot]
-;   (loop [kestot {}
-;          opiskeluoikeudet {}
-;          jaksot jaksot]
-;     (if-let [jakso (first jaksot)]
-;       (let [concurrent-jaksot (get-concurrent-jaksot jakso)
-;             jaksojen-opiskeluoikeudet
-;             (get-jaksojen-opiskeluoikeudet opiskeluoikeudet
-;                                            (map :opiskeluoikeus_oid
-;                                                 concurrent-jaksot))]
-;         (recur (assoc kestot
-;                       (:hankkimistapa_id jakso)
-;                       (compute-kesto jakso concurrent-jaksot opiskeluoikeudet))
-;                (merge opiskeluoikeudet jaksojen-opiskeluoikeudet)
-;                (rest jaksot)))
-;       kestot)))
+(defn compute-kesto-new
+  "Laskee yksittäisen jakson keston." 
+  [jakso concurrent-jaksot opiskeluoikeudet]
+  (let [do-one #(add-to-jaksot-by-day-new
+                  %1 %2 (get opiskeluoikeudet (:opiskeluoikeus_oid %2)))]
+    (get (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (merge-with + %3 (get %1 %2))) acc m))
+            {}
+            (map handle-one-day-new (vals (reduce do-one {} concurrent-jaksot))))
+         (:hankkimistapa_id jakso))))
+
+(defn compute-kesto-old-and-new
+  "Laskee yksittäisen jakson keston, vanhalla ja uudella tavalla."
+  [jakso concurrent-jaksot opiskeluoikeudet]
+  {:vanha (compute-kesto-old jakso concurrent-jaksot opiskeluoikeudet)
+   :uusi  (compute-kesto-new jakso concurrent-jaksot opiskeluoikeudet)})
 
 (defn compute-kestot-new
-  "Laskee jaksojen kestot ja palauttaa mapin OHT ID:stä kestoihin. Olettaa, että
-  kaikki jaksot kuuluvat samalle oppilaalle."
-  [jaksot opiskeluoikeus]
-  (log/info "compute-kestot-new for " jaksot)
-  (let [first-start-date  (first (sort (map :jakso_alkupvm jaksot)))
-        last-end-date     (first (reverse (sort (map :jakso_loppupvm jaksot))))
-        concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between
-                            (:oppija_oid (first jaksot))
-                            first-start-date
-                            last-end-date)
-        oo-map (reduce #(assoc %1 %2 (if (= (:oid opiskeluoikeus) %2)
-                                       opiskeluoikeus
-                                       (koski/get-opiskeluoikeus-catch-404 %2)))
-                       {}
-                       (set (map :opiskeluoikeus_oid concurrent-jaksot)))
-        do-one #(add-to-jaksot-by-day-new %1
-                                      %2
-                                      (get oo-map (:opiskeluoikeus_oid %2)))]
-    (log/info (str "compute kestot new jaksot " jaksot ", concurrent " concurrent-jaksot))
-    (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (mapv + %3 (get %1 %2 [0 0]))) acc m))
-            {}
-            (map handle-one-day-new (vals (reduce do-one {} concurrent-jaksot))))))
+  "Laskee kestot kaikille jaksoille `jaksot` listassa."
+  [jaksot]
+  (loop [kestot {}
+         opiskeluoikeudet {}
+         jaksot jaksot]
+    (if-let [jakso (first jaksot)]
+      (let [concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between
+                                (:oppija_oid jakso)
+                                (:jakso_alkupvm jakso)
+                                (:jakso_loppupvm jakso))
+            jaksojen-opiskeluoikeudet
+            (get-jaksojen-opiskeluoikeudet opiskeluoikeudet
+                                           (map :opiskeluoikeus_oid
+                                                concurrent-jaksot))]
+        (recur (assoc kestot
+                      (:hankkimistapa_id jakso)
+                      (compute-kesto-old-and-new jakso concurrent-jaksot jaksojen-opiskeluoikeudet))
+               (merge opiskeluoikeudet jaksojen-opiskeluoikeudet)
+               (rest jaksot)))
+      kestot)))
 
 (defn group-jaksot-and-compute-kestot
   "Ryhmittää jaksot oppija_oid:n perusteella ja laskee niiden kestot."
