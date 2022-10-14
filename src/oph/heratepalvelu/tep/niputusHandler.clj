@@ -35,7 +35,7 @@
 (defn not-before-or-after-opiskeluoikeus?
   "Varmistaa, että jakson alkamis- ja päättymispäivät eivät ole opiskeluoikeuden alku- ja loppuajankohdan ulkopuolella."
   [start end oo-tilat]
-  (when-not (seq oo-tilat)
+  (when-not (empty? oo-tilat)
     (and (.isAfter start (:alku (first oo-tilat)))
          (or (not (:loppu (last oo-tilat)))
              (.isBefore end (:loppu (last oo-tilat)))))))
