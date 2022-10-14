@@ -35,7 +35,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
                 queue: tepRahoitusDLQ,
                 maxReceiveCount: 5
             },
-            visibilityTimeout: Duration.seconds(60),
+            visibilityTimeout: Duration.seconds(90),
             retentionPeriod: Duration.days(14)
         });
 
