@@ -416,11 +416,11 @@
                     :jakso_alkupvm "2021-01-15"
                     :jakso_loppupvm "2022-04-29"}]
             results {4 {:vanha 37.558
-                        :uusi {:with-oa 57.841
-                               :without-oa 57.841}}
+                        :uusi {:with-oa 52.675
+                               :without-oa 52.675}}
                      7 {:vanha 60.079
-                        :uusi {:with-oa 112.654
-                               :without-oa 225.308}}}
+                        :uusi {:with-oa 84.321
+                               :without-oa 168.641}}}
             call-results [{:type "gtab"
                            :start "2021-05-15"
                            :end "2021-12-01"

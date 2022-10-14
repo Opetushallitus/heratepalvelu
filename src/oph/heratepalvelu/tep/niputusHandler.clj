@@ -32,13 +32,15 @@
                    (and (:loppu %) (.isAfter date (:loppu %))))
               keskeytymisajanjaksot)))
 
-(defn not-before-or-after-opiskeluoikeus?
-  "Varmistaa, että jakson alkamis- ja päättymispäivät eivät ole opiskeluoikeuden alku- ja loppuajankohdan ulkopuolella."
-  [start end oo-tilat]
-  (when-not (empty? oo-tilat)
-    (and (.isAfter start (:alku (first oo-tilat)))
-         (or (not (:loppu (last oo-tilat)))
-             (.isBefore end (:loppu (last oo-tilat)))))))
+; (defn not-before-or-after-opiskeluoikeus?
+;   "Varmistaa, että jakson alkamis- ja päättymispäivät eivät ole opiskeluoikeuden alku- ja loppuajankohdan ulkopuolella."
+;   [start end oo-tilat]
+;   (when-not (empty? oo-tilat)
+;     (let [oo-alku  (:alku (first oo-tilat))
+;           oo-loppu (:loppu (last oo-tilat))]
+;       (and (or (.isAfter start oo-alku) (.isEqual start oo-alku))
+;            (or (not (:loppu (last oo-tilat)))
+;                (or (.isBefore end oo-loppu) (.isEqual end oo-loppu)))))))
 
 (defn is-weekday?
   "Tarkistaa, onko annettu päivämäärä arkipäivä."
@@ -119,9 +121,8 @@
             jaksot-by-day
             (let [start (LocalDate/parse (:jakso_alkupvm jakso))
                   end (LocalDate/parse (:jakso_loppupvm jakso))]
-              (when (not-before-or-after-opiskeluoikeus? start end oo-tilat)
-                (map #(.plusDays start %)
-                     (range (inc (.between ChronoUnit/DAYS start end)))))))))
+              (map #(.plusDays start %)
+                   (range (inc (.between ChronoUnit/DAYS start end))))))))
 
 (defn get-osa-aikaisuus
   "Hakee osa-aikaisuutta jaksosta ja varmistaa, että se on sallittujen rajojen
