@@ -159,7 +159,8 @@
                                             :koodiarvo])
             existing-arvo-tunnus (:tunnus (read-previously-processed-hankkimistapa tapa-id))
             rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus (LocalDate/parse (:loppupvm herate)))
-            jakso {:oppija_oid (:oppija-oid herate)
+            jakso {:hankkimistapa_id tapa-id
+                   :oppija_oid (:oppija-oid herate)
                    :jakso_alkupvm (:alkupvm herate)
                    :jakso_loppupvm (:loppupvm herate)}
             concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between
