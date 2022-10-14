@@ -11,7 +11,7 @@
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as koski]
-            [oph.heratepalvelu.tep.niputusHandler :refer [compute-kestot-new]]
+            [oph.heratepalvelu.tep.niputusHandler :as nh]
             [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [schema.core :as s])
   (:import (clojure.lang ExceptionInfo)
@@ -159,10 +159,17 @@
                                             :koodiarvo])
             existing-arvo-tunnus (:tunnus (read-previously-processed-hankkimistapa tapa-id))
             rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus (LocalDate/parse (:loppupvm herate)))
-            uudelleenlaskettu-kesto (compute-kestot-new [{:oppija_oid (:oppija-oid herate)
-                                                          :jakso_alkupvm (:alkupvm herate)
-                                                          :jakso_loppupvm (:loppupvm herate)}]
-                                                        opiskeluoikeus)
+            jakso {:oppija_oid (:oppija-oid herate)
+                   :jakso_alkupvm (:alkupvm herate)
+                   :jakso_loppupvm (:loppupvm herate)}
+            concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between
+                                (:oppija_oid jakso)
+                                (:jakso_alkupvm jakso)
+                                (:jakso_loppupvm jakso))
+            opiskeluoikeudet (nh/get-jaksojen-opiskeluoikeudet
+                               (assoc {} (:opiskeluoikeus_oid herate) opiskeluoikeus)
+                               (map :opiskeluoikeus_oid concurrent-jaksot))
+            kestot (nh/compute-kesto-old-and-new jakso concurrent-jaksot opiskeluoikeudet)
             db-data {:hankkimistapa_id     [:n tapa-id]
                      :hankkimistapa_tyyppi
                                            [:s (last (str/split (:hankkimistapa-tyyppi herate)
@@ -203,7 +210,9 @@
                                            [:s (c/normalize-string (:tyopaikan-nimi herate))]
                      :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
-                     :uudelleenlaskettu-kesto [:n (math-round (get uudelleenlaskettu-kesto tapa-id 0.0))]
+                     :vanha-kesto           [:n (math-round (get-in kestot [tapa-id :vanha] 0.0))]
+                     :uusi-kesto-with-oa    [:n (math-round (get-in kestot [tapa-id :uusi :with-oa] 0.0))]
+                     :uusi-kesto-without-oa [:n (math-round (get-in kestot [tapa-id :uusi :without-oa] 0.0))]
                      :save-timestamp [:s (str start-time)]}
             results-table-data
             (cond-> db-data
@@ -225,7 +234,7 @@
                                    (:oppisopimuksen-perusta herate)
                                    #"_"))]))
             ]
-        (log/info (str "Uudelleenlaskettu kesto " uudelleenlaskettu-kesto))
+        (log/info (str "Uudelleenlaskettu kesto " kestot))
         (when (check-open-keskeytymisajanjakso herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
         (try
