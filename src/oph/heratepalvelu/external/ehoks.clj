@@ -9,7 +9,8 @@
 (defn- ehoks-query-base-options
   "Alustavat optiot ehoks-kyselyyn."
   []
-  {:headers {:ticket (cas/get-service-ticket "/ehoks-virkailija-backend"
+  {:headers {:ticket (cas/get-service-ticket (or (:ehoks-cas-base env)
+                                                 "/ehoks-virkailija-backend")
                                              "cas-security-check")}
    :as      :json})
 
