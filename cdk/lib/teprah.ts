@@ -80,8 +80,8 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             code: lambdaCode,
             environment: {
                 ...this.envVars,
-                ehoks_url: `${virkailija_url}/ehoks-virkailija-backend/api/v1/`, //fixme, add -freeze for prod
-                ehoks_cas_base: `/ehoks-virkailija-backend`, //fixme, add -freeze for prod
+                ehoks_url: `${virkailija_url}/ehoks-virkailija-backend-freeze/api/v1/`, //note -freeze
+                ehoks_cas_base: `/ehoks-virkailija-backend-freeze`,
                 results_table: resultsTable.tableName,
                 jaksotunnus_table: tepJaksotunnusTable.tableName, //this should only be read from by the handler...
                 caller_id: `1.2.246.562.10.00000000001.${id}-rahoitusLaskentaHandler`,
