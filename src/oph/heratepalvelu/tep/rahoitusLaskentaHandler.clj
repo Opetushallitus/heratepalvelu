@@ -235,7 +235,7 @@
                                    (:oppisopimuksen-perusta herate)
                                    #"_"))]))
             ]
-        (log/info (str "Uudelleenlaskettu kesto " kestot))
+        (log/info (str "Uudelleenlaskettu kesto tapa-id:lle " tapa-id ": " kestot))
         (when (check-open-keskeytymisajanjakso herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
         (try
