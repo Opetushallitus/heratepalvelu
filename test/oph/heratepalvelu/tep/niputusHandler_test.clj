@@ -163,44 +163,42 @@
                           {:opiskeluoikeusjaksot
                            [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
                             {:alku "2022-02-02"
-                             :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}]}}))
-
-(defn- mock-get-opiskeluoikeus [oo-oid]
-  (cond
+                             :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}]}}
     (= oo-oid "1.2.3.8") {:tila
-                                             {:opiskeluoikeusjaksot
-                                              [{:alku "2020-01-01", :tila {:koodiarvo "lasna"}}]}}
+                          {:opiskeluoikeusjaksot
+                           [{:alku "2020-01-01", :tila {:koodiarvo "lasna"}}]}}
     (= oo-oid "1.2.3.7") {:tila
-                                             {:opiskeluoikeusjaksot
-                                              [{:alku "2020-04-06",
-                                                :tila {:koodiarvo "lasna"}}]}}
+                          {:opiskeluoikeusjaksot
+                           [{:alku "2020-04-06",
+                             :tila {:koodiarvo "lasna"}}]}}
     (= oo-oid "1.2.3.9") {:tila
-                                             {:opiskeluoikeusjaksot
-                                              [{:alku "2022-08-25",
-                                                :tila {:koodiarvo "lasna"}}]}}
+                          {:opiskeluoikeusjaksot
+                           [{:alku "2022-08-25",
+                             :tila {:koodiarvo "lasna"}}]}}
     (= oo-oid "1.2.3.6") {:tila
-                                            {:opiskeluoikeusjaksot
-                                             [{:alku "2020-03-05",
-                                               :tila {:koodiarvo "lasna"}}]}}
+                          {:opiskeluoikeusjaksot
+                           [{:alku "2020-03-05",
+                             :tila {:koodiarvo "lasna"}}]}}
     (= oo-oid "1.2.3.10") {:tila
-                                             {:opiskeluoikeusjaksot
-                                              [{:alku "2020-10-27",
-                                                :tila {:koodiarvo "lasna"}}]}}
-    :else {}))
+                           {:opiskeluoikeusjaksot
+                            [{:alku "2020-10-27",
+                              :tila {:koodiarvo "lasna"}}]}}
+    :else nil))
 
 (deftest get-jaksojen-opiskeluoikeudet
   (testing "Varmistaa, että get-jaksojen-opiskeluoikeudet toimii kuten pitää."
     (with-redefs
-      [oph.heratepalvelu.external.koski/get-opiskeluoikeus
-       mock-get-opiskeluoikeus]
+      [oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
+       mock-get-opiskeluoikeus-catch-404]
       (let [opiskeluoikeudet {"1.2.3.a" "a" "1.2.3.b" "b"}]
         (is (= {} (nh/get-jaksojen-opiskeluoikeudet {} [])))
         (is (= {"1.2.3.a" "a"} (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.a"])))
-        (is (= {"1.2.3.a" {} "1.2.3.b" {}} (nh/get-jaksojen-opiskeluoikeudet {} ["1.2.3.a" "1.2.3.b"])))
-        (is (= {"1.2.3.c" {}} (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.c"])))
+        (is (= {"1.2.3.a" nil "1.2.3.b" nil} (nh/get-jaksojen-opiskeluoikeudet {} ["1.2.3.a" "1.2.3.b"])))
+        (is (= {"1.2.3.c" nil} (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.c"])))
         (is (= {"1.2.3.7" {:tila {:opiskeluoikeusjaksot [{:alku "2020-04-06", :tila {:koodiarvo "lasna"}}]}}
-                "1.2.3.9" {:tila {:opiskeluoikeusjaksot [{:alku "2022-08-25", :tila {:koodiarvo "lasna"}}]}}}
-               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.7" "1.2.3.9"])))
+                "1.2.3.9" {:tila {:opiskeluoikeusjaksot [{:alku "2022-08-25", :tila {:koodiarvo "lasna"}}]}}
+                "1.2.3.10.onnea.matkaan" nil}
+               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.7" "1.2.3.9" "1.2.3.10.onnea.matkaan"])))
         (is (= {"1.2.3.8" {:tila {:opiskeluoikeusjaksot [{:alku "2020-01-01", :tila {:koodiarvo "lasna"}}]}}
                 "1.2.3.a" "a"
                 "1.2.3.b" "b"}
@@ -266,7 +264,7 @@
         (is (= (vec (reverse @test-compute-kestot-results)) call-results))))))
 
 (deftest test-compute-kestot-new
-  (testing "Varmistaa, että compute-kestot laskee kestot oikein."
+  (testing "Varmistaa, että compute-kestot-new laskee kestot oikein."
     (with-redefs
       [oph.heratepalvelu.external.ehoks/get-tyoelamajaksot-active-between
        (fn [oppija-oid start end]
@@ -404,9 +402,17 @@
                 :jakso_loppupvm "2022-04-29",
                 :osa_aikaisuus 50,
                 :tyyppi "hato",
-                :keskeytymisajanjaksot []}]))
-       oph.heratepalvelu.external.koski/get-opiskeluoikeus
-       mock-get-opiskeluoikeus]
+                :keskeytymisajanjaksot []}
+               {:opiskeluoikeus_oid "1.2.3.10.onnea.etsintaan",
+                :hankkimistapa_id 666,
+                :jakso_alkupvm "2021-08-27",
+                :jakso_loppupvm "2022-04-29",
+                :osa_aikaisuus 100,
+                :tyyppi "hato",
+                :keskeytymisajanjaksot []}
+               ]))
+       oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
+       mock-get-opiskeluoikeus-catch-404]
       (let [jaksot [{:hankkimistapa_id 4
                      :oppija_oid "4.4.4.4"
                      :jakso_alkupvm "2021-05-15"
