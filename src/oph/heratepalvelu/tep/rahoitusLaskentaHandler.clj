@@ -211,9 +211,9 @@
                                            [:s (c/normalize-string (:tyopaikan-nimi herate))]
                      :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
-                     :vanha-kesto           [:n (math-round (get kestot :vanha 0.0))]
-                     :uusi-kesto-with-oa    [:n (math-round (get-in kestot [:uusi :with-oa] 0.0))]
-                     :uusi-kesto-without-oa [:n (math-round (get-in kestot [:uusi :without-oa] 0.0))]
+                     :vanha-kesto           [:n (math-round (or (get kestot :vanha) 0.0))]
+                     :uusi-kesto-with-oa    [:n (math-round (or (get-in kestot [:uusi :with-oa]) 0.0))]
+                     :uusi-kesto-without-oa [:n (math-round (or (get-in kestot [:uusi :without-oa]) 0.0))]
                      :save-timestamp [:s (str start-time)]}
             results-table-data
             (cond-> db-data
@@ -235,7 +235,7 @@
                                    (:oppisopimuksen-perusta herate)
                                    #"_"))]))
             ]
-        (log/info (str "Uudelleenlaskettu kesto " kestot))
+        (log/info (str "Uudelleenlaskettu kesto tapa-id:lle " tapa-id ": " kestot))
         (when (check-open-keskeytymisajanjakso herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
         (try

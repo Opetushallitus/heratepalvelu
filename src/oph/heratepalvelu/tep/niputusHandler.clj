@@ -180,7 +180,7 @@
              oid
              (if-let [opiskeluoikeus (get opiskeluoikeudet oid)]
                opiskeluoikeus
-               (koski/get-opiskeluoikeus oid))))
+               (koski/get-opiskeluoikeus-catch-404 oid))))
     {}
     opiskeluoikeus-oidt))
 
@@ -209,8 +209,9 @@
 (defn compute-kesto-old-and-new
   "Laskee yksittäisen jakson keston, vanhalla ja uudella tavalla."
   [jakso concurrent-jaksot opiskeluoikeudet]
-  {:vanha (compute-kesto-old jakso concurrent-jaksot opiskeluoikeudet)
-   :uusi  (compute-kesto-new jakso concurrent-jaksot opiskeluoikeudet)})
+  (let [cc-jaksot-with-oo (filter #(get opiskeluoikeudet (:opiskeluoikeus_oid %1)) concurrent-jaksot)]
+    {:vanha (compute-kesto-old jakso cc-jaksot-with-oo opiskeluoikeudet)
+     :uusi  (compute-kesto-new jakso cc-jaksot-with-oo opiskeluoikeudet)}))
 
 (defn compute-kestot-new
   "Laskee kestot kaikille jaksoille `jaksot` listassa."
