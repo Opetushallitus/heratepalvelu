@@ -19,6 +19,7 @@
 
 (defn- get-opiskeluoikeus-catch-404
   [oid]
+  (Thread/sleep 300) ; hidastetaan koski-palveluun kohdistuvaa hetkellistä kuormitusta
   (try (get-opiskeluoikeus oid)
        (catch ExceptionInfo e
          (when-not (and (:status (ex-data e))
@@ -49,22 +50,21 @@
 
 (def matching (get-matching-items (:tmp-dir env)))
 
-(defn- get-rahoitusryhma
+(defn- resolve-rahoitusryhma
   [item]
-  ; tämä vähentää koski-palveluun kohdistuvaa kuormaa
-  (Thread/sleep 300)
   (let [opiskeluoikeus (get-opiskeluoikeus-catch-404 (:opiskeluoikeus_oid item))]
     (c/get-rahoitusryhma opiskeluoikeus (LocalDate/parse (:herate item)))))
 
 (defn- write-csv-row
   [item w]
   (.write w
-          (str (:tunnus item) "," (get-rahoitusryhma item) "\n")))
+          (str (:tunnus item) "," (resolve-rahoitusryhma item) "\n"))
+  (.flush w))
 
 (defn generate-csv
   "Tämä funktio ajetaan paikallisesti lein replissä. Funktio odottaa .lein-env -tiedostossa olevan seuraavat arvot:
-  koski-url, koski-user, koski-pwd, tmp-dir ja output-csv-filename. Laita S3:sta haetut jaksotunnus-json-tiedostot
-  kyseiseen tmp-hakemistoon. CSV-tiedosto muodostuu myös samaan tmp-hakemistoon."
+  koski-url, koski-user, koski-pwd, tmp-dir ja output-csv-filename. Laita S3:sta haetut jaksotunnus-taulun
+  json-tiedostot määriteltyyn tmp-hakemistoon. CSV-tiedosto muodostuu myös samaan tmp-hakemistoon."
   ([amount]
    (with-open [w (io/writer (str (:tmp-dir env) "/" (:output-csv-filename env)) :append true)]
      (doall
