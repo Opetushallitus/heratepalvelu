@@ -236,7 +236,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     ONRhenkilomodifyHandler.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
-      resources: [ONRhenkilomodifyQueue.queueArn, herateDeadLetterQueue.queueArn],
+      resources: [ONRhenkilomodifyQueue.queueArn],
       actions: [
         "sqs:GetQueueUrl",
         "sqs:ReceiveMessage",
