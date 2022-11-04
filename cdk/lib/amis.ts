@@ -236,7 +236,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     ONRhenkilomodifyHandler.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
-      resources: [ONRhenkilomodifyQueue.queueArn, herateDeadLetterQueue.queueArn],
+      resources: [ONRhenkilomodifyQueue.queueArn],
       actions: [
         "sqs:GetQueueUrl",
         "sqs:ReceiveMessage",
@@ -244,6 +244,38 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         "sqs:DeleteMessage",
         "sqs:GetQueueAttributes"
       ]}));
+
+    const OnrHenkiloModifyDlqResendHandler = new lambda.Function(this, "OnrHenkiloModifyDlqResendHandler", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        queue_name: ONRhenkilomodifyQueue.queueName
+      },
+      handler: "oph.heratepalvelu.util.DLQresendHandler::handleDLQresend",
+      memorySize: 1024,
+      timeout: Duration.seconds(60),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
+    OnrHenkiloModifyDlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [ONRhenkilomodifyQueue.queueArn, ONRhenkilomodifyDLQ.queueArn],
+      actions: [
+        "sqs:GetQueueUrl",
+        "sqs:SendMessage",
+        "sqs:ReceiveMessage",
+        "sqs:ChangeMessageVisibility",
+        "sqs:DeleteMessage",
+        "sqs:GetQueueAttributes"
+      ]
+    }));
+
+    new CfnEventSourceMapping(this, "OnrHenkiloModifyDlqResendEventSourceMapping", {
+      eventSourceArn: ONRhenkilomodifyDLQ.queueArn,
+      functionName: OnrHenkiloModifyDlqResendHandler.functionName,
+      batchSize: 1,
+      enabled: false
+    });
 
     const AMISherateEmailHandler = new lambda.Function(this, "AMISHerateEmailHandler", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
@@ -613,7 +645,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISTimedOperationsHandler,
       AMISMassHerateResendHandler,
       EhoksOpiskeluoikeusUpdateHandler,
-      ONRhenkilomodifyHandler,
       dbChanger
      // dbArchiver,
     ].forEach(
