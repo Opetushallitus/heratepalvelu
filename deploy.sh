@@ -9,7 +9,7 @@ prod="sade"
 
 if [ "$#" -eq 2 ]; then
   if lein test; then
-    lein uberjar
+    lein with-profile uberjar uberjar
     cd cdk || exit $?
     if [ "$stack" == "amis" ]; then
       if [ "$env" == "$prod" ]; then

@@ -505,7 +505,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       }
     );
 
-/*    const AMISherateArchive2021_2022Table = new dynamodb.Table(
+    const AMISherateArchive2021_2022Table = new dynamodb.Table(
       this,
       "AMISHerateArchive2021to2022Table",
       {
@@ -520,7 +520,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
         serverSideEncryption: true
       }
-    );*/
+    );
 
     const AMISTimedOperationsHandler = new lambda.Function(
       this,
@@ -611,7 +611,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     AMISherateTable.grantReadWriteData(dbChanger);
 
- /*   const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
+    const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code:lambdaCode,
       environment: {
@@ -631,7 +631,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     AMISherateTable.grantReadWriteData(dbArchiver);
     AMISherateArchive2019_2020Table.grantReadWriteData(dbArchiver);
     AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);
-    AMISherateArchive2021_2022Table.grantReadWriteData(dbArchiver);*/
+    AMISherateArchive2021_2022Table.grantReadWriteData(dbArchiver);
 
     [
       AMISHerateHandler,
@@ -646,8 +646,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISMassHerateResendHandler,
       EhoksOpiskeluoikeusUpdateHandler,
       ONRhenkilomodifyHandler,
-      dbChanger
-     // dbArchiver,
+      dbChanger,
+      dbArchiver,
     ].forEach(
       lambdaFunction => {
         AMISherateTable.grantReadWriteData(lambdaFunction);
