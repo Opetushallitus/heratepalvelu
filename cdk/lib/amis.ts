@@ -611,6 +611,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     AMISherateTable.grantReadWriteData(dbChanger);
 
+    /*
     const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code:lambdaCode,
@@ -632,6 +633,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     AMISherateArchive2019_2020Table.grantReadWriteData(dbArchiver);
     AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);
     AMISherateArchive2021_2022Table.grantReadWriteData(dbArchiver);
+    */
 
     [
       AMISHerateHandler,
@@ -647,7 +649,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       EhoksOpiskeluoikeusUpdateHandler,
       ONRhenkilomodifyHandler,
       dbChanger,
-      dbArchiver,
+      // dbArchiver,
     ].forEach(
       lambdaFunction => {
         AMISherateTable.grantReadWriteData(lambdaFunction);
