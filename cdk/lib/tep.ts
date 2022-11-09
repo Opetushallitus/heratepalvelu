@@ -510,6 +510,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     jaksotunnusTable.grantReadWriteData(dbChangerTep);
 
     // Arkistointifunktiot
+    /*
     const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
@@ -547,6 +548,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     nippuTable.grantReadWriteData(archiveNippuTable);
     nippuArchive2021_2022Table.grantReadWriteData(archiveNippuTable);
+    */
 
     // IAM
 
@@ -560,8 +562,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       SmsMuistutusHandler,
       EmailMuistutusHandler,
       dbChangerTep,
-      archiveJaksoTable,
-      archiveNippuTable,
+      // archiveJaksoTable,
+      // archiveNippuTable,
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
