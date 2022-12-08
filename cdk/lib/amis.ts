@@ -95,6 +95,15 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       projectionType: dynamodb.ProjectionType.ALL
     });
 
+    AMISherateTable.addGlobalSecondaryIndex({
+      indexName: "ehoksIdIndex",
+      partitionKey: {
+        name: "ehoks-id",
+        type: dynamodb.AttributeType.NUMBER
+      },
+      projectionType: dynamodb.ProjectionType.KEYS_ONLY
+    })
+
     const organisaatioWhitelistTable = new dynamodb.Table(
       this,
       "OrganisaatioWhitelistTable",

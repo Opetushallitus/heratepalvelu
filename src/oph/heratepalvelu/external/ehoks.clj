@@ -150,3 +150,9 @@
   päättyneistä työelämäjaksoista"
   []
   (ehoks-delete "heratepalvelu/tyopaikkaohjaajan-yhteystiedot" {}))
+
+(defn delete-opiskelijan-yhteystiedot
+  "Poistaa opiskelijan yhteystiedot yli kolme kuukautta sitten
+  päättyneistä hokseista"
+  []
+  (ehoks-delete "heratepalvelu/opiskelijan-yhteystiedot" {}))
