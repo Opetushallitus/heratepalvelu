@@ -11,13 +11,16 @@
 (def mock-env {:ehoks-url "https://oph-ehoks.com/"
                :herate-table "herate-table"})
 
-(def starting-table-contents [{:ehoks-id [:n 1]
+(def starting-table-contents [{:toimija_oppija [:s "1/1"]
+                               :ehoks-id [:n 1]
                                :sahkoposti [:s "oppilas1@gmail.com"]
                                :puhelinnumero [:s "0402222222"]}
-                              {:ehoks-id [:n 2]
+                              {:toimija_oppija [:s "2/2"]
+                               :ehoks-id [:n 2]
                                :sahkoposti [:s "oppilas2@gmail.com"]
                                :puhelinnumero [:s "0402222223"]}
-                              {:ehoks-id [:n 3]
+                              {:toimija_oppija [:s "3/3"]
+                               :ehoks-id [:n 3]
                                :sahkoposti [:s "oppilas3@gmail.com"]
                                :puhelinnumero [:s "0402222224"]}])
 
@@ -42,11 +45,18 @@
                  :headers
                  {:ticket
                   "service-ticket/ehoks-virkailija-backend/cas-security-check"}}
-                {:body {:data {:hoks-ids [1 2 3]}}})
+                {:body {:data {:hoksit [{:ehoks-id 1
+                                         :koulutustoimija-oid "1"
+                                         :oppija-oid "1"}
+                                        {:ehoks-id 2
+                                         :koulutustoimija-oid "2"
+                                         :oppija-oid "2"}
+                                        {:ehoks-id 3
+                                         :koulutustoimija-oid "3"
+                                         :oppija-oid "3"}]}}})
   (mdb/clear-mock-db)
   (mdb/create-table (:herate-table mock-env)
-                    {:primary-key :ehoks-id
-                     :sort-key :ehoks-id})
+                    {:primary-key :toimija_oppija})
   (mdb/set-table-contents (:herate-table mock-env) starting-table-contents))
 
 (defn- teardown-test []
@@ -110,13 +120,16 @@
                   {:level :info
                    :message "Poistettu 3 opiskelijan yhteystiedot"})))
       (is (= (mdb/get-table-values (:herate-table mock-env))
-             #{{:ehoks-id [:n 1]
+             #{{:toimija_oppija [:s "1/1"]
+                :ehoks-id [:n 1]
                 :sahkoposti [:s ""]
                 :puhelinnumero [:s ""]}
-               {:ehoks-id [:n 2]
+               {:toimija_oppija [:s "2/2"]
+                :ehoks-id [:n 2]
                 :sahkoposti [:s ""]
                 :puhelinnumero [:s ""]}
-               {:ehoks-id [:n 3]
+               {:toimija_oppija [:s "3/3"]
+                :ehoks-id [:n 3]
                 :sahkoposti [:s ""]
                 :puhelinnumero [:s ""]}}))
       (teardown-test))))

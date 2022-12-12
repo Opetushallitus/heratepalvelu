@@ -30,13 +30,15 @@
 
   (log/info "Käynnistetään opiskelijan yhteystietojen poisto")
   (let [hoksit (get-in (ehoks/delete-opiskelijan-yhteystiedot)
-                       [:body :data :hoks-ids])]
-    (doseq [hoks-id hoksit]
-      (log/info "Poistetaan opiskelijan yhteystiedot (ehoks-id = "
-                hoks-id
-                ")")
+                       [:body :data :hoksit])]
+    (doseq [hoks hoksit]
+      (log/info (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = "
+                     (:koulutustoimija-oid hoks) "/" (:oppija-oid hoks)
+                     ")"))
       (ddb/update-item
-       {:ehoks-id [:n hoks-id]}
+       {:toimija_oppija [:s (str (:koulutustoimija-oid hoks)
+                                 "/"
+                                 (:oppija-oid hoks))]}
        {:update-expr "SET #eml = :eml_value, #puh = :puh_value"
         :expr-attr-names {"#eml" "sahkoposti"
                           "#puh" "puhelinnumero"}

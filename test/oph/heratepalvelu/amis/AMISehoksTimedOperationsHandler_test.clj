@@ -18,7 +18,15 @@
 
 (defn- mock-delete-call []
   (reset! delete-endpoint-called true)
-  {:body {:data {:hoks-ids [1 2 3]}}})
+  {:body {:data {:hoksit [{:ehoks-id 1
+                           :koulutustoimija-oid "1"
+                           :oppija-oid "1"}
+                          {:ehoks-id 2
+                           :koulutustoimija-oid "2"
+                           :oppija-oid "2"}
+                          {:ehoks-id 3
+                           :koulutustoimija-oid "3"
+                           :oppija-oid "3"}]}}})
 
 (defn- mock-update-item [_ __ ___]
   (swap! update-item-called inc))
