@@ -111,14 +111,14 @@
                    :message "Poistettu 3 opiskelijan yhteystiedot"})))
       (is (= (mdb/get-table-values (:herate-table mock-env))
              #{{:ehoks-id [:n 1]
-                :sahkoposti [:s nil]
-                :puhelinnumero [:s nil]}
+                :sahkoposti [:s ""]
+                :puhelinnumero [:s ""]}
                {:ehoks-id [:n 2]
-                :sahkoposti [:s nil]
-                :puhelinnumero [:s nil]}
+                :sahkoposti [:s ""]
+                :puhelinnumero [:s ""]}
                {:ehoks-id [:n 3]
-                :sahkoposti [:s nil]
-                :puhelinnumero [:s nil]}}))
+                :sahkoposti [:s ""]
+                :puhelinnumero [:s ""]}}))
       (teardown-test))))
 
 ;; -handleMassHerateResend testi

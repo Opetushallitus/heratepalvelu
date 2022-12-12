@@ -33,14 +33,14 @@
                        [:body :data :hoks-ids])]
     (doseq [hoks-id hoksit]
       (log/info "Poistetaan opiskelijan yhteystiedot (ehoks-id = "
-                (:tjk-id hoks-id)
+                hoks-id
                 ")")
       (ddb/update-item
        {:ehoks-id [:n hoks-id]}
        {:update-expr "SET #eml = :eml_value, #puh = :puh_value"
         :expr-attr-names {"#eml" "sahkoposti"
                           "#puh" "puhelinnumero"}
-        :expr-attr-vals {":eml_value" [:s nil] ":puh_value" [:s nil]}}
+        :expr-attr-vals {":eml_value" [:s ""] ":puh_value" [:s ""]}}
        (:herate-table env)))
     (log/info "Poistettu" (count hoksit) "opiskelijan yhteystiedot")))
 
