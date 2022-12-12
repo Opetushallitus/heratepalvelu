@@ -27,6 +27,9 @@
         (get-in (ehoks/delete-tyopaikkaohjaajan-yhteystiedot)
                 [:body :data :hankkimistapa-ids])]
     (doseq [hankkimistapa_id hankkimistavat]
+      (log/info "Poistetaan ohjaajan yhteystiedot (hankkimistapa_id = "
+                (:tjk-id hankkimistapa_id)
+                ")")
       (ddb/update-item
        {:hankkimistapa_id [:n hankkimistapa_id]}
        {:update-expr "SET #eml = :eml_value, #puh = :puh_value"
