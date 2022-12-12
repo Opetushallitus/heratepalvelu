@@ -109,13 +109,13 @@
                     :message "Poistettu 3 ohjaajan yhteystiedot"})))
       (is (= (mdb/get-table-values (:jaksotunnus-table mock-env))
              #{{:hankkimistapa_id [:n 1]
-                :ohjaaja_email [:s nil]
-                :ohjaaja_puhelinnumero [:s nil]}
+                :ohjaaja_email [:s ""]
+                :ohjaaja_puhelinnumero [:s ""]}
                {:hankkimistapa_id [:n 2]
-                :ohjaaja_email [:s nil]
-                :ohjaaja_puhelinnumero [:s nil]}
+                :ohjaaja_email [:s ""]
+                :ohjaaja_puhelinnumero [:s ""]}
                {:hankkimistapa_id [:n 3]
-                :ohjaaja_email [:s nil]
-                :ohjaaja_puhelinnumero [:s nil]}}))
+                :ohjaaja_email [:s ""]
+                :ohjaaja_puhelinnumero [:s ""]}}))
 
       (teardown-test))))

@@ -28,13 +28,13 @@
                 [:body :data :hankkimistapa-ids])]
     (doseq [hankkimistapa_id hankkimistavat]
       (log/info "Poistetaan ohjaajan yhteystiedot (hankkimistapa_id = "
-                (:tjk-id hankkimistapa_id)
+                hankkimistapa_id
                 ")")
       (ddb/update-item
        {:hankkimistapa_id [:n hankkimistapa_id]}
        {:update-expr "SET #eml = :eml_value, #puh = :puh_value"
         :expr-attr-names {"#eml" "ohjaaja_email"
                           "#puh" "ohjaaja_puhelinnumero"}
-        :expr-attr-vals {":eml_value" [:s nil] ":puh_value" [:s nil]}}
+        :expr-attr-vals {":eml_value" [:s ""] ":puh_value" [:s ""]}}
        (:jaksotunnus-table env)))
     (log/info "Poistettu" (count hankkimistavat) "ohjaajan yhteystiedot")))
