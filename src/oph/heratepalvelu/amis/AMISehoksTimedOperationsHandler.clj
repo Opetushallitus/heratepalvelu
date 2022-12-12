@@ -32,18 +32,19 @@
   (let [hoksit (get-in (ehoks/delete-opiskelijan-yhteystiedot)
                        [:body :data :hoksit])]
     (doseq [hoks hoksit]
-      (log/info (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = "
-                     (:koulutustoimija-oid hoks) "/" (:oppija-oid hoks)
-                     ")"))
-      (ddb/update-item
-       {:toimija_oppija [:s (str (:koulutustoimija-oid hoks)
-                                 "/"
-                                 (:oppija-oid hoks))]}
-       {:update-expr "SET #eml = :eml_value, #puh = :puh_value"
-        :expr-attr-names {"#eml" "sahkoposti"
-                          "#puh" "puhelinnumero"}
-        :expr-attr-vals {":eml_value" [:s ""] ":puh_value" [:s ""]}}
-       (:herate-table env)))
+      (let [toimija-oppija (str (:koulutustoimija-oid hoks)
+                                "/"
+                                (:oppija-oid hoks))]
+        (log/info (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = "
+                       toimija-oppija
+                       ")"))
+        (ddb/update-item
+         {:toimija_oppija [:s toimija-oppija]}
+         {:update-expr "SET #eml = :eml_value, #puh = :puh_value"
+          :expr-attr-names {"#eml" "sahkoposti"
+                            "#puh" "puhelinnumero"}
+          :expr-attr-vals {":eml_value" [:s ""] ":puh_value" [:s ""]}}
+         (:herate-table env))))
     (log/info "Poistettu" (count hoksit) "opiskelijan yhteystiedot")))
 
 (defn -handleMassHerateResend
