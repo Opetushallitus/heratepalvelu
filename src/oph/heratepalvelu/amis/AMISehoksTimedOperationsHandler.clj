@@ -32,6 +32,9 @@
   (let [hoksit (get-in (ehoks/delete-opiskelijan-yhteystiedot)
                        [:body :data :hoks-ids])]
     (doseq [hoks-id hoksit]
+      (log/info "Poistetaan opiskelijan yhteystiedot (ehoks-id = "
+                (:tjk-id hoks-id)
+                ")")
       (ddb/update-item
        {:ehoks-id [:n hoks-id]}
        {:update-expr "SET #eml = :eml_value, #puh = :puh_value"
