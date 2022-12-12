@@ -243,6 +243,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       code: lambdaCode,
       environment: {
         ...this.envVars,
+        jaksotunnus_table: jaksotunnusTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-timedOperationsHandler`,
       },
       memorySize: Token.asNumber(1024),
