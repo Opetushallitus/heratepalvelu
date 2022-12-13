@@ -31,7 +31,7 @@
   (log/info "Käynnistetään opiskelijan yhteystietojen poisto")
   (let [hoksit (get-in (ehoks/delete-opiskelijan-yhteystiedot)
                        [:body :data :hoks-ids])]
-    (log/info "Poistettuja hokseja" (count hoksit) "kpl")
+    (log/info "Käydään läpi" (count hoksit) "hoksin tiedot")
     (doseq [hoks hoksit]
       (let [resp (ddb/scan {:filter-expression   "#id = :id"
                             :expr-attr-names     {"#id" "ehoks-id"}
