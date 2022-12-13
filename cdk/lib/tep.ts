@@ -260,6 +260,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(timedOperationsHandler)]
     });
 
+    jaksotunnusTable.grantReadWriteData(timedOperationsHandler);
+
     // jaksoHandler
 
     const jaksoHandler = new lambda.Function(this, "TEPJaksoHandler", {
