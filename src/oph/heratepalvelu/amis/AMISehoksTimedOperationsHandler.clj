@@ -32,7 +32,8 @@
   (let [hoksit (get-in (ehoks/delete-opiskelijan-yhteystiedot)
                        [:body :data :hoksit])]
     (doseq [hoks hoksit]
-      (let [resp (ddb/scan {:filter-expression   "ehoks-id = :id"
+      (let [resp (ddb/scan {:filter-expression   "#id = :id"
+                            :expr-attr-names     {"#id" "ehoks-id"}
                             :expr-attr-vals      {":id" [:n (:hoks-id hoks)]}}
                            (:herate-table env))
             items (:items resp)]
