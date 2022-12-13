@@ -32,19 +32,25 @@
   (let [hoksit (get-in (ehoks/delete-opiskelijan-yhteystiedot)
                        [:body :data :hoksit])]
     (doseq [hoks hoksit]
-      (let [toimija-oppija (str (:koulutustoimija-oid hoks)
-                                "/"
-                                (:oppija-oid hoks))]
-        (log/info (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = "
-                       toimija-oppija
-                       ")"))
-        (ddb/update-item
-         {:toimija_oppija [:s toimija-oppija]}
-         {:update-expr "SET #eml = :eml_value, #puh = :puh_value"
-          :expr-attr-names {"#eml" "sahkoposti"
-                            "#puh" "puhelinnumero"}
-          :expr-attr-vals {":eml_value" [:s ""] ":puh_value" [:s ""]}}
-         (:herate-table env))))
+      (let [resp (ddb/scan {:filter-expression   "ehoks-id = :id"
+                            :expr-attr-vals      {":id" [:n (:hoks-id hoks)]}}
+                           (:herate-table env))
+            items (:items resp)]
+        (doseq [item items]
+          (log/info
+            (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = "
+                 (:toimija_oppija item)
+                 ", tyyppi_kausi = "
+                 (:tyyppi_kausi item)
+                 ")"))
+          (ddb/update-item
+            {:toimija_oppija [:s (:toimija_oppija item)]
+             :tyyppi_kausi   [:s (:tyyppi_kausi item)]}
+            {:update-expr     "SET #eml = :eml_value, #puh = :puh_value"
+             :expr-attr-names {"#eml" "sahkoposti"
+                               "#puh" "puhelinnumero"}
+             :expr-attr-vals  {":eml_value" [:s ""] ":puh_value" [:s ""]}}
+            (:herate-table env)))))
     (log/info "Poistettu" (count hoksit) "opiskelijan yhteystiedot")))
 
 (defn -handleMassHerateResend

@@ -10,6 +10,7 @@
 
 (def results (atom {}))
 (def delete-endpoint-called (atom false))
+(def scan-called (atom 0))
 (def update-item-called (atom 0))
 
 (defn- mock-get-retry-kyselylinkit [start end limit]
@@ -28,6 +29,11 @@
                            :koulutustoimija-oid "3"
                            :oppija-oid "3"}]}}})
 
+(defn- mock-scan [_ __]
+  (swap! scan-called inc)
+  {:items [{:toimija_oppija [:s "1"]
+            :tyyppi_kausi [:s "aloittaneet/2022-2023"]}]})
+
 (defn- mock-update-item [_ __ ___]
   (swap! update-item-called inc))
 
@@ -39,6 +45,7 @@
                   oph.heratepalvelu.external.ehoks/get-retry-kyselylinkit
                   mock-get-retry-kyselylinkit
                   ehoks/delete-opiskelijan-yhteystiedot mock-delete-call
+                  ddb/scan mock-scan
                   ddb/update-item mock-update-item]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
@@ -58,6 +65,8 @@
                :message
                "Käynnistetään opiskelijan yhteystietojen poisto"})))
         (is (true? @delete-endpoint-called))
+        (is (= @scan-called 3))
+        (is (= @update-item-called 3))
         (is (true? (tu/logs-contain?
                     {:level :info
                      :message "Poistettu 3 opiskelijan yhteystiedot"})))))))
