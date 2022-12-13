@@ -30,11 +30,12 @@
 
   (log/info "Käynnistetään opiskelijan yhteystietojen poisto")
   (let [hoksit (get-in (ehoks/delete-opiskelijan-yhteystiedot)
-                       [:body :data :hoksit])]
+                       [:body :data :hoks-ids])]
+    (log/info "Poistettuja hokseja" (count hoksit) "kpl")
     (doseq [hoks hoksit]
       (let [resp (ddb/scan {:filter-expression   "#id = :id"
                             :expr-attr-names     {"#id" "ehoks-id"}
-                            :expr-attr-vals      {":id" [:n (:hoks-id hoks)]}}
+                            :expr-attr-vals      {":id" [:n hoks]}}
                            (:herate-table env))
             items (:items resp)]
         (doseq [item items]
@@ -52,7 +53,7 @@
                                "#puh" "puhelinnumero"}
              :expr-attr-vals  {":eml_value" [:s ""] ":puh_value" [:s ""]}}
             (:herate-table env)))))
-    (log/info "Poistettu" (count hoksit) "opiskelijan yhteystiedot")))
+    (log/info "Opiskelijan yhteystietojen poisto valmis")))
 
 (defn -handleMassHerateResend
   "Pyytää ehoksia lähettämäan viime 2 viikon herätteet uudestaan."

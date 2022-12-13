@@ -48,15 +48,7 @@
                  :headers
                  {:ticket
                   "service-ticket/ehoks-virkailija-backend/cas-security-check"}}
-                {:body {:data {:hoksit [{:hoks-id 1
-                                         :koulutustoimija-oid "1"
-                                         :oppija-oid "1"}
-                                        {:hoks-id 2
-                                         :koulutustoimija-oid "2"
-                                         :oppija-oid "2"}
-                                        {:hoks-id 3
-                                         :koulutustoimija-oid "3"
-                                         :oppija-oid "3"}]}}})
+                {:body {:data {:hoks-ids [1 2 3]}}})
   (mdb/clear-mock-db)
   (mdb/create-table (:herate-table mock-env)
                     {:primary-key :toimija_oppija
@@ -121,9 +113,27 @@
                   {:level :info
                    :message
                    "Käynnistetään opiskelijan yhteystietojen poisto"})))
+      (is (true?
+            (tu/logs-contain?
+              {:level :info
+               :message
+               (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 1/1,"
+                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
+      (is (true?
+            (tu/logs-contain?
+              {:level :info
+               :message
+               (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 2/2,"
+                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
+      (is (true?
+            (tu/logs-contain?
+              {:level :info
+               :message
+               (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 3/3,"
+                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
       (is (true? (tu/logs-contain?
                   {:level :info
-                   :message "Poistettu 3 opiskelijan yhteystiedot"})))
+                   :message "Opiskelijan yhteystietojen poisto valmis"})))
       (is (= (mdb/get-table-values (:herate-table mock-env))
              #{{:toimija_oppija [:s "1/1"]
                 :tyyppi_kausi [:s "aloittaneet/2022-2023"]

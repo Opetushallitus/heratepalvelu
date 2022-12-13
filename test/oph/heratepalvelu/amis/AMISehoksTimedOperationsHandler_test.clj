@@ -19,15 +19,7 @@
 
 (defn- mock-delete-call []
   (reset! delete-endpoint-called true)
-  {:body {:data {:hoksit [{:ehoks-id 1
-                           :koulutustoimija-oid "1"
-                           :oppija-oid "1"}
-                          {:ehoks-id 2
-                           :koulutustoimija-oid "2"
-                           :oppija-oid "2"}
-                          {:ehoks-id 3
-                           :koulutustoimija-oid "3"
-                           :oppija-oid "3"}]}}})
+  {:body {:data {:hoks-ids [1 2 3]}}})
 
 (defn- mock-scan [_ __]
   (swap! scan-called inc)
@@ -60,16 +52,17 @@
                       :message "Lähetetty 1000 viestiä"})))
 
         (is (true?
-             (tu/logs-contain?
-              {:level :info
-               :message
-               "Käynnistetään opiskelijan yhteystietojen poisto"})))
+              (tu/logs-contain?
+                {:level :info
+                 :message
+                 "Käynnistetään opiskelijan yhteystietojen poisto"})))
         (is (true? @delete-endpoint-called))
         (is (= @scan-called 3))
         (is (= @update-item-called 3))
-        (is (true? (tu/logs-contain?
-                    {:level :info
-                     :message "Poistettu 3 opiskelijan yhteystiedot"})))))))
+        (is (true?
+              (tu/logs-contain?
+                {:level :info
+                 :message "Opiskelijan yhteystietojen poisto valmis"})))))))
 
 (def mass-resend-results (atom []))
 
