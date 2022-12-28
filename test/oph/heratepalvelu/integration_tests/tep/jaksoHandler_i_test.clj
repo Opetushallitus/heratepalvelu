@@ -76,7 +76,8 @@
                                        [{:koodiarvo "test-tutkintonimike"}]}]
                         :tila {:opiskeluoikeusjaksot
                                [{:alku "2022-01-05"
-                                 :tila {:koodiarvo "lasna"}}]}
+                                 :tila {:koodiarvo "lasna"}
+                                 :opintojenRahoitus {:koodiarvo "1"}}]}
                         :oppilaitos {:oid "testilaitos"}}})
   (mhc/bind-url :get
                 (str (:organisaatio-url mock-env) "test-toimipiste")

@@ -379,3 +379,16 @@
     (catch Exception e
       (log/error "Virhe kutsussa organisaatiopalveluun")
       (log/error e))))
+
+(defn feedback-collecting-prevented?
+  [opiskeluoikeus]
+  (let [preventing-codes #{"6" "14" "15"}]
+    (some?
+      (seq
+        (filter (fn [jakso]
+                  (let [rahoitus (get-in jakso
+                                         [:opintojenRahoitus :koodiarvo])]
+                    (contains? preventing-codes rahoitus)))
+                (-> opiskeluoikeus
+                    :tila
+                    :opiskeluoikeusjaksot))))))
