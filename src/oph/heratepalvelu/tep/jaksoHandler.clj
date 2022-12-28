@@ -255,8 +255,7 @@
                                 request-id
                                 koulutustoimija
                                 suoritus
-                                (str alkupvm)
-                                rahoitusryhma))
+                                (str alkupvm)))
                   tunnus (:tunnus (:body arvo-resp))]
               (try
                 (when (and (some? tunnus) (check-duplicate-tunnus tunnus))

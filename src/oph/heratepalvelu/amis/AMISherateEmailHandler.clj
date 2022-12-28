@@ -37,8 +37,7 @@
                        (:koulutustoimija herate)
                        (c/get-suoritus opiskeluoikeus)
                        (:alkupvm herate)
-                       (:voimassa-loppupvm herate)
-                       (:rahoitusryhma herate))
+                       (:voimassa-loppupvm herate))
             arvo-resp (try
                         (if (= (:kyselytyyppi herate) "aloittaneet")
                           (arvo/create-amis-kyselylinkki req-body)

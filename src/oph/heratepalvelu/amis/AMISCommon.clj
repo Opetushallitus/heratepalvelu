@@ -58,8 +58,7 @@
                          koulutustoimija
                          suoritus
                          alkupvm
-                         loppupvm
-                         rahoitusryhma)
+                         loppupvm)
               db-data
               {:toimija_oppija      [:s (str koulutustoimija "/" oppija)]
                :tyyppi_kausi        [:s (str kyselytyyppi "/" laskentakausi)]

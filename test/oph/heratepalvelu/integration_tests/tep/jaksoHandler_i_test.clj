@@ -86,7 +86,6 @@
                 (str (:arvo-url mock-env) "tyoelamapalaute/v1/vastaajatunnus")
                 {:content-type "application/json"
                  :body (str "{\"osa_aikaisuus\":50,\"tyopaikka\":\"Testi Oy\","
-                            "\"rahoitusryhma\":\"02\","
                             "\"tyopaikka_normalisoitu\":\"testi_oy\","
                             "\"vastaamisajan_alkupvm\":\"2022-02-16\","
                             "\"tyonantaja\":\"123456-7\","
@@ -188,7 +187,6 @@
     :url "https://oph-arvo.com/tyoelamapalaute/v1/vastaajatunnus"
     :options {:content-type "application/json"
               :body (str "{\"osa_aikaisuus\":50,\"tyopaikka\":\"Testi Oy\","
-                         "\"rahoitusryhma\":\"02\","
                          "\"tyopaikka_normalisoitu\":\"testi_oy\","
                          "\"vastaamisajan_alkupvm\":\"2022-02-16\","
                          "\"tyonantaja\":\"123456-7\","
