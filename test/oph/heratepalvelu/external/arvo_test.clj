@@ -112,16 +112,14 @@
                       :oppilaitos_oid "test-laitos"
                       :request_id "test-request-id"
                       :toimipiste_oid "test-toimipiste"
-                      :hankintakoulutuksen_toteuttaja "hkt for: 123"
-                      :rahoitusryhma "02"}]
+                      :hankintakoulutuksen_toteuttaja "hkt for: 123"}]
         (is (= (arvo/build-arvo-request-body herate
                                              opiskeluoikeus
                                              request-id
                                              koulutustoimija
                                              suoritus
                                              alkupvm
-                                             loppupvm
-                                             "02")
+                                             loppupvm)
                expected))))))
 
 (defn- mock-http [method]
@@ -250,8 +248,7 @@
                                                     request-id
                                                     koulutustoimija
                                                     suoritus
-                                                    niputuspvm
-                                                    2)
+                                                    niputuspvm)
                {:koulutustoimija_oid "test-kt"
                 :tyonantaja "123456-7"
                 :tyopaikka "Työ Paikka"
@@ -269,8 +266,7 @@
                 :vastaamisajan_alkupvm "2022-03-16"
                 :oppilaitos_oid "test-laitos"
                 :toimipiste_oid "test-toimipiste"
-                :request_id "test-request-id"
-                :rahoitusryhma 02}))))))
+                :request_id "test-request-id"}))))))
 
 (deftest test-create-jaksotunnus
   (testing "Create jaksotunnus"
