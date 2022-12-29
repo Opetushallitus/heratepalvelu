@@ -298,6 +298,8 @@
                            (check-not-fully-keskeytynyt herate)
                            (c/check-opiskeluoikeus-suoritus-types?
                              opiskeluoikeus)
+                           (false? (c/feedback-collecting-prevented?
+                                     opiskeluoikeus))
                            (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
                   (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))))
           (ehoks/patch-oht-tep-kasitelty (:hankkimistapa-id herate)))

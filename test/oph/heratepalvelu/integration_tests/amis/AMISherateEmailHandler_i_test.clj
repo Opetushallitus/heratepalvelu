@@ -13,7 +13,9 @@
                :viestintapalvelu-url "viestintapalvelu-example.com"
                :ehoks-url "ehoks-example.com/"
                :arvo-url "arvo-example.com/"
-               :arvo-user "arvo-user"})
+               :arvo-user "arvo-user"
+               :koski-url "koski-example.com"
+               :koski-user "koski-user"})
 
 (def starting-table-contents
   [{:toimija_oppija [:s "abc/123"]
@@ -40,7 +42,15 @@
    {:toimija_oppija [:s "test/2"]
     :tyyppi_kausi [:s "asdf"]
     :lahetystila [:s (:success c/kasittelytilat)]
-    :alkupvm [:s "2022-06-04"]}])
+    :alkupvm [:s "2022-06-04"]}
+   {:toimija_oppija [:s "abc/345"]
+    :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+    :sahkoposti [:s "sahko.posti2@esimerkki.fi"]
+    :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+    :suorituskieli [:s "fi"]
+    :kyselytyyppi [:s "aloittaneet"]
+    :alkupvm [:s "2022-01-01"]
+    :opiskeluoikeus-oid [:s "1234"]}])
 
 (defn- setup-test []
   (mhc/clear-results)
@@ -53,8 +63,15 @@
                 (str (:arvo-url mock-env) "vastauslinkki/v1/status/245")
                 {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
                 {:body {:voimassa_loppupvm "2022-02-01"}})
-  (mcc/clear-results)
-  (mcc/clear-url-bindings)
+  (mhc/bind-url :get
+                (str (:koski-url mock-env)
+                     "/opiskeluoikeus/1234")
+                {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
+                {:body {:oid "1234"
+                        :tila {:opiskeluoikeusjaksot
+                               [{:alku "2022-01-05"
+                                 :tila {:koodiarvo "lasna"}
+                                 :opintojenRahoitus {:koodiarvo "14"}}]}}})
   (mcc/bind-url :post
                 (:viestintapalvelu-url mock-env)
                 {:recipient [{:email "sahko.posti@esimerkki.fi"}]
@@ -114,7 +131,15 @@
     {:toimija_oppija [:s "test/2"]
      :tyyppi_kausi [:s "asdf"]
      :lahetystila [:s (:success c/kasittelytilat)]
-     :alkupvm [:s "2022-06-04"]}})
+     :alkupvm [:s "2022-06-04"]}
+    {:toimija_oppija [:s "abc/345"]
+     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+     :sahkoposti [:s "sahko.posti2@esimerkki.fi"]
+     :lahetystila [:s (:ei-laheteta c/kasittelytilat)]
+     :suorituskieli [:s "fi"]
+     :kyselytyyppi [:s "aloittaneet"]
+     :alkupvm [:s "2022-01-01"]
+     :opiskeluoikeus-oid [:s "1234"]}})
 
 (def expected-http-results
   [{:method :get
@@ -130,6 +155,10 @@
                          "\"lahetyspvm\":\"2022-02-02\","
                          "\"sahkoposti\":\"sahko.posti@esimerkki.fi\","
                          "\"lahetystila\":\"viestintapalvelussa\"}")
+              :as :json}}
+   {:method :get
+    :url "koski-example.com/opiskeluoikeus/1234"
+    :options {:basic-auth ["koski-user" "koski-pwd"]
               :as :json}}
    {:method :get
     :url "arvo-example.com/vastauslinkki/v1/status/245"
@@ -163,6 +192,7 @@
                   oph.heratepalvelu.db.dynamodb/query-items mdb/query-items
                   oph.heratepalvelu.db.dynamodb/update-item mdb/update-item
                   oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.koski/pwd (delay "koski-pwd")
                   oph.heratepalvelu.external.cas-client/cas-authenticated-post
                   mcc/mock-cas-authenticated-post
                   oph.heratepalvelu.external.cas-client/get-service-ticket
