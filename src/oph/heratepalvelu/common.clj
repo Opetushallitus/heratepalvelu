@@ -385,10 +385,6 @@
   (let [preventing-codes #{"6" "14" "15"}]
     (some?
       (seq
-        (filter (fn [jakso]
-                  (let [rahoitus (get-in jakso
-                                         [:opintojenRahoitus :koodiarvo])]
-                    (contains? preventing-codes rahoitus)))
-                (-> opiskeluoikeus
-                    :tila
-                    :opiskeluoikeusjaksot))))))
+        (filter #(contains? preventing-codes
+                            (get-in % [:opintojenRahoitus :koodiarvo]))
+                (get-in opiskeluoikeus [:tila :opiskeluoikeusjaksot]))))))
