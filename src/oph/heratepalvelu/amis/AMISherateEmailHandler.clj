@@ -43,7 +43,10 @@
                           (arvo/create-amis-kyselylinkki req-body)
                           (arvo/create-amis-kyselylinkki-catch-404 req-body))
                         (catch Exception e
-                          (log/error "Virhe kyselylinkin hakemisessa Arvosta:"
+                          (log/error "Virhe kyselylinkin hakemisessa Arvosta."
+                                     "Request:"
+                                     req-body
+                                     "Error:"
                                      e)
                           (throw e)))]
         (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
