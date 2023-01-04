@@ -38,6 +38,13 @@
                                "application/json")
                         options))))
 
+(defn- ehoks-delete
+  "Tekee DELETE-kyselyn ehoksiin."
+  ([uri-path] (ehoks-delete uri-path {}))
+  ([uri-path options]
+   (client/delete (str (:ehoks-url env) uri-path)
+                  (merge (ehoks-query-base-options) options))))
+
 (defn get-hoks-by-opiskeluoikeus
   "Hakee HOKSin opiskeluoikeuden OID:n perusteella."
   [oo-oid]
@@ -137,3 +144,9 @@
   "Lähettää tiedon henkilön tietojen muutoksesta eHOKS-palveluun."
   [oppija-oid]
   (ehoks-post (str "heratepalvelu/onrmodify") {:query-params {:oid oppija-oid}}))
+
+(defn delete-tyopaikkaohjaajan-yhteystiedot
+  "Poistaa työpaikkaohjaajan yhteystiedot yli kolme kuukautta sitten
+  päättyneistä työelämäjaksoista"
+  []
+  (ehoks-delete "heratepalvelu/tyopaikkaohjaajan-yhteystiedot" {}))
