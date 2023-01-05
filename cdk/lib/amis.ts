@@ -549,8 +549,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       }
     );
 
-    AMISherateTable.grantReadWriteData(AMISTimedOperationsHandler);
-
     new events.Rule(this, "AMISTimedOperationsScheduleRule", {
       schedule: events.Schedule.expression(
         `rate(${this.getParameterFromSsm("timedoperations-rate")})`
