@@ -95,6 +95,15 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       projectionType: dynamodb.ProjectionType.ALL
     });
 
+    AMISherateTable.addGlobalSecondaryIndex({
+      indexName: "ehoksIdIndex",
+      partitionKey: {
+        name: "ehoks-id",
+        type: dynamodb.AttributeType.NUMBER
+      },
+      projectionType: dynamodb.ProjectionType.KEYS_ONLY
+    })
+
     const organisaatioWhitelistTable = new dynamodb.Table(
       this,
       "OrganisaatioWhitelistTable",
@@ -530,6 +539,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         code: lambdaCode,
         environment: {
           ...this.envVars,
+          herate_table: AMISherateTable.tableName,
           caller_id: `1.2.246.562.10.00000000001.${id}-AMISTimedOperationsHandler`,
         },
         memorySize: Token.asNumber(1024),
@@ -538,6 +548,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         tracing: lambda.Tracing.ACTIVE
       }
     );
+
+    AMISherateTable.grantReadWriteData(AMISTimedOperationsHandler);
 
     new events.Rule(this, "AMISTimedOperationsScheduleRule", {
       schedule: events.Schedule.expression(
