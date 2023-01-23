@@ -125,8 +125,11 @@
                                       [:eq [:n (:hankkimistapa_id item)]]}
                                      {}
                                      (:table env))
-            jakso (first dbjakso)]
-        (ddb/delete-item {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
+            jakso (first dbjakso)
+            hankkimistapa_id (:hankkimistapa_id jakso)]
+        (log/info
+          "Poistetaan tyhjä jaksorivi, hankkimistapa_id =" hankkimistapa_id)
+        (ddb/delete-item {:hankkimistapa_id [:n hankkimistapa_id]}
                          (:table env))))
     (when (.hasLastEvaluatedKey resp)
       (recur
