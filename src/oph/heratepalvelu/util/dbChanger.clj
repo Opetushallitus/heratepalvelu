@@ -122,7 +122,7 @@
                      (str "attribute_not_exists(oppija_oid)")})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (let [dbjakso (ddb/query-items {:hankkimistapa_id
-                                      [:eq [:s (:hankkimistapa_id item)]]}
+                                      [:eq [:n (:hankkimistapa_id item)]]}
                                      {}
                                      (:table env))
             jakso (first dbjakso)]
