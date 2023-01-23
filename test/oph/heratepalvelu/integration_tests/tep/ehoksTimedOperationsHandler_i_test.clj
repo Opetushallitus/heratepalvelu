@@ -87,6 +87,7 @@
                   mcc/mock-get-service-ticket
                   oph.heratepalvelu.external.http-client/get mhc/mock-get
                   oph.heratepalvelu.external.http-client/delete mhc/mock-delete
+                  ddb/scan mdb/scan
                   ddb/update-item mdb/update-item]
       (setup-test)
       (etoh/-handleTimedOperations {}

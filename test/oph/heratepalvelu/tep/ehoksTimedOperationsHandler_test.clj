@@ -10,6 +10,7 @@
 
 (def results (atom {}))
 (def delete-endpoint-called (atom false))
+(def scan-called (atom 0))
 (def update-item-called (atom 0))
 
 (defn- mock-get-paattyneet-tyoelamajaksot [start end limit]
@@ -19,6 +20,12 @@
 (defn- mock-delete-call []
   (reset! delete-endpoint-called true)
   {:body {:data {:hankkimistapa-ids [1 2 3]}}})
+
+(defn- mock-scan [_ __]
+  (swap! scan-called inc)
+  {:items [{:hankkimistapa_id [:n @scan-called]
+            :sahkoposti [:s "testi@oph.fi"]
+            :puhelinnumero [:s "0401111111"]}]})
 
 (defn- mock-update-item [_ __ ___]
   (swap! update-item-called inc))
@@ -30,6 +37,7 @@
        oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 10 10))
        ehoks/get-paattyneet-tyoelamajaksot mock-get-paattyneet-tyoelamajaksot
        ehoks/delete-tyopaikkaohjaajan-yhteystiedot mock-delete-call
+       ddb/scan mock-scan
        ddb/update-item mock-update-item]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
@@ -48,6 +56,8 @@
             {:level :info
              :message
              "Käynnistetään työpaikkaohjaajan yhteystietojen poisto"})))
+        (is (= @scan-called 3))
+        (is (= @update-item-called 3))
         (is (true? @delete-endpoint-called))
         (is (true? (tu/logs-contain?
                      {:level :info
