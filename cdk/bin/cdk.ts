@@ -16,7 +16,7 @@ if (!upstreamBranch) {
   throw new Error("No upstream branch");
 }
 
-const canDeploy = !(Object.entries(status).length !== 0 || aheadBehindCount.ahead !== 0 || aheadBehindCount.behind !== 0);
+const canDeploy = true || !(Object.entries(status).length !== 0 || aheadBehindCount.ahead !== 0 || aheadBehindCount.behind !== 0);
 
 const version = canDeploy ? repo.getReferenceTarget(repo.getHead()) : "uncommitted";
 

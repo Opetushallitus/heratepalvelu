@@ -225,7 +225,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       this,
       "EhoksHerateTEPLambdaAsset",
       {
-        path: "../target/uberjar/heratepalvelu-0.1.0-SNAPSHOT-standalone.jar"
+        path: "../target/default+uberjar/heratepalvelu-0.1.0-SNAPSHOT-standalone.jar"
       }
     );
 
