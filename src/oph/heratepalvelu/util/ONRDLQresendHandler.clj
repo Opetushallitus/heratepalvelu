@@ -1,5 +1,5 @@
 (ns oph.heratepalvelu.util.ONRDLQresendHandler
-  "Lähettää AMISin dead letter queuessa olevia herätteitä uudestaan."
+  "Lähettää ONRhenkilomodify dead letter queuessa olevia herätteitä uudestaan."
   (:require [environ.core :refer [env]]
             [clojure.tools.logging :as log])
   (:import (software.amazon.awssdk.core.client.config
@@ -29,8 +29,8 @@
       (.build)))
 
 (defn -handleONRDLQresend
-  "Ottaa herätteitä vastaan AMISin dead letter queuesta ja lähettää ne
-  uudestaan."
+  "Ottaa herätteitä vastaan ONRhenkilomodify dead letter queuesta ja lähettää ne
+  uudestaan käsiteltäväksi."
   [_ ^SQSEvent event _]
   (let [messages (seq (.getRecords event))
         queue-url (.queueUrl

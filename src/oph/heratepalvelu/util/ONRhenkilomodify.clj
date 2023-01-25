@@ -22,7 +22,6 @@
       (try
         (let [body (parse-string (.getBody msg) true)
               message (parse-string (:Message body) true)]
-          (throw (Exception. "testivirhe"))
           (ehoks/post-henkilomodify-event (:oidHenkilo message)))
         (catch ExceptionInfo e
           (log/error e))))))
