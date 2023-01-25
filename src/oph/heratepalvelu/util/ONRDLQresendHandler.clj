@@ -13,7 +13,7 @@
                                                       GetQueueUrlRequest)))
 
 (gen-class
-  :name "oph.heratepalvelu.util.DLQresendHandler"
+  :name "oph.heratepalvelu.util.ONRDLQresendHandler"
   :methods [[^:static handleDLQresend
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
