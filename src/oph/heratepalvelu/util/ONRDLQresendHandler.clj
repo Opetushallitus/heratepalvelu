@@ -14,7 +14,7 @@
 
 (gen-class
   :name "oph.heratepalvelu.util.ONRDLQresendHandler"
-  :methods [[^:static handleDLQresend
+  :methods [[^:static handleONRDLQresend
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
