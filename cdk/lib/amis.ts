@@ -241,7 +241,12 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE
     });
 
-    ONRhenkilomodifyHandler.addEventSource(new SqsEventSource(ONRhenkilomodifyQueue, { batchSize: 1, }));
+    new CfnEventSourceMapping(this, "ONRhenkilomodifyEventSourceMapping", {
+      eventSourceArn: ONRhenkilomodifyQueue.queueArn,
+      functionName: ONRhenkilomodifyHandler.functionName,
+      batchSize: 1,
+      maximumBatchingWindowInSeconds: 5,
+    });
 
     ONRhenkilomodifyHandler.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
