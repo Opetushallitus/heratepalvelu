@@ -287,6 +287,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       eventSourceArn: ONRhenkilomodifyDLQ.queueArn,
       functionName: ONRdlqResendHandler.functionName,
       batchSize: 1,
+      maximumBatchingWindowInSeconds: 5,
       enabled: false
     });
 
