@@ -49,7 +49,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       this,
       "EhoksHerateTPKLambdaAsset",
       {
-        path: "../target/default+uberjar/heratepalvelu-0.1.0-SNAPSHOT-standalone.jar"
+        path: "../target/uberjar/heratepalvelu-0.1.0-SNAPSHOT-standalone.jar"
       }
     );
 
