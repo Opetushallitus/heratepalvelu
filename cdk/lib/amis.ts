@@ -9,7 +9,7 @@ import sns = require("@aws-cdk/aws-sns");
 import snsSubs = require("@aws-cdk/aws-sns-subscriptions")
 import iam = require("@aws-cdk/aws-iam");
 import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
-import {Duration, Fn, Token} from "@aws-cdk/core";
+import {Duration, Token} from "@aws-cdk/core";
 import { CfnEventSourceMapping } from "@aws-cdk/aws-lambda";
 import {HeratepalveluStack} from "./heratepalvelu";
 
