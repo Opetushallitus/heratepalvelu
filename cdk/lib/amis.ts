@@ -6,7 +6,6 @@ import lambda = require("@aws-cdk/aws-lambda");
 import s3assets = require("@aws-cdk/aws-s3-assets");
 import sqs = require("@aws-cdk/aws-sqs");
 import sns = require("@aws-cdk/aws-sns");
-import { RuleEvent } from '@aws-cdk/aws-events'
 import snsSubs = require("@aws-cdk/aws-sns-subscriptions")
 import iam = require("@aws-cdk/aws-iam");
 import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
@@ -284,39 +283,12 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         "sqs:GetQueueAttributes"
       ]}));
 
-    const ONRDLQResendEventSourceMapping = new CfnEventSourceMapping(this, "ONR-DLQResendEventSourceMapping", {
+    new CfnEventSourceMapping(this, "ONR-DLQResendEventSourceMapping", {
       eventSourceArn: ONRhenkilomodifyDLQ.queueArn,
       functionName: ONRdlqResendHandler.functionName,
       batchSize: 1,
       maximumBatchingWindowInSeconds: 5,
       enabled: false
-    });
-
-    const ONRDLQToggleHandler = new lambda.Function(this, "ONRDLQToggleHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        mapping_anr: Fn.getAtt(ONRDLQResendEventSourceMapping.ref, 'Arn').toString()
-      },
-      reservedConcurrentExecutions: 1,
-      handler: "oph.heratepalvelu.util.ONRDLQEventSourceMappingEnabledToggler::handleONRDLQToggler",
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    const truePayload = { "enabled": "true" };
-    const falsePayload = { "enabled": "false" };
-
-    new events.Rule(this, "EnableRule", {
-      schedule: events.Schedule.expression(`cron(${this.getParameterFromSsm("onrenable-cron")})`),
-      targets: [new targets.LambdaFunction(ONRDLQToggleHandler,
-          {event: events.RuleTargetInput.fromObject(truePayload)})],
-    });
-
-    new events.Rule(this, "DisableRule", {
-      schedule: events.Schedule.expression(`cron(${this.getParameterFromSsm("onrdisable-cron")})`),
-      targets: [new targets.LambdaFunction(ONRDLQToggleHandler,
-          {event: events.RuleTargetInput.fromObject(falsePayload)})],
     });
 
     const AMISherateEmailHandler = new lambda.Function(this, "AMISHerateEmailHandler", {
@@ -338,7 +310,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     new events.Rule(this, "AMISHerateEmailScheduleRule", {
       schedule: events.Schedule.expression(
-        c
+          `cron(${this.getParameterFromSsm("emailhandler-cron")})`
       ),
       targets: [new targets.LambdaFunction(AMISherateEmailHandler)]
     });

@@ -12,7 +12,6 @@
                  [com.amazonaws/aws-xray-recorder-sdk-aws-sdk-v2 "2.4.0"]
                  [com.amazonaws/aws-lambda-java-core "1.2.0"]
                  [com.amazonaws/aws-lambda-java-events "2.2.7"]
-                 [com.amazonaws/aws-java-sdk-cloudformation "1.12.393"]
                  [software.amazon.awssdk/dynamodb "2.10.56"]
                  [software.amazon.awssdk/ssm "2.10.56"]
                  [software.amazon.awssdk/sqs "2.10.60"]
