@@ -310,7 +310,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     new events.Rule(this, "AMISHerateEmailScheduleRule", {
       schedule: events.Schedule.expression(
-          `cron(${this.getParameterFromSsm("emailhandler-cron")})`
+        `cron(${this.getParameterFromSsm("emailhandler-cron")})`
       ),
       targets: [new targets.LambdaFunction(AMISherateEmailHandler)]
     });
