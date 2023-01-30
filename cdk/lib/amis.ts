@@ -241,11 +241,16 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE
     });
 
-    ONRhenkilomodifyHandler.addEventSource(new SqsEventSource(ONRhenkilomodifyQueue, { batchSize: 1, }));
+    new CfnEventSourceMapping(this, "ONRhenkilomodifyEventSourceMapping", {
+      eventSourceArn: ONRhenkilomodifyQueue.queueArn,
+      functionName: ONRhenkilomodifyHandler.functionName,
+      batchSize: 1,
+      maximumBatchingWindowInSeconds: 5,
+    });
 
     ONRhenkilomodifyHandler.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
-      resources: [ONRhenkilomodifyQueue.queueArn],
+      resources: [ONRhenkilomodifyQueue.queueArn, ONRhenkilomodifyDLQ.queueArn],
       actions: [
         "sqs:GetQueueUrl",
         "sqs:ReceiveMessage",
@@ -254,19 +259,19 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         "sqs:GetQueueAttributes"
       ]}));
 
-    const OnrHenkiloModifyDlqResendHandler = new lambda.Function(this, "OnrHenkiloModifyDlqResendHandler", {
+    const ONRdlqResendHandler = new lambda.Function(this, "ONR-DLQresendHandler", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
       environment: {
         queue_name: ONRhenkilomodifyQueue.queueName
       },
-      handler: "oph.heratepalvelu.util.DLQresendHandler::handleDLQresend",
+      handler: "oph.heratepalvelu.util.ONRDLQresendHandler::handleONRDLQresend",
       memorySize: 1024,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE
     });
 
-    OnrHenkiloModifyDlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
+    ONRdlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
       effect: iam.Effect.ALLOW,
       resources: [ONRhenkilomodifyQueue.queueArn, ONRhenkilomodifyDLQ.queueArn],
       actions: [
@@ -276,13 +281,13 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         "sqs:ChangeMessageVisibility",
         "sqs:DeleteMessage",
         "sqs:GetQueueAttributes"
-      ]
-    }));
+      ]}));
 
-    new CfnEventSourceMapping(this, "OnrHenkiloModifyDlqResendEventSourceMapping", {
+    new CfnEventSourceMapping(this, "ONR-DLQResendEventSourceMapping", {
       eventSourceArn: ONRhenkilomodifyDLQ.queueArn,
-      functionName: OnrHenkiloModifyDlqResendHandler.functionName,
+      functionName: ONRdlqResendHandler.functionName,
       batchSize: 1,
+      maximumBatchingWindowInSeconds: 5,
       enabled: false
     });
 
