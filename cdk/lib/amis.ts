@@ -662,7 +662,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISTimedOperationsHandler,
       AMISMassHerateResendHandler,
       EhoksOpiskeluoikeusUpdateHandler,
-      ONRhenkilomodifyHandler,
       dbChanger,
       // dbArchiver,
     ].forEach(
