@@ -36,3 +36,25 @@ Lambdafunktion Test-välilehdelle ja käynnistä funktio painamalla
 Test-painiketta. Arkistoitavien tietueiden määrästä riippuen voit joutua 
 ajamaan funktioita useita kertoja. Ei ole väliä, missä järjestyksessä 
 funktiot ajetaan, kunhan niitä ei ajeta liian aikaisin.
+
+## Oppijanumeron päivittäminen eHOKS:iin Oppijanumerorekisteristä
+
+Herätepalvelun AWS-infrastruktuuria käytetään jonkin verran hyödyksi eHOKS:iin 
+liittyvissä automatisoiduissa ratkaisuissa. Yksi näistä on oppijan tietojen 
+muutosten seuranta Oppijanumerorekisterissä ja sen myötä tehtävät tietojen 
+päivitykset eHOKS:iin.
+
+Tämä ratkaisu on toteutettu AMIS-osion puolella ja määrittelyt löytyvät 
+`/lib/amis.ts` -tiedostosta.
+
+Muutoksia varten on luotu oma SQS-jono joka on rekisteröity seuraamaan 
+Oppijanumerorekisterin SNS-topic:a. SQS-jonoon saapuvat viestit triggeröivät 
+puolestaan funktion `/util/ONRhenkilomodify.clj`, joka lähettää tiedot 
+muutoksista eHOKS:n rajapintaan. Funktiossa tapahtuu aika ajoin virhe, joka 
+suurella todennäköisyydellä johtuu siitä, ettei eHOKS vastaa tarpeeksi 
+nopeasti kutsuun. Yleensä nämä käsittelyt onnistuvat automaattisessa 
+uudelleenkäsittelyssä, mutta joskus ne päätyvät DLQ-jonoon, joka täytyy 
+manuaalisesti tyhjentää. Tätä varten on olemassa `util/ONRDLQresendHandler.
+clj`, joka tyhjennetään samaan tapaan kuin palvelun muutkin DLQ-jonot, eli 
+aktivoidaan Lambdan triggeri AWS Consolesta ja odotetaan, että DLQ on tyhjä. 
+Sen jälkeen trigger disabloidaan.
