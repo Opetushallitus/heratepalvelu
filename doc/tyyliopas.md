@@ -36,9 +36,9 @@ myös näihin globaaleihin.
 Komento `lein eastwood` ajaa kaikki eastwoodin linterit paitsi
 `:unused-fn-args` (mikä heittää virheen myös macrojen luomien argumenttien
 takia) ja `:keyword-typos` (mikä ei tykkää siitä, että käytämme sekä
-viiva-avaimia että alaviiva-avaimia projektissa). Jos tarvitset kummankin näistä
-lintereistä, voit ajaa sen erikseen (ohjeet löytyvät eastwoodin GitHubista:
-https://github.com/jonase/eastwood).
+viiva-avaimia että alaviiva-avaimia projektissa). Jos tarvitset jompaa kumpaa 
+näistä lintereistä, voit ajaa sen erikseen (ohjeet löytyvät eastwoodin 
+GitHubista: https://github.com/jonase/eastwood).
 
 
 ## Kielten käyttö projektissa
@@ -52,7 +52,6 @@ vaikea lukea automaattisesti generoidun englanninkielisen logituksen seasta.
 _Koodia_ kuitenkin pitäisi kirjoittaa englanniksi paitsi sanat, jotka liittyvät
 suoraan projektiin ja on määritelty alun perin suomeksi, esim. _nippu_ tai
 _jakso_. Nimeä siis funktiot "create-nippu" ja "get-jakso", ei "luo-nippu" tai
-"hae-jakso". Sellaisia tapauksia, joissa tätä sääntöä rikotaan, löytyy edelleen
-koodista, mutta pyrimme poistamaan niitä vähitellen. Näin vältämme tapaukset,
-joissa ä:t ja ö:t täytyy korvata a:lla tai o:lla, ja pidämme koodin siistinä ja
-tavanmukaisena.
+"hae-jakso". Jos löydät koodista tapauksia, joissa näitä sääntöjä ei 
+noudateta, ne voi korjata muiden töiden ohessa ilman erillisiä tikettejä tai 
+brancheja.
