@@ -1,5 +1,6 @@
 #!/usr/bin/env node
-import cdk = require("@aws-cdk/core");
+//import cdk = require("@aws-cdk/core");
+import { App } from 'aws-cdk-lib'
 import { HeratepalveluAMISStack } from "../lib/amis";
 import { HeratepalveluTEPStack } from "../lib/tep";
 import { HeratepalveluTPKStack } from "../lib/tpk";
@@ -20,7 +21,7 @@ const canDeploy = !(Object.entries(status).length !== 0 || aheadBehindCount.ahea
 
 const version = canDeploy ? repo.getReferenceTarget(repo.getHead()) : "uncommitted";
 
-const app = new cdk.App();
+const app = new App();
 
 new HeratepalveluAMISStack(app, "sieni-services-heratepalvelu", 'sieni', version);
 const tepSieni = new HeratepalveluTEPStack(app, "sieni-services-heratepalvelu-tep", 'sieni', version);

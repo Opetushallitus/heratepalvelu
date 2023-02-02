@@ -1,26 +1,27 @@
-import cdk = require("@aws-cdk/core");
-import dynamodb = require("@aws-cdk/aws-dynamodb");
-import events = require("@aws-cdk/aws-events");
-import targets = require("@aws-cdk/aws-events-targets");
-import lambda = require("@aws-cdk/aws-lambda");
-import s3assets = require("@aws-cdk/aws-s3-assets");
-import sqs = require("@aws-cdk/aws-sqs");
-import sns = require("@aws-cdk/aws-sns");
-import snsSubs = require("@aws-cdk/aws-sns-subscriptions")
-import iam = require("@aws-cdk/aws-iam");
-import { SqsEventSource } from "@aws-cdk/aws-lambda-event-sources";
-import { Duration, Token } from "@aws-cdk/core";
-import { CfnEventSourceMapping } from "@aws-cdk/aws-lambda";
+import { App, Duration, Token, StackProps } from 'aws-cdk-lib';
+import dynamodb = require("aws-cdk-lib/aws-dynamodb");
+import events = require("aws-cdk-lib/aws-events");
+import targets = require("aws-cdk-lib/aws-events-targets");
+import lambda = require("aws-cdk-lib/aws-lambda");
+import s3assets = require("aws-cdk-lib/aws-s3-assets");
+import sqs = require("aws-cdk-lib/aws-sqs");
+import sns = require("aws-cdk-lib/aws-sns");
+import snsSubs = require("aws-cdk-lib/aws-sns-subscriptions")
+import iam = require("aws-cdk-lib/aws-iam");
+import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
+import { CfnEventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import {HeratepalveluStack} from "./heratepalvelu";
+import { TableEncryption } from "aws-cdk-lib/aws-dynamodb";
+
 
 
 export class HeratepalveluAMISStack extends HeratepalveluStack {
   constructor(
-    scope: cdk.App,
+    scope: App,
     id: string,
     envName: string,
     version: string,
-    props?: cdk.StackProps
+    props?: StackProps
   ) {
     super(scope, id, envName, version, props);
 
@@ -34,7 +35,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      serverSideEncryption: true
+      encryption: TableEncryption.AWS_MANAGED
     });
 
     AMISherateTable.addGlobalSecondaryIndex({
@@ -113,7 +114,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        serverSideEncryption: true
+        encryption: TableEncryption.AWS_MANAGED
       }
     );
 
@@ -123,7 +124,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      serverSideEncryption: true
+      encryption: TableEncryption.AWS_MANAGED
     });
 
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
@@ -498,7 +499,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        serverSideEncryption: true
+        encryption: TableEncryption.AWS_MANAGED
       }
     );
 
@@ -515,7 +516,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        serverSideEncryption: true
+        encryption: TableEncryption.AWS_MANAGED
       }
     );
 
@@ -532,7 +533,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        serverSideEncryption: true
+        encryption: TableEncryption.AWS_MANAGED
       }
     );
 

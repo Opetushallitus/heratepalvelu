@@ -1,6 +1,6 @@
-import cdk = require("@aws-cdk/core");
-import ssm = require("@aws-cdk/aws-ssm");
-import { Tags } from "@aws-cdk/core";
+import * as cdk from 'aws-cdk-lib';
+import ssm = require("aws-cdk-lib/aws-ssm");
+import { Tags } from 'aws-cdk-lib';
 
 export type EnvVars = {
   virkailija_url: string
