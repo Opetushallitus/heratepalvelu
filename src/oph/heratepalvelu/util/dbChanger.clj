@@ -18,6 +18,9 @@
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static handleDBUpdateTep
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]
+            [^:static deleteEmptyRowsFromJaksotunnusTable
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (defn scan [options]
@@ -113,3 +116,22 @@
                                         "AND attribute_not_exists(uudelleenlaskettu_kesto)")
                 :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
                                  ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}})))))
+
+(defn -deleteEmptyRowsFromJaksotunnusTable [this event context]
+  (loop [resp (scan {:filter-expression
+                     (str "attribute_not_exists(oppija_oid)")})]
+    (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
+      (let [dbjakso (ddb/query-items {:hankkimistapa_id
+                                      [:eq [:n (:hankkimistapa_id item)]]}
+                                     {}
+                                     (:table env))
+            jakso (first dbjakso)
+            hankkimistapa_id (:hankkimistapa_id jakso)]
+        (log/info
+          "Poistetaan tyhjä jaksorivi, hankkimistapa_id =" hankkimistapa_id)
+        (ddb/delete-item {:hankkimistapa_id [:n hankkimistapa_id]}
+                         (:table env))))
+    (when (.hasLastEvaluatedKey resp)
+      (recur
+        (scan {:filter-expression (str "attribute_not_exists(oppija_oid)")
+               :exclusive-start-key (.lastEvaluatedKey resp)})))))
