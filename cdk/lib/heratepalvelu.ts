@@ -1,6 +1,5 @@
-import cdk = require("@aws-cdk/core");
-import ssm = require("@aws-cdk/aws-ssm");
-import { Tags } from "@aws-cdk/core";
+import { Stack, App, StackProps, Tags } from 'aws-cdk-lib';
+import ssm = require("aws-cdk-lib/aws-ssm");
 
 export type EnvVars = {
   virkailija_url: string
@@ -14,16 +13,16 @@ export type EnvVars = {
   stage: string
 }
 
-export class HeratepalveluStack extends cdk.Stack {
+export class HeratepalveluStack extends Stack {
   envName: string;
   envVars: EnvVars;
 
   constructor(
-    scope: cdk.App,
+    scope: App,
     id: string,
     envName: string,
     version: string,
-    props?: cdk.StackProps
+    props?: StackProps
   ) {
     super(scope, id, props);
 

@@ -1,21 +1,18 @@
-import cdk = require("@aws-cdk/core");
-import dynamodb = require("@aws-cdk/aws-dynamodb");
-import events = require("@aws-cdk/aws-events");
-import targets = require("@aws-cdk/aws-events-targets");
-import iam = require("@aws-cdk/aws-iam");
-import lambda = require("@aws-cdk/aws-lambda");
-import s3assets = require("@aws-cdk/aws-s3-assets");
-import { Duration, Token } from "@aws-cdk/core";
+import { App, Duration, Token, StackProps } from 'aws-cdk-lib';
+import dynamodb = require("aws-cdk-lib/aws-dynamodb");
+import lambda = require("aws-cdk-lib/aws-lambda");
+import s3assets = require("aws-cdk-lib/aws-s3-assets");
+import iam = require("aws-cdk-lib/aws-iam");
 import { HeratepalveluStack } from "./heratepalvelu";
 
 export class HeratepalveluTPKStack extends HeratepalveluStack {
   constructor(
-    scope: cdk.App,
+    scope: App,
     id: string,
     envName: string,
     version: string,
     tepJaksotunnusTable: dynamodb.Table,
-    props?: cdk.StackProps,
+    props?: StackProps,
   ) {
     super(scope, id, envName, version, props);
 
@@ -27,7 +24,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      serverSideEncryption: true,
+      encryption: dynamodb.TableEncryption.AWS_MANAGED
     });
 
     const tpkNippuArchive2021FallTable = new dynamodb.Table(
@@ -39,7 +36,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        serverSideEncryption: true,
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
       }
     );
 
