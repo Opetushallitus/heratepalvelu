@@ -9,7 +9,7 @@ import iam = require("aws-cdk-lib/aws-iam");
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { HeratepalveluStack } from "./heratepalvelu";
 import {CfnEventSourceMapping} from "aws-cdk-lib/aws-lambda";
-import {TableEncryption} from "aws-cdk-lib/aws-dynamodb";
+import { TableEncryption } from "aws-cdk-lib/aws-dynamodb";
 
 export class HeratepalveluTEPStack extends HeratepalveluStack {
   constructor(

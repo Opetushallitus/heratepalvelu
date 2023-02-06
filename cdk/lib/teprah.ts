@@ -6,7 +6,7 @@ import sqs = require("aws-cdk-lib/aws-sqs");
 import iam = require("aws-cdk-lib/aws-iam");
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { HeratepalveluStack } from "./heratepalvelu";
-import {TableEncryption} from "aws-cdk-lib/aws-dynamodb";
+import { TableEncryption } from "aws-cdk-lib/aws-dynamodb";
 
 export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
     constructor(

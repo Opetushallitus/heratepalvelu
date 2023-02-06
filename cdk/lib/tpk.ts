@@ -4,7 +4,7 @@ import lambda = require("aws-cdk-lib/aws-lambda");
 import s3assets = require("aws-cdk-lib/aws-s3-assets");
 import iam = require("aws-cdk-lib/aws-iam");
 import { HeratepalveluStack } from "./heratepalvelu";
-import {TableEncryption} from "aws-cdk-lib/aws-dynamodb";
+import { TableEncryption } from "aws-cdk-lib/aws-dynamodb";
 
 export class HeratepalveluTPKStack extends HeratepalveluStack {
   constructor(
