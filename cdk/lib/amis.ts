@@ -259,6 +259,12 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         "sqs:GetQueueAttributes"
       ]}));
 
+    ONRhenkilomodifyHandler.addToRolePolicy(new iam.PolicyStatement({
+      effect: iam.Effect.ALLOW,
+      resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],
+      actions: ['ssm:GetParameter']
+    }));
+
     const ONRdlqResendHandler = new lambda.Function(this, "ONR-DLQresendHandler", {
       runtime: lambda.Runtime.JAVA_8_CORRETTO,
       code: lambdaCode,
@@ -663,7 +669,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISMassHerateResendHandler,
       EhoksOpiskeluoikeusUpdateHandler,
       dbChanger,
-      ONRhenkilomodifyHandler,
       // dbArchiver,
     ].forEach(
       lambdaFunction => {
