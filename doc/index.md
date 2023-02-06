@@ -15,19 +15,18 @@ Tiedot asennuksien tekemisestä ja siihen liittyvistä käytännöistä.
 
 ## `doc/aws_vinkit.md`
 
-Ohjeet joidenkin AWS-työkalujen käytöstä ja virheiden tutkimisesta niiden
-kautta.
+Ohjeita erilaisten AWS-työkalujen käyttöön ja virhetilanteiden selvittelyyn niiden avulla.
 
 
 ## `doc/external.md`
 
-Tiedot ulkopuolisista palveluista, joita käytetään tässä palvelussa, ja niihin
+Tiedot ulkopuolisista palveluista, joita käytetään tässä palvelussa ja niihin
 liittyvistä wrappereista ja muista apufunktioista.
 
 
 ## `doc/misc.md`
 
-Tiedot, jotka eivät kuulu mihinkään muuhun. Nykyhetkellä on vain yksi kohta
+Tiedot, jotka eivät kuulu mihinkään muuhun kategoriaan. Nykyhetkellä on vain yksi kohta
 tietokantojen arkistoinnista.
 
 
@@ -43,9 +42,9 @@ Tiedot palvelun testijärjestelmästä ja testien rakenteesta.
 
 ## `doc/tpk.md`
 
-Tiedot palvelun TPK-osion toimiannallisuudesta ja rakenteesta.
+Tiedot palvelun TPK-osion toiminnallisuudesta ja rakenteesta.
 
 
 ## `doc/tyyliopas.md`
 
-Selitys koodin tyylistä ja docstringien ja kielten käytöstä projektissa.
+Kuvaus koodin tyylistä sekä docstringien ja kielten käytöstä projektissa.

@@ -4,7 +4,7 @@
 
 Arvo luo linkkejä opiskelijakyselyihin ja kerää niihin annetut vastaukset.
 Opiskelijoiden vastauksia ei käsitellä herätepalvelussa, vaan Arvosta haetaan
-vain linkki itse ja siihen liittyvät metatiedot (esim. vastausajan ensimmäinen
+vain kyselylinkki ja siihen liittyvät metatiedot (esim. vastausajan ensimmäinen
 ja viimeinen päivämäärät ja vastattu -tila).
 
 Tiedostossa `src/oph/heratepalvelu/external/arvo.clj` on useita apufunktioita,
@@ -13,7 +13,7 @@ poistetaan ne; tai joilla näiden funktioiden argumentit saadaan oikeaan muotoon
 
 Jos kutsu Arvoon palauttaa 404-virheen viestillä `Ei kyselykertaa annetuille
 tiedoille`, kannattaa pyytää apua Arvo-tiimiltä. Tämä ei viittaa
-haavoittavuuteen meidän puolella, vaan tarkoittaa, että Arvo-tiimi ei ole vielä
+ongelmaan herätepalvelussa, vaan tarkoittaa, että Arvo-tiimi ei ole vielä
 avannut palveluaan tuon aikavälin kyselyjen luomiseen.
 
 
@@ -23,10 +23,10 @@ eHOKS käsittelee opiskelijoiden HOKSeja, joihin kuuluu muun muassa osaamisen
 hankkimistapoja, joista TEP-jaksot luodaan. Kyselylinkit lähetetään myös
 eHOKSiin sen jälkeen, että ne on luotu herätepalvelussa. Tiedosto
 `src/oph/heratepalvelu/external/ehoks.clj` sisältää funktioita, joilla haetaan
-tietoja HOKSeista ja linkkitiedot takaisin palveluun.
+tietoja HOKSeista ja joilla palautetaan tietoja kyselyistä takaisin eHOKS:n.
 
-Monet muutokset ja toiminnallisuuden lisäykset vaativat muutoksia sekä
-Herätepalveluun että eHOKS-palveluun.
+Herätepalvelun kehitystyössä monesti muutokset ja uusien toiminnallisuuksien 
+lisäykset vaativat muutoksia sekä Herätepalveluun että eHOKS-palveluun.
 
 
 ## Elisa
@@ -40,7 +40,7 @@ tekstit luodaan ja viestit lähetetään palvelun kautta.
 
 Koski käsittelee muun muassa opiskeluoikeuksia. Tiedostosta
 `src/oph/heratepalvelu/external/koski.clj` löytyy funktioita, joilla
-opiskeluoikeuksia haetaan eräiden kriteerien perusteella.
+opiskeluoikeuksia haetaan eri kriteerien perusteella.
 
 
 ## Organisaatio
@@ -54,7 +54,7 @@ joilla nämä tiedot haetaan.
 
 Viestintäpalvelu käsittelee sähköpostiviestien todellista lähetystä. Tiedostossa
 `src/oph/heratepalvelu/external/viestintapalvelu.clj` on funktioita, joilla
-sähköpostiviestien tekstit luodaan, viestit lähetetään viestintäpalveluun, ja
+sähköpostiviestien tekstit luodaan, viestit lähetetään viestintäpalveluun ja
 viestien tilat tarkistetaan palvelusta.
 
 
@@ -67,19 +67,19 @@ Sisältää funktion, jolla viestit lähetetään SQS:iin.
 
 ### AWS SSM
 
-Sisältää funktion, jolla salaiset arvot haeteen SSM:istä.
+Sisältää funktion, jolla salatut arvot haeteen SSM:istä.
 
 
 ### AWS X-Ray
 
-Sisältää funktion, jolla requestit kääritään AWS X-Rayiin.
+Sisältää funktion, jolla requestit kääritään AWS X-Ray:n.
 
 
 ### Cas Client
 
-Sisältää funktioita, joilla tehdään Cas-autentikoituja requestejä.
+Sisältää funktioita, joilla tehdään Cas-autentikoituja http-pyyntöjä.
 
 
 ### HTTP Client
 
-Sisältää wrappereita clj-http -clientin ympäri.
+Sisältää wrappereita clj-http -clientin ympärille.
