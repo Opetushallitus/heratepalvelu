@@ -12,8 +12,6 @@ import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { CfnEventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import {HeratepalveluStack} from "./heratepalvelu";
 
-
-
 export class HeratepalveluAMISStack extends HeratepalveluStack {
   constructor(
     scope: App,
