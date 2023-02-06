@@ -1,7 +1,7 @@
 # TEP-osio
 
 TEP-osio käsittelee työpaikkajaksoja, jotka tallennetaan eHOKSiin osaamisen 
-hankkimistapoina. Kyseesäs on opiskelijoiden opintoihin kuuluvat 
+hankkimistapoina. Kyseessä on opiskelijoiden opintoihin kuuluvat 
 työssäoppimisjaksot. Nämä jaksot kerätään nippuihin kaksi kertaa kuukaudessa, 
 jonka jälkeen kyselyt lähetetään työpaikkajaksoista vastaaville ohjaajille, 
 eli usein työpaikalla opiskelijan esimiehenä toimineelle henkilölle.
