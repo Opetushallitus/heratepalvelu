@@ -11,7 +11,6 @@ import iam = require("aws-cdk-lib/aws-iam");
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { CfnEventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import {HeratepalveluStack} from "./heratepalvelu";
-import { TableEncryption } from "aws-cdk-lib/aws-dynamodb";
 
 
 
@@ -35,7 +34,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: TableEncryption.AWS_MANAGED
+      encryption: dynamodb.TableEncryption.AWS_MANAGED
     });
 
     AMISherateTable.addGlobalSecondaryIndex({
@@ -114,7 +113,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        encryption: TableEncryption.AWS_MANAGED
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
       }
     );
 
@@ -124,7 +123,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: TableEncryption.AWS_MANAGED
+      encryption: dynamodb.TableEncryption.AWS_MANAGED
     });
 
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
@@ -499,7 +498,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        encryption: TableEncryption.AWS_MANAGED
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
       }
     );
 
@@ -516,7 +515,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        encryption: TableEncryption.AWS_MANAGED
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
       }
     );
 
@@ -533,7 +532,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        encryption: TableEncryption.AWS_MANAGED
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
       }
     );
 

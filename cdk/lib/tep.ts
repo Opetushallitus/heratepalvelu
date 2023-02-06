@@ -8,8 +8,7 @@ import sqs = require("aws-cdk-lib/aws-sqs");
 import iam = require("aws-cdk-lib/aws-iam");
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { HeratepalveluStack } from "./heratepalvelu";
-import {CfnEventSourceMapping} from "aws-cdk-lib/aws-lambda";
-import { TableEncryption } from "aws-cdk-lib/aws-dynamodb";
+import { CfnEventSourceMapping } from "aws-cdk-lib/aws-lambda";
 
 export class HeratepalveluTEPStack extends HeratepalveluStack {
   constructor(
@@ -29,7 +28,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.NUMBER
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: TableEncryption.AWS_MANAGED
+      encryption: dynamodb.TableEncryption.AWS_MANAGED
     });
 
     this.jaksotunnusTable = jaksotunnusTable;
@@ -104,7 +103,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: TableEncryption.AWS_MANAGED
+      encryption: dynamodb.TableEncryption.AWS_MANAGED
     });
 
     nippuTable.addGlobalSecondaryIndex({
@@ -168,7 +167,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
             type: dynamodb.AttributeType.STRING
           },
           billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-          encryption: TableEncryption.AWS_MANAGED
+          encryption: dynamodb.TableEncryption.AWS_MANAGED
         }
     );
 
@@ -181,7 +180,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.NUMBER
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        encryption: TableEncryption.AWS_MANAGED
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
       }
     );
 
@@ -198,7 +197,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        encryption: TableEncryption.AWS_MANAGED
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
       }
     );
 

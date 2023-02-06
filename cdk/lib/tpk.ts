@@ -4,7 +4,6 @@ import lambda = require("aws-cdk-lib/aws-lambda");
 import s3assets = require("aws-cdk-lib/aws-s3-assets");
 import iam = require("aws-cdk-lib/aws-iam");
 import { HeratepalveluStack } from "./heratepalvelu";
-import { TableEncryption } from "aws-cdk-lib/aws-dynamodb";
 
 export class HeratepalveluTPKStack extends HeratepalveluStack {
   constructor(
@@ -25,7 +24,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
         type: dynamodb.AttributeType.STRING
       },
       billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: TableEncryption.AWS_MANAGED
+      encryption: dynamodb.TableEncryption.AWS_MANAGED
     });
 
     const tpkNippuArchive2021FallTable = new dynamodb.Table(
@@ -37,7 +36,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
           type: dynamodb.AttributeType.STRING
         },
         billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        encryption: TableEncryption.AWS_MANAGED
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
       }
     );
 
