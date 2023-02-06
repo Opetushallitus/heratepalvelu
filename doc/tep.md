@@ -19,7 +19,7 @@ jaksotunnustauluun ja nipputauluun. Jaksolle lasketaan kesto ja se merkataan
 niputettavaksi, jos se ei ole keskeytynyt tai terminaalitilassa. 
 
 Funktiossa `niputusHandler` käydään sitten niputtamattomat 
-niput läpi ja luodaan jokaiselle kyselylinkki, joka haetaan Arvosta.
+jaksot läpi ja luodaan jokaiselle nipulle kyselylinkki, joka haetaan Arvosta.
 
 Funktio `emailHandler` käsittelee sähköpostiviestien lähettämistä
 työpaikkaohjaajille, jos nippuun liittyvistä jaksoista löytyy yksiselitteinen
