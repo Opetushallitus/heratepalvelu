@@ -530,7 +530,7 @@
                   c/terminaalitilassa? mock-terminaalitilassa?
                   oph.heratepalvelu.external.ehoks/patch-oht-tep-kasitelty
                   mock-patch-oht-tep-kasitelty
-                  oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
+                  oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404!
                   mock-get-opiskeluoikeus-catch-404
                   oph.heratepalvelu.tep.jaksoHandler/osa-aikaisuus-missing?
                   mock-osa-aikaisuus-missing?

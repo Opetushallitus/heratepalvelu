@@ -280,7 +280,7 @@
       (try
         (let [herate (parse-string (.getBody msg) true)
               oo (:opiskeluoikeus-oid herate)
-              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404 oo)]
+              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404! oo)]
           (if (nil? opiskeluoikeus)
             (log/warn "Ei löytynyt opiskeluoikeutta:" oo)
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)

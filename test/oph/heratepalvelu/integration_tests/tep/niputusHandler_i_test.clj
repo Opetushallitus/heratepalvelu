@@ -95,9 +95,9 @@
                       "\"tyonantaja\":\"123456-1\","
                       "\"tyopaikka\":\"Testi Työpaikka 1\","
                       "\"tunnukset\":[{\"tunnus\":\"AAjunk\","
-                      "\"tyopaikkajakson_kesto\":12},"
+                      "\"tyopaikkajakson_kesto\":18},"
                       "{\"tunnus\":\"ACjunk\","
-                      "\"tyopaikkajakson_kesto\":2}],"
+                      "\"tyopaikkajakson_kesto\":5}],"
                       "\"voimassa_alkupvm\":\"2022-02-18\","
                       "\"request_id\":\"test-uuid\"}")}
                 {:body {:nippulinkki "kysely.linkki/123"
@@ -114,7 +114,7 @@
                       "\"tyonantaja\":\"123456-2\","
                       "\"tyopaikka\":\"Testi Työpaikka 2\","
                       "\"tunnukset\":[{\"tunnus\":\"BAjunk\","
-                      "\"tyopaikkajakson_kesto\":1}],"
+                      "\"tyopaikkajakson_kesto\":4}],"
                       "\"voimassa_alkupvm\":\"2022-02-18\","
                       "\"request_id\":\"test-uuid\"}")}
                 {:body {:errors "Jokin meni pieleen"}})
@@ -234,7 +234,8 @@
   (mdb/clear-mock-db))
 
 (def expected-jaksotunnus-table #{{:hankkimistapa_id [:n 11]
-                                   :kesto [:n 12]
+                                   :kesto [:n 18]
+                                   :kesto-vanha [:n 12]
                                    :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                    :niputuspvm [:s "2022-02-01"]
                                    :viimeinen_vastauspvm [:s "2022-03-31"]
@@ -255,7 +256,8 @@
                                    :jakso_loppupvm [:s "2022-01-31"]
                                    :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                   {:hankkimistapa_id [:n 13]
-                                   :kesto [:n 2]
+                                   :kesto [:n 5]
+                                   :kesto-vanha [:n 2]
                                    :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                    :niputuspvm [:s "2022-02-01"]
                                    :viimeinen_vastauspvm [:s "2022-02-25"]
@@ -267,7 +269,8 @@
                                    :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                   {:hankkimistapa_id [:n 21]
                                    :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
-                                   :kesto [:n 1]
+                                   :kesto [:n 4]
+                                   :kesto-vanha [:n 1]
                                    :niputuspvm [:s "2022-02-01"]
                                    :viimeinen_vastauspvm [:s "2022-03-31"]
                                    :tunnus [:s "BAjunk"]
@@ -332,9 +335,9 @@
                          "\"tyonantaja\":\"123456-1\","
                          "\"tyopaikka\":\"Testi Työpaikka 1\","
                          "\"tunnukset\":[{\"tunnus\":\"AAjunk\","
-                         "\"tyopaikkajakson_kesto\":12},"
+                         "\"tyopaikkajakson_kesto\":18},"
                          "{\"tunnus\":\"ACjunk\","
-                         "\"tyopaikkajakson_kesto\":2}],"
+                         "\"tyopaikkajakson_kesto\":5}],"
                          "\"voimassa_alkupvm\":\"2022-02-18\","
                          "\"request_id\":\"test-uuid\"}")
               :basic-auth ["arvo-user" "arvo-pwd"] :as :json}}
@@ -360,7 +363,7 @@
                          "\"tyonantaja\":\"123456-2\","
                          "\"tyopaikka\":\"Testi Työpaikka 2\","
                          "\"tunnukset\":[{\"tunnus\":\"BAjunk\","
-                         "\"tyopaikkajakson_kesto\":1}],"
+                         "\"tyopaikkajakson_kesto\":4}],"
                          "\"voimassa_alkupvm\":\"2022-02-18\","
                          "\"request_id\":\"test-uuid\"}")
               :basic-auth ["arvo-user" "arvo-pwd"] :as :json}}])

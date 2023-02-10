@@ -21,7 +21,7 @@
   [oid]
   (:body (koski-get (str "/opiskeluoikeus/" oid) {:as :json})))
 
-(defn get-opiskeluoikeus-catch-404
+(defn get-opiskeluoikeus-catch-404!
   "Hakee opiskeluoikeuden OID:n perusteella, ja palauttaa nil, jos ilmenee
   404-virhe."
   [oid]
