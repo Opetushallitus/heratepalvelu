@@ -13,3 +13,4 @@ target
 .DS_Store
 *.csv
 herate-script.sh
+.tool-versions
