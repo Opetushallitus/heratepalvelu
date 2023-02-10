@@ -287,7 +287,7 @@
     (doseq [^SQSEvent$SQSMessage msg messages]
       (try
         (let [herate (parse-string (.getBody msg) true)
-              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
+              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404!
                                (:opiskeluoikeus-oid herate))]
           (when (some? opiskeluoikeus)
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
