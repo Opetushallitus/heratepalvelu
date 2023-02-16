@@ -564,7 +564,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       SmsMuistutusHandler,
       EmailMuistutusHandler,
       dbChangerTep,
-      emptyRowCleaner,
       // archiveJaksoTable,
       // archiveNippuTable,
     ].forEach(
