@@ -511,23 +511,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     jaksotunnusTable.grantReadWriteData(dbChangerTep);
 
-    const emptyRowCleaner = new lambda.Function(this, "emptyRowCleaner", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        table: jaksotunnusTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-emptyRowCleaner`
-      },
-      handler: "oph.heratepalvelu.util.dbChanger::deleteEmptyRowsFromJaksotunnusTable",
-      memorySize: 1024,
-      reservedConcurrentExecutions: 1,
-      timeout: Duration.seconds(900),
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    jaksotunnusTable.grantReadWriteData(emptyRowCleaner);
-
     // Arkistointifunktiot
     /*
     const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {
