@@ -40,7 +40,7 @@ listattu paikkoja, joista voi selvitellä herätteen tai kyselyn tilaa.
 
 #### Ehoks
 
-- Ehoksin ``hoksit`` -taulusta näet onko Hoks ylipäätään muodostunut.
+- Ehoksin ``hoksit`` -taulusta näet onko Hoks muodostunut onnistuneesti.
 - Ehoksin ``amisherate_kasittelytilat``-taulusta näet onko heräte 
   käsitelty herätepalvelussa. Jos kentissä ``aloitusherate_kasitelty`` tai 
   ``paattoherate_kasitelty`` on arvo ``true``, heräte on onnistuneesti 
@@ -48,14 +48,14 @@ listattu paikkoja, joista voi selvitellä herätteen tai kyselyn tilaa.
   siitä syystä, että kyseinen hoks on TUVA-hoks. Näissä tapauksissa 
   palautteita ei kerätä ja käsittelytilat merkataan käsitellyiksi heti 
   hoksin luonnin yhteydessä.
-- CloudWatchista löytyy Ehoksin logit, joista voi etsiä logituksia 
-  AMIS-herätteiden lähetyksistä SQS-jonoon. Kyseisiä logirivejä voi hakea 
-  hoks-id:llä, opiskeluoikeuden oidilla tai oppija-oidilla.
+- CloudWatchista löytyy Ehoksin logit, joista voi etsiä logeja 
+  AMIS-herätteiden lähetyksistä SQS-jonoon. Hakusanana voi käyttää 
+  hoks-id:tä, oppijanumeroa tai opiskeluoikeuden oidia.
 
 #### Herätepalvelu
 
-- AMIS herätteitä kannattaa hakea hoks-id:llä AMISHerateHandlerin 
-  CloudWatch logeilta.
+- AMIS-herätteiden käsittelyn logitukset löytyvät 
+  ``AMISHerateHandler``-funktion CloudWatch-logeilta.
 - Herätteet löytyvät DynamoDB:stä AMISHerateTable:sta. Haku kannattaa tehdä 
   querynä hoks-id:llä indeksistä. Taulun kenttä ``lahetystila`` kertoo 
   sähköpostin lähetyksen tilan ja sms-lahetystila kertoo sms:n lähetyksen 
