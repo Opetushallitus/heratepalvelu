@@ -36,7 +36,7 @@ Päättökyselyt, jotka luodaan kun opiskelija valmistuu, käsitellään samoin.
 ### Hoksille 12345 ei ole lähteny aloitus- tai päättökyselyä
 
 Tämän kaltaiset selvitystehtävät ovat yleisiä tässä projektissa. Alla on 
-listattu paikkoja, joista voi selvitellä herätteen tai kyselyn tilaa.
+listattu paikkoja, joista voi selvitellä herätteen tilaa.
 
 #### Ehoks
 
