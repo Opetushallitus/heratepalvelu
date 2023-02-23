@@ -30,3 +30,51 @@ AMISEmailResendHandler puolestaan uudelleenlähettää ensimmäisen kyselyn,
 kun eHOKS-palvelu lähettää sille uudelleenlähetysviestin SQS:n kautta.
 
 Päättökyselyt, jotka luodaan kun opiskelija valmistuu, käsitellään samoin.
+
+## Ongelmatilanteiden tutkiminen
+
+### Hoksille 12345 ei ole lähteny aloitus- tai päättökyselyä
+
+Tämän kaltaiset selvitystehtävät ovat yleisiä tässä projektissa. Alla on 
+listattu paikkoja, joista voi selvitellä herätteen tilaa.
+
+#### Ehoks
+
+- Ehoksin ``hoksit`` -taulusta näet onko Hoks muodostunut onnistuneesti.
+- Ehoksin ``amisherate_kasittelytilat``-taulusta näet onko heräte 
+  käsitelty herätepalvelussa. Jos kentissä ``aloitusherate_kasitelty`` tai 
+  ``paattoherate_kasitelty`` on arvo ``true``, heräte on onnistuneesti 
+  käsitelty herätepalvelussa. HUOM: kentät voivat olla ``true`` myös 
+  siitä syystä, että kyseinen hoks on TUVA-hoks. Näissä tapauksissa 
+  palautteita ei kerätä ja käsittelytilat merkataan käsitellyiksi heti 
+  hoksin luonnin yhteydessä.
+  ```
+  Esimerkki SQL-lauseke tietojen hakemiseen:
+  
+  SELECT ak.* FROM hoksit h 
+  JOIN amisherate_kasittelytilat ak ON ak.hoks_id  = h.id
+  WHERE h.id = <hoks-id>;
+  ```
+- Ehoksin ``kyselylinkit`` taulusta voi tarkastella kyselylinkin tietoja. 
+  Herätepalvelu lisää rivin tähän tauluun 
+  ``AMISherateEmailHandler``-funktiossa, sähköpostin lähetyksen yhteydessä.
+  ```
+  Esimerkki SQL-lauseke tietojen hakemiseen:
+  
+  SELECT k.* FROM hoksit h 
+  JOIN kyselylinkit k ON k.hoks_id = h.id 
+  WHERE h.id = <hoks-id>;
+  ```
+- CloudWatchista löytyy Ehoksin logit, joista voi etsiä logeja 
+  AMIS-herätteiden lähetyksistä SQS-jonoon. Hakusanana voi käyttää 
+  hoks-id:tä, oppijanumeroa tai opiskeluoikeuden oidia.
+
+#### Herätepalvelu
+
+- AMIS-herätteiden käsittelyn logitukset löytyvät 
+  ``AMISHerateHandler``-funktion CloudWatch-logeilta.
+- Herätteet löytyvät DynamoDB:stä AMISHerateTable:sta. Haku kannattaa tehdä 
+  querynä hoks-id:llä indeksistä. Taulun kenttä ``lahetystila`` kertoo 
+  sähköpostin lähetyksen tilan ja sms-lahetystila kertoo sms:n lähetyksen 
+  tilan. Jos tila on jokin muu kuin lahetetty tai vastattu, niin tutki syy 
+  sille koodista.

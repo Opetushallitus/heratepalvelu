@@ -1,4 +1,4 @@
-# Tutut virheet
+# Tunnetut virheet
 
 Tiedossa olevia, ei kriittisiä virheitä, jotka saattavat aiheuttaa 
 hälytyksen valvontakanavilla.
