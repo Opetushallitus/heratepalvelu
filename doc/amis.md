@@ -48,6 +48,23 @@ listattu paikkoja, joista voi selvitellä herätteen tilaa.
   siitä syystä, että kyseinen hoks on TUVA-hoks. Näissä tapauksissa 
   palautteita ei kerätä ja käsittelytilat merkataan käsitellyiksi heti 
   hoksin luonnin yhteydessä.
+  ```
+  Esimerkki SQL-lauseke tietojen hakemiseen:
+  
+  SELECT ak.* FROM hoksit h 
+  JOIN amisherate_kasittelytilat ak ON ak.hoks_id  = h.id
+  WHERE h.id = <hoks-id>;
+  ```
+- Ehoksin ``kyselylinkit`` taulusta voi tarkastella kyselylinkin tietoja. 
+  Herätepalvelu lisää rivin tähän tauluun 
+  ``AMISherateEmailHandler``-funktiossa, sähköpostin lähetyksen yhteydessä.
+  ```
+  Esimerkki SQL-lauseke tietojen hakemiseen:
+  
+  SELECT k.* FROM hoksit h 
+  JOIN kyselylinkit k ON k.hoks_id = h.id 
+  WHERE h.id = <hoks-id>;
+  ```
 - CloudWatchista löytyy Ehoksin logit, joista voi etsiä logeja 
   AMIS-herätteiden lähetyksistä SQS-jonoon. Hakusanana voi käyttää 
   hoks-id:tä, oppijanumeroa tai opiskeluoikeuden oidia.
