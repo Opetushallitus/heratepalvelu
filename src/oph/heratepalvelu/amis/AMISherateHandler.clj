@@ -31,11 +31,13 @@
                                    (:opiskeluoikeus-oid herate))]
               (if (some? opiskeluoikeus)
                 (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
-                  (if (and (check-opiskeluoikeus-suoritus-types? opiskeluoikeus)
-                           (check-organisaatio-whitelist?
+                  (if (and (has-one-or-more-ammatillinen-tutkinto?
+                             opiskeluoikeus)
+                           (whitelisted-organisaatio?!
                              koulutustoimija
                              (date-string-to-timestamp (:alkupvm herate)))
-                           (check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
+                           (not (sisaltyy-toiseen-opiskeluoikeuteen?
+                                  opiskeluoikeus)))
                     (ac/save-herate herate
                                     opiskeluoikeus
                                     koulutustoimija

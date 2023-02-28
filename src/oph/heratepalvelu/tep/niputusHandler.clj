@@ -58,13 +58,6 @@
             (map #(.plusDays start %)
                  (range (inc (.between ChronoUnit/DAYS start end)))))))
 
-(defn convert-ajanjakso
-  "Muuntaa ajanjakson alku- ja loppupäivät LocalDate:iksi."
-  [jakso]
-  (cond-> jakso
-    (:alku jakso)  (assoc :alku  (LocalDate/parse (:alku jakso)))
-    (:loppu jakso) (assoc :loppu (LocalDate/parse (:loppu jakso)))))
-
 (defn add-loppu-to-jaksot
   "Lisää jokaiseen paitsi viimeiseen jaksoon kentän :loppu, joka on päivää
   ennen kuin seuraavan :alku"
@@ -83,10 +76,10 @@
   ovat voimassa ja keskeytymättömiä sinä päivänä."
   [jaksot-by-day jakso opiskeluoikeus]
   (let [oo-tilat (->> (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
-                      (map convert-ajanjakso)
+                      (map c/alku-and-loppu-to-localdate)
                       (sort-by :alku)
                       (add-loppu-to-jaksot))
-        kjaksot-parsed (map convert-ajanjakso
+        kjaksot-parsed (map c/alku-and-loppu-to-localdate
                             (:keskeytymisajanjaksot jakso))
         kjaksot-oo (filter #(or (= "valiaikaisestikeskeytynyt"
                                    (:koodiarvo (:tila %)))
@@ -106,10 +99,10 @@
   ovat voimassa ja keskeytymättömiä sinä päivänä."
   [jaksot-by-day jakso opiskeluoikeus]
   (let [oo-tilat (->> (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
-                      (map convert-ajanjakso)
+                      (map c/alku-and-loppu-to-localdate)
                       (sort-by :alku)
                       (add-loppu-to-jaksot))
-        kjaksot-parsed (map convert-ajanjakso
+        kjaksot-parsed (map c/alku-and-loppu-to-localdate
                             (:keskeytymisajanjaksot jakso))
         kjaksot-oo (filter #(= "valiaikaisestikeskeytynyt"
                                (:koodiarvo (:tila %)))
@@ -300,7 +293,7 @@
                :request_id       [:s request-id]
                :kasittelypvm     [:s (str (c/local-date-now))]}
               {:cond-expr "attribute_not_exists(kyselylinkki)"})
-            (catch ConditionalCheckFailedException e
+            (catch ConditionalCheckFailedException _
               (log/warn "Nipulla"
                         (:ohjaaja_ytunnus_kj_tutkinto nippu)
                         "on jo kantaan tallennettu kyselylinkki.")

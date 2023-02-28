@@ -19,17 +19,17 @@
   (reset! call-log (str @call-log "get-koulutustoimija-oid "))
   (:koulutustoimija-oid opiskeluoikeus))
 
-(defn- mock-check-opiskeluoikeus-suoritus-types? [_]
-  (reset! call-log (str @call-log "check-opiskeluoikeus-suoritus-types? "))
+(defn- mock-has-one-or-more-ammatillinen-tutkinto? [_]
+  (reset! call-log (str @call-log "has-one-or-more-ammatillinen-tutkinto? "))
   true)
 
-(defn- mock-check-organisaatio-whitelist? [_ _]
-  (reset! call-log (str @call-log "check-organisaatio-whitelist? "))
+(defn- mock-whitelisted-organisaatio?! [_ _]
+  (reset! call-log (str @call-log "whitelisted-organisaatio?! "))
   true)
 
-(defn- mock-check-sisaltyy-opiskeluoikeuteen? [_]
-  (reset! call-log (str @call-log "check-sisaltyy-opiskeluoikeuteen? "))
-  true)
+(defn- mock-sisaltyy-toiseen-opiskeluoikeuteen? [_]
+  (reset! call-log (str @call-log "sisaltyy-toiseen-opiskeluoikeuteen? "))
+  false)
 
 (defn- mock-save-herate [herate opiskeluoikeus koulutustoimija herate-source]
   (reset! results {:herate herate
@@ -40,14 +40,12 @@
 (deftest test-handleAMISherate
   (testing "Varmista, että -handleAMISherate toimii oikein"
     (with-redefs [oph.heratepalvelu.amis.AMISCommon/save-herate mock-save-herate
-                  oph.heratepalvelu.common/get-koulutustoimija-oid
-                  mock-get-koulutustoimija-oid
-                  oph.heratepalvelu.common/check-opiskeluoikeus-suoritus-types?
-                  mock-check-opiskeluoikeus-suoritus-types?
-                  oph.heratepalvelu.common/check-organisaatio-whitelist?
-                  mock-check-organisaatio-whitelist?
-                  oph.heratepalvelu.common/check-sisaltyy-opiskeluoikeuteen?
-                  mock-check-sisaltyy-opiskeluoikeuteen?
+                  c/get-koulutustoimija-oid mock-get-koulutustoimija-oid
+                  c/has-one-or-more-ammatillinen-tutkinto?
+                  mock-has-one-or-more-ammatillinen-tutkinto?
+                  c/whitelisted-organisaatio?! mock-whitelisted-organisaatio?!
+                  c/sisaltyy-toiseen-opiskeluoikeuteen?
+                  mock-sisaltyy-toiseen-opiskeluoikeuteen?
                   oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
                   mock-get-opiskeluoikeus-catch-404]
       (let [event (tu/mock-sqs-event {:alkupvm "2021-10-10"
@@ -55,14 +53,14 @@
                                       :oppija-oid "12345"
                                       :kyselytyyppi "aloittaneet"})
             context (tu/mock-handler-context)]
-        (with-redefs [oph.heratepalvelu.common/check-valid-herate-date
+        (with-redefs [c/check-valid-herate-date
                       mock-check-valid-herate-date-true]
           (hh/-handleAMISherate {} event context)
           (is (= @call-log (str "get-opiskeluoikeus-catch-404 "
                                 "get-koulutustoimija-oid "
-                                "check-opiskeluoikeus-suoritus-types? "
-                                "check-organisaatio-whitelist? "
-                                "check-sisaltyy-opiskeluoikeuteen? ")))
+                                "has-one-or-more-ammatillinen-tutkinto? "
+                                "whitelisted-organisaatio?! "
+                                "sisaltyy-toiseen-opiskeluoikeuteen? ")))
           (is (= @results {:herate {:alkupvm "2021-10-10"
                                     :opiskeluoikeus-oid "1234.5.6678"
                                     :oppija-oid "12345"
@@ -73,7 +71,7 @@
                            :herate-source (:ehoks c/herate-sources)})))
         (reset! call-log "")
         (reset! results {})
-        (with-redefs [oph.heratepalvelu.common/check-valid-herate-date
+        (with-redefs [c/check-valid-herate-date
                       mock-check-valid-herate-date-false]
           (hh/-handleAMISherate {} event context)
           (is (= @call-log ""))

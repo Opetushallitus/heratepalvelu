@@ -16,7 +16,7 @@
            (com.amazonaws.services.lambda.runtime.events SQSEvent
                                                          SQSEvent$SQSMessage)
            (com.fasterxml.jackson.core JsonParseException)
-           (java.time LocalDate DayOfWeek)
+           (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
@@ -83,46 +83,40 @@
   "Järjestää TEP-jakso keskeytymisajanjaksot, parsii niiden alku- ja
   loppupäivämäärät LocalDateiksi, ja palauttaa tuloslistan."
   [herate]
-  (map (fn [x] {:alku (LocalDate/parse (:alku x))
-                :loppu (if (:loppu x) (LocalDate/parse (:loppu x)) nil)})
-       (sort-by :alku (:keskeytymisajanjaksot herate []))))
+  (map c/alku-and-loppu-to-localdate
+       (sort-by :alku (:keskeytymisajanjaksot herate))))
 
-(defn check-not-fully-keskeytynyt
-  "Palauttaa true, jos TEP-jakso ei ole keskeytynyt sen loppupäivämäärällä."
+(defn fully-keskeytynyt?
+  "Palauttaa true, jos TEP-jakso on keskeytynyt sen loppupäivämäärällä."
   [herate]
   (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
-    (or (empty? kjaksot)
-        (not (:loppu (last kjaksot)))
-        (c/is-after (LocalDate/parse (:loppupvm herate))
-                    (:loppu (last kjaksot))))))
+    (when-let [kjakso-loppu (:loppu (last kjaksot))]
+      (not (c/is-after (LocalDate/parse (:loppupvm herate)) kjakso-loppu)))))
 
-(defn check-open-keskeytymisajanjakso
-  "Palauttaa true, jos TEP-jakson viimeisellä keskeytymisajanjaksolla ei ole
+(defn loppupvm-in-last-keskeytymisajanjakso?
+  "Palauttaa true, jos TEP-jakson viimeisessä keskeytymisajanjaksossa on
   loppupäivämäärää."
   [herate]
-  (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
-    (and (seq kjaksot)
-         (not (:loppu (last kjaksot))))))
+  (some? (:loppu (last (sort-by :alku (:keskeytymisajanjaksot herate))))))
 
 (defn save-to-tables
   "Tallentaa jakso ja nipun tietokantaan."
   [jaksotunnus-table-data nippu-table-data]
-  (do
-    (ddb/put-item jaksotunnus-table-data
-                  {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
-                  (:jaksotunnus-table env))
-    (let [oykt (second (:ohjaaja_ytunnus_kj_tutkinto nippu-table-data))
-          niputuspvm (second (:niputuspvm nippu-table-data))
-          existing-nippu (ddb/get-item
-                           {:ohjaaja_ytunnus_kj_tutkinto [:s oykt]
-                            :niputuspvm                  [:s niputuspvm]}
-                           (:nippu-table env))]
-      (when (or (empty? existing-nippu)
-                (and (= (:kasittelytila existing-nippu)
-                        (:ei-niputeta c/kasittelytilat))
-                     (= (:sms_kasittelytila existing-nippu)
-                        (:ei-niputeta c/kasittelytilat))))
-        (ddb/put-item nippu-table-data {} (:nippu-table env))))))
+  (ddb/put-item jaksotunnus-table-data
+                {:cond-expr (str "attribute_not_exists(hankkimistapa_id)")}
+                (:jaksotunnus-table env))
+  (let [oykt (second (:ohjaaja_ytunnus_kj_tutkinto nippu-table-data))
+        niputuspvm (second (:niputuspvm nippu-table-data))
+        existing-nippu (ddb/get-item
+                         {:ohjaaja_ytunnus_kj_tutkinto [:s oykt]
+                          :niputuspvm                  [:s niputuspvm]}
+                         (:nippu-table env))]
+    (when (or (empty? existing-nippu)
+              (and (= (:kasittelytila existing-nippu)
+                      (:ei-niputeta c/kasittelytilat))
+                   (= (:sms_kasittelytila existing-nippu)
+                      (:ei-niputeta c/kasittelytilat))))
+      (ddb/put-item nippu-table-data {} (:nippu-table env)))))
 
 (defn save-jaksotunnus
   "Käsittelee herätteen, varmistaa, että se tulee tallentaa, hakee
@@ -213,14 +207,15 @@
                :kasittelytila         [:s (:ei-niputettu c/kasittelytilat)]
                :sms_kasittelytila     [:s (:ei-lahetetty c/kasittelytilat)]
                :niputuspvm            [:s (str niputuspvm)]}]
-          (if (check-open-keskeytymisajanjakso herate)
+          (if (and (:keskeytymisajanjaksot herate)
+                   (not (loppupvm-in-last-keskeytymisajanjakso? herate)))
             (try
               (save-to-tables
                 jaksotunnus-table-data
                 (assoc nippu-table-data
                        :kasittelytila     [:s (:ei-niputeta c/kasittelytilat)]
                        :sms_kasittelytila [:s (:ei-niputeta c/kasittelytilat)]))
-              (catch ConditionalCheckFailedException e
+              (catch ConditionalCheckFailedException _
                 (log/warn "Osaamisenhankkimistapa id:llä"
                           tapa-id
                           "on jo käsitelty."))
@@ -243,7 +238,7 @@
                   (save-to-tables
                     (assoc jaksotunnus-table-data :tunnus [:s tunnus])
                     nippu-table-data))
-                (catch ConditionalCheckFailedException e
+                (catch ConditionalCheckFailedException _
                   (log/warn "Osaamisenhankkimistapa id:llä"
                             tapa-id
                             "on jo käsitelty.")
@@ -274,15 +269,14 @@
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
               (if (some? (tep-herate-checker herate))
                 (log/error {:herate herate :msg (tep-herate-checker herate)})
-                (when (and (c/check-opiskeluoikeus-tila
-                             opiskeluoikeus (:loppupvm herate))
-                           (check-not-fully-keskeytynyt herate)
-                           (c/check-opiskeluoikeus-suoritus-types?
-                             opiskeluoikeus)
-                           (not (c/feedback-collecting-prevented?
-                                  opiskeluoikeus
-                                  (:loppupvm herate)))
-                           (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
+                (when-not
+                 (or (c/terminaalitilassa? opiskeluoikeus (:loppupvm herate))
+                     (fully-keskeytynyt? herate)
+                     (not (c/has-one-or-more-ammatillinen-tutkinto?
+                            opiskeluoikeus))
+                     (c/feedback-collecting-prevented? opiskeluoikeus
+                                                       (:loppupvm herate))
+                     (c/sisaltyy-toiseen-opiskeluoikeuteen? opiskeluoikeus))
                   (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))))
           (ehoks/patch-oht-tep-kasitelty (:hankkimistapa-id herate)))
         (catch JsonParseException e

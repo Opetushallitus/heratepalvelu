@@ -156,26 +156,25 @@
       (str year "-" (inc (Integer/parseInt year)))
       (str (dec (Integer/parseInt year)) "-" year))))
 
-(defn check-suoritus-type?
+(defn ammatillinen-tutkinto?
   "Varmistaa, että suorituksen tyyppi on joko ammatillinen tutkinto tai
   osittainen ammatillinen tutkinto."
   [suoritus]
   (or (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkinto")
       (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkintoosittainen")))
 
-(defn check-opiskeluoikeus-suoritus-types?
+(defn has-one-or-more-ammatillinen-tutkinto?
   "Varmistaa, että opiskeluoikeuden suorituksiin kuuluu vähintään yksi, jonka
   tyyppi on ammatillinen tutkinto tai osittainen ammatillinen tutkinto."
   [opiskeluoikeus]
-  (if (some check-suoritus-type?
-            (:suoritukset opiskeluoikeus))
+  (if (some ammatillinen-tutkinto? (:suoritukset opiskeluoikeus))
     true
     (log/info "Väärä suoritustyyppi opiskeluoikeudessa" (:oid opiskeluoikeus))))
 
-(defn check-sisaltyy-opiskeluoikeuteen?
-  "Palauttaa true, jos opiskeluoikeus EI sisälly toiseen opiskeluoikeuteen."
+(defn sisaltyy-toiseen-opiskeluoikeuteen?
+  "Palauttaa true, jos opiskeluoikeus sisältyy toiseen opiskeluoikeuteen."
   [opiskeluoikeus]
-  (if (:sisältyyOpiskeluoikeuteen opiskeluoikeus)
+  (when (:sisältyyOpiskeluoikeuteen opiskeluoikeus)
     (log/warn "Opiskeluoikeus"
               (:oid opiskeluoikeus)
               "sisältyy toiseen opiskeluoikeuteen.")
@@ -184,7 +183,7 @@
 (defn get-suoritus
   "Hakee tutkinnon tai tutkinnon osan suorituksen opiskeluoikeudesta."
   [opiskeluoikeus]
-  (first (filter check-suoritus-type? (:suoritukset opiskeluoikeus))))
+  (first (filter ammatillinen-tutkinto? (:suoritukset opiskeluoikeus))))
 
 (defn has-nayttotutkintoonvalmistavakoulutus?
   "Tarkistaa, onko opiskeluoikeudessa näyttötutkintoon valmistavan koulutuksen
@@ -225,7 +224,7 @@
   [tyopaikan-nimi]
   (str (normalize-string tyopaikan-nimi) "_" (local-date-now) "_" (rand-str 6)))
 
-(defn check-organisaatio-whitelist?
+(defn whitelisted-organisaatio?!
   "Tarkistaa, onko koulutustoimija mukana automaatiossa."
   [koulutustoimija timestamp]
   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
@@ -333,6 +332,14 @@
               {}
               updates)})
 
+(defn alku-and-loppu-to-localdate
+  "Muuntaa parametrina annetun hashmapin :alku ja :loppu -avaimien
+  merkkijonomuotoiset päivämäärät LocalDate:iksi."
+  [jakso]
+  (cond-> jakso
+    (:alku jakso)  (assoc :alku  (LocalDate/parse (:alku jakso)))
+    (:loppu jakso) (assoc :loppu (LocalDate/parse (:loppu jakso)))))
+
 (defn is-before
   "Wrapper .isBefore-metodin ympäri, jolla on tyyppianotaatiot."
   [^LocalDate one-date ^LocalDate other-date]
@@ -390,15 +397,15 @@
   #{"eronnut" "katsotaaneronneeksi" "mitatoity" "peruutettu"
     "valiaikaisestikeskeytynyt"})
 
-(defn check-opiskeluoikeus-tila
-  "Palauttaa true, jos opiskeluoikeus ei ole terminaalitilassa (eronnut,
+(defn terminaalitilassa?
+  "Palauttaa true, jos opiskeluoikeus on terminaalitilassa (eronnut,
   katsotaan eronneeksi, mitätöity, peruutettu, tai väliaikaisesti keskeytynyt),
-  paitsi jos opiskeluoikeus on siirtynyt tähän tilaan juuri kysyttynä päivänä."
+  myös kun opiskeluoikeus on siirtynyt tähän tilaan juuri kysyttynä päivänä."
   [opiskeluoikeus loppupvm]
   (let [jakso (get-opiskeluoikeusjakso-for-date
                 opiskeluoikeus loppupvm :one-day-offset)
         tila (get-in jakso [:tila :koodiarvo])]
-    (if (terminaalitilat tila)
+    (when (terminaalitilat tila)
       (log/warn "Opiskeluoikeus" (:oid opiskeluoikeus) "terminaalitilassa" tila)
       true)))
 

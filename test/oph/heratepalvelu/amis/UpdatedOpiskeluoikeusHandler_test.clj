@@ -2,6 +2,7 @@
   (:require [clj-time.coerce :as ctc]
             [clojure.test :refer :all]
             [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :refer :all]
+            [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.test-util :as tu]))
 
 (deftest test-get-vahvistus-pvm
@@ -211,7 +212,7 @@
           (str @test-handleUpdatedOpiskeluoikeus-results vahvistus-pvm " "))
   true)
 
-(defn- mock-check-organisaatio-whitelist? [koulutustoimija vahvistus-pvm]
+(defn- mock-whitelisted-organisaatio?! [koulutustoimija vahvistus-pvm]
   (reset! test-handleUpdatedOpiskeluoikeus-results
           (str @test-handleUpdatedOpiskeluoikeus-results
                koulutustoimija
@@ -289,12 +290,9 @@
        mock-update-last-checked
        oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/update-last-page
        mock-update-last-page
-       oph.heratepalvelu.common/check-organisaatio-whitelist?
-       mock-check-organisaatio-whitelist?
-       oph.heratepalvelu.common/check-valid-herate-date
-       mock-check-valid-herate-date
-       oph.heratepalvelu.common/get-koulutustoimija-oid
-       mock-get-koulutustoimija-oid
+       c/whitelisted-organisaatio?! mock-whitelisted-organisaatio?!
+       c/check-valid-herate-date mock-check-valid-herate-date
+       c/get-koulutustoimija-oid mock-get-koulutustoimija-oid
        oph.heratepalvelu.db.dynamodb/get-item mock-get-item
        oph.heratepalvelu.external.ehoks/get-hoks-by-opiskeluoikeus
        mock-get-hoks-by-opiskeluoikeus

@@ -48,18 +48,6 @@
       (is (= (nh/filtered-jakso-days test-jakso1) days1))
       (is (= (nh/filtered-jakso-days test-jakso2) days2)))))
 
-(deftest test-convert-ajanjakso
-  (testing "Varmistaa, että convert-ajanjakso toimii oikein."
-    (let [test1 {:alku "2022-01-01" :loppu "2022-03-03"}
-          test2 {:alku "2022-06-06"}
-          test3 {:loppu "2022-08-08"}
-          result1 {:alku (LocalDate/of 2022 1 1) :loppu (LocalDate/of 2022 3 3)}
-          result2 {:alku (LocalDate/of 2022 6 6)}
-          result3 {:loppu (LocalDate/of 2022 8 8)}]
-      (is (= (nh/convert-ajanjakso test1) result1))
-      (is (= (nh/convert-ajanjakso test2) result2))
-      (is (= (nh/convert-ajanjakso test3) result3)))))
-
 (deftest test-add-to-jaksot-by-day
   (testing "Varmistaa, että add-to-jaksot-by-day toimii oikein."
     (let [opiskeluoikeus {:tila
