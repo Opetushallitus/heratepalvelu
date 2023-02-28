@@ -624,6 +624,28 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     });
 
     jaksotunnusTable.grantReadWriteData(dbChangerTep);
+    
+    const kestojenUudelleenlaskentaHandler = new lambda.Function(
+      this,
+      "kestojenUudelleenlaskentaHandler",
+      {
+        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        code: lambdaCode,
+        environment: {
+          ...this.envVars,
+          jaksotunnus_table: jaksotunnusTable.tableName,
+          nippu_table: nippuTable.tableName,
+          caller_id: `1.2.246.562.10.00000000001.${id}-kestojenUudelleenlaskentaHandler`,
+        },
+        memorySize: Token.asNumber(1024),
+        reservedConcurrentExecutions: 1,
+        timeout: Duration.seconds(900),
+        handler: "oph.heratepalvelu.tep.kestojenUudelleenlaskentaHandler::handleKestojenUudelleenlaskenta",
+        tracing: lambda.Tracing.ACTIVE
+    });
+
+    jaksotunnusTable.grantReadWriteData(kestojenUudelleenlaskentaHandler);
+    nippuTable.grantReadWriteData(kestojenUudelleenlaskentaHandler);
 
     // Arkistointifunktiot
     const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {
@@ -683,6 +705,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       dbChangerTep,
       archiveJaksoTable,
       archiveNippuTable,
+      kestojenUudelleenlaskentaHandler
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
