@@ -1,16 +1,16 @@
 import { App, Duration, Token, StackProps } from 'aws-cdk-lib';
-import dynamodb = require("aws-cdk-lib/aws-dynamodb");
-import events = require("aws-cdk-lib/aws-events");
-import targets = require("aws-cdk-lib/aws-events-targets");
-import lambda = require("aws-cdk-lib/aws-lambda");
-import s3assets = require("aws-cdk-lib/aws-s3-assets");
-import sqs = require("aws-cdk-lib/aws-sqs");
-import sns = require("aws-cdk-lib/aws-sns");
-import snsSubs = require("aws-cdk-lib/aws-sns-subscriptions")
-import iam = require("aws-cdk-lib/aws-iam");
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as events from 'aws-cdk-lib/aws-events';
+import * as targets from 'aws-cdk-lib/aws-events-targets';
+import * as  lambda from 'aws-cdk-lib/aws-lambda';
+import * as s3assets from 'aws-cdk-lib/aws-s3-assets';
+import * as sqs from  'aws-cdk-lib/aws-sqs';
+import * as sns from 'aws-cdk-lib/aws-sns';
+import * as snsSubs from 'aws-cdk-lib/aws-sns-subscriptions';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { CfnEventSourceMapping } from "aws-cdk-lib/aws-lambda";
-import {HeratepalveluStack} from "./heratepalvelu";
+import { HeratepalveluStack } from "./heratepalvelu";
 
 
 
