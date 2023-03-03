@@ -205,7 +205,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDLQ", {
       retentionPeriod: Duration.days(14),
-      visibilityTimeout: (Duration.seconds(60))
+      visibilityTimeout: Duration.seconds(60),
+      encryption: sqs.QueueEncryption.SQS_MANAGED
     });
 
     const herateQueue = new sqs.Queue(this, "HerateQueue", {
@@ -215,7 +216,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      encryption: sqs.QueueEncryption.SQS_MANAGED
     });
 
     // S3

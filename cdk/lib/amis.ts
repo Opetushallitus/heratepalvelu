@@ -128,7 +128,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
       retentionPeriod: Duration.days(14),
-      visibilityTimeout: (Duration.seconds(60))
+      visibilityTimeout: Duration.seconds(60),
+      encryption: sqs.QueueEncryption.SQS_MANAGED
     });
 
     const ehoksHerateQueue = new sqs.Queue(this, "HerateQueue", {
@@ -138,12 +139,14 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      encryption: sqs.QueueEncryption.SQS_MANAGED
     });
 
     const ONRhenkilomodifyDLQ = new sqs.Queue(this, "ONRhenkilomodifyDLQ", {
       retentionPeriod: Duration.days(14),
-      visibilityTimeout: (Duration.seconds(60))
+      visibilityTimeout: Duration.seconds(60),
+      encryption: sqs.QueueEncryption.SQS_MANAGED
     });
 
     const ONRhenkilomodifyQueue = new sqs.Queue(this, "ONRhenkilomodifyQueue", {
@@ -153,7 +156,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      encryption: sqs.QueueEncryption.SQS_MANAGED
     });
 
     const ONRhenkilomodifyTopic = sns.Topic.fromTopicArn(this, "ONRhenkilomodifyTopic",
@@ -162,7 +166,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     ONRhenkilomodifyTopic.addSubscription(new snsSubs.SqsSubscription(ONRhenkilomodifyQueue));
 
     const ehoksAmisResendDLQueue = new sqs.Queue(this, "AmisResendDLQueue", {
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      encryption: sqs.QueueEncryption.SQS_MANAGED
     });
 
     const ehoksAmisResendQueue = new sqs.Queue(this, "AmisResendQueue", {
@@ -172,7 +177,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      encryption: sqs.QueueEncryption.SQS_MANAGED
     });
 
     const deleteTunnusDLQueue = new sqs.Queue(this, "AmisDeleteTunnusDLQueue", {
@@ -186,7 +192,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         maxReceiveCount: 5
       },
       visibilityTimeout: Duration.seconds(60),
-      retentionPeriod: Duration.days(14)
+      retentionPeriod: Duration.days(14),
+      encryption: sqs.QueueEncryption.SQS_MANAGED
     });
 
     const ehoksHerateAsset = new s3assets.Asset(
