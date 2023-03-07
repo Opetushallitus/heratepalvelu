@@ -306,8 +306,6 @@
                                      oppijan-jaksot)
                  opiskeluoikeudet  (get-and-memoize-opiskeluoikeudet!
                                     concurrent-jaksot)]
-             (log/info "Jaksot: " jaksot)
-             (log/info "Concurrent jaksot: " concurrent-jaksot)
             ; Tilapäinen: Työpaikkajaksojen kestot lasketaan sekä uudella
             ; että vanhalla laskentatavalla. Samanaikaiset jaksot ja
             ; opiskeluoikeudet haettu yllä, jotta niitä ei tarvitse hakea
@@ -324,8 +322,6 @@
   [nippu]
   (let [jaksot (query-jaksot! nippu)
         [kestot kestot-old] (calculate-kestot! jaksot)]
-    (log/info "Kestot: " kestot)
-    (log/info "Kestot (vanha): " kestot-old)
     (map #(let [oht-id    (:hankkimistapa_id %)
                 kesto     (get kestot     oht-id)
                 kesto-old (get kestot-old oht-id)]
