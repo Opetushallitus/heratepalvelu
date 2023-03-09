@@ -36,8 +36,8 @@
      [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
      :niputuspvm [:eq [:s (:niputuspvm nippu)]]}
     {:index "niputusIndex"
-     :filter-expression "attribute_exists(kesto) AND attribute_not_exists(#vanha)"}
-     :expr-attr-names {"#vanha" "kesto-vanha"}
+     :filter-expression "attribute_exists(kesto) AND attribute_not_exists(#vanha)"
+     :expr-attr-names {"#vanha" "kesto-vanha"}}
     (:jaksotunnus-table env)))
 
 (defn calculate-kestot!
