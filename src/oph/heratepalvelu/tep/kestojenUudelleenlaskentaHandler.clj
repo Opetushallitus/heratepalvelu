@@ -60,6 +60,7 @@
       (doseq [nippu (:items niput)]
         (let [jaksot (query-jaksot-with-kesto! nippu)
               kestot (calculate-kestot! jaksot)]
+          (log/info "Jaksot: " jaksot ", Kestot: " kestot)
           (doseq [jakso jaksot]
             (tc/update-jakso jakso
                              {:kesto [:n (get kestot
