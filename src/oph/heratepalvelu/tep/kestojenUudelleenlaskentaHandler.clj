@@ -7,6 +7,12 @@
             [oph.heratepalvelu.tep.niputusHandler :as nh]
             [oph.heratepalvelu.log.caller-log :refer [log-caller-details-scheduled]]))
 
+(gen-class :name "oph.heratepalvelu.tep.kestojenUudelleenlaskentaHandler"
+           :methods
+           [[^:static handleKestojenUudelleenlaskenta
+             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
+              com.amazonaws.services.lambda.runtime.Context] void]])
+
 (def rahoituskauden-alkupvm "2022-07-01")
 
 (defn scan-for-unhandled-nippus!
