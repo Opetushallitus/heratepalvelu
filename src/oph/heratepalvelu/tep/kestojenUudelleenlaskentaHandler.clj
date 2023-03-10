@@ -64,7 +64,8 @@
           (doseq [jakso jaksot]
             (tc/update-jakso jakso
                              {:kesto [:n (get kestot
-                                              (:hankkimistapa_id jakso))]
+                                              (:hankkimistapa_id jakso)
+                                              0)]
                               :kesto-vanha [:n (:kesto jakso)]})))
         (tc/update-nippu nippu {:kestojen-uudelleenlaskenta-suoritettu [:bool true]}))
       (when (and (< 30000 (.getRemainingTimeInMillis context))
