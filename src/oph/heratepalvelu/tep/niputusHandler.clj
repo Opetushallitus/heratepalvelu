@@ -323,11 +323,11 @@
   (let [jaksot (query-jaksot! nippu)
         [kestot kestot-old] (calculate-kestot! jaksot)]
     (map #(let [oht-id    (:hankkimistapa_id %)
-                kesto     (get kestot     oht-id)
-                kesto-old (get kestot-old oht-id)]
+                kesto     (get kestot     oht-id 0)
+                kesto-old (get kestot-old oht-id 0)]
             (log/info "Päivitetään jaksoon" oht-id "kesto" kesto)
             (tc/update-jakso % {:kesto [:n kesto] :kesto-vanha [:n kesto-old]})
-            (assoc % :kesto kesto :kesto-vanha kesto-old))
+            (assoc % :kesto kesto))
          jaksot)))
 
 (defn niputa
