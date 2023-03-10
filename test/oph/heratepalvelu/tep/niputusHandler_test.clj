@@ -626,9 +626,9 @@
                      {:type "update-jakso"
                       :jakso {:hankkimistapa_id 3}
                       :updates {:kesto [:n 5] :kesto-vanha [:n 4]}}]
-            updated-jaksot [{:hankkimistapa_id 1 :kesto 1 :kesto-vanha 1}
-                            {:hankkimistapa_id 2 :kesto 3 :kesto-vanha 2}
-                            {:hankkimistapa_id 3 :kesto 5 :kesto-vanha 4}]]
+            updated-jaksot [{:hankkimistapa_id 1 :kesto 1}
+                            {:hankkimistapa_id 2 :kesto 3}
+                            {:hankkimistapa_id 3 :kesto 5}]]
         (is (= (nh/retrieve-and-update-jaksot! nippu) updated-jaksot))
         (is (= @trauj-results results))))))
 
