@@ -330,10 +330,10 @@
   [nippu]
   (let [jaksot (query-jaksot! nippu)
         [kestot kestot-old] (calculate-kestot! jaksot)]
-    (map #(let [kesto     (get kestot     (:hankkimistapa_id %))
-                kesto-old (get kestot-old (:hankkimistapa_id %))]
+    (map #(let [kesto     (get kestot     (:hankkimistapa_id %) 0)
+                kesto-old (get kestot-old (:hankkimistapa_id %) 0)]
             (tc/update-jakso % {:kesto [:n kesto] :kesto-vanha [:n kesto-old]})
-            (assoc % :kesto kesto :kesto-vanha kesto-old))
+            (assoc % :kesto kesto))
          jaksot)))
 
 (defn niputa
