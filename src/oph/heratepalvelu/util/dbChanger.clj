@@ -44,7 +44,7 @@
                      :expr-attr-vals {":pvm" (.build (.s (AttributeValue/builder) "2022-08-11"))}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
-        (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
+        (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404!
                                (:opiskeluoikeus-oid item))
               rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                                  (LocalDate/parse (:alkupvm item)))]
@@ -92,7 +92,13 @@
                                              :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
                                                               ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}}
                                             (:table env))
-                    uudelleenlasketut-kestot (nip/compute-kestot oppijan-kaikki-jaksot)]
+                    concurrent-jaksot (nip/get-concurrent-jaksot-from-ehoks!
+                                        oppijan-kaikki-jaksot)
+                    opiskeluoikeudet  (nip/get-and-memoize-opiskeluoikeudet!
+                                        concurrent-jaksot)
+                    uudelleenlasketut-kestot (nip/calculate-kestot
+                                               concurrent-jaksot
+                                               opiskeluoikeudet)]
                 (println uudelleenlasketut-kestot)
                 (doseq [jakso oppijan-kaikki-jaksot]
                   (println (str "Päivitetään jaksolle "
@@ -101,7 +107,7 @@
                   (println (str "Vanha kesto "
                                 (:kesto jakso)
                                 " - Uudelleen laskettu kesto "
-                                (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id jakso) 0.0))))
+                                (get uudelleenlasketut-kestot (:hankkimistapa_id jakso))))
                   ;(let [uusi-kesto (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id jakso) 0.0))]
                   ;  (ddb/update-item {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
                   ;                   (merge (c/create-update-item-options {:uudelleenlaskettu_kesto [:n uusi-kesto]}) {})
