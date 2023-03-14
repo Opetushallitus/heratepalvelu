@@ -6,7 +6,7 @@
             [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.external.koski
              :refer
-             [get-opiskeluoikeus-catch-404!]]
+             [get-opiskeluoikeus-catch-404]]
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (com.amazonaws.services.lambda.runtime.events SQSEvent$SQSMessage)
            (com.fasterxml.jackson.core JsonParseException)
@@ -27,7 +27,7 @@
       (try
         (let [herate (parse-string (.getBody msg) true)]
           (if (check-valid-herate-date (:alkupvm herate))
-            (let [opiskeluoikeus (get-opiskeluoikeus-catch-404!
+            (let [opiskeluoikeus (get-opiskeluoikeus-catch-404
                                    (:opiskeluoikeus-oid herate))]
               (if (some? opiskeluoikeus)
                 (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]

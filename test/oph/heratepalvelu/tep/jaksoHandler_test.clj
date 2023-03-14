@@ -560,7 +560,7 @@
                   mock-get-koulutustoimija-oid
                   oph.heratepalvelu.external.ehoks/patch-oht-tep-kasitelty
                   mock-patch-oht-tep-kasitelty
-                  oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404!
+                  oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
                   mock-get-opiskeluoikeus-catch-404
                   oph.heratepalvelu.tep.jaksoHandler/check-not-fully-keskeytynyt
                   mock-check-not-fully-keskeytynyt

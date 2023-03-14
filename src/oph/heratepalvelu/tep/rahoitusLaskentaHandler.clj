@@ -163,8 +163,14 @@
                    :oppija_oid (:oppija-oid herate)
                    :jakso_alkupvm (:alkupvm herate)
                    :jakso_loppupvm (:loppupvm herate)}
-            [kesto kesto-vanha] (map #(get % (:hankkimistapa_id jakso))
-                                     (nh/calculate-kestot! [jakso]))
+            concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between
+                                (:oppija_oid jakso)
+                                (:jakso_alkupvm jakso)
+                                (:jakso_loppupvm jakso))
+            opiskeluoikeudet (nh/get-jaksojen-opiskeluoikeudet
+                               (assoc {} (:opiskeluoikeus-oid herate) opiskeluoikeus)
+                               (map :opiskeluoikeus_oid concurrent-jaksot))
+            kestot (nh/compute-kesto-old-and-new jakso concurrent-jaksot opiskeluoikeudet)
             db-data {:hankkimistapa_id     [:n tapa-id]
                      :hankkimistapa_tyyppi
                                            [:s (last (str/split (:hankkimistapa-tyyppi herate)
@@ -205,11 +211,9 @@
                                            [:s (c/normalize-string (:tyopaikan-nimi herate))]
                      :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
-                     :vanha-kesto           [:n kesto-vanha]
-                     ; TODO: Uudessa laskutavassa osa-aikaisuutta ei oteta huomioon
-                     ; :uusi-kesto-with-oa    [:n kesto] 
-                     ; :uusi-kesto-without-oa [:n kesto]
-                     :uusi-kesto [:n kesto]
+                     :vanha-kesto           [:n (math-round (or (get kestot :vanha) 0.0))]
+                     :uusi-kesto-with-oa    [:n (math-round (or (get-in kestot [:uusi :with-oa]) 0.0))]
+                     :uusi-kesto-without-oa [:n (math-round (or (get-in kestot [:uusi :without-oa]) 0.0))]
                      :save-timestamp [:s (str start-time)]}
             results-table-data
             (cond-> db-data
@@ -231,7 +235,7 @@
                                    (:oppisopimuksen-perusta herate)
                                    #"_"))]))
             ]
-        (log/info (str "Uudelleenlaskettu kesto tapa-id:lle " tapa-id ": " kesto))
+        (log/info (str "Uudelleenlaskettu kesto tapa-id:lle " tapa-id ": " kestot))
         (when (check-open-keskeytymisajanjakso herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
         (try
@@ -260,7 +264,7 @@
     (doseq [^SQSEvent$SQSMessage msg messages]
       (try
         (let [herate (parse-string (.getBody msg) true)
-              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404!
+              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
                                (:opiskeluoikeus-oid herate))]
           (if (some? opiskeluoikeus)
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]

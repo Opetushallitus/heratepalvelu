@@ -26,10 +26,10 @@
   (if (:kyselylinkki herate)
     herate
     (if-let [opiskeluoikeus
-             (if-let [oo (k/get-opiskeluoikeus-catch-404!
+             (if-let [oo (k/get-opiskeluoikeus-catch-404
                            (:opiskeluoikeus-oid herate))]
                oo
-               (k/get-opiskeluoikeus-catch-404! (:opiskeluoikeus-oid herate)))]
+               (k/get-opiskeluoikeus-catch-404 (:opiskeluoikeus-oid herate)))]
       (if (c/feedback-collecting-prevented? opiskeluoikeus)
         (do
           (log/info (str "Palautteen kerääminen estetty (opiskeluoikeus "

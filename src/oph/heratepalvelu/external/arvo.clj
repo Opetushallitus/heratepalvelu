@@ -88,7 +88,7 @@
       (if (> (count oids) 1)
         (log/warn "Enemmän kuin yksi linkitetty opiskeluoikeus! HOKS-id:"
                   ehoks-id)
-        (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404! (first oids))
+        (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404 (first oids))
               toteuttaja-oid
               (get-in
                 opiskeluoikeus
