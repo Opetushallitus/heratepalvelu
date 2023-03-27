@@ -76,37 +76,36 @@
               ;;kesto (:kesto jakso)
               uudelleenlaskettu_kesto (:uudelleenlaskettu_kesto jakso)]
           (when (nil? uudelleenlaskettu_kesto)
-            (do
-              (println (str "Lasketaan oppijan "
-                            (:oppija_oid jakso)
-                            " jaksojen kestot uudelleen niputuksessa "
-                            (:niputuspvm jakso)))
-              (let [oppijan-kaikki-jaksot (ddb/query-items
-                                            {:oppija_oid
-                                             [:eq [:s (:oppija_oid jakso)]]}
-                                            {:index "tepDbChangerIndex"
-                                             :filter-expression (str "jakso_loppupvm >= :start "
-                                                                     "jakso_loppupvm <= :end"
-                                                                     "AND attribute_exists(#tunnus)")
-                                             :expr-attr-names {"#tunnus" "tunnus"}
-                                             :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
-                                                              ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}}
-                                            (:table env))
-                    uudelleenlasketut-kestot (nip/compute-kestot oppijan-kaikki-jaksot)]
-                (println uudelleenlasketut-kestot)
-                (doseq [jakso oppijan-kaikki-jaksot]
-                  (println (str "Päivitetään jaksolle "
-                                (:hankkimistapa_id jakso)
-                                " uudelleenlaskettu_kesto."))
-                  (println (str "Vanha kesto "
-                                (:kesto jakso)
-                                " - Uudelleen laskettu kesto "
-                                (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id jakso) 0.0))))
+            (println (str "Lasketaan oppijan "
+                          (:oppija_oid jakso)
+                          " jaksojen kestot uudelleen niputuksessa "
+                          (:niputuspvm jakso)))
+            (let [oppijan-kaikki-jaksot (ddb/query-items
+                                          {:oppija_oid
+                                           [:eq [:s (:oppija_oid jakso)]]}
+                                          {:index "tepDbChangerIndex"
+                                           :filter-expression (str "jakso_loppupvm >= :start "
+                                                                   "jakso_loppupvm <= :end"
+                                                                   "AND attribute_exists(#tunnus)")
+                                           :expr-attr-names {"#tunnus" "tunnus"}
+                                           :expr-attr-vals {":start" (.build (.s (AttributeValue/builder) "2021-11-01"))
+                                                            ":end" (.build (.s (AttributeValue/builder) "2021-12-31"))}}
+                                          (:table env))
+                  uudelleenlasketut-kestot (nip/compute-kestot oppijan-kaikki-jaksot)]
+              (println uudelleenlasketut-kestot)
+              (doseq [jakso oppijan-kaikki-jaksot]
+                (println (str "Päivitetään jaksolle "
+                              (:hankkimistapa_id jakso)
+                              " uudelleenlaskettu_kesto."))
+                (println (str "Vanha kesto "
+                              (:kesto jakso)
+                              " - Uudelleen laskettu kesto "
+                              (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id jakso) 0.0))))
                   ;(let [uusi-kesto (nip/math-round (get uudelleenlasketut-kestot (:hankkimistapa_id jakso) 0.0))]
                   ;  (ddb/update-item {:hankkimistapa_id [:n (:hankkimistapa_id jakso)]}
                   ;                   (merge (c/create-update-item-options {:uudelleenlaskettu_kesto [:n uusi-kesto]}) {})
                   ;                   (:table env)))
-                  )))))
+                ))))
         (catch Exception e
           (log/error e))))
     (when (.hasLastEvaluatedKey resp)

@@ -33,7 +33,7 @@
   (let [ohjaaja-email (tc/reduce-common-value jaksot :ohjaaja_email)]
     (if (some? ohjaaja-email)
       ohjaaja-email
-      (let [osoitteet (into #{} (keep :ohjaaja_email jaksot))]
+      (let [osoitteet (set (keep :ohjaaja_email jaksot))]
         (log/warn "Ei yksiselitteistä ohjaajan sähköpostia "
                   (:ohjaaja_ytunnus_kj_tutkinto nippu) ","
                   (:niputuspvm nippu) "," osoitteet)
