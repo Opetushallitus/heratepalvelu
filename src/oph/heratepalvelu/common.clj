@@ -401,11 +401,16 @@
       (log/error "Virhe kutsussa organisaatiopalveluun")
       (log/error e))))
 
+(def feedback-collecting-preventing-codes #{"6" "14" "15"})
+
 (defn feedback-collecting-prevented?
+  "Jätetäänkö palaute keräämättä sen vuoksi, että opiskelijan opiskelu on
+  tällä hetkellä rahoitettu muilla rahoituslähteillä?"
   [opiskeluoikeus]
-  (let [preventing-codes #{"6" "14" "15"}]
-    (some?
-      (seq
-        (filter #(contains? preventing-codes
-                            (get-in % [:opintojenRahoitus :koodiarvo]))
-                (get-in opiskeluoikeus [:tila :opiskeluoikeusjaksot]))))))
+  (-> opiskeluoikeus
+      (get-in [:tila :opiskeluoikeusjaksot])
+      (->> (sort-by :alku))  ; ISO-8601 dates are lexicographically sortable
+      (last)
+      (get-in [:opintojenRahoitus :koodiarvo])
+      (feedback-collecting-preventing-codes)
+      (some?)))

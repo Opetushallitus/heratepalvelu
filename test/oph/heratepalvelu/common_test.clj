@@ -255,3 +255,29 @@
           server-error (ex-info "Internal server error" {:status 503})]
       (is (client-error? client-error))
       (is (not (client-error? server-error))))))
+
+(defn- construct-opiskeluoikeus [jaksot]
+  {:tila {:opiskeluoikeusjaksot
+          (for [[alku tila rahoitus] jaksot]
+            {:alku alku
+             :tila {:koodiarvo tila}
+             :opintojenRahoitus {:koodiarvo (str rahoitus)}})}})
+
+(deftest test-feedback-collecting-prevented?
+  (testing
+    "Tunnistetaan oikein opiskeluoikeuden tila, jossa palautekyselyitä
+    ei lähetetä."
+      (are [input result] (-> input
+                              (construct-opiskeluoikeus)
+                              (feedback-collecting-prevented?)
+                              (= result))
+           [["2021-07-30" "lasna" 3]] false
+           [["2018-06-20" "valmistunut" 1]] false
+           [["2020-06-20" "lasna" 14]] true
+           [["2019-01-03" "lasna" 1] ["2022-09-01" "lasna" 1]] false
+           [["2019-01-03" "lasna" 6] ["2019-09-01" "valmistunut" 6]] true
+           [["2020-03-15" "lasna" 3] ["2019-09-01" "lasna" 6]] false
+           [["2021-03-15" "valmistunut" 2]
+            ["2020-03-15" "lasna" 14]
+            ["2019-09-01" "lasna" 14]] false
+           [["2019-01-03" "lasna" 5] ["2019-09-01" "lasna" 15]] true)))
