@@ -75,17 +75,17 @@
                       (sort-by :alku #(compare %2 %1)) ; reverse order
                       (reduce
                         #(cons
-                          (if (first %1)
-                            (assoc %2 :loppu (.minusDays (:alku (first %1)) 1))
-                            %2)
-                          %1)
-                       []))
+                           (if (first %1)
+                             (assoc %2 :loppu (.minusDays (:alku (first %1)) 1))
+                             %2)
+                           %1)
+                        []))
         kjaksot-parsed (map convert-ajanjakso
                             (:keskeytymisajanjaksot jakso))
         kjaksot-oo (filter #(or (= "valiaikaisestikeskeytynyt"
-                                        (:koodiarvo (:tila %)))
-                                     (= "loma" (:koodiarvo (:tila %))))
-                                oo-tilat)
+                                   (:koodiarvo (:tila %)))
+                                (= "loma" (:koodiarvo (:tila %))))
+                           oo-tilat)
         kjaksot (concat kjaksot-parsed kjaksot-oo)]
     (reduce #(if (not-in-keskeytymisajanjakso? %2 kjaksot)
                (assoc %1 %2 (cons jakso (get %1 %2)))
@@ -104,11 +104,11 @@
                       (sort-by :alku #(compare %2 %1)) ; reverse order
                       (reduce
                         #(cons
-                          (if (first %1)
-                            (assoc %2 :loppu (.minusDays (:alku (first %1)) 1))
-                            %2)
-                          %1)
-                       []))
+                           (if (first %1)
+                             (assoc %2 :loppu (.minusDays (:alku (first %1)) 1))
+                             %2)
+                           %1)
+                        []))
         kjaksot-parsed (map convert-ajanjakso
                             (:keskeytymisajanjaksot jakso))
         kjaksot-oo (filter #(or (= "valiaikaisestikeskeytynyt"
@@ -147,8 +147,8 @@
   [jaksot]
   (let [fraction (/ 1.0 (count jaksot))]
     (into {} (map #(assoc {} (:hankkimistapa_id %)
-                           {:with-oa (/ (* fraction (get-osa-aikaisuus %)) 100)
-                            :without-oa fraction}) ; ilman osa-aikaisuustietoa
+                          {:with-oa (/ (* fraction (get-osa-aikaisuus %)) 100)
+                           :without-oa fraction}) ; ilman osa-aikaisuustietoa
                   jaksot))))
 
 (defn compute-kestot
@@ -182,25 +182,27 @@
                opiskeluoikeus-oidt)))
 
 (defn compute-kesto-old
-  "Laskee yksittäisen jakson keston." 
+  "Laskee yksittäisen jakson keston."
   [jakso concurrent-jaksot opiskeluoikeudet]
   (let [do-one #(add-to-jaksot-by-day
                   %1
                   %2
                   (get opiskeluoikeudet (:opiskeluoikeus_oid %2)))]
-    (get (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
-            {}
-            (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))
+    (get (reduce
+           (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
+           {}
+           (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))
          (:hankkimistapa_id jakso))))
 
 (defn compute-kesto-new
-  "Laskee yksittäisen jakson keston." 
+  "Laskee yksittäisen jakson keston."
   [jakso concurrent-jaksot opiskeluoikeudet]
   (let [do-one #(add-to-jaksot-by-day-new
                   %1 %2 (get opiskeluoikeudet (:opiskeluoikeus_oid %2)))]
-    (get (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (merge-with + %3 (get %1 %2))) acc m))
-            {}
-            (map handle-one-day-new (vals (reduce do-one {} concurrent-jaksot))))
+    (get (reduce
+           (fn [acc m] (reduce-kv #(assoc %1 %2 (merge-with + %3 (get %1 %2))) acc m))
+           {}
+           (map handle-one-day-new (vals (reduce do-one {} concurrent-jaksot))))
          (:hankkimistapa_id jakso))))
 
 (defn compute-kesto-old-and-new

@@ -42,7 +42,7 @@
 
 (defn- mock-get-organisaatio [oppilaitos]
   (add-to-results {:type "mock-get-organisaatio"
-                                         :oppilaitos oppilaitos})
+                   :oppilaitos oppilaitos})
   {:nimi {:fi "Testilaitos" :en "Test Dept." :sv "Testanstalt"}})
 
 (defn- mock-send-sms [numero body]

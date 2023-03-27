@@ -40,8 +40,8 @@
       (doseq [herate lahetettavat]
         (if (c/has-time-to-answer? (:voimassa-loppupvm herate))
           (if (and
-                 (some? (:puhelinnumero herate))
-                 (c/valid-number? (:puhelinnumero herate)))
+                (some? (:puhelinnumero herate))
+                (c/valid-number? (:puhelinnumero herate)))
             (try
               (let [numero (:puhelinnumero herate)
                     oppilaitos (org/get-organisaatio (:oppilaitos herate))

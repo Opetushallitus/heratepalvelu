@@ -60,7 +60,6 @@
       (is (= (nh/convert-ajanjakso test2) result2))
       (is (= (nh/convert-ajanjakso test3) result3)))))
 
-
 (deftest test-add-to-jaksot-by-day
   (testing "Varmistaa, että add-to-jaksot-by-day toimii oikein."
     (let [opiskeluoikeus {:tila
@@ -410,8 +409,7 @@
                 :jakso_loppupvm "2022-04-29",
                 :osa_aikaisuus 100,
                 :tyyppi "hato",
-                :keskeytymisajanjaksot []}
-               ]))
+                :keskeytymisajanjaksot []}]))
        oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
        mock-get-opiskeluoikeus-catch-404]
       (let [jaksot [{:hankkimistapa_id 4
@@ -420,8 +418,8 @@
                      :jakso_loppupvm "2021-12-01"}
                     {:hankkimistapa_id 7
                      :oppija_oid "4.4.4.4"
-                    :jakso_alkupvm "2021-01-15"
-                    :jakso_loppupvm "2022-04-29"}]
+                     :jakso_alkupvm "2021-01-15"
+                     :jakso_loppupvm "2022-04-29"}]
             results {4 {:vanha 37.558
                         :uusi {:with-oa 52.675
                                :without-oa 52.675}}

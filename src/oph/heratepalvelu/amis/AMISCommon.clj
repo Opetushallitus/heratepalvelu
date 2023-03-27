@@ -94,8 +94,8 @@
                :herate-source       [:s herate-source]}
               db-data-cond-values
               (cond-> db-data
-                      (not-empty (:puhelinnumero herate))
-                      (assoc :puhelinnumero [:s (:puhelinnumero herate)]))]
+                (not-empty (:puhelinnumero herate))
+                (assoc :puhelinnumero [:s (:puhelinnumero herate)]))]
           (try
             (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
                       (str kyselytyyppi "/" laskentakausi) ", request-id:"

@@ -152,8 +152,7 @@
             kestot (nh/compute-kesto-old-and-new jakso concurrent-jaksot opiskeluoikeudet)
             db-data {:hankkimistapa_id     [:n tapa-id]
                      :hankkimistapa_tyyppi
-                                           [:s (last (str/split (:hankkimistapa-tyyppi herate)
-                                                                #"_"))]
+                     [:s (last (str/split (:hankkimistapa-tyyppi herate) #"_"))]
                      :tyopaikan_nimi       [:s (:tyopaikan-nimi herate)]
                      :tyopaikan_ytunnus    [:s (:tyopaikan-ytunnus herate)]
                      :ohjaaja_nimi         [:s (:tyopaikkaohjaaja-nimi herate)]
@@ -175,19 +174,19 @@
                      :tutkinnonosa_tyyppi  [:s (:tyyppi herate)]
                      :tutkinnonosa_id      [:n (:tutkinnonosa-id herate)]
                      :tutkintonimike
-                                           [:s (str (seq (map :koodiarvo
-                                                              (:tutkintonimike suoritus))))]
+                     [:s (str (seq (map :koodiarvo
+                                        (:tutkintonimike suoritus))))]
                      :osaamisala
-                                           [:s (str (seq (arvo/get-osaamisalat
-                                                           suoritus
-                                                           (:oid opiskeluoikeus))))]
+                     [:s (str (seq (arvo/get-osaamisalat
+                                     suoritus
+                                     (:oid opiskeluoikeus))))]
                      :toimipiste_oid       [:s (str (arvo/get-toimipiste suoritus))]
                      :ohjaaja_ytunnus_kj_tutkinto
-                                           [:s (str (:tyopaikkaohjaaja-nimi herate) "/"
-                                                    (:tyopaikan-ytunnus herate) "/"
-                                                    koulutustoimija "/" tutkinto)]
+                     [:s (str (:tyopaikkaohjaaja-nimi herate) "/"
+                              (:tyopaikan-ytunnus herate) "/"
+                              koulutustoimija "/" tutkinto)]
                      :tyopaikan_normalisoitu_nimi
-                                           [:s (c/normalize-string (:tyopaikan-nimi herate))]
+                     [:s (c/normalize-string (:tyopaikan-nimi herate))]
                      :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
                      :vanha-kesto           [:n (math-round (or (get kestot :vanha) 0.0))]
@@ -196,24 +195,23 @@
                      :save-timestamp [:s (str start-time)]}
             results-table-data
             (cond-> db-data
-                    (not-empty (:tyopaikkaohjaaja-email herate))
-                    (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
-                    (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
-                    (assoc :ohjaaja_puhelinnumero
-                           [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
-                    (not-empty (:tutkinnonosa-koodi herate))
-                    (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
-                    (not-empty (:tutkinnonosa-nimi herate))
-                    (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
-                    (some? (:osa-aikaisuus herate))
-                    (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)])
-                    (some? (:oppisopimuksen-perusta herate))
-                    (assoc :oppisopimuksen_perusta
-                           [:s (last
-                                 (str/split
-                                   (:oppisopimuksen-perusta herate)
-                                   #"_"))]))
-            ]
+              (not-empty (:tyopaikkaohjaaja-email herate))
+              (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
+              (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
+              (assoc :ohjaaja_puhelinnumero
+                     [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
+              (not-empty (:tutkinnonosa-koodi herate))
+              (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
+              (not-empty (:tutkinnonosa-nimi herate))
+              (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
+              (some? (:osa-aikaisuus herate))
+              (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)])
+              (some? (:oppisopimuksen-perusta herate))
+              (assoc :oppisopimuksen_perusta
+                     [:s (last
+                           (str/split
+                             (:oppisopimuksen-perusta herate)
+                             #"_"))]))]
         (log/info (str "Uudelleenlaskettu kesto tapa-id:lle " tapa-id ": " kestot))
         (when (check-open-keskeytymisajanjakso herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
@@ -229,8 +227,7 @@
             (throw e))))
       (catch Exception e
         (log/error "Unknown error" e)
-        (throw e)))
-    ))
+        (throw e)))))
 
 (defn -handleRahoitusHerate
   "Käsittelee jaksoherätteet, jotka eHOKS-palvelu lähettää SQS:in kautta. Tekee
@@ -258,8 +255,7 @@
                   (save-results herate opiskeluoikeus koulutustoimija))))
             (do
               (log/info "No opiskeluoikeus found for oid " (:opiskeluoikeus-oid herate))
-              (log/info "Not saving heräte - hankkimistapa-id " (:hankkimistapa-id herate))
-              )))
+              (log/info "Not saving heräte - hankkimistapa-id " (:hankkimistapa-id herate)))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa:" e))
         (catch ExceptionInfo e

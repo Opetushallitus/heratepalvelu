@@ -387,7 +387,7 @@
   [opiskeluoikeus loppupvm]
   (let [tila (get-tila opiskeluoikeus loppupvm :one-day-offset)]
     (if (#{"eronnut" "katsotaaneronneeksi" "mitatoity" "peruutettu"
-          "valiaikaisestikeskeytynyt"} tila)
+           "valiaikaisestikeskeytynyt"} tila)
       (log/warn "Opiskeluoikeus" (:oid opiskeluoikeus) "terminaalitilassa" tila)
       true)))
 
