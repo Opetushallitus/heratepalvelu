@@ -234,7 +234,7 @@
             :expr-attr-vals {":field_1" [:s "value"]
                              ":field_2" [:n 123]}}))))
 
-(deftest valid-number-test
+(deftest test-valid-number?
   (testing
     "Funktio valid-number? tunnistaa oikeita ja virheellisiä puhelinnumeroja"
     (let [fi-phone-number "040 654 3210"
@@ -248,7 +248,7 @@
       (is (not (valid-number? junk-invalid)))
       (is (not (valid-number? unicode-invalid))))))
 
-(deftest client-error-test
+(deftest test-client-error?
   (testing
     "Funktio client-error? erottaa client erroreja muista HTTP-statuksista"
     (let [client-error (ex-info "File not found" {:status 404})
