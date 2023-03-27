@@ -66,11 +66,13 @@
 (defn amis-msg-body
   "Luo opiskelijapalauteviestin tekstin."
   [linkki oppilaitos]
-  (str "Palautetta oppilaitokselle - Respons till läroanstalten - Feedback to educational institution"
+  (str "Palautetta oppilaitokselle - "
+       "Respons till läroanstalten - Feedback to educational institution"
        "\n\n"
        "Kokemuksesi koulutuksesta ovat tärkeitä. "
        "Vastaa tähän kyselyyn (10-15 min) ja kerro meille, "
-       "missä olemme onnistuneet ja mitä voisimme tehdä vielä paremmin. Palaute annetaan nimettömänä."
+       "missä olemme onnistuneet ja mitä voisimme tehdä vielä paremmin. "
+       "Palaute annetaan nimettömänä."
        "\n\n"
        "Dina erfarenheter av utbildningen är viktiga för oss. "
        "Vi hoppas att du vill svara på den här enkäten (10-15 min) "
@@ -78,7 +80,8 @@
        "Responsen ges anonymt."
        "\n\n"
        "Your experiences in education and training matter. "
-       "Respond to this survey (10-15 min) and tell us what we did well and what we could do even better. "
+       "Respond to this survey (10-15 min) and tell us what we did well "
+       "and what we could do even better. "
        "Your feedback is collected anonymously."
        "\n\n"
        linkki

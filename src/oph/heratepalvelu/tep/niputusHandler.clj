@@ -33,7 +33,8 @@
               keskeytymisajanjaksot)))
 
 ; (defn not-before-or-after-opiskeluoikeus?
-;   "Varmistaa, että jakson alkamis- ja päättymispäivät eivät ole opiskeluoikeuden alku- ja loppuajankohdan ulkopuolella."
+;   "Varmistaa, että jakson alkamis- ja päättymispäivät eivät ole
+;   opiskeluoikeuden alku- ja loppuajankohdan ulkopuolella."
 ;   [start end oo-tilat]
 ;   (when-not (empty? oo-tilat)
 ;     (let [oo-alku  (:alku (first oo-tilat))
@@ -174,7 +175,8 @@
             (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))))
 
 (defn get-jaksojen-opiskeluoikeudet
-  "Funktiossa kokeillaan ensin hakea jaksojen opiskeluoikeuksia `opiskeluoikeudet` mapista. Jos niitä ei löydy tästä, ne haetaan Koskesta."
+  "Funktiossa kokeillaan ensin hakea jaksojen opiskeluoikeuksia
+  `opiskeluoikeudet` mapista. Jos niitä ei löydy tästä, ne haetaan Koskesta."
   [opiskeluoikeudet opiskeluoikeus-oidt]
   (zipmap opiskeluoikeus-oidt
           (map #(or (get opiskeluoikeudet %)
@@ -200,7 +202,8 @@
   (let [do-one #(add-to-jaksot-by-day-new
                   %1 %2 (get opiskeluoikeudet (:opiskeluoikeus_oid %2)))]
     (get (reduce
-           (fn [acc m] (reduce-kv #(assoc %1 %2 (merge-with + %3 (get %1 %2))) acc m))
+           (fn [acc m]
+             (reduce-kv #(assoc %1 %2 (merge-with + %3 (get %1 %2))) acc m))
            {}
            (map handle-one-day-new (vals (reduce do-one {} concurrent-jaksot))))
          (:hankkimistapa_id jakso))))
@@ -208,7 +211,9 @@
 (defn compute-kesto-old-and-new
   "Laskee yksittäisen jakson keston, vanhalla ja uudella tavalla."
   [jakso concurrent-jaksot opiskeluoikeudet]
-  (let [cc-jaksot-with-oo (filter #(get opiskeluoikeudet (:opiskeluoikeus_oid %1)) concurrent-jaksot)]
+  (let [cc-jaksot-with-oo
+        (filter #(get opiskeluoikeudet (:opiskeluoikeus_oid %1))
+                concurrent-jaksot)]
     {:vanha (compute-kesto-old jakso cc-jaksot-with-oo opiskeluoikeudet)
      :uusi  (compute-kesto-new jakso cc-jaksot-with-oo opiskeluoikeudet)}))
 
@@ -229,7 +234,8 @@
                                                 concurrent-jaksot))]
         (recur (assoc kestot
                       (:hankkimistapa_id jakso)
-                      (compute-kesto-old-and-new jakso concurrent-jaksot jaksojen-opiskeluoikeudet))
+                      (compute-kesto-old-and-new
+                        jakso concurrent-jaksot jaksojen-opiskeluoikeudet))
                (merge opiskeluoikeudet jaksojen-opiskeluoikeudet)
                (rest jaksot)))
       kestot)))
@@ -283,10 +289,8 @@
     (if (not-empty tunnukset)
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))
             arvo-resp (arvo/create-nippu-kyselylinkki
-                        (arvo/build-niputus-request-body tunniste
-                                                         nippu
-                                                         tunnukset
-                                                         request-id))]
+                        (arvo/build-niputus-request-body
+                          tunniste nippu tunnukset request-id))]
         (if (some? (:nippulinkki arvo-resp))
           (try
             (tc/update-nippu

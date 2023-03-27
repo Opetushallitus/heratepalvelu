@@ -46,7 +46,8 @@
               (let [numero (:puhelinnumero herate)
                     oppilaitos (org/get-organisaatio (:oppilaitos herate))
                     oppilaitos-nimi (:fi (:nimi oppilaitos))
-                    body (elisa/amis-msg-body (:kyselylinkki herate) oppilaitos-nimi)
+                    body (elisa/amis-msg-body (:kyselylinkki herate)
+                                              oppilaitos-nimi)
                     resp (elisa/send-sms numero body)
                     results (get-in resp [:body :messages (keyword numero)])]
                 (ac/update-herate

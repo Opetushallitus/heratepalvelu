@@ -80,7 +80,8 @@
                        :oppilaitos nil}
                       {:type "mock-send-sms"
                        :numero "12345"
-                       :body (elisa/amis-msg-body "kysely.linkki/123" "Testilaitos")}
+                       :body (elisa/amis-msg-body
+                               "kysely.linkki/123" "Testilaitos")}
                       {:type "mock-update-herate"
                        :herate {:voimassa-loppupvm "2022-04-04"
                                 :puhelinnumero "12345"

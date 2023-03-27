@@ -128,7 +128,8 @@
                     (LocalDate/of 2022 1 18) (seq [jakso])
                     (LocalDate/of 2022 1 19) (seq [jakso])
                     (LocalDate/of 2022 1 20) (seq [jakso])}]
-      (is (= expected (nh/add-to-jaksot-by-day-new jaksot-by-day jakso opiskeluoikeus))))))
+      (is (= expected (nh/add-to-jaksot-by-day-new
+                        jaksot-by-day jakso opiskeluoikeus))))))
 
 (deftest test-handle-one-day
   (testing "Varmistaa, että handle-one-day toimii oikein."
@@ -192,17 +193,29 @@
        mock-get-opiskeluoikeus-catch-404]
       (let [opiskeluoikeudet {"1.2.3.a" "a" "1.2.3.b" "b"}]
         (is (= {} (nh/get-jaksojen-opiskeluoikeudet {} [])))
-        (is (= {"1.2.3.a" "a"} (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.a"])))
-        (is (= {"1.2.3.a" nil "1.2.3.b" nil} (nh/get-jaksojen-opiskeluoikeudet {} ["1.2.3.a" "1.2.3.b"])))
-        (is (= {"1.2.3.c" nil} (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.c"])))
-        (is (= {"1.2.3.7" {:tila {:opiskeluoikeusjaksot [{:alku "2020-04-06", :tila {:koodiarvo "lasna"}}]}}
-                "1.2.3.9" {:tila {:opiskeluoikeusjaksot [{:alku "2022-08-25", :tila {:koodiarvo "lasna"}}]}}
+        (is (= {"1.2.3.a" "a"}
+               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.a"])))
+        (is (= {"1.2.3.a" nil "1.2.3.b" nil}
+               (nh/get-jaksojen-opiskeluoikeudet {} ["1.2.3.a" "1.2.3.b"])))
+        (is (= {"1.2.3.c" nil}
+               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.c"])))
+        (is (= {"1.2.3.7"
+                {:tila {:opiskeluoikeusjaksot
+                        [{:alku "2020-04-06", :tila {:koodiarvo "lasna"}}]}}
+                "1.2.3.9"
+                {:tila {:opiskeluoikeusjaksot
+                        [{:alku "2022-08-25", :tila {:koodiarvo "lasna"}}]}}
                 "1.2.3.10.onnea.matkaan" nil}
-               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.7" "1.2.3.9" "1.2.3.10.onnea.matkaan"])))
-        (is (= {"1.2.3.8" {:tila {:opiskeluoikeusjaksot [{:alku "2020-01-01", :tila {:koodiarvo "lasna"}}]}}
+               (nh/get-jaksojen-opiskeluoikeudet
+                 opiskeluoikeudet
+                 ["1.2.3.7" "1.2.3.9" "1.2.3.10.onnea.matkaan"])))
+        (is (= {"1.2.3.8"
+                {:tila {:opiskeluoikeusjaksot
+                        [{:alku "2020-01-01", :tila {:koodiarvo "lasna"}}]}}
                 "1.2.3.a" "a"
                 "1.2.3.b" "b"}
-               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.a" "1.2.3.8" "1.2.3.b"])))))))
+               (nh/get-jaksojen-opiskeluoikeudet
+                 opiskeluoikeudet ["1.2.3.a" "1.2.3.8" "1.2.3.b"])))))))
 
 (deftest test-compute-kestot
   (testing "Varmistaa, että compute-kestot laskee kestot oikein."
@@ -441,7 +454,8 @@
                            (update-in [7 :vanha] do-rounding-new)
                            (update-in [7 :uusi :with-oa] do-rounding-new)
                            (update-in [7 :uusi :without-oa] do-rounding-new))))
-        (is (= call-results (vec (reverse @test-compute-kestot-new-results))))))))
+        (is (= call-results
+               (vec (reverse @test-compute-kestot-new-results))))))))
 
 (defn- mock-compute-kestot [jaksot] {(:oppija_oid (first jaksot)) (vec jaksot)})
 
