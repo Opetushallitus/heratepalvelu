@@ -1,15 +1,13 @@
 (ns oph.heratepalvelu.util.dbChanger
   (:require [oph.heratepalvelu.db.dynamodb :as ddb]
             [environ.core :refer [env]]
-            [clj-time.core :as t]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
-            [oph.heratepalvelu.tep.tepCommon :as tc]
             [oph.heratepalvelu.tep.niputusHandler :as nip])
   (:import (software.amazon.awssdk.services.dynamodb.model
-             ScanRequest AttributeValue)
+             ScanRequest ScanResponse AttributeValue)
            (java.time LocalDate)))
 
 (gen-class
@@ -24,8 +22,9 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn scan [options]
-  (let [req (-> (ScanRequest/builder)
+(defn ^ScanResponse scan [options]
+  (let [^ScanRequest
+        req (-> (ScanRequest/builder)
                 (cond->
                   (:filter-expression options)
                   (.filterExpression (:filter-expression options))
@@ -36,7 +35,7 @@
                 (.tableName (:table env))
                 (.build))
         response (.scan ddb/ddb-client req)]
-    (log/info (count (.items response)))
+    ;; FIXME: probably outdated? ; (log/info (count (.items response)))
     response))
 
 (defn- attr [^String input] (.build (.s (AttributeValue/builder) input)))

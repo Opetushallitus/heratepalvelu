@@ -3,8 +3,7 @@
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.external.organisaatio :as org])
+            [oph.heratepalvelu.db.dynamodb :as ddb])
   (:import (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 

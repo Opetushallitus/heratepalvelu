@@ -65,6 +65,17 @@
     (:alku jakso)  (assoc :alku  (LocalDate/parse (:alku jakso)))
     (:loppu jakso) (assoc :loppu (LocalDate/parse (:loppu jakso)))))
 
+(defn add-loppu-to-jaksot
+  "Lisää jokaiseen paitsi viimeiseen jaksoon kentän :loppu, joka on päivää
+  ennen kuin seuraavan :alku"
+  [jaksot]
+  (conj (mapv (fn [current next]
+                (let [^LocalDate next-starts (:alku next)]
+                  (assoc current :loppu (.minusDays next-starts 1))))
+              jaksot
+              (rest jaksot))
+        (last jaksot)))
+
 (defn add-to-jaksot-by-day
   "Lisää jaksoon viittaavan referenssin jokaiselle päivälle jaksot-by-day
   -objektissa, jolloin jakso on voimassa eikä ole keskeytynyt. Objekti
@@ -73,14 +84,8 @@
   [jaksot-by-day jakso opiskeluoikeus]
   (let [oo-tilat (->> (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
                       (map convert-ajanjakso)
-                      (sort-by :alku #(compare %2 %1)) ; reverse order
-                      (reduce
-                        #(cons
-                           (if (first %1)
-                             (assoc %2 :loppu (.minusDays (:alku (first %1)) 1))
-                             %2)
-                           %1)
-                        []))
+                      (sort-by :alku)
+                      (add-loppu-to-jaksot))
         kjaksot-parsed (map convert-ajanjakso
                             (:keskeytymisajanjaksot jakso))
         kjaksot-oo (filter #(or (= "valiaikaisestikeskeytynyt"
@@ -102,18 +107,12 @@
   [jaksot-by-day jakso opiskeluoikeus]
   (let [oo-tilat (->> (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
                       (map convert-ajanjakso)
-                      (sort-by :alku #(compare %2 %1)) ; reverse order
-                      (reduce
-                        #(cons
-                           (if (first %1)
-                             (assoc %2 :loppu (.minusDays (:alku (first %1)) 1))
-                             %2)
-                           %1)
-                        []))
+                      (sort-by :alku)
+                      (add-loppu-to-jaksot))
         kjaksot-parsed (map convert-ajanjakso
                             (:keskeytymisajanjaksot jakso))
-        kjaksot-oo (filter #(or (= "valiaikaisestikeskeytynyt"
-                                   (:koodiarvo (:tila %))))
+        kjaksot-oo (filter #(= "valiaikaisestikeskeytynyt"
+                               (:koodiarvo (:tila %)))
                            oo-tilat)
         kjaksot (concat kjaksot-parsed kjaksot-oo)]
     (reduce #(if (not-in-keskeytymisajanjakso? %2 kjaksot)

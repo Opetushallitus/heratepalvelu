@@ -33,7 +33,7 @@
                             :expr-attr-vals      {":id" [:n hankkimistapa_id]}}
                            (:jaksotunnus-table env))
             items (:items resp)]
-        (doseq [item items]
+        (doseq [_ items]  ; FIXME: weird.  Why don't we use items for anything?
           (log/info "Poistetaan ohjaajan yhteystiedot (hankkimistapa_id = "
                     hankkimistapa_id
                     ")")

@@ -6,8 +6,7 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.ehoks :as ehoks]
-            [oph.heratepalvelu.external.koski :as koski])
+            [oph.heratepalvelu.external.ehoks :as ehoks])
   (:import (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
