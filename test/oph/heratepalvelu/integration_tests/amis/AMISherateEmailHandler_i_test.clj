@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.integration-tests.amis.AMISherateEmailHandler-i-test
   (:require [clojure.test :refer :all]
+            [clojure.data :refer [diff]]
             [oph.heratepalvelu.amis.AMISherateEmailHandler :as heh]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
@@ -14,6 +15,7 @@
                :ehoks-url "ehoks-example.com/"
                :arvo-url "arvo-example.com/"
                :arvo-user "arvo-user"
+               :organisaatio-url "organisaatio-example.com/"
                :koski-url "koski-example.com"
                :koski-user "koski-user"})
 
@@ -50,7 +52,24 @@
     :suorituskieli [:s "fi"]
     :kyselytyyppi [:s "aloittaneet"]
     :alkupvm [:s "2022-01-01"]
-    :opiskeluoikeus-oid [:s "1234"]}])
+    :opiskeluoikeus-oid [:s "1234"]}
+   {:toimija_oppija [:s "abc/346"]
+    :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+    :sahkoposti [:s "sahko.posti3@esimerkki.fi"]
+    :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+    :suorituskieli [:s "fi"]
+    :kyselytyyppi [:s "aloittaneet"]
+    :alkupvm [:s "2022-01-02"]
+    :opiskeluoikeus-oid [:s "1241"]}
+   {:toimija_oppija [:s "abc/347"]
+    :ehoks-id [:n 189438]
+    :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+    :sahkoposti [:s "sahko.posti4@esimerkki.fi"]
+    :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+    :suorituskieli [:s "fi"]
+    :kyselytyyppi [:s "aloittaneet"]
+    :alkupvm [:s "2022-01-03"]
+    :opiskeluoikeus-oid [:s "1242"]}])
 
 (defn- setup-test []
   (mhc/clear-results)
@@ -63,13 +82,33 @@
                 (str (:arvo-url mock-env) "vastauslinkki/v1/status/245")
                 {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
                 {:body {:voimassa_loppupvm "2022-02-01"}})
+  (mhc/sloppy-bind-url :post
+                       (str (:arvo-url mock-env) "vastauslinkki/v1")
+                       {:body {:kysely_linkki "kysely.linkki/86423"}})
   (mhc/bind-url :get
-                (str (:koski-url mock-env)
-                     "/opiskeluoikeus/1234")
+                (str (:koski-url mock-env) "/opiskeluoikeus/1234")
                 {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
                 {:body {:oid "1234"
                         :tila {:opiskeluoikeusjaksot
-                               [{:alku "2022-01-05"
+                               [{:alku "2022-01-10"
+                                 :tila {:koodiarvo "lasna"}
+                                 :opintojenRahoitus {:koodiarvo "14"}}
+                                {:alku "2022-01-05"
+                                 :tila {:koodiarvo "lasna"}
+                                 :opintojenRahoitus {:koodiarvo "1"}}]}}})
+  (mhc/bind-url :get
+                (str (:koski-url mock-env) "/opiskeluoikeus/1242")
+                {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
+                {:body {:oid "1242"
+                        :suoritukset
+                        [{:suorituskieli {:koodiarvo "FI"}
+                          :tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}
+                          :vahvistus {:päivä "2019-07-24"}}]
+                        :tila {:opiskeluoikeusjaksot
+                               [{:alku "2022-01-10"
+                                 :tila {:koodiarvo "lasna"}
+                                 :opintojenRahoitus {:koodiarvo "1"}}
+                                {:alku "2022-01-05"
                                  :tila {:koodiarvo "lasna"}
                                  :opintojenRahoitus {:koodiarvo "14"}}]}}})
   (mcc/bind-url :post
@@ -97,8 +136,6 @@
   (mdb/set-table-contents (:herate-table mock-env) starting-table-contents))
 
 (defn- teardown-test []
-  (mhc/clear-results)
-  (mhc/clear-url-bindings)
   (mcc/clear-results)
   (mcc/clear-url-bindings)
   (mdb/clear-mock-db))
@@ -139,7 +176,26 @@
      :suorituskieli [:s "fi"]
      :kyselytyyppi [:s "aloittaneet"]
      :alkupvm [:s "2022-01-01"]
-     :opiskeluoikeus-oid [:s "1234"]}})
+     :opiskeluoikeus-oid [:s "1234"]}
+    {:toimija_oppija [:s "abc/346"]
+     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+     :sahkoposti [:s "sahko.posti3@esimerkki.fi"]
+     :lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]
+     :suorituskieli [:s "fi"]
+     :kyselytyyppi [:s "aloittaneet"]
+     :alkupvm [:s "2022-01-02"]
+     :opiskeluoikeus-oid [:s "1241"]}
+    {:toimija_oppija [:s "abc/347"]
+     :ehoks-id [:n 189438]
+     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+     :sahkoposti [:s "sahko.posti4@esimerkki.fi"]
+     :lahetystila [:s (:vastausaika-loppunut c/kasittelytilat)]
+     :lahetyspvm [:s "2022-02-02"]
+     :suorituskieli [:s "fi"]
+     :kyselytyyppi [:s "aloittaneet"]
+     :kyselylinkki [:s "kysely.linkki/86423"]
+     :alkupvm [:s "2022-01-03"]
+     :opiskeluoikeus-oid [:s "1242"]}})
 
 (def expected-http-results
   [{:method :get
@@ -158,12 +214,51 @@
               :as :json}}
    {:method :get
     :url "koski-example.com/opiskeluoikeus/1234"
-    :options {:basic-auth ["koski-user" "koski-pwd"]
-              :as :json}}
+    :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
+   {:method :get
+    :url "koski-example.com/opiskeluoikeus/1241"
+    :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
+   {:method :get
+    :url "koski-example.com/opiskeluoikeus/1241"
+    :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
+   {:method :get
+    :url "koski-example.com/opiskeluoikeus/1242"
+    :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
+   {:method :get :url "organisaatio-example.com/" :options {:as :json}}
+   {:method :get :url "ehoks-example.com/hoks/189438/hankintakoulutukset"
+    :options
+    {:headers
+     {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+     :as :json}}
+   {:method :post
+    :url "arvo-example.com/vastauslinkki/v1"
+    :options
+    {:content-type "application/json"
+     :body (str "{\"vastaamisajan_alkupvm\":\"2022-01-03\","
+                "\"osaamisala\":null,\"heratepvm\":\"2022-01-03\","
+                "\"koulutustoimija_oid\":null,"
+                "\"tutkinnon_suorituskieli\":\"fi\",\"toimipiste_oid\":null,"
+                "\"oppilaitos_oid\":null,"
+                "\"hankintakoulutuksen_toteuttaja\":null,"
+                "\"kyselyn_tyyppi\":\"aloittaneet\",\"tutkintotunnus\":null,"
+                "\"request_id\":null,\"vastaamisajan_loppupvm\":null}")
+     :basic-auth ["arvo-user" "arvo-pwd"], :as :json}}
+   {:method :post
+    :url "ehoks-example.com/hoks/189438/kyselylinkki"
+    :options
+    {:headers
+     {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+     :as :json
+     :content-type "application/json"
+     :body (str "{\"kyselylinkki\":\"kysely.linkki/86423\","
+                "\"tyyppi\":\"aloittaneet\",\"alkupvm\":\"2022-01-03\","
+                "\"lahetystila\":\"ei_lahetetty\"}")}}
+   {:method :get
+    :url "arvo-example.com/vastauslinkki/v1/status/86423"
+    :options {:basic-auth ["arvo-user" "arvo-pwd"], :as :json}}
    {:method :get
     :url "arvo-example.com/vastauslinkki/v1/status/245"
-    :options {:basic-auth ["arvo-user" "arvo-pwd"]
-              :as :json}}])
+    :options {:basic-auth ["arvo-user" "arvo-pwd"] :as :json}}])
 
 (def expected-cas-client-results
   [{:method :post
@@ -182,6 +277,12 @@
     :options {:as :json}}
    {:type :get-service-ticket
     :service "/ehoks-virkailija-backend"
+    :suffix "cas-security-check"}
+   {:type :get-service-ticket
+    :service "/ehoks-virkailija-backend"
+    :suffix "cas-security-check"}
+   {:type :get-service-ticket
+    :service "/ehoks-virkailija-backend"
     :suffix "cas-security-check"}])
 
 (deftest test-AMISherateEmailHandler-integration
@@ -198,13 +299,24 @@
                   oph.heratepalvelu.external.cas-client/get-service-ticket
                   mcc/mock-get-service-ticket
                   oph.heratepalvelu.external.http-client/get mhc/mock-get
+                  oph.heratepalvelu.external.http-client/post mhc/mock-post
                   oph.heratepalvelu.external.http-client/patch mhc/mock-patch]
       (setup-test)
       (heh/-handleSendAMISEmails {}
                                  (tu/mock-handler-event :scheduledherate)
                                  (tu/mock-handler-context))
-      (is (= (mdb/get-table-values (:herate-table mock-env))
-             expected-table-contents))
-      (is (= (mhc/get-results) expected-http-results))
-      (is (= (mcc/get-results) expected-cas-client-results))
+      (let [actual-table-contents
+            (mdb/get-table-values (:herate-table mock-env))]
+        (is (= actual-table-contents expected-table-contents)
+            (->> (diff actual-table-contents expected-table-contents)
+                 (clojure.string/join "\n")
+                 (str "differing items:\n"))))
+      (is (= (mhc/get-results) expected-http-results)
+          (->> (diff (mhc/get-results) expected-http-results)
+               (clojure.string/join "\n")
+               (str "differing items:\n")))
+      (is (= (mcc/get-results) expected-cas-client-results)
+          (->> (diff (mcc/get-results) expected-cas-client-results)
+               (clojure.string/join "\n")
+               (str "differing items:\n")))
       (teardown-test))))
