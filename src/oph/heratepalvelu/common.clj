@@ -367,6 +367,30 @@
   (and (> (:status (ex-data e)) 399)
        (< (:status (ex-data e)) 500)))
 
+(defn get-tila
+  "Hakee opiskeluoikeuden tilan tiettynä päivänä."
+  ([opiskeluoikeus vahvistus-pvm mode]
+   (let [offset (if (= mode :one-day-offset) 1 0)
+         jaksot (sort-by :alku (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))]
+     (-> (partition 2 1 jaksot)
+         (->> (some (fn [[current next]]
+                      (and (< (compare vahvistus-pvm (:alku next)) offset)
+                           current))))
+         (or (last jaksot))
+         (get-in [:tila :koodiarvo]))))
+  ([opiskeluoikeus vahvistus-pvm]
+   (get-tila opiskeluoikeus vahvistus-pvm :normal)))
+
+(defn check-opiskeluoikeus-tila
+  "Palauttaa true, jos opiskeluoikeus ei ole terminaalitilassa (eronnut,
+  katsotaan eronneeksi, mitätöity, peruutettu, tai väliaikaisesti keskeytynyt)."
+  [opiskeluoikeus loppupvm]
+  (let [tila (get-tila opiskeluoikeus loppupvm :one-day-offset)]
+    (if (#{"eronnut" "katsotaaneronneeksi" "mitatoity" "peruutettu"
+          "valiaikaisestikeskeytynyt"} tila)
+      (log/warn "Opiskeluoikeus" (:oid opiskeluoikeus) "terminaalitilassa" tila)
+      true)))
+
 (defn get-oppilaitokset
   "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaiton-kentän
   perusteella."

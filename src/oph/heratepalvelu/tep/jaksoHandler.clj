@@ -79,27 +79,6 @@
       (throw (ex-info (str "Tunnus " tunnus " on jo käytössä.")
                       {:items items})))))
 
-(defn check-opiskeluoikeus-tila
-  "Palauttaa true, jos opiskeluoikeus ei ole terminaalitilassa (eronnut,
-  katsotaan eronneeksi, mitätöity, peruutettu, tai väliaikaisesti keskeytynyt)."
-  [opiskeluoikeus loppupvm]
-  (let [tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
-        voimassa (reduce
-                   (fn [res next]
-                     (if (c/is-before (LocalDate/parse (:alku next))
-                                      (LocalDate/parse loppupvm))
-                       next
-                       (reduced res)))
-                   (sort-by :alku tilat))
-        tila (:koodiarvo (:tila voimassa))]
-    (if (or (= tila "eronnut")
-            (= tila "katsotaaneronneeksi")
-            (= tila "mitatoity")
-            (= tila "peruutettu")
-            (= tila "valiaikaisestikeskeytynyt"))
-      (log/warn "Opiskeluoikeus" (:oid opiskeluoikeus) "terminaalitilassa" tila)
-      true)))
-
 (defn sort-process-keskeytymisajanjaksot
   "Järjestää TEP-jakso keskeytymisajanjaksot, parsii niiden alku- ja
   loppupäivämäärät LocalDateiksi, ja palauttaa tuloslistan."
@@ -293,8 +272,8 @@
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
               (if (some? (tep-herate-checker herate))
                 (log/error {:herate herate :msg (tep-herate-checker herate)})
-                (when (and (check-opiskeluoikeus-tila opiskeluoikeus
-                                                      (:loppupvm herate))
+                (when (and (c/check-opiskeluoikeus-tila opiskeluoikeus
+                                                        (:loppupvm herate))
                            (check-not-fully-keskeytynyt herate)
                            (c/check-opiskeluoikeus-suoritus-types?
                              opiskeluoikeus)

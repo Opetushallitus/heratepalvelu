@@ -26,6 +26,96 @@
     (is (= "2018-2019" (kausi "2018-07-01")))
     (is (= "2018-2019" (kausi "2019-06-30")))))
 
+(deftest test-get-tila
+  (testing "Get correct tila given opiskeluoikeus and vahvistus-pvm"
+    (is (= (get-tila
+             {:oid "1.2.246.562.15.82039738925"
+              :koulutustoimija {:oid "1.2.246.562.10.35751498086"}
+              :suoritukset [{:suorituskieli {:koodiarvo "FI"}
+                             :tyyppi
+                             {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}
+                             :vahvistus {:päivä "2019-07-24"}}
+                            {:suorituskieli {:koodiarvo "FI"}
+                             :tyyppi
+                             {:koodiarvo "ammatillinentutkintoosittainen"}
+                             :vahvistus {:päivä "2019-07-23"}}]
+              :tila {:opiskeluoikeusjaksot [{:alku "2019-07-24"
+                                             :tila {:koodiarvo "lasna"}}
+                                            {:alku "2019-07-23"
+                                             :tila
+                                             {:koodiarvo "valmistunut"}}]}}
+             "2019-07-23")
+           "valmistunut"))
+    (is (= (get-tila
+             {:oid "1.2.246.562.15.82039738925"
+              :koulutustoimija {:oid "1.2.246.562.10.35751498086"}
+              :suoritukset [{:suorituskieli {:koodiarvo "FI"}
+                             :tyyppi
+                             {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}
+                             :vahvistus {:päivä "2019-07-24"}}
+                            {:suorituskieli {:koodiarvo "FI"}
+                             :tyyppi
+                             {:koodiarvo "ammatillinentutkintoosittainen"}
+                             :vahvistus {:päivä "2019-07-23"}}]
+              :tila {:opiskeluoikeusjaksot [{:alku "2019-07-24"
+                                             :tila {:koodiarvo "lasna"}}
+                                            {:alku "2019-07-23"
+                                             :tila
+                                             {:koodiarvo "valmistunut"}}]}}
+             "2019-07-24")
+           "lasna"))))
+
+(deftest check-opiskeluoikeus-tila-test
+  (testing "Opiskeluoikeuden tilan tarkastus. Keskeytetty opiskeluoikeus estää
+           jakson käsittelyn. Jakson päättymispäivänä keskeytetty opiskeluoikeus
+           ei estä jakson käsittelyä."
+    (let [loppupvm "2021-09-07"
+          opiskeluoikeus-lasna {:tila
+                                {:opiskeluoikeusjaksot
+                                 [{:alku "2021-06-20"
+                                   :tila {:koodiarvo "loma"}}
+                                  {:alku "2021-05-01"
+                                   :tila {:koodiarvo "lasna"}}
+                                  {:alku "2021-06-25"
+                                   :tila {:koodiarvo "lasna"}}]}}
+          opiskeluoikeus-eronnut-samana-paivana {:tila
+                                                 {:opiskeluoikeusjaksot
+                                                  [{:alku "2021-06-20"
+                                                    :tila {:koodiarvo "loma"}}
+                                                   {:alku "2021-05-01"
+                                                    :tila {:koodiarvo "lasna"}}
+                                                   {:alku "2021-09-07"
+                                                    :tila
+                                                    {:koodiarvo "eronnut"}}]}}
+          opiskeluoikeus-eronnut-tulevaisuudessa {:tila
+                                                  {:opiskeluoikeusjaksot
+                                                   [{:alku "2021-06-20"
+                                                     :tila {:koodiarvo "loma"}}
+                                                    {:alku "2021-05-01"
+                                                     :tila {:koodiarvo "lasna"}}
+                                                    {:alku "2021-09-08"
+                                                     :tila
+                                                     {:koodiarvo "eronnut"}}]}}
+          opiskeluoikeus-eronnut-paivaa-aiemmin {:tila
+                                                 {:opiskeluoikeusjaksot
+                                                  [{:alku "2021-06-20"
+                                                    :tila {:koodiarvo "loma"}}
+                                                   {:alku "2021-05-01"
+                                                    :tila {:koodiarvo "lasna"}}
+                                                   {:alku "2021-09-06"
+                                                    :tila
+                                                    {:koodiarvo "eronnut"}}]}}]
+      (is (= true (check-opiskeluoikeus-tila opiskeluoikeus-lasna loppupvm)))
+      (is (= true (check-opiskeluoikeus-tila
+                    opiskeluoikeus-eronnut-samana-paivana
+                    loppupvm)))
+      (is (= true (check-opiskeluoikeus-tila
+                    opiskeluoikeus-eronnut-tulevaisuudessa
+                    loppupvm)))
+      (is (nil? (check-opiskeluoikeus-tila
+                  opiskeluoikeus-eronnut-paivaa-aiemmin
+                  loppupvm))))))
+
 (deftest test-check-suoritus-type
   (testing "Check suoritus type"
     (is (false? (check-suoritus-type? {:tyyppi {:koodiarvo "valma"}})))

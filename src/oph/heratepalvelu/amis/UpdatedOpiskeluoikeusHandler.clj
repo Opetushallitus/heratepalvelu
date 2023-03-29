@@ -75,18 +75,6 @@
       (= tyyppi "ammatillinentutkintoosittainen")
       "tutkinnon_osia_suorittaneet")))
 
-(defn get-tila
-  "Hakee opiskeluoikeuden tilan."
-  [opiskeluoikeus vahvistus-pvm]
-  (let [tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
-        voimassa (reduce
-                   (fn [res next]
-                     (if (>= (compare vahvistus-pvm (:alku next)) 0)
-                       next
-                       (reduced res)))
-                   (sort-by :alku tilat))]
-    (:koodiarvo (:tila voimassa))))
-
 (defn check-tila
   "Varmistaa, että opiskeluoikeuden tila on 'valmistunut' tai 'läsnä'."
   [opiskeluoikeus vahvistus-pvm]
