@@ -88,37 +88,35 @@
   [vals-map]
   (into {} (for [[k v] vals-map] [(name k) (build-condition v)])))
 
+(declare map-attribute-values-to-vals)
+
 (defn get-value
   "Hakee arvon AttributeValue-objektista ja muuttaa sen oikeaksi
   Clojure-tyypiksi."
   [av]
-  (reduce (fn [_ t]
+  (first
+    (keep (fn [t]
             (let [v (invoke-instance-method av t [])]
               (when (and (some? v)
                          (not (instance? DefaultSdkAutoConstructMap v))
                          (not (instance? DefaultSdkAutoConstructList v)))
-                (reduced (cond
-                           (= t "n")
-                           (Integer/parseInt v)
-                           (= t "ns")
-                           (map #(Integer/parseInt %) v)
-                           (= t "m")
-                           (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
-                                      {} (into {} v))
-                           :else v)))))
-          nil (vals attribute-types)))
+                (cond (= t "n") (Integer/parseInt v)
+                      (= t "ns") (map #(Integer/parseInt %) v)
+                      (= t "m") (map-attribute-values-to-vals v)
+                      :else v))))
+          (vals attribute-types))))
 
 (defn map-attribute-values-to-vals
   "Muuttaa key value mapin muodosta {\"<key>\" <AttributeValue>} muodoksi
   {:<key> <Clojure-arvo>}."
   [item]
-  (reduce-kv #(assoc %1 (keyword %2) (get-value %3))
-             {} (into {} item)))
+  (reduce-kv #(assoc %1 (keyword %2) (get-value %3)) {} (into {} item)))
 
 (defn map-raw-vals-to-typed-vals
   "Muuttaa key value mapin muodosta {\"key\" <Clojure-arvo>} muodoksi
   {\"key\" [:<tyyppi> <arvo>]}."
   [item]
+  ; FIXME: map-values
   (reduce #(assoc %1
                   (first %2) (cond (or (= (type (second %2)) java.lang.Long)
                                        (= (type (second %2)) java.lang.Integer))

@@ -50,7 +50,7 @@
             (assoc
               @mock-db-tables
               table-name
-              (reduce #(assoc %1 (get-item-key key-fields %2) %2) {} items)))))
+              (zipmap (map (partial get-item-key key-fields) items) items)))))
 
 (defn get-whole-table [table-name] (get @mock-db-tables table-name))
 

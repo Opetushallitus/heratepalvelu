@@ -34,13 +34,10 @@
   "Palauttaa ensimmäisen hyväksyttävän suorituksen vahvistuspäivämäärän, jos
   sellainen on olemassa."
   [opiskeluoikeus]
-  (if-let [vahvistus-pvm
-           (reduce
-             (fn [_ suoritus]
-               (when (check-suoritus-type? suoritus)
-                 (reduced (get-in suoritus [:vahvistus :päivä]))))
-             nil (:suoritukset opiskeluoikeus))]
-    vahvistus-pvm
+  (or
+    (some #(and (check-suoritus-type? %)
+                (get-in % [:vahvistus :päivä]))
+          (:suoritukset opiskeluoikeus))
     (log/info "Opiskeluoikeudessa" (:oid opiskeluoikeus)
               "ei vahvistus päivämäärää")))
 

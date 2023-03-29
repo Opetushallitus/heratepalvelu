@@ -80,6 +80,7 @@
   [nippu]
   (try
     (ddb/put-item
+      ; FIXME: map-values
       (reduce #(assoc %1 (first %2) [:s (second %2)]) {} (seq nippu))
       {}
       (:tpk-nippu-table env))

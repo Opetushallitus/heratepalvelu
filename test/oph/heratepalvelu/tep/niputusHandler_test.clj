@@ -147,6 +147,7 @@
 (def test-compute-kestot-new-results (atom []))
 
 (defn- do-rounding [values]
+  ; FIXME: map-values
   (reduce-kv #(assoc %1 %2 (/ (Math/round (* %3 1000.0)) 1000.0)) {} values))
 
 (defn- do-rounding-new [value]

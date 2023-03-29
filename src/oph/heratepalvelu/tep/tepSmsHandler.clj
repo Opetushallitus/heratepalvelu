@@ -62,11 +62,7 @@
           (if (some? number)
             {:sms_kasittelytila [:s (:phone-invalid c/kasittelytilat)]
              :lahetettynumeroon [:s number]}
-            (let [numerot (reduce #(if (some? (:ohjaaja_puhelinnumero %2))
-                                     (conj %1 (:ohjaaja_puhelinnumero %2))
-                                     %1)
-                                  #{}
-                                  jaksot)]
+            (let [numerot (set (keep :ohjaaja_puhelinnumero jaksot))]
               (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa,"
                         (count numerot)
                         "numeroa löydetty")

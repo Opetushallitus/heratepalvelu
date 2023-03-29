@@ -39,11 +39,8 @@
   "Jos kaikissa annetuissa objekteissa (items) on kentässä f sama arvo tai nil,
   palauttaa yhteisen arvon. Muuten palauttaa nil."
   [items f]
-  (reduce #(if (some? %1)
-             (if (and (some? (f %2)) (not= %1 (f %2))) (reduced nil) %1)
-             (f %2))
-          nil
-          items))
+  (let [values (set (keep f items))]
+    (if (= 1 (count values)) (first values))))
 
 (defn update-nippu
   "Wrapper update-itemin ympäri, joka yksinkertaistaa tietokantapäivitykset."
