@@ -28,7 +28,8 @@
     :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
     :suorituskieli [:s "fi"]
     :kyselytyyppi [:s "aloittaneet"]
-    :alkupvm [:s "2022-01-01"]}
+    :alkupvm [:s "2022-01-01"]
+    :heratepvm [:s "2022-01-01"]}
    {:toimija_oppija [:s "lkj/245"]
     :tyyppi_kausi [:s "paattyneet/2022-2023"]
     :kyselylinkki [:s "kysely.linkki/245"]
@@ -36,22 +37,26 @@
     :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
     :suorituskieli [:s "fi"]
     :kyselytyyppi [:s "tutkinnon_suorittaneet"]
-    :alkupvm [:s "2022-01-05"]}
+    :alkupvm [:s "2022-01-05"]
+    :heratepvm [:s "2022-01-05"]}
    {:toimija_oppija [:s "test/1"]
     :tyyppi_kausi [:s "asdf"]
     :lahetystila [:s (:success c/kasittelytilat)]
-    :alkupvm [:s "2022-06-06"]}
+    :alkupvm [:s "2022-06-06"]
+    :heratepvm [:s "2022-06-06"]}
    {:toimija_oppija [:s "test/2"]
     :tyyppi_kausi [:s "asdf"]
     :lahetystila [:s (:success c/kasittelytilat)]
-    :alkupvm [:s "2022-06-04"]}
+    :alkupvm [:s "2022-06-04"]
+    :heratepvm [:s "2022-06-04"]}
    {:toimija_oppija [:s "abc/345"]
     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
     :sahkoposti [:s "sahko.posti2@esimerkki.fi"]
     :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
     :suorituskieli [:s "fi"]
     :kyselytyyppi [:s "aloittaneet"]
-    :alkupvm [:s "2022-01-01"]
+    :alkupvm [:s "2022-01-15"]
+    :heratepvm [:s "2022-01-15"]
     :opiskeluoikeus-oid [:s "1234"]}
    {:toimija_oppija [:s "abc/346"]
     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
@@ -59,7 +64,8 @@
     :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
     :suorituskieli [:s "fi"]
     :kyselytyyppi [:s "aloittaneet"]
-    :alkupvm [:s "2022-01-02"]
+    :alkupvm [:s "2022-01-15"]
+    :heratepvm [:s "2022-01-15"]
     :opiskeluoikeus-oid [:s "1241"]}
    {:toimija_oppija [:s "abc/347"]
     :ehoks-id [:n 189438]
@@ -68,7 +74,8 @@
     :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
     :suorituskieli [:s "fi"]
     :kyselytyyppi [:s "aloittaneet"]
-    :alkupvm [:s "2022-01-03"]
+    :alkupvm [:s "2022-01-15"]
+    :heratepvm [:s "2022-01-15"]
     :opiskeluoikeus-oid [:s "1242"]}])
 
 (defn- setup-test []
@@ -151,6 +158,7 @@
      :suorituskieli [:s "fi"]
      :kyselytyyppi [:s "aloittaneet"]
      :alkupvm [:s "2022-01-01"]
+     :heratepvm [:s "2022-01-01"]
      :viestintapalvelu-id [:n 123]}
     {:toimija_oppija [:s "lkj/245"]
      :tyyppi_kausi [:s "paattyneet/2022-2023"]
@@ -160,22 +168,26 @@
      :lahetyspvm [:s "2022-02-02"]
      :suorituskieli [:s "fi"]
      :kyselytyyppi [:s "tutkinnon_suorittaneet"]
-     :alkupvm [:s "2022-01-05"]}
+     :alkupvm [:s "2022-01-05"]
+     :heratepvm [:s "2022-01-05"]}
     {:toimija_oppija [:s "test/1"]
      :tyyppi_kausi [:s "asdf"]
      :lahetystila [:s (:success c/kasittelytilat)]
-     :alkupvm [:s "2022-06-06"]}
+     :alkupvm [:s "2022-06-06"]
+     :heratepvm [:s "2022-06-06"]}
     {:toimija_oppija [:s "test/2"]
      :tyyppi_kausi [:s "asdf"]
      :lahetystila [:s (:success c/kasittelytilat)]
-     :alkupvm [:s "2022-06-04"]}
+     :alkupvm [:s "2022-06-04"]
+     :heratepvm [:s "2022-06-04"]}
     {:toimija_oppija [:s "abc/345"]
      :tyyppi_kausi [:s "aloittaneet/2021-2022"]
      :sahkoposti [:s "sahko.posti2@esimerkki.fi"]
      :lahetystila [:s (:ei-laheteta c/kasittelytilat)]
      :suorituskieli [:s "fi"]
      :kyselytyyppi [:s "aloittaneet"]
-     :alkupvm [:s "2022-01-01"]
+     :alkupvm [:s "2022-01-15"]
+     :heratepvm [:s "2022-01-15"]
      :opiskeluoikeus-oid [:s "1234"]}
     {:toimija_oppija [:s "abc/346"]
      :tyyppi_kausi [:s "aloittaneet/2021-2022"]
@@ -183,7 +195,8 @@
      :lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]
      :suorituskieli [:s "fi"]
      :kyselytyyppi [:s "aloittaneet"]
-     :alkupvm [:s "2022-01-02"]
+     :alkupvm [:s "2022-01-15"]
+     :heratepvm [:s "2022-01-15"]
      :opiskeluoikeus-oid [:s "1241"]}
     {:toimija_oppija [:s "abc/347"]
      :ehoks-id [:n 189438]
@@ -194,7 +207,8 @@
      :suorituskieli [:s "fi"]
      :kyselytyyppi [:s "aloittaneet"]
      :kyselylinkki [:s "kysely.linkki/86423"]
-     :alkupvm [:s "2022-01-03"]
+     :alkupvm [:s "2022-01-15"]
+     :heratepvm [:s "2022-01-15"]
      :opiskeluoikeus-oid [:s "1242"]}})
 
 (def expected-http-results
@@ -212,6 +226,9 @@
                          "\"sahkoposti\":\"sahko.posti@esimerkki.fi\","
                          "\"lahetystila\":\"viestintapalvelussa\"}")
               :as :json}}
+   {:method :get
+    :url "arvo-example.com/vastauslinkki/v1/status/245"
+    :options {:basic-auth ["arvo-user" "arvo-pwd"] :as :json}}
    {:method :get
     :url "koski-example.com/opiskeluoikeus/1234"
     :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
@@ -234,8 +251,8 @@
     :url "arvo-example.com/vastauslinkki/v1"
     :options
     {:content-type "application/json"
-     :body (str "{\"vastaamisajan_alkupvm\":\"2022-01-03\","
-                "\"osaamisala\":null,\"heratepvm\":\"2022-01-03\","
+     :body (str "{\"vastaamisajan_alkupvm\":\"2022-01-15\","
+                "\"osaamisala\":null,\"heratepvm\":\"2022-01-15\","
                 "\"koulutustoimija_oid\":null,"
                 "\"tutkinnon_suorituskieli\":\"fi\",\"toimipiste_oid\":null,"
                 "\"oppilaitos_oid\":null,"
@@ -251,14 +268,11 @@
      :as :json
      :content-type "application/json"
      :body (str "{\"kyselylinkki\":\"kysely.linkki/86423\","
-                "\"tyyppi\":\"aloittaneet\",\"alkupvm\":\"2022-01-03\","
+                "\"tyyppi\":\"aloittaneet\",\"alkupvm\":\"2022-01-15\","
                 "\"lahetystila\":\"ei_lahetetty\"}")}}
    {:method :get
     :url "arvo-example.com/vastauslinkki/v1/status/86423"
-    :options {:basic-auth ["arvo-user" "arvo-pwd"], :as :json}}
-   {:method :get
-    :url "arvo-example.com/vastauslinkki/v1/status/245"
-    :options {:basic-auth ["arvo-user" "arvo-pwd"] :as :json}}])
+    :options {:basic-auth ["arvo-user" "arvo-pwd"], :as :json}}])
 
 (def expected-cas-client-results
   [{:method :post

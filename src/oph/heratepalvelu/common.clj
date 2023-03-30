@@ -367,27 +367,38 @@
   (and (> (:status (ex-data e)) 399)
        (< (:status (ex-data e)) 500)))
 
+(defn get-opiskeluoikeusjakso-for-date
+  "Hakee opiskeluoikeudesta jakson, joka on voimassa tiettynä päivänä."
+  [opiskeluoikeus vahvistus-pvm mode]
+  (let [offset (if (= mode :one-day-offset) 1 0)
+        jaksot (sort-by :alku (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))]
+    (reduce (fn [res next]
+              (if (>= (compare vahvistus-pvm (:alku next)) offset)
+                next
+                (reduced res)))
+            (first jaksot)
+            jaksot)))
+
 (defn get-tila
   "Hakee opiskeluoikeuden tilan tiettynä päivänä."
-  ([opiskeluoikeus vahvistus-pvm mode]
-   (let [offset (if (= mode :one-day-offset) 1 0)
-         jaksot (sort-by :alku (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))]
-     (-> (partition 2 1 jaksot)
-         (->> (some (fn [[current next]]
-                      (and (< (compare vahvistus-pvm (:alku next)) offset)
-                           current))))
-         (or (last jaksot))
-         (get-in [:tila :koodiarvo]))))
-  ([opiskeluoikeus vahvistus-pvm]
-   (get-tila opiskeluoikeus vahvistus-pvm :normal)))
+  [opiskeluoikeus vahvistus-pvm]
+  (-> opiskeluoikeus
+      (get-opiskeluoikeusjakso-for-date vahvistus-pvm :normal)
+      (get-in [:tila :koodiarvo])))
+
+(def terminaalitilat
+  #{"eronnut" "katsotaaneronneeksi" "mitatoity" "peruutettu"
+    "valiaikaisestikeskeytynyt"})
 
 (defn check-opiskeluoikeus-tila
   "Palauttaa true, jos opiskeluoikeus ei ole terminaalitilassa (eronnut,
-  katsotaan eronneeksi, mitätöity, peruutettu, tai väliaikaisesti keskeytynyt)."
+  katsotaan eronneeksi, mitätöity, peruutettu, tai väliaikaisesti keskeytynyt),
+  paitsi jos opiskeluoikeus on siirtynyt tähän tilaan juuri kysyttynä päivänä."
   [opiskeluoikeus loppupvm]
-  (let [tila (get-tila opiskeluoikeus loppupvm :one-day-offset)]
-    (if (#{"eronnut" "katsotaaneronneeksi" "mitatoity" "peruutettu"
-           "valiaikaisestikeskeytynyt"} tila)
+  (let [jakso (get-opiskeluoikeusjakso-for-date
+                opiskeluoikeus loppupvm :one-day-offset)
+        tila (get-in jakso [:tila :koodiarvo])]
+    (if (terminaalitilat tila)
       (log/warn "Opiskeluoikeus" (:oid opiskeluoikeus) "terminaalitilassa" tila)
       true)))
 
@@ -406,11 +417,9 @@
 (defn feedback-collecting-prevented?
   "Jätetäänkö palaute keräämättä sen vuoksi, että opiskelijan opiskelu on
   tällä hetkellä rahoitettu muilla rahoituslähteillä?"
-  [opiskeluoikeus]
+  [opiskeluoikeus heratepvm]
   (-> opiskeluoikeus
-      (get-in [:tila :opiskeluoikeusjaksot])
-      (->> (sort-by :alku))  ; ISO-8601 dates are lexicographically sortable
-      (last)
+      (get-opiskeluoikeusjakso-for-date heratepvm :normal)
       (get-in [:opintojenRahoitus :koodiarvo])
       (feedback-collecting-preventing-codes)
       (some?)))

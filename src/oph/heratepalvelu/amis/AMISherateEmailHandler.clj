@@ -30,7 +30,7 @@
                            (:opiskeluoikeus-oid herate))]
                oo
                (k/get-opiskeluoikeus-catch-404 (:opiskeluoikeus-oid herate)))]
-      (if (c/feedback-collecting-prevented? opiskeluoikeus)
+      (if (c/feedback-collecting-prevented? opiskeluoikeus (:heratepvm herate))
         (do
           (log/info (str "Palautteen kerääminen estetty (opiskeluoikeus "
                          (:oid opiskeluoikeus)
