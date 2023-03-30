@@ -263,6 +263,7 @@
     :oppisopimuksen_perusta [:s "02"]}])
 
 (defn- get-specific-niputtamaton [index]
+  ; FIXME: map-values
   (reduce #(assoc %1 (first %2) (second (second %2)))
           {}
           (seq (get mock-niputtamattomat-list index))))

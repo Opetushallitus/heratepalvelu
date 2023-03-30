@@ -184,11 +184,7 @@
 (defn get-suoritus
   "Hakee tutkinnon tai tutkinnon osan suorituksen opiskeluoikeudesta."
   [opiskeluoikeus]
-  (reduce
-    (fn [_ suoritus]
-      (when (check-suoritus-type? suoritus)
-        (reduced suoritus)))
-    nil (:suoritukset opiskeluoikeus)))
+  (first (filter check-suoritus-type? (:suoritukset opiskeluoikeus))))
 
 (defn has-nayttotutkintoonvalmistavakoulutus?
   "Tarkistaa, onko opiskeluoikeudessa näyttötutkintoon valmistavan koulutuksen
@@ -328,10 +324,11 @@
   "Luo options-objekti update-item -kutsulle."
   [updates]
   {:update-expr (str "SET " (str/join ", " (map make-set-pair (keys updates))))
-   :expr-attr-names (reduce #(assoc %1 (str "#" (normalize-string %2)) %2)
-                            {}
-                            (map name (keys updates)))
+   :expr-attr-names
+   (let [names (map name (keys updates))]
+     (zipmap (map #(str "#" (normalize-string %)) names) names))
    :expr-attr-vals
+   ; FIXME: map-keys
    (reduce-kv #(assoc %1 (str ":" (normalize-string (name %2))) %3)
               {}
               updates)})
@@ -369,6 +366,30 @@
   [e]
   (and (> (:status (ex-data e)) 399)
        (< (:status (ex-data e)) 500)))
+
+(defn get-tila
+  "Hakee opiskeluoikeuden tilan tiettynä päivänä."
+  ([opiskeluoikeus vahvistus-pvm mode]
+   (let [offset (if (= mode :one-day-offset) 1 0)
+         jaksot (sort-by :alku (:opiskeluoikeusjaksot (:tila opiskeluoikeus)))]
+     (-> (partition 2 1 jaksot)
+         (->> (some (fn [[current next]]
+                      (and (< (compare vahvistus-pvm (:alku next)) offset)
+                           current))))
+         (or (last jaksot))
+         (get-in [:tila :koodiarvo]))))
+  ([opiskeluoikeus vahvistus-pvm]
+   (get-tila opiskeluoikeus vahvistus-pvm :normal)))
+
+(defn check-opiskeluoikeus-tila
+  "Palauttaa true, jos opiskeluoikeus ei ole terminaalitilassa (eronnut,
+  katsotaan eronneeksi, mitätöity, peruutettu, tai väliaikaisesti keskeytynyt)."
+  [opiskeluoikeus loppupvm]
+  (let [tila (get-tila opiskeluoikeus loppupvm :one-day-offset)]
+    (if (#{"eronnut" "katsotaaneronneeksi" "mitatoity" "peruutettu"
+          "valiaikaisestikeskeytynyt"} tila)
+      (log/warn "Opiskeluoikeus" (:oid opiskeluoikeus) "terminaalitilassa" tila)
+      true)))
 
 (defn get-oppilaitokset
   "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaiton-kentän

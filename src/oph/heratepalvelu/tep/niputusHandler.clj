@@ -161,12 +161,14 @@
                             (:oppija_oid (first jaksot))
                             first-start-date
                             last-end-date)
+        ; FIXME: zipmap
         oo-map (reduce #(assoc %1 %2 (koski/get-opiskeluoikeus-catch-404 %2))
                        {}
                        (set (map :opiskeluoikeus_oid concurrent-jaksot)))
         do-one #(add-to-jaksot-by-day %1
                                       %2
                                       (get oo-map (:opiskeluoikeus_oid %2)))]
+    ; FIXME: mapcat + merge-with
     (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
             {}
             (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))))
@@ -174,15 +176,10 @@
 (defn get-jaksojen-opiskeluoikeudet
   "Funktiossa kokeillaan ensin hakea jaksojen opiskeluoikeuksia `opiskeluoikeudet` mapista. Jos niitä ei löydy tästä, ne haetaan Koskesta."
   [opiskeluoikeudet opiskeluoikeus-oidt]
-  (reduce
-    (fn [jaksojen-opiskeluoikeudet oid]
-      (assoc jaksojen-opiskeluoikeudet
-             oid
-             (if-let [opiskeluoikeus (get opiskeluoikeudet oid)]
-               opiskeluoikeus
-               (koski/get-opiskeluoikeus-catch-404 oid))))
-    {}
-    opiskeluoikeus-oidt))
+  (zipmap opiskeluoikeus-oidt
+          (map #(or (get opiskeluoikeudet %)
+                    (koski/get-opiskeluoikeus-catch-404 %))
+               opiskeluoikeus-oidt)))
 
 (defn compute-kesto-old
   "Laskee yksittäisen jakson keston." 
@@ -238,8 +235,10 @@
 (defn group-jaksot-and-compute-kestot
   "Ryhmittää jaksot oppija_oid:n perusteella ja laskee niiden kestot."
   [jaksot]
-  (let [f #(assoc %1 (:oppija_oid %2) (cons %2 (get %1 (:oppija_oid %2))))]
-    (apply merge (map compute-kestot (vals (reduce f {} jaksot))))))
+  (->> (group-by :oppija_oid jaksot)
+       (vals)
+       (map (comp compute-kestot reverse))
+       (apply merge)))
 
 (defn query-jaksot
   "Hakee tietokannasta ne jaksot, jotka kuuluvat annettuun nippuun ja joiden

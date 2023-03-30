@@ -34,13 +34,10 @@
   "Palauttaa ensimmäisen hyväksyttävän suorituksen vahvistuspäivämäärän, jos
   sellainen on olemassa."
   [opiskeluoikeus]
-  (if-let [vahvistus-pvm
-           (reduce
-             (fn [_ suoritus]
-               (when (check-suoritus-type? suoritus)
-                 (reduced (get-in suoritus [:vahvistus :päivä]))))
-             nil (:suoritukset opiskeluoikeus))]
-    vahvistus-pvm
+  (or
+    (some #(and (check-suoritus-type? %)
+                (get-in % [:vahvistus :päivä]))
+          (:suoritukset opiskeluoikeus))
     (log/info "Opiskeluoikeudessa" (:oid opiskeluoikeus)
               "ei vahvistus päivämäärää")))
 
@@ -77,18 +74,6 @@
       "tutkinnon_suorittaneet"
       (= tyyppi "ammatillinentutkintoosittainen")
       "tutkinnon_osia_suorittaneet")))
-
-(defn get-tila
-  "Hakee opiskeluoikeuden tilan."
-  [opiskeluoikeus vahvistus-pvm]
-  (let [tilat (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
-        voimassa (reduce
-                   (fn [res next]
-                     (if (>= (compare vahvistus-pvm (:alku next)) 0)
-                       next
-                       (reduced res)))
-                   (sort-by :alku tilat))]
-    (:koodiarvo (:tila voimassa))))
 
 (defn check-tila
   "Varmistaa, että opiskeluoikeuden tila on 'valmistunut' tai 'läsnä'."
