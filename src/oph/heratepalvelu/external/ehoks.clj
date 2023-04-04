@@ -9,9 +9,9 @@
 (defn- ehoks-query-base-options
   "Alustavat optiot ehoks-kyselyyn."
   []
-  {:headers {:ticket (cas/get-service-ticket (or (:ehoks-cas-base env)
-                                                 "/ehoks-virkailija-backend")
-                                             "cas-security-check")}
+  {:headers {:ticket (cas/get-service-ticket
+                       (or (:ehoks-cas-base env) "/ehoks-virkailija-backend")
+                       "cas-security-check")}
    :as      :json})
 
 (defn- ehoks-get
@@ -143,7 +143,8 @@
 (defn post-henkilomodify-event
   "Lähettää tiedon henkilön tietojen muutoksesta eHOKS-palveluun."
   [oppija-oid]
-  (ehoks-post (str "heratepalvelu/onrmodify") {:query-params {:oid oppija-oid}}))
+  (ehoks-post (str "heratepalvelu/onrmodify")
+              {:query-params {:oid oppija-oid}}))
 
 (defn delete-tyopaikkaohjaajan-yhteystiedot
   "Poistaa työpaikkaohjaajan yhteystiedot yli kolme kuukautta sitten

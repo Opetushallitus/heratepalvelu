@@ -81,7 +81,8 @@
   [link]
   [:div
    [:p "Hyvä opiskelija!"]
-   [:p "Olet edennyt hienosti ja saamassa päätökseen tavoitteesi mukaiset ammatilliset opinnot."]
+   [:p (str "Olet edennyt hienosti ja saamassa päätökseen tavoitteesi mukaiset "
+            "ammatilliset opinnot.")]
    [:p (str "Kokemuksesi koulutuksesta ovat tärkeitä. Kerro meille, missä "
             "olemme onnistuneet ja mitä voisimme tehdä vielä paremmin.")]
    [:p (str "Toivomme, että käyttäisit noin 10-15 minuuttia aikaa tähän "
@@ -94,7 +95,8 @@
    [:p "Terveisin oppilaitoksesi"]
    horizontal-line
    [:p "Bästa studerande!"]
-   [:p "Du har utvecklats väl och är på väg att slutföra dina yrkesinriktade studier."]
+   [:p (str "Du har utvecklats väl och är på väg att slutföra dina "
+            "yrkesinriktade studier.")]
    [:p (str "Dina erfarenheter av utbildningen är viktiga för oss. Vi vill "
             "gärna höra dina åsikter om hur vi har lyckats och vad vi kunde "
             "göra bättre i fortsättningen.")]
@@ -109,7 +111,8 @@
    [:p "Hälsningar, din läroanstalt"]
    horizontal-line
    [:p "Dear student!"]
-   [:p "You have progressed well and are about to complete the vocational studies you set as your goal."]
+   [:p (str "You have progressed well and are about to complete the vocational "
+            "studies you set as your goal.")]
    [:p (str "Your experiences in education and training matter. Tell us what "
             "we did well and what we could do even better.")]
    [:p "We ask you to take 10 to 15 minutes to respond to this survey."]

@@ -126,7 +126,8 @@
                :content-type "application/json"}
      :body    (generate-string {:sender "OPH"
                                 :destination ["12345"]
-                                :text (elisa/amis-msg-body "kysely.linkki/4" "Testilaitos")})
+                                :text (elisa/amis-msg-body
+                                        "kysely.linkki/4" "Testilaitos")})
      :as      :json}}])
 
 (deftest test-AMISSMSHerate-integration

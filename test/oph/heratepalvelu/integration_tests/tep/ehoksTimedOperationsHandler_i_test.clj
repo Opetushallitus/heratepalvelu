@@ -47,7 +47,8 @@
   (mdb/create-table (:jaksotunnus-table mock-env)
                     {:primary-key :hankkimistapa_id
                      :sort-key :hankkimistapa_id})
-  (mdb/set-table-contents (:jaksotunnus-table mock-env) starting-table-contents))
+  (mdb/set-table-contents (:jaksotunnus-table mock-env)
+                          starting-table-contents))
 
 (defn- teardown-test []
   (mcc/clear-results)

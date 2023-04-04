@@ -139,7 +139,9 @@
               tutkinto      (get-in suoritus [:koulutusmoduuli
                                               :tunniste
                                               :koodiarvo])
-              rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus (LocalDate/parse (:loppupvm herate)))
+              rahoitusryhma (c/get-rahoitusryhma
+                              opiskeluoikeus
+                              (LocalDate/parse (:loppupvm herate)))
               db-data {:hankkimistapa_id     [:n tapa-id]
                        :hankkimistapa_tyyppi
                        [:s (last (str/split (:hankkimistapa-tyyppi herate)

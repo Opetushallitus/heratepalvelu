@@ -33,7 +33,7 @@
                             :expr-attr-vals      {":id" [:n hankkimistapa_id]}}
                            (:jaksotunnus-table env))
             items (:items resp)]
-        (doseq [item items]
+        (when (seq items)
           (log/info "Poistetaan ohjaajan yhteystiedot (hankkimistapa_id = "
                     hankkimistapa_id
                     ")")

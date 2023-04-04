@@ -60,7 +60,6 @@
       (is (= (nh/convert-ajanjakso test2) result2))
       (is (= (nh/convert-ajanjakso test3) result3)))))
 
-
 (deftest test-add-to-jaksot-by-day
   (testing "Varmistaa, että add-to-jaksot-by-day toimii oikein."
     (let [opiskeluoikeus {:tila
@@ -129,7 +128,8 @@
                     (LocalDate/of 2022 1 18) (seq [jakso])
                     (LocalDate/of 2022 1 19) (seq [jakso])
                     (LocalDate/of 2022 1 20) (seq [jakso])}]
-      (is (= expected (nh/add-to-jaksot-by-day-new jaksot-by-day jakso opiskeluoikeus))))))
+      (is (= expected (nh/add-to-jaksot-by-day-new
+                        jaksot-by-day jakso opiskeluoikeus))))))
 
 (deftest test-handle-one-day
   (testing "Varmistaa, että handle-one-day toimii oikein."
@@ -193,17 +193,29 @@
        mock-get-opiskeluoikeus-catch-404]
       (let [opiskeluoikeudet {"1.2.3.a" "a" "1.2.3.b" "b"}]
         (is (= {} (nh/get-jaksojen-opiskeluoikeudet {} [])))
-        (is (= {"1.2.3.a" "a"} (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.a"])))
-        (is (= {"1.2.3.a" nil "1.2.3.b" nil} (nh/get-jaksojen-opiskeluoikeudet {} ["1.2.3.a" "1.2.3.b"])))
-        (is (= {"1.2.3.c" nil} (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.c"])))
-        (is (= {"1.2.3.7" {:tila {:opiskeluoikeusjaksot [{:alku "2020-04-06", :tila {:koodiarvo "lasna"}}]}}
-                "1.2.3.9" {:tila {:opiskeluoikeusjaksot [{:alku "2022-08-25", :tila {:koodiarvo "lasna"}}]}}
+        (is (= {"1.2.3.a" "a"}
+               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.a"])))
+        (is (= {"1.2.3.a" nil "1.2.3.b" nil}
+               (nh/get-jaksojen-opiskeluoikeudet {} ["1.2.3.a" "1.2.3.b"])))
+        (is (= {"1.2.3.c" nil}
+               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.c"])))
+        (is (= {"1.2.3.7"
+                {:tila {:opiskeluoikeusjaksot
+                        [{:alku "2020-04-06", :tila {:koodiarvo "lasna"}}]}}
+                "1.2.3.9"
+                {:tila {:opiskeluoikeusjaksot
+                        [{:alku "2022-08-25", :tila {:koodiarvo "lasna"}}]}}
                 "1.2.3.10.onnea.matkaan" nil}
-               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.7" "1.2.3.9" "1.2.3.10.onnea.matkaan"])))
-        (is (= {"1.2.3.8" {:tila {:opiskeluoikeusjaksot [{:alku "2020-01-01", :tila {:koodiarvo "lasna"}}]}}
+               (nh/get-jaksojen-opiskeluoikeudet
+                 opiskeluoikeudet
+                 ["1.2.3.7" "1.2.3.9" "1.2.3.10.onnea.matkaan"])))
+        (is (= {"1.2.3.8"
+                {:tila {:opiskeluoikeusjaksot
+                        [{:alku "2020-01-01", :tila {:koodiarvo "lasna"}}]}}
                 "1.2.3.a" "a"
                 "1.2.3.b" "b"}
-               (nh/get-jaksojen-opiskeluoikeudet opiskeluoikeudet ["1.2.3.a" "1.2.3.8" "1.2.3.b"])))))))
+               (nh/get-jaksojen-opiskeluoikeudet
+                 opiskeluoikeudet ["1.2.3.a" "1.2.3.8" "1.2.3.b"])))))))
 
 (deftest test-compute-kestot
   (testing "Varmistaa, että compute-kestot laskee kestot oikein."
@@ -410,8 +422,7 @@
                 :jakso_loppupvm "2022-04-29",
                 :osa_aikaisuus 100,
                 :tyyppi "hato",
-                :keskeytymisajanjaksot []}
-               ]))
+                :keskeytymisajanjaksot []}]))
        oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
        mock-get-opiskeluoikeus-catch-404]
       (let [jaksot [{:hankkimistapa_id 4
@@ -420,8 +431,8 @@
                      :jakso_loppupvm "2021-12-01"}
                     {:hankkimistapa_id 7
                      :oppija_oid "4.4.4.4"
-                    :jakso_alkupvm "2021-01-15"
-                    :jakso_loppupvm "2022-04-29"}]
+                     :jakso_alkupvm "2021-01-15"
+                     :jakso_loppupvm "2022-04-29"}]
             results {4 {:vanha 37.558
                         :uusi {:with-oa 52.675
                                :without-oa 52.675}}
@@ -443,7 +454,8 @@
                            (update-in [7 :vanha] do-rounding-new)
                            (update-in [7 :uusi :with-oa] do-rounding-new)
                            (update-in [7 :uusi :without-oa] do-rounding-new))))
-        (is (= call-results (vec (reverse @test-compute-kestot-new-results))))))))
+        (is (= call-results
+               (vec (reverse @test-compute-kestot-new-results))))))))
 
 (defn- mock-compute-kestot [jaksot] {(:oppija_oid (first jaksot)) (vec jaksot)})
 

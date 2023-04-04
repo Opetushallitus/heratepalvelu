@@ -6,8 +6,7 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.ehoks :as ehoks]
-            [oph.heratepalvelu.external.koski :as koski])
+            [oph.heratepalvelu.external.ehoks :as ehoks])
   (:import (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
@@ -94,8 +93,8 @@
                :herate-source       [:s herate-source]}
               db-data-cond-values
               (cond-> db-data
-                      (not-empty (:puhelinnumero herate))
-                      (assoc :puhelinnumero [:s (:puhelinnumero herate)]))]
+                (not-empty (:puhelinnumero herate))
+                (assoc :puhelinnumero [:s (:puhelinnumero herate)]))]
           (try
             (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
                       (str kyselytyyppi "/" laskentakausi) ", request-id:"

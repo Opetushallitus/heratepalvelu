@@ -33,7 +33,8 @@
               keskeytymisajanjaksot)))
 
 ; (defn not-before-or-after-opiskeluoikeus?
-;   "Varmistaa, että jakson alkamis- ja päättymispäivät eivät ole opiskeluoikeuden alku- ja loppuajankohdan ulkopuolella."
+;   "Varmistaa, että jakson alkamis- ja päättymispäivät eivät ole
+;   opiskeluoikeuden alku- ja loppuajankohdan ulkopuolella."
 ;   [start end oo-tilat]
 ;   (when-not (empty? oo-tilat)
 ;     (let [oo-alku  (:alku (first oo-tilat))
@@ -64,6 +65,17 @@
     (:alku jakso)  (assoc :alku  (LocalDate/parse (:alku jakso)))
     (:loppu jakso) (assoc :loppu (LocalDate/parse (:loppu jakso)))))
 
+(defn add-loppu-to-jaksot
+  "Lisää jokaiseen paitsi viimeiseen jaksoon kentän :loppu, joka on päivää
+  ennen kuin seuraavan :alku"
+  [jaksot]
+  (conj (mapv (fn [current next]
+                (let [^LocalDate next-starts (:alku next)]
+                  (assoc current :loppu (.minusDays next-starts 1))))
+              jaksot
+              (rest jaksot))
+        (last jaksot)))
+
 (defn add-to-jaksot-by-day
   "Lisää jaksoon viittaavan referenssin jokaiselle päivälle jaksot-by-day
   -objektissa, jolloin jakso on voimassa eikä ole keskeytynyt. Objekti
@@ -72,20 +84,14 @@
   [jaksot-by-day jakso opiskeluoikeus]
   (let [oo-tilat (->> (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
                       (map convert-ajanjakso)
-                      (sort-by :alku #(compare %2 %1)) ; reverse order
-                      (reduce
-                        #(cons
-                          (if (first %1)
-                            (assoc %2 :loppu (.minusDays (:alku (first %1)) 1))
-                            %2)
-                          %1)
-                       []))
+                      (sort-by :alku)
+                      (add-loppu-to-jaksot))
         kjaksot-parsed (map convert-ajanjakso
                             (:keskeytymisajanjaksot jakso))
         kjaksot-oo (filter #(or (= "valiaikaisestikeskeytynyt"
-                                        (:koodiarvo (:tila %)))
-                                     (= "loma" (:koodiarvo (:tila %))))
-                                oo-tilat)
+                                   (:koodiarvo (:tila %)))
+                                (= "loma" (:koodiarvo (:tila %))))
+                           oo-tilat)
         kjaksot (concat kjaksot-parsed kjaksot-oo)]
     (reduce #(if (not-in-keskeytymisajanjakso? %2 kjaksot)
                (assoc %1 %2 (cons jakso (get %1 %2)))
@@ -101,18 +107,12 @@
   [jaksot-by-day jakso opiskeluoikeus]
   (let [oo-tilat (->> (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
                       (map convert-ajanjakso)
-                      (sort-by :alku #(compare %2 %1)) ; reverse order
-                      (reduce
-                        #(cons
-                          (if (first %1)
-                            (assoc %2 :loppu (.minusDays (:alku (first %1)) 1))
-                            %2)
-                          %1)
-                       []))
+                      (sort-by :alku)
+                      (add-loppu-to-jaksot))
         kjaksot-parsed (map convert-ajanjakso
                             (:keskeytymisajanjaksot jakso))
-        kjaksot-oo (filter #(or (= "valiaikaisestikeskeytynyt"
-                                   (:koodiarvo (:tila %))))
+        kjaksot-oo (filter #(= "valiaikaisestikeskeytynyt"
+                               (:koodiarvo (:tila %)))
                            oo-tilat)
         kjaksot (concat kjaksot-parsed kjaksot-oo)]
     (reduce #(if (not-in-keskeytymisajanjakso? %2 kjaksot)
@@ -147,8 +147,8 @@
   [jaksot]
   (let [fraction (/ 1.0 (count jaksot))]
     (into {} (map #(assoc {} (:hankkimistapa_id %)
-                           {:with-oa (/ (* fraction (get-osa-aikaisuus %)) 100)
-                            :without-oa fraction}) ; ilman osa-aikaisuustietoa
+                          {:with-oa (/ (* fraction (get-osa-aikaisuus %)) 100)
+                           :without-oa fraction}) ; ilman osa-aikaisuustietoa
                   jaksot))))
 
 (defn compute-kestot
@@ -174,7 +174,8 @@
             (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))))
 
 (defn get-jaksojen-opiskeluoikeudet
-  "Funktiossa kokeillaan ensin hakea jaksojen opiskeluoikeuksia `opiskeluoikeudet` mapista. Jos niitä ei löydy tästä, ne haetaan Koskesta."
+  "Funktiossa kokeillaan ensin hakea jaksojen opiskeluoikeuksia
+  `opiskeluoikeudet` mapista. Jos niitä ei löydy tästä, ne haetaan Koskesta."
   [opiskeluoikeudet opiskeluoikeus-oidt]
   (zipmap opiskeluoikeus-oidt
           (map #(or (get opiskeluoikeudet %)
@@ -182,31 +183,36 @@
                opiskeluoikeus-oidt)))
 
 (defn compute-kesto-old
-  "Laskee yksittäisen jakson keston." 
+  "Laskee yksittäisen jakson keston."
   [jakso concurrent-jaksot opiskeluoikeudet]
   (let [do-one #(add-to-jaksot-by-day
                   %1
                   %2
                   (get opiskeluoikeudet (:opiskeluoikeus_oid %2)))]
-    (get (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
-            {}
-            (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))
+    (get (reduce
+           (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
+           {}
+           (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))
          (:hankkimistapa_id jakso))))
 
 (defn compute-kesto-new
-  "Laskee yksittäisen jakson keston." 
+  "Laskee yksittäisen jakson keston."
   [jakso concurrent-jaksot opiskeluoikeudet]
   (let [do-one #(add-to-jaksot-by-day-new
                   %1 %2 (get opiskeluoikeudet (:opiskeluoikeus_oid %2)))]
-    (get (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (merge-with + %3 (get %1 %2))) acc m))
-            {}
-            (map handle-one-day-new (vals (reduce do-one {} concurrent-jaksot))))
+    (get (reduce
+           (fn [acc m]
+             (reduce-kv #(assoc %1 %2 (merge-with + %3 (get %1 %2))) acc m))
+           {}
+           (map handle-one-day-new (vals (reduce do-one {} concurrent-jaksot))))
          (:hankkimistapa_id jakso))))
 
 (defn compute-kesto-old-and-new
   "Laskee yksittäisen jakson keston, vanhalla ja uudella tavalla."
   [jakso concurrent-jaksot opiskeluoikeudet]
-  (let [cc-jaksot-with-oo (filter #(get opiskeluoikeudet (:opiskeluoikeus_oid %1)) concurrent-jaksot)]
+  (let [cc-jaksot-with-oo
+        (filter #(get opiskeluoikeudet (:opiskeluoikeus_oid %1))
+                concurrent-jaksot)]
     {:vanha (compute-kesto-old jakso cc-jaksot-with-oo opiskeluoikeudet)
      :uusi  (compute-kesto-new jakso cc-jaksot-with-oo opiskeluoikeudet)}))
 
@@ -227,7 +233,8 @@
                                                 concurrent-jaksot))]
         (recur (assoc kestot
                       (:hankkimistapa_id jakso)
-                      (compute-kesto-old-and-new jakso concurrent-jaksot jaksojen-opiskeluoikeudet))
+                      (compute-kesto-old-and-new
+                        jakso concurrent-jaksot jaksojen-opiskeluoikeudet))
                (merge opiskeluoikeudet jaksojen-opiskeluoikeudet)
                (rest jaksot)))
       kestot)))
@@ -281,10 +288,8 @@
     (if (not-empty tunnukset)
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))
             arvo-resp (arvo/create-nippu-kyselylinkki
-                        (arvo/build-niputus-request-body tunniste
-                                                         nippu
-                                                         tunnukset
-                                                         request-id))]
+                        (arvo/build-niputus-request-body
+                          tunniste nippu tunnukset request-id))]
         (if (some? (:nippulinkki arvo-resp))
           (try
             (tc/update-nippu

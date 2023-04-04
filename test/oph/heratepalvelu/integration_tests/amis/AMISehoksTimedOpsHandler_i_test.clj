@@ -110,9 +110,9 @@
                                     :message "Lähetetty 2 viestiä"})))
 
       (is (true? (tu/logs-contain?
-                  {:level :info
-                   :message
-                   "Käynnistetään opiskelijan yhteystietojen poisto"})))
+                   {:level :info
+                    :message
+                    "Käynnistetään opiskelijan yhteystietojen poisto"})))
       (is (true?
             (tu/logs-contain?
               {:level :info
@@ -132,8 +132,8 @@
                (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 3/3,"
                     " tyyppi_kausi = aloittaneet/2022-2023)")})))
       (is (true? (tu/logs-contain?
-                  {:level :info
-                   :message "Opiskelijan yhteystietojen poisto valmis"})))
+                   {:level :info
+                    :message "Opiskelijan yhteystietojen poisto valmis"})))
       (is (= (mdb/get-table-values (:herate-table mock-env))
              #{{:toimija_oppija [:s "1/1"]
                 :tyyppi_kausi [:s "aloittaneet/2022-2023"]
