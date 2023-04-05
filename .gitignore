@@ -6,6 +6,7 @@
 .idea
 .serverless
 .nrepl-port
+node_modules
 target
 .lein-env
 .lein-failures
@@ -14,3 +15,5 @@ target
 *.csv
 herate-script.sh
 .tool-versions
+/python-virtualenv
+/tags
