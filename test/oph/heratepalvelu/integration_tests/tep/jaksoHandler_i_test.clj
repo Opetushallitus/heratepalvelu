@@ -38,6 +38,13 @@
                   :keskeytymisajanjaksot [{:alku "2022-01-08"
                                            :loppu "2022-01-14"}]})
 
+(def test-herate-externalfunding
+  (assoc test-herate
+         :oppija-oid "test-extfund-oppija-oid"
+         :opiskeluoikeus-oid "test-oo-oid-externalfunding"
+         :hankkimistapa-id 456
+         :hoks-id 345))
+
 (def duplicate-herate {:tyyppi "aloittaneet"
                        :alkupvm "2022-01-01"
                        :loppupvm "2022-02-06"
@@ -54,6 +61,23 @@
                        :tyopaikkaohjaaja-email "ohjaaja@esimerkki.fi"
                        :tyopaikkaohjaaja-nimi "Olli Ohjaaja"})
 
+(defn- opiskeluoikeus-response [rahoituskoodi1 rahoituskoodi2]
+  {:oid "test-oo-oid"
+   :koulutustoimija {:oid "koulutustoimija-oid"}
+   :suoritukset [{:toimipiste {:oid "test-toimipiste"}
+                  :tyyppi {:koodiarvo "ammatillinentutkinto"}
+                  :koulutusmoduuli {:tunniste {:koodiarvo "testitutkinto"}}
+                  :osaamisala [{:koodiarvo "test-osaamisala"}]
+                  :tutkintonimike [{:koodiarvo "test-tutkintonimike"}]}]
+   :tila {:opiskeluoikeusjaksot
+          [{:alku "2022-01-05"
+            :tila {:koodiarvo "lasna"}
+            :opintojenRahoitus {:koodiarvo rahoituskoodi1}}
+           {:alku "2021-10-08"
+            :tila {:koodiarvo "lasna"}
+            :opintojenRahoitus {:koodiarvo rahoituskoodi2}}]}
+   :oppilaitos {:oid "testilaitos"}})
+
 (defn- setup-test []
   (mcc/clear-results)
   (mcc/clear-url-bindings)
@@ -62,23 +86,12 @@
   (mhc/bind-url :get
                 (str (:koski-url mock-env) "/opiskeluoikeus/test-oo-oid")
                 {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
-                {:body {:oid "test-oo-oid"
-                        :koulutustoimija {:oid "koulutustoimija-oid"}
-                        :suoritukset [{:toimipiste {:oid "test-toimipiste"}
-                                       :tyyppi
-                                       {:koodiarvo "ammatillinentutkinto"}
-                                       :koulutusmoduuli
-                                       {:tunniste
-                                        {:koodiarvo "testitutkinto"}}
-                                       :osaamisala
-                                       [{:koodiarvo "test-osaamisala"}]
-                                       :tutkintonimike
-                                       [{:koodiarvo "test-tutkintonimike"}]}]
-                        :tila {:opiskeluoikeusjaksot
-                               [{:alku "2022-01-05"
-                                 :tila {:koodiarvo "lasna"}
-                                 :opintojenRahoitus {:koodiarvo "1"}}]}
-                        :oppilaitos {:oid "testilaitos"}}})
+                {:body (opiskeluoikeus-response "1" "14")})
+  (mhc/bind-url :get
+                (str (:koski-url mock-env)
+                     "/opiskeluoikeus/test-oo-oid-externalfunding")
+                {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
+                {:body (opiskeluoikeus-response "14" "1")})
   (mhc/bind-url :get
                 (str (:organisaatio-url mock-env) "test-toimipiste")
                 {:as :json}
@@ -101,8 +114,8 @@
                             "\"tutkintotunnus\":\"testitutkinto\","
                             "\"sopimustyyppi\":\"oppisopimus\","
                             "\"tutkintonimike\":[\"test-tutkintonimike\"],"
-                            "\"request_id\":\"test-uuid\""
-                            ",\"tutkinnon_osa\":\"test-tutkinnonosa\"}")
+                            "\"request_id\":\"test-uuid\","
+                            "\"tutkinnon_osa\":\"test-tutkinnonosa\"}")
                  :basic-auth [(:arvo-user mock-env) "arvo-pwd"]
                  :as :json}
                 {:body {:tunnus "ABCDEF"}})
@@ -214,7 +227,7 @@
               :content-type "application/json"
               :as :json}}
    {:method :get
-    :url "https://oph-koski.com/opiskeluoikeus/test-oo-oid2"
+    :url (str (:koski-url mock-env) "/opiskeluoikeus/test-oo-oid2")
     :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
    {:method :patch
     :url (str (:ehoks-url mock-env)
@@ -222,14 +235,24 @@
     :options {:headers {:ticket (str "service-ticket/ehoks-virkailija-backend"
                                      "/cas-security-check")}
               :content-type "application/json"
-              :as :json}}])
+              :as :json}}
+   {:method :get
+    :url (str (:koski-url mock-env)
+              "/opiskeluoikeus/test-oo-oid-externalfunding")
+    :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
+   {:method :patch
+    :url (str (:ehoks-url mock-env)
+              "heratepalvelu/osaamisenhankkimistavat/456/kasitelty")
+    :options
+    {:headers
+     {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+     :as :json
+     :content-type "application/json"}}])
 
-(def expected-cas-client-results [{:type :get-service-ticket
-                                   :service "/ehoks-virkailija-backend"
-                                   :suffix "cas-security-check"}
-                                  {:type :get-service-ticket
-                                   :service "/ehoks-virkailija-backend"
-                                   :suffix "cas-security-check"}])
+(def expected-cas-client-results
+  (repeat 3 {:type :get-service-ticket
+             :service "/ehoks-virkailija-backend"
+             :suffix "cas-security-check"}))
 
 (deftest test-jaksoHandler-integration
   (testing "jaksoHandler integraatiotesti"
@@ -248,12 +271,11 @@
                   oph.heratepalvelu.external.http-client/post mhc/mock-post
                   oph.heratepalvelu.external.koski/pwd (delay "koski-pwd")]
       (setup-test)
-      (jh/-handleJaksoHerate {}
-                             (tu/mock-sqs-event test-herate)
-                             (tu/mock-handler-context))
-      (jh/-handleJaksoHerate {}
-                             (tu/mock-sqs-event duplicate-herate)
-                             (tu/mock-handler-context))
+      (let [context (tu/mock-handler-context)]
+        (jh/-handleJaksoHerate {} (tu/mock-sqs-event test-herate) context)
+        (jh/-handleJaksoHerate {} (tu/mock-sqs-event duplicate-herate) context)
+        (jh/-handleJaksoHerate
+          {} (tu/mock-sqs-event test-herate-externalfunding) context))
       (is (= (mdb/get-table-values (:jaksotunnus-table mock-env))
              expected-jaksotunnus-table))
       (is (= (mdb/get-table-values (:nippu-table mock-env))

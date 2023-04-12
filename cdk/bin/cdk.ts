@@ -16,7 +16,7 @@ if (!upstreamBranch) {
   throw new Error("No upstream branch");
 }
 
-const canDeploy = !(Object.entries(status).length !== 0 || aheadBehindCount.ahead !== 0 || aheadBehindCount.behind !== 0);
+const canDeploy = (Object.entries(status).length === 0 && aheadBehindCount.ahead === 0 && aheadBehindCount.behind === 0);
 
 const version = canDeploy ? repo.getReferenceTarget(repo.getHead()) : "uncommitted";
 
@@ -42,7 +42,7 @@ if (canDeploy) {
     console.log("\nNOT IN MASTER BRANCH!!!\n")
   }
 } else {
-  console.log("\nUncommited changes or local is ahead/behind of remote:\n");
+  console.log("\nUncommited changes or local is ahead/behind of remote, so not doing anything:\n");
   console.log(status);
   console.log(aheadBehindCount);
   console.log("\n");

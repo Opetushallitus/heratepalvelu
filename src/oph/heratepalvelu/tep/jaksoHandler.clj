@@ -274,13 +274,14 @@
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
               (if (some? (tep-herate-checker herate))
                 (log/error {:herate herate :msg (tep-herate-checker herate)})
-                (when (and (c/check-opiskeluoikeus-tila opiskeluoikeus
-                                                        (:loppupvm herate))
+                (when (and (c/check-opiskeluoikeus-tila
+                             opiskeluoikeus (:loppupvm herate))
                            (check-not-fully-keskeytynyt herate)
                            (c/check-opiskeluoikeus-suoritus-types?
                              opiskeluoikeus)
-                           (false? (c/feedback-collecting-prevented?
-                                     opiskeluoikeus))
+                           (not (c/feedback-collecting-prevented?
+                                  opiskeluoikeus
+                                  (:loppupvm herate)))
                            (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
                   (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))))
           (ehoks/patch-oht-tep-kasitelty (:hankkimistapa-id herate)))

@@ -6,13 +6,13 @@
 
 (defn clear-results [] (reset! results []))
 
-(defn get-results [] (vec (reverse @results)))
+(defn get-results [] @results)
 
 (defn- create-mock-method [method]
   (fn [url & [options]]
-    (reset! results
-            (cons {:method method :url url :options options} @results))
-    (get @url-bindings [method url options])))
+    (swap! results conj {:method method :url url :options options})
+    (or (get @url-bindings [method url options])
+        (get @url-bindings [method url]))))
 
 (def mock-delete (create-mock-method :delete))
 (def mock-get (create-mock-method :get))
@@ -21,5 +21,8 @@
 
 (defn bind-url [method url options value]
   (swap! url-bindings assoc [method url options] value))
+
+(defn sloppy-bind-url [method url value]
+  (swap! url-bindings assoc [method url] value))
 
 (defn clear-url-bindings [] (reset! url-bindings {}))
