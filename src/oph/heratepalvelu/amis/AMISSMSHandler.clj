@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.amis.AMISSMSHandler
   "Käsittelee SMS-viestien lähettämistä herätteitä varten."
   (:require [clojure.tools.logging :as log]
+            [environ.core :refer [env]]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -25,9 +26,9 @@
     {:sms-lahetystila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
      :alkupvm         [:le [:s (str (c/local-date-now))]]}
     {:index "smsIndex"
-     :filter-expression "attribute_exists(#kyselylinkki)"
-     :expr-attr-names {"#kyselylinkki" "kyselylinkki"}
-     :limit limit}))
+     :filter-expression "attribute_exists(kyselylinkki)"
+     :limit limit}
+    (:herate-table env)))
 
 (defn -handleAMISSMS
   "Hakee tietokannasta herätteitä, joilta SMS-viesti ei ole vielä lähetetty, ja

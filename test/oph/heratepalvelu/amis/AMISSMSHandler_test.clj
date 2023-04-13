@@ -7,22 +7,25 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
-(defn- mock-query-items [params options] {:params params :options options})
+(defn- mock-query-items [params options table] {:params params
+                                                :options options
+                                                :table table})
 
 (deftest test-query-lahetettavat
   (testing "Varmistaa, että query-lahetettavat toimii oikein."
     (with-redefs [oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2022 3 3))
-                  oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
+                  oph.heratepalvelu.db.dynamodb/query-items mock-query-items
+                  environ.core/env {:herate-table "herate-table-name"}]
       (is (= (ash/query-lahetettavat 20)
              {:params
               {:sms-lahetystila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                :alkupvm         [:le [:s "2022-03-03"]]}
               :options
               {:index "smsIndex"
-               :filter-expression "attribute_exists(#kyselylinkki)"
-               :expr-attr-names {"#kyselylinkki" "kyselylinkki"}
-               :limit 20}})))))
+               :filter-expression "attribute_exists(kyselylinkki)"
+               :limit 20}
+              :table "herate-table-name"})))))
 
 (def results (atom []))
 
