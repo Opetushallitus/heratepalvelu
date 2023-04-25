@@ -1,4 +1,5 @@
 import { Stack, App, StackProps, Tags } from 'aws-cdk-lib';
+import lambda = require("aws-cdk-lib/aws-lambda");
 import ssm = require("aws-cdk-lib/aws-ssm");
 
 export type EnvVars = {
@@ -52,6 +53,8 @@ export class HeratepalveluStack extends Stack {
       cas_url: `${envVarsTemp.virkailija_url}/cas`,
       stage: envName
     };
+
+    this.runtime = lambda.Runtime.JAVA_11;
   }
 
   getParameterFromSsm = (parameterName: string): string => {

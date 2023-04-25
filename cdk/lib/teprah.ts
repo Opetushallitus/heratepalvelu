@@ -72,7 +72,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
         const virkailija_url = this.getEnvVarFromSsm("virkailija_url");
 
         const rahoitusResultsHandler = new lambda.Function(this, "TEPRahoitusLaskentaHandler", {
-            runtime: lambda.Runtime.JAVA_8_CORRETTO,
+            runtime: this.runtime,
             code: lambdaCode,
             environment: {
                 ...this.envVars,

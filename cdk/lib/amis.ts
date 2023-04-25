@@ -203,7 +203,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     );
 
     const AMISHerateHandler = new lambda.Function(this, "AMISHerateHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -225,7 +225,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     organisaatioWhitelistTable.grantReadData(AMISHerateHandler);
 
     const ONRhenkilomodifyHandler = new lambda.Function(this, "ONRhenkilomodifyHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -266,7 +266,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     }));
 
     const ONRdlqResendHandler = new lambda.Function(this, "ONR-DLQresendHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         queue_name: ONRhenkilomodifyQueue.queueName
@@ -298,7 +298,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     const AMISherateEmailHandler = new lambda.Function(this, "AMISHerateEmailHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -322,7 +322,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     const AMISEmailStatusHandler = new lambda.Function(this, "AMISEmailStatusHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -346,7 +346,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     const AMISMuistutusHandler = new lambda.Function(this, "AMISMuistutusHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -370,7 +370,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     const AMISEmailResendHandler = new lambda.Function(this, "AMISEmailResendHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -387,7 +387,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     AMISEmailResendHandler.addEventSource(new SqsEventSource(ehoksAmisResendQueue, { batchSize: 1, }));
 
     const AMISSMSHandler = new lambda.Function(this, "AMISSMSHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -411,7 +411,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     const updatedOoHandler = new lambda.Function(this, "UpdatedOOHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -443,7 +443,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     metadataTable.grantReadWriteData(updatedOoHandler);
 
     const dlqResendHandler = new lambda.Function(this, "AMIS-DLQresendHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         queue_name: ehoksHerateQueue.queueName
@@ -474,7 +474,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     const AMISDeleteTunnusHandler = new lambda.Function(this, "AMISDeleteTunnusHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -546,7 +546,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       this,
       "AMISTimedOperationsHandler",
       {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        runtime: this.runtime,
         code: lambdaCode,
         environment: {
           ...this.envVars,
@@ -571,7 +571,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       this,
       "AMISMassHerateResendHandler",
       {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        runtime: this.runtime,
         code: lambdaCode,
         environment: {
           ...this.envVars,
@@ -595,7 +595,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         this,
         "EhoksOpiskeluoikeusUpdateHandler",
         {
-          runtime: lambda.Runtime.JAVA_8_CORRETTO,
+          runtime: this.runtime,
           code: lambdaCode,
           environment: {
             ...this.envVars,
@@ -616,7 +616,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
 
     const dbChanger = new lambda.Function(this, "dbChanger", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -634,7 +634,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
 
     /*
     const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code:lambdaCode,
       environment: {
         ...this.envVars,
