@@ -17,6 +17,7 @@ export type EnvVars = {
 export class HeratepalveluStack extends Stack {
   envName: string;
   envVars: EnvVars;
+  runtime: lambda.Runtime
 
   constructor(
     scope: App,
