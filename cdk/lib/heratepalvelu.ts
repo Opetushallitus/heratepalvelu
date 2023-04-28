@@ -1,5 +1,5 @@
 import { Stack, App, StackProps, Tags } from 'aws-cdk-lib';
-import ssm = require("aws-cdk-lib/aws-ssm");
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 
 export type EnvVars = {
   virkailija_url: string

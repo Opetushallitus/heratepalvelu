@@ -1,9 +1,9 @@
 import { App, Duration, Token, StackProps } from 'aws-cdk-lib';
-import dynamodb = require("aws-cdk-lib/aws-dynamodb");
-import lambda = require("aws-cdk-lib/aws-lambda");
-import s3assets = require("aws-cdk-lib/aws-s3-assets");
-import sqs = require("aws-cdk-lib/aws-sqs");
-import iam = require("aws-cdk-lib/aws-iam");
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
+import * as lambda from 'aws-cdk-lib/aws-lambda';
+import * as s3assets from 'aws-cdk-lib/aws-s3-assets';
+import * as sqs from 'aws-cdk-lib/aws-sqs';
+import * as iam from 'aws-cdk-lib/aws-iam';
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { HeratepalveluStack } from "./heratepalvelu";
 
@@ -22,7 +22,8 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
 
         const tepRahoitusDLQ = new sqs.Queue(this, "RahoitusLaskentaDLQ", {
             retentionPeriod: Duration.days(14),
-            visibilityTimeout: (Duration.seconds(60))
+            visibilityTimeout: Duration.seconds(60),
+            encryption: sqs.QueueEncryption.SQS_MANAGED
         });
 
         const tepRahoitusQueue = new sqs.Queue(this, "RahoitusLaskentaQueue", {
@@ -32,7 +33,8 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
                 maxReceiveCount: 5
             },
             visibilityTimeout: Duration.seconds(90),
-            retentionPeriod: Duration.days(14)
+            retentionPeriod: Duration.days(14),
+            encryption: sqs.QueueEncryption.SQS_MANAGED
         });
 
 
