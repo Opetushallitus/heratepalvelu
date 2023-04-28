@@ -106,9 +106,9 @@
                                                     :tila
                                                     {:koodiarvo "eronnut"}}]}}]
       (are [oo expected] (= expected (terminaalitilassa? oo loppupvm))
-        opiskeluoikeus-lasna nil
-        opiskeluoikeus-eronnut-samana-paivana nil
-        opiskeluoikeus-eronnut-tulevaisuudessa nil
+        opiskeluoikeus-lasna false
+        opiskeluoikeus-eronnut-samana-paivana false
+        opiskeluoikeus-eronnut-tulevaisuudessa false
         opiskeluoikeus-eronnut-paivaa-aiemmin true))))
 
 (deftest test-ammatillinen-tutkinto
@@ -302,12 +302,10 @@
 
 (deftest test-alku-and-loppu-to-localdate
   (testing "Varmistaa, että alku-and-loppu-to-localdate toimii oikein."
-    (let [test1 {:alku "2022-01-01" :loppu "2022-03-03"}
-          test2 {:alku "2022-06-06"}
-          test3 {:loppu "2022-08-08"}
-          result1 {:alku (LocalDate/of 2022 1 1) :loppu (LocalDate/of 2022 3 3)}
-          result2 {:alku (LocalDate/of 2022 6 6)}
-          result3 {:loppu (LocalDate/of 2022 8 8)}]
-      (is (= (alku-and-loppu-to-localdate test1) result1))
-      (is (= (alku-and-loppu-to-localdate test2) result2))
-      (is (= (alku-and-loppu-to-localdate test3) result3)))))
+    (are [input result] (= (alku-and-loppu-to-localdate input) result)
+      {:alku "2022-01-01" :loppu "2022-03-03"}
+      {:alku (LocalDate/of 2022 1 1) :loppu (LocalDate/of 2022 3 3)}
+      {:alku "2022-06-06"}
+      {:alku (LocalDate/of 2022 6 6)}
+      {:loppu "2022-08-08"}
+      {:loppu (LocalDate/of 2022 8 8)})))

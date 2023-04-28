@@ -160,25 +160,25 @@
   "Varmistaa, että suorituksen tyyppi on joko ammatillinen tutkinto tai
   osittainen ammatillinen tutkinto."
   [suoritus]
-  (or (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkinto")
-      (= (:koodiarvo (:tyyppi suoritus)) "ammatillinentutkintoosittainen")))
+  (some? (#{"ammatillinentutkinto" "ammatillinentutkintoosittainen"}
+          (:koodiarvo (:tyyppi suoritus)))))
 
 (defn has-one-or-more-ammatillinen-tutkinto?
   "Varmistaa, että opiskeluoikeuden suorituksiin kuuluu vähintään yksi, jonka
   tyyppi on ammatillinen tutkinto tai osittainen ammatillinen tutkinto."
   [opiskeluoikeus]
-  (if (some ammatillinen-tutkinto? (:suoritukset opiskeluoikeus))
-    true
-    (log/info "Väärä suoritustyyppi opiskeluoikeudessa" (:oid opiskeluoikeus))))
+  (some? (or (some ammatillinen-tutkinto? (:suoritukset opiskeluoikeus))
+             (log/info "Väärä suoritustyyppi opiskeluoikeudessa"
+                       (:oid opiskeluoikeus)))))
 
 (defn sisaltyy-toiseen-opiskeluoikeuteen?
   "Palauttaa true, jos opiskeluoikeus sisältyy toiseen opiskeluoikeuteen."
   [opiskeluoikeus]
-  (when (:sisältyyOpiskeluoikeuteen opiskeluoikeus)
-    (log/warn "Opiskeluoikeus"
-              (:oid opiskeluoikeus)
-              "sisältyy toiseen opiskeluoikeuteen.")
-    true))
+  (some? (when (:sisältyyOpiskeluoikeuteen opiskeluoikeus)
+           (log/warn "Opiskeluoikeus"
+                     (:oid opiskeluoikeus)
+                     "sisältyy toiseen opiskeluoikeuteen.")
+           true)))
 
 (defn get-suoritus
   "Hakee tutkinnon tai tutkinnon osan suorituksen opiskeluoikeudesta."
@@ -229,20 +229,20 @@
   [koulutustoimija timestamp]
   (let [item (ddb/get-item {:organisaatio-oid [:s koulutustoimija]}
                            (:orgwhitelist-table env))]
-    (if (or (.isBefore (LocalDate/of 2021 6 30)
-                       (LocalDate/ofEpochDay (/ timestamp 86400000)))
-            (and (:kayttoonottopvm item)
-                 (<= (c/to-long (f/parse (:date f/formatters)
-                                         (:kayttoonottopvm item)))
-                     timestamp)
-                 (<= (c/to-long (f/parse (:date f/formatters)
-                                         (:kayttoonottopvm item)))
-                     (c/to-long (local-date-now)))))
-      true
-      (log/info "Koulutustoimija" koulutustoimija
-                "ei ole mukana automaatiossa, tai herätepvm"
-                (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
-                "on ennen käyttöönotto päivämäärää"))))
+    (some?
+      (or (.isBefore (LocalDate/of 2021 6 30)
+                     (LocalDate/ofEpochDay (/ timestamp 86400000)))
+          (and (:kayttoonottopvm item)
+               (<= (c/to-long (f/parse (:date f/formatters)
+                                       (:kayttoonottopvm item)))
+                   timestamp)
+               (<= (c/to-long (f/parse (:date f/formatters)
+                                       (:kayttoonottopvm item)))
+                   (c/to-long (local-date-now))))
+          (log/info "Koulutustoimija" koulutustoimija
+                    "ei ole mukana automaatiossa, tai herätepvm"
+                    (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
+                    "on ennen käyttöönotto päivämäärää")))))
 
 (defn check-duplicate-herate?
   "Palauttaa true, jos ei ole vielä herätettä tallennettua tietokantaan samoilla
@@ -337,8 +337,8 @@
   merkkijonomuotoiset päivämäärät LocalDate:iksi."
   [jakso]
   (cond-> jakso
-    (:alku jakso)  (assoc :alku  (LocalDate/parse (:alku jakso)))
-    (:loppu jakso) (assoc :loppu (LocalDate/parse (:loppu jakso)))))
+    (:alku jakso)  (update :alku  #(LocalDate/parse %))
+    (:loppu jakso) (update :loppu #(LocalDate/parse %))))
 
 (defn is-before
   "Wrapper .isBefore-metodin ympäri, jolla on tyyppianotaatiot."
@@ -405,9 +405,12 @@
   (let [jakso (get-opiskeluoikeusjakso-for-date
                 opiskeluoikeus loppupvm :one-day-offset)
         tila (get-in jakso [:tila :koodiarvo])]
-    (when (terminaalitilat tila)
-      (log/warn "Opiskeluoikeus" (:oid opiskeluoikeus) "terminaalitilassa" tila)
-      true)))
+    (some? (when (terminaalitilat tila)
+             (log/warn "Opiskeluoikeus"
+                       (:oid opiskeluoikeus)
+                       "terminaalitilassa"
+                       tila)
+             true))))
 
 (defn get-oppilaitokset
   "Hakee oppilaitosten nimet organisaatiopalvelusta jaksojen oppilaiton-kentän

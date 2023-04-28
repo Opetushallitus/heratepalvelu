@@ -73,7 +73,7 @@
       (is (not (jh/fully-keskeytynyt? herate3)))
       (is (not (jh/fully-keskeytynyt? herate4))))))
 
-(deftest test-loppupvm-in-last-keskeytymisajanjakso?
+(deftest test-last-keskeytymisajanjakso-has-ended?
   (testing "Asd"
     (let [herate1 {:keskeytymisajanjaksot [{:alku "2021-08-08"
                                             :loppu "2021-08-10"}
@@ -81,9 +81,9 @@
                                             :loppu "2021-08-04"}]}
           herate2 {}
           herate3 {:keskeytymisajanjaksot [{:alku "2021-08-08"}]}]
-      (is (jh/loppupvm-in-last-keskeytymisajanjakso? herate1))
-      (is (not (jh/loppupvm-in-last-keskeytymisajanjakso? herate2)))
-      (is (not (jh/loppupvm-in-last-keskeytymisajanjakso? herate3))))))
+      (is (jh/last-keskeytymisajanjakso-has-ended? herate1))
+      (is (not (jh/last-keskeytymisajanjakso-has-ended? herate2)))
+      (is (not (jh/last-keskeytymisajanjakso-has-ended? herate3))))))
 
 (defn- mock-check-duplicate-hankkimistapa-get-item [query-params table]
   (when (and (= :n (first (:hankkimistapa_id query-params)))

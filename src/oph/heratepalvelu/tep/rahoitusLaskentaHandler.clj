@@ -152,7 +152,7 @@
                              (:oppisopimuksen-perusta herate)
                              #"_"))]))]
         (log/info "Uudelleenlaskettu kesto tapa-id:lle" tapa-id ":" kestot)
-        (when (jh/loppupvm-in-last-keskeytymisajanjakso? herate)
+        (when (jh/last-keskeytymisajanjakso-has-ended? herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
         (try
           ;; näille ei normaalikäsittelyssä luotu arvo-tunnusta.
@@ -186,13 +186,15 @@
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
               (if (some? (jh/tep-herate-checker herate))
                 (log/error {:herate herate :msg (jh/tep-herate-checker herate)})
-                (when-not
-                 (or (c/terminaalitilassa? opiskeluoikeus (:loppupvm herate))
-                     (jh/fully-keskeytynyt? herate)
-                     (not (c/has-one-or-more-ammatillinen-tutkinto?
+                (and (not (c/terminaalitilassa? opiskeluoikeus
+                                                (:loppupvm herate)))
+                     (not (jh/fully-keskeytynyt? herate))
+                     (c/has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus)
+                     (not (c/sisaltyy-toiseen-opiskeluoikeuteen?
                             opiskeluoikeus))
-                     (c/sisaltyy-toiseen-opiskeluoikeuteen? opiskeluoikeus))
-                  (save-results herate opiskeluoikeus koulutustoimija))))
+                     (jh/save-jaksotunnus herate
+                                          opiskeluoikeus
+                                          koulutustoimija))))
             (do
               (log/info "No opiskeluoikeus found for oid"
                         (:opiskeluoikeus-oid herate))

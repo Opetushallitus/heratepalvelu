@@ -93,9 +93,9 @@
     (when-let [kjakso-loppu (:loppu (last kjaksot))]
       (not (c/is-after (LocalDate/parse (:loppupvm herate)) kjakso-loppu)))))
 
-(defn loppupvm-in-last-keskeytymisajanjakso?
+(defn last-keskeytymisajanjakso-has-ended?
   "Palauttaa true, jos TEP-jakson viimeisessä keskeytymisajanjaksossa on
-  loppupäivämäärää."
+  loppupäivämäärä."
   [herate]
   (some? (:loppu (last (sort-by :alku (:keskeytymisajanjaksot herate))))))
 
@@ -208,7 +208,7 @@
                :sms_kasittelytila     [:s (:ei-lahetetty c/kasittelytilat)]
                :niputuspvm            [:s (str niputuspvm)]}]
           (if (and (:keskeytymisajanjaksot herate)
-                   (not (loppupvm-in-last-keskeytymisajanjakso? herate)))
+                   (not (last-keskeytymisajanjakso-has-ended? herate)))
             (try
               (save-to-tables
                 jaksotunnus-table-data
@@ -269,15 +269,17 @@
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
               (if (some? (tep-herate-checker herate))
                 (log/error {:herate herate :msg (tep-herate-checker herate)})
-                (when-not
-                 (or (c/terminaalitilassa? opiskeluoikeus (:loppupvm herate))
-                     (fully-keskeytynyt? herate)
-                     (not (c/has-one-or-more-ammatillinen-tutkinto?
+                (and (not (c/terminaalitilassa? opiskeluoikeus
+                                                (:loppupvm herate)))
+                     (not (fully-keskeytynyt? herate))
+                     (c/has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus)
+                     (not (c/feedback-collecting-prevented? opiskeluoikeus
+                                                            (:loppupvm herate)))
+                     (not (c/sisaltyy-toiseen-opiskeluoikeuteen?
                             opiskeluoikeus))
-                     (c/feedback-collecting-prevented? opiskeluoikeus
-                                                       (:loppupvm herate))
-                     (c/sisaltyy-toiseen-opiskeluoikeuteen? opiskeluoikeus))
-                  (save-jaksotunnus herate opiskeluoikeus koulutustoimija)))))
+                     (save-jaksotunnus herate
+                                       opiskeluoikeus
+                                       koulutustoimija)))))
           (ehoks/patch-oht-tep-kasitelty (:hankkimistapa-id herate)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa:" e))
