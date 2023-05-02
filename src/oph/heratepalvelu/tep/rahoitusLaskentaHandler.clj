@@ -2,7 +2,12 @@
   "Käsittelee työpaikkajaksoja, tallentaa niitä tietokantaan erilliseen tauluun.
   Rakennettu syksyllä 2022 rahoituskauden tietojen päivittämiseen ja
   uudelleenkäsittelyyn. Voi olla hyödyksi uudelleenkäsittelytarpeisiin
-  muokkauksin, ei tarkoitettu jatkuvaan käyttöön."
+  muokkauksin, ei tarkoitettu jatkuvaan käyttöön.
+
+  HUOM! Tätä handleria ei ole käytetty eikä ylläpidetty hyvään toviin, joten
+  jos suunnittelet handlerin käyttöä, varmista että se pitää sisällään
+  17. lokakuuta 2022 jälkeen tehdyt muutokset jaksoHandleriin sekä
+  kestonlaskentaan."
   (:require [cheshire.core :refer [parse-string]]
             [clojure.string :as str]
             [clojure.tools.logging :as log]
@@ -12,14 +17,14 @@
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as koski]
+            [oph.heratepalvelu.tep.jaksoHandler :as jh]
             [oph.heratepalvelu.tep.niputusHandler :as nh]
-            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
-            [schema.core :as s])
+            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]])
   (:import (clojure.lang ExceptionInfo)
            (com.amazonaws.services.lambda.runtime.events SQSEvent
                                                          SQSEvent$SQSMessage)
            (com.fasterxml.jackson.core JsonParseException)
-           (java.time LocalDate DayOfWeek)
+           (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
@@ -30,88 +35,11 @@
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(s/defschema tep-herate-keskeytymisajanjakso-schema
-  "Keskeytymisajanjakson schema."
-  {:alku                   (s/conditional not-empty s/Str)
-   (s/optional-key :loppu) (s/maybe s/Str)})
-
-(s/defschema tep-herate-schema
-  "TEP-herätteen schema."
-  {:tyyppi                 (s/conditional not-empty s/Str)
-   :alkupvm                (s/conditional not-empty s/Str)
-   :loppupvm               (s/conditional not-empty s/Str)
-   :hoks-id                s/Num
-   :opiskeluoikeus-oid     (s/conditional not-empty s/Str)
-   :oppija-oid             (s/conditional not-empty s/Str)
-   :hankkimistapa-id       s/Num
-   :hankkimistapa-tyyppi   (s/conditional not-empty s/Str)
-   :tutkinnonosa-id        s/Num
-   :tutkinnonosa-koodi     (s/maybe s/Str)
-   :tutkinnonosa-nimi      (s/maybe s/Str)
-   :tyopaikan-nimi         (s/conditional not-empty s/Str)
-   :tyopaikan-ytunnus      (s/conditional not-empty s/Str)
-   :tyopaikkaohjaaja-email (s/maybe s/Str)
-   :tyopaikkaohjaaja-nimi  (s/conditional not-empty s/Str)
-   (s/optional-key :osa-aikaisuus)                  (s/maybe s/Num)
-   (s/optional-key :oppisopimuksen-perusta)         (s/maybe s/Str)
-   (s/optional-key :tyopaikkaohjaaja-puhelinnumero) (s/maybe s/Str)
-   (s/optional-key :keskeytymisajanjaksot)
-   (s/maybe [tep-herate-keskeytymisajanjakso-schema])})
-
-(def tep-herate-checker
-  "TEP-herätescheman tarkistusfunktio."
-  (s/checker tep-herate-schema))
-
 (defn read-previously-processed-hankkimistapa
   "Palauttaa true, jos ei ole vielä jaksoa tietokannassa annetulla ID:llä."
   [id]
   (ddb/get-item {:hankkimistapa_id [:n id]}
                 (:jaksotunnus-table env)))
-
-(defn check-duplicate-hankkimistapa
-  "Palauttaa true, jos ei ole vielä jaksoa tietokannassa annetulla ID:llä."
-  [id]
-  (if (empty? (ddb/get-item {:hankkimistapa_id [:n id]}
-                            (:jaksotunnus-table env)))
-    true
-    (log/warn "Osaamisenhankkimistapa id" id "on jo käsitelty.")))
-
-(defn check-duplicate-tunnus
-  "Palauttaa true, jos ei ole vielä jaksoa tietokannassa, jonka tunnus täsmää
-  annetun arvon kanssa."
-  [tunnus]
-  (let [items (ddb/query-items {:tunnus [:eq [:s tunnus]]}
-                               {:index "uniikkiusIndex"}
-                               (:jaksotunnus-table env))]
-    (if (empty? items)
-      true
-      (throw (ex-info (str "Tunnus " tunnus " on jo käytössä.")
-                      {:items items})))))
-
-(defn sort-process-keskeytymisajanjaksot
-  "Järjestää TEP-jakso keskeytymisajanjaksot, parsii niiden alku- ja
-  loppupäivämäärät LocalDateiksi, ja palauttaa tuloslistan."
-  [herate]
-  (map (fn [x] {:alku (LocalDate/parse (:alku x))
-                :loppu (if (:loppu x) (LocalDate/parse (:loppu x)) nil)})
-       (sort-by :alku (:keskeytymisajanjaksot herate []))))
-
-(defn check-not-fully-keskeytynyt
-  "Palauttaa true, jos TEP-jakso ei ole keskeytynyt sen loppupäivämäärällä."
-  [herate]
-  (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
-    (or (empty? kjaksot)
-        (not (:loppu (last kjaksot)))
-        (c/is-after (LocalDate/parse (:loppupvm herate))
-                    (:loppu (last kjaksot))))))
-
-(defn check-open-keskeytymisajanjakso
-  "Palauttaa true, jos TEP-jakson viimeisellä keskeytymisajanjaksolla ei ole
-  loppupäivämäärää."
-  [herate]
-  (let [kjaksot (sort-process-keskeytymisajanjaksot herate)]
-    (and (seq kjaksot)
-         (not (:loppu (last kjaksot))))))
 
 (defn save-results-to-ddb
   [results]
@@ -224,12 +152,12 @@
                              (:oppisopimuksen-perusta herate)
                              #"_"))]))]
         (log/info "Uudelleenlaskettu kesto tapa-id:lle" tapa-id ":" kestot)
-        (when (check-open-keskeytymisajanjakso herate)
+        (when (jh/last-keskeytymisajanjakso-has-ended? herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
         (try
           ;; näille ei normaalikäsittelyssä luotu arvo-tunnusta.
           (save-results-to-ddb results-table-data)
-          (catch ConditionalCheckFailedException e
+          (catch ConditionalCheckFailedException _
             (log/warn "Osaamisenhankkimistapa id:llä"
                       tapa-id
                       "on jo käsitelty."))
@@ -256,15 +184,17 @@
                                (:opiskeluoikeus-oid herate))]
           (if (some? opiskeluoikeus)
             (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
-              (if (some? (tep-herate-checker herate))
-                (log/error {:herate herate :msg (tep-herate-checker herate)})
-                (when (and (c/check-opiskeluoikeus-tila opiskeluoikeus
-                                                        (:loppupvm herate))
-                           (check-not-fully-keskeytynyt herate)
-                           (c/check-opiskeluoikeus-suoritus-types?
-                             opiskeluoikeus)
-                           (c/check-sisaltyy-opiskeluoikeuteen? opiskeluoikeus))
-                  (save-results herate opiskeluoikeus koulutustoimija))))
+              (if (some? (jh/tep-herate-checker herate))
+                (log/error {:herate herate :msg (jh/tep-herate-checker herate)})
+                (and (not (c/terminaalitilassa? opiskeluoikeus
+                                                (:loppupvm herate)))
+                     (not (jh/fully-keskeytynyt? herate))
+                     (c/has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus)
+                     (not (c/sisaltyy-toiseen-opiskeluoikeuteen?
+                            opiskeluoikeus))
+                     (jh/save-jaksotunnus herate
+                                          opiskeluoikeus
+                                          koulutustoimija))))
             (do
               (log/info "No opiskeluoikeus found for oid"
                         (:opiskeluoikeus-oid herate))

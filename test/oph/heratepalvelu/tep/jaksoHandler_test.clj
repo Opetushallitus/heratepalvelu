@@ -50,13 +50,12 @@
                       :loppu (LocalDate/parse "2021-08-10")}]
           expected2 [{:alku  (LocalDate/parse "2021-08-01")
                       :loppu (LocalDate/parse "2021-08-04")}
-                     {:alku  (LocalDate/parse "2021-08-08")
-                      :loppu nil}]]
+                     {:alku  (LocalDate/parse "2021-08-08")}]]
       (is (= expected1 (jh/sort-process-keskeytymisajanjaksot herate1)))
       (is (= expected2 (jh/sort-process-keskeytymisajanjaksot herate2))))))
 
-(deftest check-not-fully-keskeytynyt-test
-  (testing "check-not-fully-keskeytynyt test"
+(deftest test-fully-keskeytynyt?
+  (testing "fully-keskeytynyt?"
     (let [herate1 {:keskeytymisajanjaksot [{:alku "2021-08-08"
                                             :loppu "2021-08-10"}
                                            {:alku "2021-08-01"
@@ -69,22 +68,22 @@
                    :loppupvm "2021-08-11"}
           herate3 {}
           herate4 {:keskeytymisajanjaksot [{:alku "2021-08-08"}]}]
-      (is (not (jh/check-not-fully-keskeytynyt herate1)))
-      (is (true? (jh/check-not-fully-keskeytynyt herate2)))
-      (is (true? (jh/check-not-fully-keskeytynyt herate3)))
-      (is (true? (jh/check-not-fully-keskeytynyt herate4))))))
+      (is (jh/fully-keskeytynyt? herate1))
+      (is (not (jh/fully-keskeytynyt? herate2)))
+      (is (not (jh/fully-keskeytynyt? herate3)))
+      (is (not (jh/fully-keskeytynyt? herate4))))))
 
-(deftest check-open-keskeytymisajanjakso-test
-  (testing "check-open-keskeytymisajanjakso test"
+(deftest test-last-keskeytymisajanjakso-has-ended?
+  (testing "Asd"
     (let [herate1 {:keskeytymisajanjaksot [{:alku "2021-08-08"
                                             :loppu "2021-08-10"}
                                            {:alku "2021-08-01"
                                             :loppu "2021-08-04"}]}
           herate2 {}
           herate3 {:keskeytymisajanjaksot [{:alku "2021-08-08"}]}]
-      (is (not (jh/check-open-keskeytymisajanjakso herate1)))
-      (is (not (jh/check-open-keskeytymisajanjakso herate2)))
-      (is (true? (jh/check-open-keskeytymisajanjakso herate3))))))
+      (is (jh/last-keskeytymisajanjakso-has-ended? herate1))
+      (is (not (jh/last-keskeytymisajanjakso-has-ended? herate2)))
+      (is (not (jh/last-keskeytymisajanjakso-has-ended? herate3))))))
 
 (defn- mock-check-duplicate-hankkimistapa-get-item [query-params table]
   (when (and (= :n (first (:hankkimistapa_id query-params)))
@@ -215,7 +214,7 @@
 (deftest test-save-jaksotunnus
   (testing "Varmista, että save-jaksotunnus kutsuu funktioita oikein"
     (with-redefs
-      [oph.heratepalvelu.common/local-date-now (fn [] (LocalDate/of 2021 12 15))
+      [c/local-date-now (fn [] (LocalDate/of 2021 12 15))
        oph.heratepalvelu.external.arvo/create-jaksotunnus
        mock-create-jaksotunnus
        oph.heratepalvelu.external.arvo/delete-jaksotunnus
@@ -463,30 +462,30 @@
                                           :opiskeluoikeus opiskeluoikeus})
   (:koulutustoimija opiskeluoikeus))
 
-(defn- mock-check-opiskeluoikeus-tila [opiskeluoikeus loppupvm]
+(defn- mock-terminaalitilassa? [opiskeluoikeus loppupvm]
   (add-to-test-handleJaksoHerate-results
-    {:type "mock-check-opiskeluoikeus-tila"
+    {:type "mock-terminaalitilassa?"
      :opiskeluoikeus opiskeluoikeus
      :loppupvm loppupvm})
-  true)
+  false)
 
-(defn- mock-check-not-fully-keskeytynyt [herate]
+(defn- mock-fully-keskeytynyt? [herate]
   (add-to-test-handleJaksoHerate-results
-    {:type "mock-check-not-fully-keskeytynyt"
+    {:type "mock-fully-keskeytynyt?"
      :herate herate})
-  true)
+  false)
 
-(defn- mock-check-opiskeluoikeus-suoritus-types? [opiskeluoikeus]
+(defn- mock-has-one-or-more-ammatillinen-tutkinto? [opiskeluoikeus]
   (add-to-test-handleJaksoHerate-results
-    {:type "mock-check-opiskeluoikeus-suoritus-types?"
+    {:type "mock-has-one-or-more-ammatillinen-tutkinto?"
      :opiskeluoikeus opiskeluoikeus})
   true)
 
-(defn- mock-check-sisaltyy-opiskeluoikeuteen? [opiskeluoikeus]
+(defn- mock-sisaltyy-toiseen-opiskeluoikeuteen? [opiskeluoikeus]
   (add-to-test-handleJaksoHerate-results
-    {:type "mock-check-sisaltyy-opiskeluoikeuteen?"
+    {:type "mock-sisaltyy-toiseen-opiskeluoikeuteen?"
      :opiskeluoikeus opiskeluoikeus})
-  true)
+  false)
 
 (defn- mock-save-jaksotunnus [herate opiskeluoikeus koulutustoimija]
   (add-to-test-handleJaksoHerate-results {:type "mock-save-jaksotunnus"
@@ -501,20 +500,18 @@
 
 (deftest test-handleJaksoHerate
   (testing "Varmista, että -handleJaksoHerate kutsuu funktioita oikein"
-    (with-redefs [oph.heratepalvelu.common/check-opiskeluoikeus-suoritus-types?
-                  mock-check-opiskeluoikeus-suoritus-types?
-                  oph.heratepalvelu.common/check-sisaltyy-opiskeluoikeuteen?
-                  mock-check-sisaltyy-opiskeluoikeuteen?
-                  oph.heratepalvelu.common/get-koulutustoimija-oid
-                  mock-get-koulutustoimija-oid
-                  oph.heratepalvelu.common/check-opiskeluoikeus-tila
-                  mock-check-opiskeluoikeus-tila
+    (with-redefs [c/has-one-or-more-ammatillinen-tutkinto?
+                  mock-has-one-or-more-ammatillinen-tutkinto?
+                  c/sisaltyy-toiseen-opiskeluoikeuteen?
+                  mock-sisaltyy-toiseen-opiskeluoikeuteen?
+                  c/get-koulutustoimija-oid mock-get-koulutustoimija-oid
+                  c/terminaalitilassa? mock-terminaalitilassa?
                   oph.heratepalvelu.external.ehoks/patch-oht-tep-kasitelty
                   mock-patch-oht-tep-kasitelty
                   oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
                   mock-get-opiskeluoikeus-catch-404
-                  oph.heratepalvelu.tep.jaksoHandler/check-not-fully-keskeytynyt
-                  mock-check-not-fully-keskeytynyt
+                  oph.heratepalvelu.tep.jaksoHandler/fully-keskeytynyt?
+                  mock-fully-keskeytynyt?
                   oph.heratepalvelu.tep.jaksoHandler/save-jaksotunnus
                   mock-save-jaksotunnus
                   oph.heratepalvelu.tep.jaksoHandler/tep-herate-checker
@@ -529,20 +526,20 @@
                       :opiskeluoikeus
                       {:oid "123.456.789"
                        :koulutustoimija "mock-koulutustoimija-oid"}}
-                     {:type "mock-check-opiskeluoikeus-tila"
+                     {:type "mock-terminaalitilassa?"
                       :opiskeluoikeus
                       {:oid "123.456.789"
                        :koulutustoimija "mock-koulutustoimija-oid"}
                       :loppupvm "2021-12-15"}
-                     {:type "mock-check-not-fully-keskeytynyt"
+                     {:type "mock-fully-keskeytynyt?"
                       :herate {:opiskeluoikeus-oid "123.456.789"
                                :loppupvm "2021-12-15"
                                :hankkimistapa-id 12345}}
-                     {:type "mock-check-opiskeluoikeus-suoritus-types?"
+                     {:type "mock-has-one-or-more-ammatillinen-tutkinto?"
                       :opiskeluoikeus
                       {:oid "123.456.789"
                        :koulutustoimija "mock-koulutustoimija-oid"}}
-                     {:type "mock-check-sisaltyy-opiskeluoikeuteen?"
+                     {:type "mock-sisaltyy-toiseen-opiskeluoikeuteen?"
                       :opiskeluoikeus
                       {:oid "123.456.789"
                        :koulutustoimija "mock-koulutustoimija-oid"}}

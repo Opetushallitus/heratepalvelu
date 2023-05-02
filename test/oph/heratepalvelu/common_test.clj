@@ -65,7 +65,7 @@
              "2019-07-24")
            "lasna"))))
 
-(deftest check-opiskeluoikeus-tila-test
+(deftest terminaalitilassa-test
   (testing "Opiskeluoikeuden tilan tarkastus. Keskeytetty opiskeluoikeus estää
            jakson käsittelyn. Jakson päättymispäivänä keskeytetty opiskeluoikeus
            ei estä jakson käsittelyä."
@@ -105,39 +105,43 @@
                                                    {:alku "2021-09-06"
                                                     :tila
                                                     {:koodiarvo "eronnut"}}]}}]
-      (is (= true (check-opiskeluoikeus-tila opiskeluoikeus-lasna loppupvm)))
-      (is (= true (check-opiskeluoikeus-tila
-                    opiskeluoikeus-eronnut-samana-paivana
-                    loppupvm)))
-      (is (= true (check-opiskeluoikeus-tila
-                    opiskeluoikeus-eronnut-tulevaisuudessa
-                    loppupvm)))
-      (is (nil? (check-opiskeluoikeus-tila
-                  opiskeluoikeus-eronnut-paivaa-aiemmin
-                  loppupvm))))))
+      (are [oo expected] (= expected (terminaalitilassa? oo loppupvm))
+        opiskeluoikeus-lasna false
+        opiskeluoikeus-eronnut-samana-paivana false
+        opiskeluoikeus-eronnut-tulevaisuudessa false
+        opiskeluoikeus-eronnut-paivaa-aiemmin true))))
 
-(deftest test-check-suoritus-type
+(deftest test-ammatillinen-tutkinto
   (testing "Check suoritus type"
-    (is (false? (check-suoritus-type? {:tyyppi {:koodiarvo "valma"}})))
-    (is (true? (check-suoritus-type?
+    (is (false? (ammatillinen-tutkinto? {:tyyppi {:koodiarvo "valma"}})))
+    (is (true? (ammatillinen-tutkinto?
                  {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}})))
-    (is (true? (check-suoritus-type?
+    (is (true? (ammatillinen-tutkinto?
                  {:tyyppi {:koodiarvo "ammatillinentutkinto"}})))))
 
-(deftest test-check-opiskeluoikeus-suoritus-types
-  (testing "Check opiskeluoikeus suoritus types"
-    (is (nil? (check-opiskeluoikeus-suoritus-types?
-                {:suoritukset [{:tyyppi {:koodiarvo "valma"}}]})))
-    (is (true? (check-opiskeluoikeus-suoritus-types?
-                 {:suoritukset
-                  [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]})))
-    (is (true? (check-opiskeluoikeus-suoritus-types?
-                 {:suoritukset
-                  [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}
-                   {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]})))
-    (is (nil? (check-opiskeluoikeus-suoritus-types?
-                {:suoritukset [{:tyyppi {:koodiarvo "valma"}}
-                               {:tyyppi {:koodiarvo "telma"}}]})))))
+(deftest test-ammatillinen-tutkinto?
+  (testing "Check suoritus type"
+    (is (not (ammatillinen-tutkinto? {:tyyppi {:koodiarvo "valma"}})))
+    (is (ammatillinen-tutkinto?
+          {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}))
+    (is (ammatillinen-tutkinto?
+          {:tyyppi {:koodiarvo "ammatillinentutkinto"}}))))
+
+(deftest test-has-one-or-more-ammatillinen-tutkinto?
+  (testing
+    "Has one or more ammatillinen tutkinto in opiskeluoikeus suoritus types"
+    (is (not (has-one-or-more-ammatillinen-tutkinto?
+               {:suoritukset [{:tyyppi {:koodiarvo "valma"}}]})))
+    (is (has-one-or-more-ammatillinen-tutkinto?
+          {:suoritukset
+           [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]}))
+    (is (has-one-or-more-ammatillinen-tutkinto?
+          {:suoritukset
+           [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}
+            {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]}))
+    (is (not (has-one-or-more-ammatillinen-tutkinto?
+               {:suoritukset [{:tyyppi {:koodiarvo "valma"}}
+                              {:tyyppi {:koodiarvo "telma"}}]})))))
 
 (deftest test-date-string-to-timestamp
   (testing "Transforming date-string to timestamp"
@@ -203,11 +207,11 @@
     (is (not (true? (check-valid-herate-date ""))))
     (is (not (true? (check-valid-herate-date nil))))))
 
-(deftest test-check-sisaltyy-opiskeluoikeuteen
-  (testing "Check sisältyy opiskeluoikeuteen"
+(deftest test-sisaltyy-toiseen-opiskeluoikeuteen
+  (testing "Sisältyy toiseen opiskeluoikeuteen"
     (let [oo {:oid "1.2.246.562.15.43634207518"
               :sisältyyOpiskeluoikeuteen {:oid "1.2.246.562.15.12345678901"}}]
-      (is (= nil (check-sisaltyy-opiskeluoikeuteen? oo))))))
+      (is (sisaltyy-toiseen-opiskeluoikeuteen? oo)))))
 
 (deftest test-has-nayttotutkintoonvalmistavakoulutus
   (testing "Check has-nayttotutkintoonvalmistavakoulutus"
@@ -295,3 +299,13 @@
       [["2021-03-15" "valmistunut" 2]
        ["2020-03-15" "lasna" 14]
        ["2019-09-01" "lasna" 14]] "2019-07-01" true)))
+
+(deftest test-alku-and-loppu-to-localdate
+  (testing "Varmistaa, että alku-and-loppu-to-localdate toimii oikein."
+    (are [input result] (= (alku-and-loppu-to-localdate input) result)
+      {:alku "2022-01-01" :loppu "2022-03-03"}
+      {:alku (LocalDate/of 2022 1 1) :loppu (LocalDate/of 2022 3 3)}
+      {:alku "2022-06-06"}
+      {:alku (LocalDate/of 2022 6 6)}
+      {:loppu "2022-08-08"}
+      {:loppu (LocalDate/of 2022 8 8)})))

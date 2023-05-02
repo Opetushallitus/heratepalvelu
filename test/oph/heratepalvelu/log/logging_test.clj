@@ -44,8 +44,8 @@
                   mock-get-opiskeluoikeus
                   oph.heratepalvelu.common/check-duplicate-herate?
                   mock-check-duplicate-herate-true?
-                  oph.heratepalvelu.common/check-organisaatio-whitelist?
-                  mock-check-organisaatio-whitelist-true?
+                  whitelisted-organisaatio?!
+                  mock-whitelisted-organisaatio-true?
                   oph.heratepalvelu.db.dynamodb/put-item
                   mock-put-item-aws-exception
                   oph.heratepalvelu.external.arvo/create-amis-kyselylinkki
@@ -72,8 +72,8 @@
        mock-get-opiskeluoikeus
        oph.heratepalvelu.common/check-duplicate-herate?
        mock-check-duplicate-herate-true?
-       oph.heratepalvelu.common/check-organisaatio-whitelist?
-       mock-check-organisaatio-whitelist-true?
+       whitelisted-organisaatio?!
+       mock-whitelisted-organisaatio-true?
        oph.heratepalvelu.db.dynamodb/put-item
        mock-put-item-cond-check-exception
        oph.heratepalvelu.external.arvo/create-amis-kyselylinkki

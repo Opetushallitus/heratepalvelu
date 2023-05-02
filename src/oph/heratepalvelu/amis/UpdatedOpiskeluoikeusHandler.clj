@@ -35,7 +35,7 @@
   sellainen on olemassa."
   [opiskeluoikeus]
   (or
-    (some #(and (check-suoritus-type? %)
+    (some #(and (ammatillinen-tutkinto? %)
                 (get-in % [:vahvistus :päivä]))
           (:suoritukset opiskeluoikeus))
     (log/info "Opiskeluoikeudessa" (:oid opiskeluoikeus)
@@ -109,7 +109,7 @@
                     vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
                 (when (and (some? vahvistus-pvm)
                            (check-valid-herate-date vahvistus-pvm)
-                           (check-organisaatio-whitelist?
+                           (whitelisted-organisaatio?!
                              koulutustoimija
                              (date-string-to-timestamp
                                vahvistus-pvm))
