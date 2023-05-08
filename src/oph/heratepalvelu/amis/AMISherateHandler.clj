@@ -18,47 +18,50 @@
              [com.amazonaws.services.lambda.runtime.events.SQSEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
+(defn handle-single-herate!
+  "Käsittelee yhden SQS-viestin."
+  [^SQSEvent$SQSMessage msg]
+  (try
+    (let [herate (parse-string (.getBody msg) true)
+          opiskeluoikeus (get-opiskeluoikeus-catch-404
+                           (:opiskeluoikeus-oid herate))
+          koulutustoimija (and opiskeluoikeus
+                               (get-koulutustoimija-oid opiskeluoikeus))
+          summary (str "opiskeluoikeus-oid: " (:opiskeluoikeus-oid herate)
+                       " koulutustoimija: " (or koulutustoimija "ei mikään")
+                       " oppija-oid: " (:oppija-oid herate)
+                       " kyselytyyppi: " (:kyselytyyppi herate))]
+      (log/info "Käsitellään SQS-heräte:" herate)
+      (cond
+        (not (valid-herate-date? (:alkupvm herate)))
+        (log/warn "Ei tallenneta, alkupvm" (:alkupvm herate)
+                  "virheellinen:" summary)
+
+        (not (some? opiskeluoikeus))
+        (log/error "Ei löytynyt opiskeluoikeutta:" summary)
+
+        (not (has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus))
+        (log/warn "Ei tallenneta, opiskeluoikeus ei ammatillinen:" summary)
+
+        (not (whitelisted-organisaatio?!
+               koulutustoimija (date-string-to-timestamp (:alkupvm herate))))
+        (log/info "Ei tallenneta, koulutustoimija ei mukana:" summary)
+
+        (sisaltyy-toiseen-opiskeluoikeuteen? opiskeluoikeus)
+        (log/info "Ei tallenneta, opiskeluoikeus sisältyy toiseen oikeuteen"
+                  (:sisältyyOpiskeluoikeuteen opiskeluoikeus) ":" summary)
+
+        :else (ac/save-herate herate opiskeluoikeus koulutustoimija
+                              (:ehoks herate-sources))))
+    (catch JsonParseException e
+      (log/error e "Virhe viestin lukemisessa:" (.getBody msg) "\n" e))
+    (catch ExceptionInfo e
+      (log/error e "Käsittelemätön poikkeus viestille:" (.getBody msg)))))
+
 (defn -handleAMISherate
   "Käsittelee herätteitä ja tallentaa ne tietokantaan, jos ne ovat valideja."
   [_ ^com.amazonaws.services.lambda.runtime.events.SQSEvent event context]
   (log-caller-details-sqs "handleAMISherate" context)
   (let [messages (seq (.getRecords event))]
     (doseq [^SQSEvent$SQSMessage msg messages]
-      (try
-        (let [herate (parse-string (.getBody msg) true)]
-          (if (check-valid-herate-date (:alkupvm herate))
-            (let [opiskeluoikeus (get-opiskeluoikeus-catch-404
-                                   (:opiskeluoikeus-oid herate))]
-              (if (some? opiskeluoikeus)
-                (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)]
-                  (if (and (has-one-or-more-ammatillinen-tutkinto?
-                             opiskeluoikeus)
-                           (whitelisted-organisaatio?!
-                             koulutustoimija
-                             (date-string-to-timestamp (:alkupvm herate)))
-                           (not (sisaltyy-toiseen-opiskeluoikeuteen?
-                                  opiskeluoikeus)))
-                    (ac/save-herate herate
-                                    opiskeluoikeus
-                                    koulutustoimija
-                                    (:ehoks herate-sources))
-                    (log/info "Ei tallenneta kantaan"
-                              (str koulutustoimija "/" (:oppija-oid herate))
-                              (str (:kyselytyyppi herate)))))
-                (log/error "Ei opiskeluoikeutta ID:llä"
-                           (:opiskeluoikeus-oid herate))))
-            (log/warn "Ei tallenneta kantaan. Alkupvm virheellinen."
-                      (str "alkupvm " (:alkupvm herate))
-                      (str "opiskeluoikeus-oid " (:opiskeluoikeus-oid herate))
-                      (str "oppija-oid " (:oppija-oid herate))
-                      (str "kyselytyyppi " (:kyselytyyppi herate)))))
-        (catch JsonParseException e
-          (log/error "Virhe viestin lukemisessa:" msg "\n" e))
-        (catch ExceptionInfo e
-          (if (and (:status (ex-data e))
-                   (= 404 (:status (ex-data e))))
-            (log/error "404-virhe. Opiskeluoikeus:"
-                       (:opiskeluoikeus-oid (parse-string (.getBody msg) true))
-                       "error:"
-                       e)
-            (log/error e)))))))
+      (handle-single-herate! msg))))

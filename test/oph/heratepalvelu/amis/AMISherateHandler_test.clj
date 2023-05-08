@@ -74,5 +74,6 @@
         (with-redefs [c/valid-herate-date?
                       mock-check-valid-herate-date-false]
           (hh/-handleAMISherate {} event context)
-          (is (= @call-log ""))
+          (is (= @call-log
+                 "get-opiskeluoikeus-catch-404 get-koulutustoimija-oid "))
           (is (= @results {})))))))
