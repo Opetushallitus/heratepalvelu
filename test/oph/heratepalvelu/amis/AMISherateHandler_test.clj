@@ -53,7 +53,7 @@
                                       :oppija-oid "12345"
                                       :kyselytyyppi "aloittaneet"})
             context (tu/mock-handler-context)]
-        (with-redefs [c/check-valid-herate-date
+        (with-redefs [c/valid-herate-date?
                       mock-check-valid-herate-date-true]
           (hh/-handleAMISherate {} event context)
           (is (= @call-log (str "get-opiskeluoikeus-catch-404 "
@@ -71,7 +71,7 @@
                            :herate-source (:ehoks c/herate-sources)})))
         (reset! call-log "")
         (reset! results {})
-        (with-redefs [c/check-valid-herate-date
+        (with-redefs [c/valid-herate-date?
                       mock-check-valid-herate-date-false]
           (hh/-handleAMISherate {} event context)
           (is (= @call-log ""))

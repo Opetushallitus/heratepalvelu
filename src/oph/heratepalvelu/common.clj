@@ -13,6 +13,7 @@
            (com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException)
            (java.text Normalizer Normalizer$Form)
            (java.time LocalDate)
+           (java.time.format DateTimeParseException)
            (java.util UUID)))
 
 (s/defschema herate-schema
@@ -283,13 +284,14 @@
       (ddb/delete-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
                         :tyyppi_kausi   [:s (str tyyppi "/" laskentakausi)]}))))
 
-(defn check-valid-herate-date
-  "Varmistaa, että herätteen päivämäärä ei ole ennen 1.7.2022."
+(defn valid-herate-date?
+  "onko herätteen päivämäärä aikaisintaan 1.7.2022?"
   [heratepvm]
   (try
-    (not (.isAfter (LocalDate/of 2022 7 1) (LocalDate/parse heratepvm)))
-    (catch Exception e
-      (log/error e))))
+    (not (.isAfter (LocalDate/of 2022 7 1) (LocalDate/parse (or heratepvm ""))))
+    (catch DateTimeParseException e
+      (log/warn "Bad date" heratepvm)
+      false)))
 
 (def herate-checker
   "Herätescheman tarkistusfunktio."

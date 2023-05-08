@@ -291,7 +291,7 @@
        oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/update-last-page
        mock-update-last-page
        c/whitelisted-organisaatio?! mock-whitelisted-organisaatio?!
-       c/check-valid-herate-date mock-check-valid-herate-date
+       c/valid-herate-date? mock-check-valid-herate-date
        c/get-koulutustoimija-oid mock-get-koulutustoimija-oid
        oph.heratepalvelu.db.dynamodb/get-item mock-get-item
        oph.heratepalvelu.external.ehoks/get-hoks-by-opiskeluoikeus
