@@ -59,7 +59,7 @@
                                            nil
                                            (mock-handler-event :ehoksherate)
                                            (mock-handler-context))))
-        (is (true? (did-log? "Virhe tietokantaan tallennettaessa" "ERROR")))))))
+        (is (true? (did-log? "at save-herate-ddb!" "ERROR")))))))
 
 (deftest test-ehoksherate-cond-check-exception
   (testing "Failed conditional check throws exception and logs warn"

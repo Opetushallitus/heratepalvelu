@@ -22,6 +22,39 @@
       (log/error "Hakuvirhe (get-item-by-kyselylinkki)" kyselylinkki ":" e)
       (throw e))))
 
+(defn save-herate-ddb!
+  "Vie herätteen tietokantaan ja poistaa mahdollisen aiemman vastaavan."
+  [db-data herate-source oppija koulutustoimija laskentakausi kyselytyyppi]
+  (try
+    (ddb/put-item
+      db-data
+      (if (= herate-source (:ehoks c/herate-sources))
+        {:cond-expr "attribute_not_exists(kyselylinkki)"}
+        {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
+                         "attribute_not_exists(tyyppi_kausi) OR "
+                         "attribute_not_exists(kyselylinkki) AND "
+                         "#source = :koski")
+         :expr-attr-names {"#source" "herate-source"}
+         :expr-attr-vals {":koski" [:s (:koski c/herate-sources)]}}))
+    (c/delete-other-paattoherate
+      oppija koulutustoimija laskentakausi kyselytyyppi)
+    (catch ConditionalCheckFailedException e
+      (log/warn e "Estetty ylikirjoittamasta olemassaolevaa herätettä."
+                "Oppija:" oppija "koulutustoimijalla:" koulutustoimija
+                "tyyppi:" kyselytyyppi "kausi:" laskentakausi))
+    (catch Exception e
+      (log/error e "at save-herate-ddb!")
+      (throw e))))
+
+(defn update-herate-ehoks!
+  "Vie eHOKSiin tiedon siitä, että heräte on käsitelty."
+  [ehoks-id kyselytyyppi]
+  (try
+    (if (= kyselytyyppi "aloittaneet")
+      (ehoks/patch-amis-aloitusherate-kasitelty ehoks-id)
+      (ehoks/patch-amis-paattoherate-kasitelty ehoks-id))
+    (catch Exception e (log/error e "at update-herate-ehoks!"))))
+
 (defn check-and-save-herate!
   "Tarkistaa herätteen ja tallentaa sen tietokantaan."
   [herate opiskeluoikeus koulutustoimija herate-source]
@@ -100,55 +133,23 @@
               (cond-> db-data
                 (not-empty (:puhelinnumero herate))
                 (assoc :puhelinnumero [:s (:puhelinnumero herate)]))]
-          (try
-            (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
-                      (str kyselytyyppi "/" laskentakausi) ", request-id:"
-                      uuid)
-
-            (ddb/put-item
-              db-data-cond-values
-              (if (= herate-source (:ehoks c/herate-sources))
-                {:cond-expr "attribute_not_exists(kyselylinkki)"}
-                {:cond-expr (str "attribute_not_exists(toimija_oppija) AND "
-                                 "attribute_not_exists(tyyppi_kausi) OR "
-                                 "attribute_not_exists(kyselylinkki) AND "
-                                 "#source = :koski")
-                 :expr-attr-names {"#source" "herate-source"}
-                 :expr-attr-vals {":koski" [:s (:koski c/herate-sources)]}}))
-            (c/delete-other-paattoherate oppija
-                                         koulutustoimija
-                                         laskentakausi
-                                         kyselytyyppi)
-            (try
-              (if (= kyselytyyppi "aloittaneet")
-                (ehoks/patch-amis-aloitusherate-kasitelty (:ehoks-id herate))
-                (ehoks/patch-amis-paattoherate-kasitelty (:ehoks-id herate)))
-              (catch Exception e
-                (log/error
-                  "Virhe käsittelytilan päivittämisessä eHOKS-palveluun")))
-            (when (c/has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
-              (log/info
-                {:nayttotutkinto        true
-                 :hoks-id               (:ehoks-id herate)
-                 :request-id            uuid
-                 :opiskeluoikeus-oid    (:oid opiskeluoikeus)
-                 :koulutuksenjarjestaja koulutustoimija
-                 :tutkintotunnus        (get-in suoritus [:koulutusmoduuli
-                                                          :tunniste
-                                                          :koodiarvo])
-                 :voimassa-loppupvm     loppupvm}))
-
-            (catch ConditionalCheckFailedException e
-              (log/warn "Estetty ylikirjoittamasta olemassaolevaa herätettä."
-                        "Oppija:" oppija "koulutustoimijalla:" koulutustoimija
-                        "tyyppi:" kyselytyyppi "kausi:" laskentakausi
-                        "request-id:" uuid "Conditional check exception:" e))
-            (catch AwsServiceException e
-              (log/error "Virhe tietokantaan tallennettaessa" uuid)
-              (throw e))
-            (catch Exception e
-              (log/error "Unknown error " e)
-              (throw e))))))))
+          (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)
+                    (str kyselytyyppi "/" laskentakausi) ", request-id:"
+                    uuid)
+          (save-herate-ddb! db-data-cond-values herate-source
+                            oppija koulutustoimija laskentakausi kyselytyyppi)
+          (update-herate-ehoks! (:ehoks-id herate) kyselytyyppi)
+          (when (c/has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
+            (log/info
+              {:nayttotutkinto        true
+               :hoks-id               (:ehoks-id herate)
+               :request-id            uuid
+               :opiskeluoikeus-oid    (:oid opiskeluoikeus)
+               :koulutuksenjarjestaja koulutustoimija
+               :tutkintotunnus        (get-in suoritus [:koulutusmoduuli
+                                                        :tunniste
+                                                        :koodiarvo])
+               :voimassa-loppupvm     loppupvm})))))))
 
 (defn update-herate
   "Wrapper update-itemin ympäri, joka yksinkertaistaa herätteen päivitykset
