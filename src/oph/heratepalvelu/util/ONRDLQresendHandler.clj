@@ -40,7 +40,7 @@
                           (.queueName (:queue-name env))
                           ^GetQueueUrlRequest (.build))))]
     (doseq [^SQSEvent$SQSMessage msg messages]
-      (log/info (.getBody msg))
+      (log/info "käsitellään SQS-heräte:" (.getBody msg))
       (try
         (.sendMessage sqs-client
                       (-> (SendMessageRequest/builder)
