@@ -26,8 +26,8 @@
   "Tarkistaa herätteen ja tallentaa sen tietokantaan."
   [herate opiskeluoikeus koulutustoimija herate-source]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
-  (if (some? (c/herate-checker herate))
-    (log/error {:herate herate :msg (c/herate-checker herate)})
+  (if-some [errors (c/herate-schema-errors herate)]
+    (log/error "Heräte" herate "ei vastaa skeemaa:" errors)
     (let [kyselytyyppi (:kyselytyyppi herate)
           heratepvm (:alkupvm herate)
           herate-date (LocalDate/parse heratepvm)

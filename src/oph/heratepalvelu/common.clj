@@ -293,7 +293,7 @@
       (log/warn "Bad date" heratepvm)
       false)))
 
-(def herate-checker
+(def herate-schema-errors
   "Herätescheman tarkistusfunktio."
   (s/checker herate-schema))
 
