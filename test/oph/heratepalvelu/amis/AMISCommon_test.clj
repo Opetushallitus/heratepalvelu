@@ -88,8 +88,8 @@
                         :ehoks-id ehoks-id})
   "test-hankintakoulutuksen-toteuttaja")
 
-(deftest test-save-herate
-  (testing "Varmista, että save-herate kutsuu funktioita oikein"
+(deftest test-check-and-save-herate!
+  (testing "Varmista, että check-and-save-herate! kutsuu funktioita oikein"
     (with-redefs
       [oph.heratepalvelu.common/check-duplicate-herate?
        mock-check-duplicate-herate?
@@ -257,14 +257,10 @@
                        [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
                          :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
                          :suorituskieli {:koodiarvo "fi"}}]}}]]
-        (ac/save-herate herate-1
-                        opiskeluoikeus
-                        koulutustoimija
-                        (:ehoks c/herate-sources))
-        (ac/save-herate herate-2
-                        opiskeluoikeus
-                        koulutustoimija
-                        (:koski c/herate-sources))
+        (ac/check-and-save-herate! herate-1 opiskeluoikeus koulutustoimija
+                                   (:ehoks c/herate-sources))
+        (ac/check-and-save-herate! herate-2 opiskeluoikeus koulutustoimija
+                                   (:koski c/herate-sources))
         (is (= results (vec (reverse @test-results))))))))
 
 ;; Testaa update-herate

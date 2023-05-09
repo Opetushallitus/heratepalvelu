@@ -39,13 +39,19 @@
 
 (deftest test-handleAMISherate
   (testing "Varmista, että -handleAMISherate toimii oikein"
-    (with-redefs [oph.heratepalvelu.amis.AMISCommon/save-herate mock-save-herate
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/check-and-save-herate!
+                  mock-save-herate
+
                   c/get-koulutustoimija-oid mock-get-koulutustoimija-oid
+
                   c/has-one-or-more-ammatillinen-tutkinto?
                   mock-has-one-or-more-ammatillinen-tutkinto?
+
                   c/whitelisted-organisaatio?! mock-whitelisted-organisaatio?!
+
                   c/sisaltyy-toiseen-opiskeluoikeuteen?
                   mock-sisaltyy-toiseen-opiskeluoikeuteen?
+
                   oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
                   mock-get-opiskeluoikeus-catch-404]
       (let [event (tu/mock-sqs-event {:alkupvm "2021-10-10"

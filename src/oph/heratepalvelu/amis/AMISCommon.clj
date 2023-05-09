@@ -22,7 +22,7 @@
       (log/error "Hakuvirhe (get-item-by-kyselylinkki)" kyselylinkki ":" e)
       (throw e))))
 
-(defn save-herate
+(defn check-and-save-herate!
   "Tarkistaa herätteen ja tallentaa sen tietokantaan."
   [herate opiskeluoikeus koulutustoimija herate-source]
   (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))

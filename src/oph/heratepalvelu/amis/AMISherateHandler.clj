@@ -51,8 +51,8 @@
         (log/info "Ei tallenneta, opiskeluoikeus sisältyy toiseen oikeuteen"
                   (:sisältyyOpiskeluoikeuteen opiskeluoikeus) ":" summary)
 
-        :else (ac/save-herate herate opiskeluoikeus koulutustoimija
-                              (:ehoks herate-sources))))
+        :else (ac/check-and-save-herate! herate opiskeluoikeus koulutustoimija
+                                         (:ehoks herate-sources))))
     (catch JsonParseException e
       (log/error e "Virhe viestin lukemisessa:" (.getBody msg) "\n" e))
     (catch ExceptionInfo e

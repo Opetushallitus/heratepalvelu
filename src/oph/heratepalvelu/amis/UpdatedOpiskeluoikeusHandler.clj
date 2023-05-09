@@ -127,7 +127,7 @@
                                            koulutustoimija)
                                  (throw e))))]
                     (if (:osaamisen-hankkimisen-tarve hoks)
-                      (ac/save-herate
+                      (ac/check-and-save-herate!
                         (parse-herate
                           hoks
                           (get-kysely-type opiskeluoikeus)
