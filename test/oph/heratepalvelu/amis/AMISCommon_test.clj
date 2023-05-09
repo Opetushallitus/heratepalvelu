@@ -40,7 +40,7 @@
                         :laskentakausi laskentakausi
                         :kyselytyyppi kyselytyyppi
                         :herate-source herate-source})
-  true)
+  nil)
 
 (defn- mock-create-amis-kyselylinkki [req-body]
   (add-to-test-results {:type "mock-create-amis-kyselylinkki"
@@ -91,7 +91,7 @@
 (deftest test-check-and-save-herate!
   (testing "Varmista, että check-and-save-herate! kutsuu funktioita oikein"
     (with-redefs
-      [oph.heratepalvelu.common/check-duplicate-herate?
+      [oph.heratepalvelu.common/already-superseding-herate!
        mock-check-duplicate-herate?
        oph.heratepalvelu.common/generate-uuid mock-generate-uuid
        oph.heratepalvelu.common/has-nayttotutkintoonvalmistavakoulutus?

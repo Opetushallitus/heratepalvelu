@@ -42,8 +42,8 @@
                   mock-get-koulutustoimija-oid
                   oph.heratepalvelu.external.koski/get-opiskeluoikeus
                   mock-get-opiskeluoikeus
-                  oph.heratepalvelu.common/check-duplicate-herate?
-                  mock-check-duplicate-herate-true?
+                  oph.heratepalvelu.common/already-superseding-herate!
+                  mock-check-duplicate-herate?-nil
                   whitelisted-organisaatio?!
                   mock-whitelisted-organisaatio-true?
                   oph.heratepalvelu.db.dynamodb/put-item
@@ -70,8 +70,8 @@
        mock-get-koulutustoimija-oid
        oph.heratepalvelu.external.koski/get-opiskeluoikeus
        mock-get-opiskeluoikeus
-       oph.heratepalvelu.common/check-duplicate-herate?
-       mock-check-duplicate-herate-true?
+       oph.heratepalvelu.common/already-superseding-herate!
+       mock-check-duplicate-herate?-nil
        whitelisted-organisaatio?!
        mock-whitelisted-organisaatio-true?
        oph.heratepalvelu.db.dynamodb/put-item

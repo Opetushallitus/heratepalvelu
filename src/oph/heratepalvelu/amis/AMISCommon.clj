@@ -44,11 +44,16 @@
                           (:koodiarvo (:suorituskieli suoritus)))
           rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
                                              herate-date)]
-      (if (c/check-duplicate-herate? oppija
-                                     koulutustoimija
-                                     laskentakausi
-                                     kyselytyyppi
-                                     herate-source)
+      (if-some [existing (c/already-superseding-herate! oppija
+                                                        koulutustoimija
+                                                        laskentakausi
+                                                        kyselytyyppi
+                                                        herate-source)]
+        (log/info "Meillä on jo vastaava heräte" existing
+                  "joten ei ylikirjoiteta. Uudessa oppija:" oppija
+                  "koulutustoimija:" koulutustoimija
+                  ";" kyselytyyppi laskentakausi)
+
         ; Vaikka Arvokyselyä ei tässä tehdä, body-objektia käytetään muuten.
         (let [req-body (arvo/build-arvo-request-body
                          herate
