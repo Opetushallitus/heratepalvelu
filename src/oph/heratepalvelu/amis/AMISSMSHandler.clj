@@ -30,6 +30,52 @@
      :limit limit}
     (:herate-table env)))
 
+(defn update-status-in-db!
+  "Päivittää tekstiviestilähetyksen statuksen tietokantaan."
+  [herate status]
+  (log/info "Viedään tietokantaan status:" status)
+  (let [update
+        (cond-> {:sms-lahetyspvm    [:s (str (c/local-date-now))]
+                 :sms-lahetystila   [:s (:status status)]}
+          (not (#{(:vastausaika-loppunut c/kasittelytilat)
+                  (:phone-invalid c/kasittelytilat)} (:status status)))
+          (assoc :lahetettynumeroon
+                 [:s (or (:converted status) (:puhelinnumero herate))]))]
+    (try
+      (ac/update-herate herate update)
+      ;; TODO uuden alkupvm asettaminen
+      (catch Exception e
+        (log/error e "at update-status-in-db!")))))
+
+(defn send-sms-and-return-status!
+  "Lähettää SMS-viestin yhdelle herätteelle."
+  [herate]
+  (log/info "Käsitellään heräte:" herate)
+  (cond
+    (not (c/has-time-to-answer? (:voimassa-loppupvm herate)))
+    {:status (:vastausaika-loppunut c/kasittelytilat)}
+
+    (or (not (:puhelinnumero herate))
+        (not (c/valid-number? (:puhelinnumero herate))))
+    {:status (:phone-invalid c/kasittelytilat)}
+
+    :else
+    (try
+      (let [numero (:puhelinnumero herate)
+            oppilaitos (org/get-organisaatio (:oppilaitos herate))
+            oppilaitos-nimi (:fi (:nimi oppilaitos))
+            body (elisa/amis-msg-body (:kyselylinkki herate) oppilaitos-nimi)
+            resp (elisa/send-sms numero body)
+            results (get-in resp [:body :messages (keyword numero)])]
+        results)
+      (catch ExceptionInfo e
+        (let [error-type (if (c/client-error? e) "Client" "Server")]
+          (log/error e error-type "error while sending AMIS SMS")
+          {:status (:ei-lahetetty c/kasittelytilat)}))
+      (catch Exception e
+        (log/error e "Virhe AMIS SMS-lähetyksessä")
+        {:status (:ei-lahetetty c/kasittelytilat)}))))
+
 (defn -handleAMISSMS
   "Hakee tietokannasta herätteitä, joilta SMS-viesti ei ole vielä lähetetty, ja
   käsittelee viestien lähetystä."
@@ -39,48 +85,8 @@
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää SMS-viestiä.")
     (when (seq lahetettavat)
       (doseq [herate lahetettavat]
-        (if (c/has-time-to-answer? (:voimassa-loppupvm herate))
-          (if (and
-                (some? (:puhelinnumero herate))
-                (c/valid-number? (:puhelinnumero herate)))
-            (try
-              (let [numero (:puhelinnumero herate)
-                    oppilaitos (org/get-organisaatio (:oppilaitos herate))
-                    oppilaitos-nimi (:fi (:nimi oppilaitos))
-                    body (elisa/amis-msg-body (:kyselylinkki herate)
-                                              oppilaitos-nimi)
-                    resp (elisa/send-sms numero body)
-                    results (get-in resp [:body :messages (keyword numero)])]
-                (ac/update-herate
-                  herate ;; TODO uuden alkupvm asettaminen
-                  {:sms-lahetystila   [:s (:status results)]
-                   :sms-lahetyspvm    [:s (str (c/local-date-now))]
-                   :lahetettynumeroon [:s (or (:converted results) numero)]}))
-              (catch AwsServiceException e
-                (log/error "AMIS SMS-viestin lähetysvaiheen kantapäivityksessä"
-                           "tapahtui virhe!"
-                           e))
-              (catch ExceptionInfo e
-                (let [error-type (if (c/client-error? e) "Client" "Server")]
-                  (log/error error-type "error while sending AMIS SMS" e)))
-              (catch Exception e
-                (log/error "Virhe AMIS SMS-lähetyksessä:" e)))
-            (try (ac/update-herate
-                   herate
-                   {:sms-lahetyspvm  [:s (str (c/local-date-now))]
-                    :sms-lahetystila [:s (:phone-invalid c/kasittelytilat)]})
-                 (catch Exception e
-                   (log/error "Virhe AMIS SMS-lähetystila päivistykessä kun"
-                              "puhelinnumero ei ollut validi."
-                              e))))
-          (try
-            (ac/update-herate
-              herate
-              {:sms-lahetyspvm [:s (str (c/local-date-now))]
-               :sms-lahetystila [:s (:vastausaika-loppunut c/kasittelytilat)]})
-            (catch Exception e
-              (log/error "Virhe AMIS SMS-lähetystilan päivityksessä kun"
-                         "vastausaika on umpeutunut:"
-                         e)))))
+        (->> herate
+             (send-sms-and-return-status!)
+             (update-status-in-db! herate)))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (query-lahetettavat 20))))))
