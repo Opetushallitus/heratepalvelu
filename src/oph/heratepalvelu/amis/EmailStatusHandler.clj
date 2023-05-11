@@ -55,10 +55,12 @@
   "Hakee yhden viestin tilan viestintäpalvelusta ja päivittää sen tietokantaan.
   Palauttaa, päivitettiinkö viestin tila."
   [herate]
+  (log/info "Kysytään herätteen" herate "viestintäpalvelun tila")
   (let [status (vp/get-email-status (:viestintapalvelu-id herate))
         tila (vp/viestintapalvelu-status->kasittelytila status)]
     (if tila
       (try
+        (log/info "Herätteellä on status" status "eli tila" tila)
         (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)
         (update-ehoks-if-not-muistutus herate status tila)
         (update-db herate tila)
