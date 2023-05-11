@@ -12,10 +12,10 @@
           bad1  {:sahkoposti "a@b.com"}
           bad2  {:kyselylinkki "kysely.linkki/2345"
                  :sahkoposti ""}]
-      (is (nil? (erh/resend-checker good1)))
-      (is (nil? (erh/resend-checker good2)))
-      (is (some? (erh/resend-checker bad1)))
-      (is (some? (erh/resend-checker bad2))))))
+      (is (nil? (erh/resend-schema-errors good1)))
+      (is (nil? (erh/resend-schema-errors good2)))
+      (is (some? (erh/resend-schema-errors bad1)))
+      (is (some? (erh/resend-schema-errors bad2))))))
 
 (def results (atom {}))
 
@@ -32,7 +32,7 @@
 
 (deftest test-handleEmailResend
   (testing "Varmista, että -handleEmailResend toimii oikein"
-    (with-redefs [oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/get-herate-by-kyselylinkki!
                   mock-get-item-by-kyselylinkki
                   oph.heratepalvelu.amis.AMISCommon/update-herate
                   mock-update-herate]
@@ -66,7 +66,7 @@
                           :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]}}))
         (is (true? (tu/did-log? "Ei sähköpostia, käytetään" "WARN")))
         (with-redefs
-          [oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
+          [oph.heratepalvelu.amis.AMISCommon/get-herate-by-kyselylinkki!
            mock-return-nothing]
           (erh/-handleEmailResend {} good-event context)
           (is (true? (tu/did-log? "Ei löytynyt herätettä" "ERROR"))))))))

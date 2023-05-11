@@ -23,7 +23,7 @@
   {:kyselylinkki (s/constrained s/Str not-empty)
    (s/optional-key :sahkoposti) (s/constrained s/Str not-empty)})
 
-(def resend-checker
+(def resend-schema-errors
   "Uudelleenlähetyksen herätteen scheman tarkistusfunktio."
   (s/checker resend-schema))
 
@@ -32,8 +32,8 @@
   [herate]
   (log/info "Käsitellään resend-heräte" herate)
   (let [kyselylinkki (:kyselylinkki herate)
-        schema-errors (resend-checker herate)
-        db-herate (ac/get-item-by-kyselylinkki kyselylinkki)
+        schema-errors (resend-schema-errors herate)
+        db-herate (ac/get-herate-by-kyselylinkki! kyselylinkki)
         sahkoposti (or (not-empty (:sahkoposti herate))
                        (:sahkoposti db-herate))]
     (cond (some? schema-errors)

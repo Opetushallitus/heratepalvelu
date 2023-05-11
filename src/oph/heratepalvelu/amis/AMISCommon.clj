@@ -12,7 +12,7 @@
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
 
-(defn get-item-by-kyselylinkki
+(defn get-herate-by-kyselylinkki!
   "Hakee yhden herätteen tietokannasta kyselylinkin perusteella."
   [kyselylinkki]
   (try

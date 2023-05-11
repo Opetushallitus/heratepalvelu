@@ -48,6 +48,6 @@
           (if (some? tunnus-checked)
             (log/error {:herate herate :msg tunnus-checked})
             (delete-one-item
-              (ac/get-item-by-kyselylinkki (:kyselylinkki herate)))))
+              (ac/get-herate-by-kyselylinkki! (:kyselylinkki herate)))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa: " msg "\n" e))))))

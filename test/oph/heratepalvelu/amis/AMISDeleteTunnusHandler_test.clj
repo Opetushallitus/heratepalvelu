@@ -43,7 +43,7 @@
   (testing "Call -handleDeleteTunnus with mocked DB and event"
     (with-redefs
       [clojure.tools.logging/error mock-error-logger
-       oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
+       oph.heratepalvelu.amis.AMISCommon/get-herate-by-kyselylinkki!
        mock-get-item-by-kyselylinkki
        oph.heratepalvelu.amis.AMISDeleteTunnusHandler/delete-one-item
        mock-delete-one-item]
