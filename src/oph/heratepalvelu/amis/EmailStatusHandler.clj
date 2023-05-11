@@ -17,7 +17,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn update-ehoks-if-not-muistutus
+(defn update-ehoks-if-not-muistutus!
   "Päivittää sähköpostitiedot ehoksiin lähetyksen jälkeen, jos viesti ei ole
   muistutus."
   [herate status tila]
@@ -34,7 +34,7 @@
          :sahkoposti (:sahkoposti herate)
          :lahetystila tila}))))
 
-(defn update-db
+(defn update-db-tila!
   "Päivittää sähköpostin tilan tietokantaan."
   [herate tila]
   (try
@@ -43,7 +43,7 @@
       (log/error "Lähetystilan tallennus kantaan epäonnistui" herate)
       (log/error e))))
 
-(defn do-query
+(defn do-query!
   "Hakee viestintäpalvelussa olevien herätteiden tiedot tietokannasta."
   []
   (ddb/query-items {:lahetystila
@@ -62,8 +62,8 @@
       (try
         (log/info "Herätteellä on status" status "eli tila" tila)
         (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)
-        (update-ehoks-if-not-muistutus herate status tila)
-        (update-db herate tila)
+        (update-ehoks-if-not-muistutus! herate status tila)
+        (update-db-tila! herate tila)
         (catch Exception e
           (log/error e "Lähetystilan tallennus Arvoon epäonnistui" herate)))
       (log/info "Heräte" herate "odottaa lähetystä:" status))
@@ -73,11 +73,11 @@
   "Päivittää viestintäpalvelussa olevien sähköpostien tilat tietokantaan."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (loop [heratteet (do-query)]
+  (loop [heratteet (do-query!)]
     ;; this logic is weird, though.  If we have 10 messages that have not
     ;; been sent yet, we stop querying for more that might be.  Is it correct?
     (let [changed? (->> heratteet
                         (map handle-single-herate!)  ; avoid short circuit here
                         (reduce #(or %2 %1) false))]
       (when (and changed? (< 120000 (.getRemainingTimeInMillis context)))
-        (recur (do-query))))))
+        (recur (do-query!))))))

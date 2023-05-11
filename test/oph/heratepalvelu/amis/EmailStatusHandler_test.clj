@@ -26,8 +26,8 @@
       {:muistutukset 0}
       :else nil)))
 
-(deftest test-update-ehoks-if-not-muistutus
-  (testing "Varmista, että update-ehoks-if-not-muistutus tekee kutsuja oikein"
+(deftest test-update-ehoks-if-not-muistutus!
+  (testing "Varmista, että update-ehoks-if-not-muistutus! tekee kutsuja oikein"
     (with-redefs [oph.heratepalvelu.common/send-lahetys-data-to-ehoks
                   mock-send-lahetys-data-to-ehoks
                   oph.heratepalvelu.db.dynamodb/get-item mock-get-item]
@@ -48,9 +48,9 @@
                        :lahetyspvm "2021-10-10"
                        :sahkoposti "a@b.com"
                        :lahetystila (:viestintapalvelussa c/kasittelytilat)}]
-        (esh/update-ehoks-if-not-muistutus email1 status tila)
+        (esh/update-ehoks-if-not-muistutus! email1 status tila)
         (is (= @mock-send-lahetys-data-to-ehoks-results expected1))
-        (esh/update-ehoks-if-not-muistutus email2 status tila)
+        (esh/update-ehoks-if-not-muistutus! email2 status tila)
         (is (= @mock-send-lahetys-data-to-ehoks-results expected2))))))
 
 (def mock-update-herate-results (atom {}))
@@ -58,8 +58,8 @@
 (defn- mock-update-herate [herate updates]
   (reset! mock-update-herate-results {:herate herate :updates updates}))
 
-(deftest test-update-db
-  (testing "Varmista, että update-db kutsuu update-item oikein"
+(deftest test-update-db-tila!
+  (testing "Varmista, että update-db-tila! kutsuu update-item oikein"
     (with-redefs [oph.heratepalvelu.amis.AMISCommon/update-herate
                   mock-update-herate]
       (let [email {:toimija_oppija "toimija-oppija"
@@ -67,7 +67,7 @@
             tila (:success c/kasittelytilat)
             expected {:herate email
                       :updates {:lahetystila [:s (:success c/kasittelytilat)]}}]
-        (esh/update-db email tila)
+        (esh/update-db-tila! email tila)
         (is (= @mock-update-herate-results expected))))))
 
 (def mock-query-items-results (atom {}))
@@ -81,10 +81,10 @@
                (= "lahetysIndex" (:index options))
                (= 10 (:limit options)))))
 
-(deftest test-do-query
-  (testing "Varmista, että do-query kutsuu query-items oikein"
+(deftest test-do-query!
+  (testing "Varmista, että do-query! kutsuu query-items oikein"
     (with-redefs [oph.heratepalvelu.db.dynamodb/query-items mock-query-items]
-      (esh/do-query)
+      (esh/do-query!)
       (is (true? @mock-query-items-results)))))
 
 (def test-handleEmailStatus-results (atom ""))
@@ -111,9 +111,9 @@
 (deftest test-handleEmailStatus
   (testing "Varmista, että -handleEmailStatus kutsuu muita funktioita oikein"
     (with-redefs
-      [oph.heratepalvelu.amis.EmailStatusHandler/do-query mock-do-query
-       oph.heratepalvelu.amis.EmailStatusHandler/update-db mock-update-db
-       oph.heratepalvelu.amis.EmailStatusHandler/update-ehoks-if-not-muistutus
+      [oph.heratepalvelu.amis.EmailStatusHandler/do-query! mock-do-query
+       oph.heratepalvelu.amis.EmailStatusHandler/update-db-tila! mock-update-db
+       oph.heratepalvelu.amis.EmailStatusHandler/update-ehoks-if-not-muistutus!
        mock-update-ehoks-if-not-muistutus
        oph.heratepalvelu.external.arvo/patch-kyselylinkki-metadata
        mock-patch-kyselylinkki-metadata]
