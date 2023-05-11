@@ -17,10 +17,6 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(def ^:private new-changes?
-  "Atom, jolla pidetään kiinni siitä, onko uusia muutoksia tapahtunut."
-  (atom false))
-
 (defn update-ehoks-if-not-muistutus
   "Päivittää sähköpostitiedot ehoksiin lähetyksen jälkeen, jos viesti ei ole
   muistutus."
@@ -55,30 +51,31 @@
                    {:index "lahetysIndex"
                     :limit 10}))
 
+(defn handle-single-herate!
+  "Hakee yhden viestin tilan viestintäpalvelusta ja päivittää sen tietokantaan.
+  Palauttaa, päivitettiinkö viestin tila."
+  [herate]
+  (let [status (vp/get-email-status (:viestintapalvelu-id herate))
+        tila (vp/convert-email-status status)]
+    (if tila
+      (try
+        (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)
+        (update-ehoks-if-not-muistutus herate status tila)
+        (update-db herate tila)
+        (catch Exception e
+          (log/error e "Lähetystilan tallennus Arvoon epäonnistui" herate)))
+      (log/info "Heräte" herate "odottaa lähetystä:" status))
+    tila))
+
 (defn -handleEmailStatus
   "Päivittää viestintäpalvelussa olevien sähköpostien tilat tietokantaan."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
   (loop [heratteet (do-query)]
-    (doseq [herate heratteet]
-      (let [status (vp/get-email-status (:viestintapalvelu-id herate))
-            tila (vp/convert-email-status status)]
-        (if tila
-          (do
-            (when-not @new-changes?
-              (reset! new-changes? true))
-            (try
-              (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)
-              (update-ehoks-if-not-muistutus herate status tila)
-              (update-db herate tila)
-              (catch Exception e
-                (log/error "Lähetystilan tallennus Arvoon epäonnistui" herate)
-                (log/error e))))
-          (do
-            (log/info "Odottaa lähetystä viestintäpalvelussa")
-            (log/info herate)
-            (log/info status)))))
-    (when (and @new-changes?
-               (< 120000 (.getRemainingTimeInMillis context)))
-      (reset! new-changes? false)
-      (recur (do-query)))))
+    ;; this logic is weird, though.  If we have 10 messages that have not
+    ;; been sent yet, we stop querying for more that might be.  Is it correct?
+    (let [changed? (->> heratteet
+                        (map handle-single-herate!)  ; avoid short circuit here
+                        (reduce #(or %2 %1) false))]
+      (when (and changed? (< 120000 (.getRemainingTimeInMillis context)))
+        (recur (do-query))))))
