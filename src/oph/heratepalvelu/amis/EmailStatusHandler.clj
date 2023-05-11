@@ -56,7 +56,7 @@
   Palauttaa, päivitettiinkö viestin tila."
   [herate]
   (let [status (vp/get-email-status (:viestintapalvelu-id herate))
-        tila (vp/convert-email-status status)]
+        tila (vp/viestintapalvelu-status->kasittelytila status)]
     (if tila
       (try
         (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)

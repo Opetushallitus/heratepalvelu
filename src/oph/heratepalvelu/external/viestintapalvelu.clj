@@ -359,7 +359,7 @@
            id
            {:as :json})))
 
-(defn convert-email-status
+(defn viestintapalvelu-status->kasittelytila
   "Muuttaa viestintäpalvelusta palautetun statuksen käsittelytilaksi."
   [status]
   (if (= (:numberOfSuccessfulSendings status) 1)
