@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler-test
   (:require [clj-time.coerce :as ctc]
             [clojure.test :refer :all]
+            [clojure.data :refer [diff]]
             [oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler :refer :all]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.test-util :as tu]))
@@ -178,7 +179,13 @@
         (update-last-page page)
         (is (= @test-update-last-page-results expected))))))
 
-(def test-handleUpdatedOpiskeluoikeus-results (atom ""))
+(def test-handleUpdatedOpiskeluoikeus-results (atom []))
+
+(defn mock-function [fn-name return-fn]
+  (fn [& args]
+    (swap! test-handleUpdatedOpiskeluoikeus-results
+           #(conj % (into [(keyword fn-name)] args)))
+    (apply return-fn args)))
 
 (defn- mock-get-item [query-params table]
   (when (and (= :s (first (:key query-params))) (= table "metadata-table-name"))
@@ -188,92 +195,47 @@
       {:key "opiskeluoikeus-last-page"
        :value "0"})))
 
-(defn- mock-get-updated-opiskeluoikeudet [last-checked last-page]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results
-               last-checked
-               " "
-               last-page
-               " "))
-  [{:oid "1.2.3"}])
+(def mock-get-updated-opiskeluoikeudet
+  (mock-function 'mock-get-updated-opiskeluoikeudet
+                 (constantly [{:oid "1.2.3"}])))
 
-(defn- mock-get-koulutustoimija-oid [opiskeluoikeus]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results opiskeluoikeus " "))
-  "test-koulutustoimija-oid")
+(def mock-get-koulutustoimija-oid
+  (mock-function 'mock-get-koulutustoimija-oid
+                 (constantly "test-koulutustoimija-oid")))
 
-(defn- mock-get-vahvistus-pvm [opiskeluoikeus]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results opiskeluoikeus " "))
-  "2021-10-10")
+(def mock-get-vahvistus-pvm
+  (mock-function 'mock-get-vahvistus-pvm (constantly "2021-10-10")))
 
-(defn- mock-check-valid-herate-date [vahvistus-pvm]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results vahvistus-pvm " "))
-  true)
+(def mock-check-valid-herate-date
+  (mock-function 'mock-check-valid-herate-date (constantly true)))
 
-(defn- mock-whitelisted-organisaatio?! [koulutustoimija vahvistus-pvm]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results
-               koulutustoimija
-               " "
-               vahvistus-pvm
-               " "))
-  true)
+(def mock-whitelisted-organisaatio?!
+  (mock-function 'mock-whitelisted-organisaatio?! (constantly true)))
 
-(defn- mock-check-tila [opiskeluoikeus vahvistus-pvm]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results
-               opiskeluoikeus
-               " "
-               vahvistus-pvm
-               " "))
-  true)
+(def mock-check-tila
+  (mock-function 'mock-check-tila (constantly true)))
 
-(defn- mock-get-hoks-by-opiskeluoikeus [opiskeluoikeus-oid]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results
-               "get-hoks-by-opiskeluoikeus: "
-               opiskeluoikeus-oid
-               " "))
-  {:osaamisen-hankkimisen-tarve true
-   :id "123.456.789"
-   :opiskeluoikeus-oid "1.2.3"
-   :oppija-oid "7.8.9"
-   :sahkoposti "a@b.com"
-   :puhelinnumero "1234567"})
+(def mock-get-hoks-by-opiskeluoikeus
+  (mock-function 'mock-get-hoks-by-opiskeluoikeus
+                 (constantly {:osaamisen-hankkimisen-tarve true
+                              :id "123.456.789"
+                              :opiskeluoikeus-oid "1.2.3"
+                              :oppija-oid "7.8.9"
+                              :sahkoposti "a@b.com"
+                              :puhelinnumero "1234567"})))
 
-(defn- mock-get-kysely-type [_]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results "get-kysely-type "))
-  "tutkinnon_suorittaneet")
+(def mock-get-kysely-type
+  (mock-function 'mock-get-kysely-type
+                 (constantly "tutkinnon_suorittaneet")))
 
-(defn- mock-save-herate [herate opiskeluoikeus koulutustoimija herate-source]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results
-               "save-herate: "
-               herate
-               " "
-               opiskeluoikeus
-               " "
-               koulutustoimija
-               " "
-               herate-source
-               " ")))
+(def mock-save-herate
+  (mock-function 'mock-save-herate (constantly nil)))
 
-(defn- mock-update-last-page [last-page]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results
-               "update-last-page: "
-               last-page
-               " ")))
+(def mock-update-last-page
+  (mock-function 'mock-update-last-page (constantly nil)))
 
-(defn- mock-update-last-checked [start-time]
-  (reset! test-handleUpdatedOpiskeluoikeus-results
-          (str @test-handleUpdatedOpiskeluoikeus-results
-               "update-last-checked: "
-               start-time
-               " ")))
+(def mock-update-last-checked
+  (mock-function 'mock-update-last-checked (constantly nil)))
 
 (deftest test-handleUpdatedOpiskeluoikeus
   (testing "Varmista, että -handleUpdatedOpiskeluoikeus tekee kutsuja oikein"
@@ -300,19 +262,30 @@
        mock-get-updated-opiskeluoikeudet]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
-            expected (str "2021-12-14T10:30:00.000Z 0 {:oid \"1.2.3\"} "
-                          "{:oid \"1.2.3\"} 2021-10-10 "
-                          "test-koulutustoimija-oid 1633824000000 "
-                          "{:oid \"1.2.3\"} 2021-10-10 "
-                          "get-hoks-by-opiskeluoikeus: 1.2.3 "
-                          "get-kysely-type save-herate: "
-                          "{:ehoks-id \"123.456.789\", "
-                          ":kyselytyyppi \"tutkinnon_suorittaneet\", "
-                          ":opiskeluoikeus-oid \"1.2.3\", "
-                          ":oppija-oid \"7.8.9\", :sahkoposti \"a@b.com\", "
-                          ":puhelinnumero \"1234567\", "
-                          ":alkupvm \"2021-10-10\"} {:oid \"1.2.3\"} "
-                          "test-koulutustoimija-oid tiedot_muuttuneet_koskessa "
-                          "update-last-page: 1 ")]
+            expected
+            [[:mock-get-updated-opiskeluoikeudet "2021-12-14T10:30:00.000Z" 0]
+             [:mock-get-koulutustoimija-oid {:oid "1.2.3"}]
+             [:mock-get-vahvistus-pvm {:oid "1.2.3"}]
+             [:mock-check-valid-herate-date "2021-10-10"]
+             [:mock-whitelisted-organisaatio?!
+              "test-koulutustoimija-oid" 1633824000000]
+             [:mock-check-tila {:oid "1.2.3"} "2021-10-10"]
+             [:mock-get-hoks-by-opiskeluoikeus "1.2.3"]
+             [:mock-get-kysely-type {:oid "1.2.3"}]
+             [:mock-save-herate
+              {:ehoks-id "123.456.789"
+               :kyselytyyppi "tutkinnon_suorittaneet"
+               :opiskeluoikeus-oid "1.2.3"
+               :oppija-oid "7.8.9"
+               :sahkoposti "a@b.com"
+               :puhelinnumero "1234567"
+               :alkupvm "2021-10-10"}
+              {:oid "1.2.3"}
+              "test-koulutustoimija-oid"
+              "tiedot_muuttuneet_koskessa"]
+             [:mock-update-last-page 1]]]
         (-handleUpdatedOpiskeluoikeus {} event context)
-        (is (= @test-handleUpdatedOpiskeluoikeus-results expected))))))
+        (is (= @test-handleUpdatedOpiskeluoikeus-results expected)
+            (->> (diff @test-handleUpdatedOpiskeluoikeus-results expected)
+                 (clojure.string/join "\n")
+                 (str "Eroavaisuudet: \n")))))))
