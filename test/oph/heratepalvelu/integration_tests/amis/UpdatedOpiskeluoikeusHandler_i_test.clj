@@ -66,6 +66,15 @@
                                   [{:alku "2022-07-07"
                                     :tila {:koodiarvo "lasna"}}]}}]}]})
   (mhc/bind-url :get
+                (str (:koski-url mock-env) "/oppija/")
+                {:query-params {"opiskeluoikeudenTyyppi" "ammatillinenkoulutus"
+                                "muuttunutJälkeen" "2022-02-02T00:00:00.000Z"
+                                "pageSize" 100
+                                "pageNumber" 1}
+                 :basic-auth [(:koski-user mock-env) "koski-pwd"]
+                 :as :json-strict}
+                {:body []})
+  (mhc/bind-url :get
                 (str (:ehoks-url mock-env) "hoks/opiskeluoikeus/12345")
                 {:headers {:ticket (str "service-ticket"
                                         "/ehoks-virkailija-backend"
@@ -122,9 +131,9 @@
   (mdb/clear-mock-db))
 
 (def expected-table-contents #{{:key [:s "opiskeluoikeus-last-checked"]
-                                :value [:s "2022-02-02T00:00:00.000Z"]}
+                                :value [:s "2021-12-31T06:55:00.000Z"]}
                                {:key [:s "opiskeluoikeus-last-page"]
-                                :value [:s "1"]}})
+                                :value [:s "0"]}})
 
 (def expected-ow-table (into #{} starting-ow-table))
 
@@ -213,7 +222,9 @@
     (with-redefs [environ.core/env mock-env
                   oph.heratepalvelu.common/generate-uuid (fn [] "test-uuid")
                   oph.heratepalvelu.common/local-date-now
-                  (fn [] (LocalDate/of 2022 2 2))
+                  (constantly (LocalDate/of 2022 2 2))
+                  oph.heratepalvelu.common/current-time-millis
+                  (constantly 1640934000000)
                   oph.heratepalvelu.db.dynamodb/delete-item mdb/delete-item
                   oph.heratepalvelu.db.dynamodb/get-item mdb/get-item
                   oph.heratepalvelu.db.dynamodb/put-item mdb/put-item

@@ -197,7 +197,7 @@
 
 (def mock-get-updated-opiskeluoikeudet
   (mock-function 'mock-get-updated-opiskeluoikeudet
-                 (constantly [{:oid "1.2.3"}])))
+                 #(if (= 0 %2) [{:oid "1.2.3"}] [])))
 
 (def mock-get-koulutustoimija-oid
   (mock-function 'mock-get-koulutustoimija-oid
@@ -254,6 +254,7 @@
        mock-update-last-page
        c/whitelisted-organisaatio?! mock-whitelisted-organisaatio?!
        c/valid-herate-date? mock-check-valid-herate-date
+       c/current-time-millis (constantly 1640934000000)
        c/get-koulutustoimija-oid mock-get-koulutustoimija-oid
        oph.heratepalvelu.db.dynamodb/get-item mock-get-item
        oph.heratepalvelu.external.ehoks/get-hoks-by-opiskeluoikeus
@@ -283,7 +284,9 @@
               {:oid "1.2.3"}
               "test-koulutustoimija-oid"
               "tiedot_muuttuneet_koskessa"]
-             [:mock-update-last-page 1]]]
+             [:mock-update-last-page 1]
+             [:mock-update-last-page 0]
+             [:mock-update-last-checked (ctc/from-long 1640934000000)]]]
         (-handleUpdatedOpiskeluoikeus {} event context)
         (is (= @test-handleUpdatedOpiskeluoikeus-results expected)
             (->> (diff @test-handleUpdatedOpiskeluoikeus-results expected)

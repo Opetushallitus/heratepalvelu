@@ -86,12 +86,69 @@
                     ". Odotettu arvo on 'valmistunut' tai 'läsnä'.")
           false))))
 
+(defn handle-single-opiskeluoikeus!
+  "Käsittelee yhden päivittyneen opiskeluoikeudet (vie sen herätteenä kantaan)."
+  [opiskeluoikeus]
+  (log/info "käsitellään päivittynyt opiskeluoikeus" (:oid opiskeluoikeus))
+  (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
+        vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
+    (cond
+      (or (not vahvistus-pvm) (not (valid-herate-date? vahvistus-pvm)))
+      (log/warn "huono vahvistuspäivämäärä: " vahvistus-pvm)
+
+      (not (whitelisted-organisaatio?!
+             koulutustoimija (date-string-to-timestamp vahvistus-pvm)))
+      (log/info "koulutustoimijaa" koulutustoimija "ei käsitellä")
+
+      (:sisältyyOpiskeluoikeuteen opiskeluoikeus)
+      (log/info "opiskeluoikeus sisältyy toiseen"
+                (:sisältyyOpiskeluoikeuteen opiskeluoikeus) ", ei käsitellä")
+
+      (not (check-tila opiskeluoikeus vahvistus-pvm))
+      (log/info "opiskeluoikeus on tilassa"
+                (get-tila opiskeluoikeus vahvistus-pvm) "joten ei käsitellä")
+
+      :else
+      (try
+        (let [hoks (ehoks/get-hoks-by-opiskeluoikeus (:oid opiskeluoikeus))
+              herate (parse-herate
+                       hoks (get-kysely-type opiskeluoikeus) vahvistus-pvm)]
+          (if-not (:osaamisen-hankkimisen-tarve hoks)
+            (log/info "Ei osaamisen hankkimisen tarvetta hoksissa" (:id hoks))
+            (ac/check-and-save-herate! herate opiskeluoikeus koulutustoimija
+                                       (:koski herate-sources))))
+        (catch ExceptionInfo e
+          (if (= 404 (:status (ex-data e)))
+            (log/info "Opiskeluoikeudella" (:oid opiskeluoikeus)
+                      "ei HOKSia. Koulutustoimija:" koulutustoimija)
+            (log/error e "at handle-single-opiskeluoikeus!")))
+        (catch Exception e
+          (log/error e "at handle-single-opiskeluoikeus!"))))))
+
+(defn fetch-and-process-opiskeluoikeudet-from!
+  "Hakee opiskeluoikeuksien päivitykset annetusta (ajan-)kohdasta eteenpäin
+  ja vie niiden tiedot tietokantaan."
+  [last-checked last-page
+   ^com.amazonaws.services.lambda.runtime.Context context]
+  (if-some [opiskeluoikeudet
+            (seq (k/get-updated-opiskeluoikeudet last-checked last-page))]
+    (do
+      (log/info "Käsitellään" (count opiskeluoikeudet)
+                "opiskeluoikeutta, sivu" last-page)
+      (doseq [opiskeluoikeus opiskeluoikeudet]
+        (handle-single-opiskeluoikeus! opiskeluoikeus))
+      (update-last-page (inc last-page))
+      (when (< 120000 (.getRemainingTimeInMillis context))
+        (recur last-checked (inc last-page) context)))
+    (log/info "Ei enempiä päivittyneitä opiskeluoikeuksia")))
+
 (defn -handleUpdatedOpiskeluoikeus
   "Hakee päivitettyjä opiskeluoikeuksia koskesta ja tallentaa niiden tiedot
-  tietokantaan."
+  tietokantaan. Jos kaikki menee hyvin, päivittää mistä eteenpäin seuraavaksi
+  tiedot luetaan."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleUpdatedOpiskeluoikeus" event context)
-  (let [start-time (System/currentTimeMillis)
+  (let [start-time (current-time-millis)
         last-checked (:value (ddb/get-item
                                {:key [:s "opiskeluoikeus-last-checked"]}
                                (:metadata-table env)))
@@ -100,50 +157,6 @@
                                       {:key [:s "opiskeluoikeus-last-page"]}
                                       (:metadata-table env))))]
     (log/info "Käsitellään" last-checked "jälkeen muuttuneet opiskeluoikeudet")
-    (loop [opiskeluoikeudet (k/get-updated-opiskeluoikeudet last-checked
-                                                            last-page)
-           next-page (inc last-page)]
-      (if (seq opiskeluoikeudet)
-        (do (doseq [opiskeluoikeus opiskeluoikeudet]
-              (let [koulutustoimija (get-koulutustoimija-oid opiskeluoikeus)
-                    vahvistus-pvm (get-vahvistus-pvm opiskeluoikeus)]
-                (when (and (some? vahvistus-pvm)
-                           (valid-herate-date? vahvistus-pvm)
-                           (whitelisted-organisaatio?!
-                             koulutustoimija
-                             (date-string-to-timestamp
-                               vahvistus-pvm))
-                           (nil? (:sisältyyOpiskeluoikeuteen opiskeluoikeus))
-                           (check-tila opiskeluoikeus vahvistus-pvm))
-                  (if-let [hoks
-                           (try
-                             (ehoks/get-hoks-by-opiskeluoikeus
-                               (:oid opiskeluoikeus))
-                             (catch ExceptionInfo e
-                               (if (= 404 (:status (ex-data e)))
-                                 (log/info "Opiskeluoikeudella"
-                                           (:oid opiskeluoikeus)
-                                           "ei HOKSia. Koulutustoimija:"
-                                           koulutustoimija)
-                                 (throw e))))]
-                    (if (:osaamisen-hankkimisen-tarve hoks)
-                      (ac/check-and-save-herate!
-                        (parse-herate
-                          hoks
-                          (get-kysely-type opiskeluoikeus)
-                          vahvistus-pvm)
-                        opiskeluoikeus
-                        koulutustoimija
-                        (:koski herate-sources))
-                      (log/info "Ei osaamisen hankkimisen tarvetta hoksissa"
-                                (:id hoks)))))))
-            (log/info "Käsitelty" (count opiskeluoikeudet)
-                      "opiskeluoikeutta, sivu" (dec next-page))
-            (update-last-page next-page)
-            (when (< 120000 (.getRemainingTimeInMillis context))
-              (recur
-                (k/get-updated-opiskeluoikeudet last-checked next-page)
-                (inc next-page))))
-        (do
-          (update-last-page 0)
-          (update-last-checked (c/from-long start-time)))))))
+    (fetch-and-process-opiskeluoikeudet-from! last-checked last-page context)
+    (update-last-page 0)
+    (update-last-checked (c/from-long start-time))))
