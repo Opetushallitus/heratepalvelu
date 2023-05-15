@@ -93,7 +93,7 @@
                                                             :end end
                                                             :limit limit}}))
 
-(defn get-retry-kyselylinkit
+(defn send-kasittelemattomat-heratteet!
   "Pyytää eHOKS-palvelua lähettämään käsittelemättömät AMIS-herätteet
   SQS:iin."
   [start end limit]

@@ -194,7 +194,7 @@
                                                     100)
                expected))))))
 
-(deftest test-get-retry-kyselylinkit
+(deftest test-send-kasittelemattomat-heratteet!
   (testing "Varmista, että get-retry-kyselylinkit toimii oikein"
     (with-redefs [environ.core/env {:ehoks-url "example.com/"}
                   oph.heratepalvelu.external.cas-client/get-service-ticket
@@ -216,7 +216,8 @@
                                          :end "2021-09-09"
                                          :limit 100}
                           :as :json}}}}}]
-        (is (= (ehoks/get-retry-kyselylinkit "2021-08-08" "2021-09-09" 100)
+        (is (= (ehoks/send-kasittelemattomat-heratteet!
+                 "2021-08-08" "2021-09-09" 100)
                expected))))))
 
 (deftest test-get-tyoelamajaksot-active-between
