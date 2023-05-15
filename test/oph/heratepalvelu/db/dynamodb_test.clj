@@ -117,6 +117,7 @@
                   :indexName                 (.indexName req)
                   :limit                     (.limit req)
                   :keyConditions             (.keyConditions req)
+                  :keyConditionExpression    (.keyConditionExpression req)
                   :tableName                 (.tableName req)}]
         (reset! mock-ddb-client-request-results resp)
         (.build
@@ -180,6 +181,7 @@
             results {:tableName "herate-table-name"
                      :keyConditions {"test-field" (ddb/build-condition
                                                     [:eq [:s "asdf"]])}
+                     :keyConditionExpression nil
                      :indexName "testIndex"
                      :limit 10
                      :filterExpression "#a = :a"
@@ -189,6 +191,29 @@
             expected-items [{:field "asdf"}]]
         (is (= (ddb/query-items test-key-conds test-options) expected-items))
         (is (= @mock-ddb-client-request-results results))))))
+
+(deftest test-query-items-with-expression
+  (testing "Varmista, että query-items-with-expression toimii oikein"
+           (with-redefs [environ.core/env {:herate-table "herate-table-name"}
+                         oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient]
+             (let [test-key-expr "test-field = \"asdf\""
+                   test-options {:index "testIndex"
+                                 :limit 10
+                                 :filter-expression "#a = :a"
+                                 :expr-attr-names {"#a" "AAA"}
+                                 :expr-attr-vals {":a" [:s "aaa"]}}
+                   results {:tableName "herate-table-name"
+                            :keyConditions {}
+                            :keyConditionExpression test-key-expr
+                            :indexName "testIndex"
+                            :limit 10
+                            :filterExpression "#a = :a"
+                            :expressionAttributeNames {"#a" "AAA"}
+                            :expressionAttributeValues
+                            {":a" (ddb/to-attribute-value [:s "aaa"])}}
+                   expected-items [{:field "asdf"}]]
+               (is (= (ddb/query-items-with-expression test-key-expr test-options) expected-items))
+               (is (= @mock-ddb-client-request-results results))))))
 
 (deftest test-update-item
   (testing "Varmista, että update-item toimii oikein"

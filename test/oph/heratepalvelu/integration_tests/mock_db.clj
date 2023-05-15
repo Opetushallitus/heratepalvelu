@@ -136,6 +136,28 @@
                          items-sorted)]
      (map strip-attr-vals items-limited))))
 
+(defn query-items-expr
+  ([key-expr options] (query-items key-expr options (:herate-table env)))
+  ([key-expr options table-name]
+   (let [table (get @mock-db-tables table-name)
+         key-fields (if (:index options)
+                      (get-index-key-fields table-name (:index options))
+                      (get-table-key-fields table-name))
+         filter-expr-predicate (pce/parse (:filter-expression options)
+                                          (:expr-attr-names options)
+                                          (:expr-attr-vals options))
+         key-expr-predicate (pce/parse key-expr
+                                       (:expr-attr-names options)
+                                       (:expr-attr-vals options))
+         predicate (fn [item] (and (key-expr-predicate item)
+                                   (filter-expr-predicate item)))
+         items-sorted (sort-by-index (filter predicate (vals table))
+                                     key-fields)
+         items-limited (if (:limit options)
+                         (take (:limit options) items-sorted)
+                         items-sorted)]
+     (map strip-attr-vals items-limited))))
+
 (defn- parse-update-expr [update-expr attr-names attr-vals]
   (into {} (map (fn [[k v]] [(keyword (get attr-names k k)) (get attr-vals v)])
                 (map (fn [x] (s/split x #" *= *"))
