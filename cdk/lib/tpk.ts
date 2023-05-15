@@ -60,7 +60,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
     // Handlers
 
     const tpkNiputusHandler = new lambda.Function(this, "TPKNiputusHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -78,7 +78,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
     tpkNippuTable.grantReadWriteData(tpkNiputusHandler);
 
     const tpkArvoCallHandler = new lambda.Function(this, "TPKArvoCallHandler", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
@@ -97,7 +97,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       this,
       "archiveTpkNippuTable",
       {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        runtime: this.runtime,
         code: lambdaCode,
         environment: {
           ...this.envVars,
