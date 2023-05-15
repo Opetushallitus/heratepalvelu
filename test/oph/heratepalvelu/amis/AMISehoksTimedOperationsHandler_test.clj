@@ -91,10 +91,6 @@
               {:type  "mock-resend-paattoheratteet"
                :start "2022-01-19"
                :end   "2022-02-02"}]))
-      (is (true?
-            (tu/logs-contain?
-              {:level :info
-               :message "Käynnistetään herätteiden massauudelleenlähetys"})))
       (is
         (true?
           (tu/logs-contain?

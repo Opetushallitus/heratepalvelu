@@ -215,10 +215,6 @@
                                    (tu/mock-handler-context))
       (is (= (mcc/get-results) expected-mass-cas-client-results))
       (is (= (mhc/get-results) expected-mass-http-results))
-      (is (true?
-            (tu/logs-contain?
-              {:level :info
-               :message "Käynnistetään herätteiden massauudelleenlähetys"})))
       (is (true? (tu/logs-contain?
                    {:level :info
                     :message "Lähetetty 2 aloitusviestiä ja 3 päättöviestiä"})))

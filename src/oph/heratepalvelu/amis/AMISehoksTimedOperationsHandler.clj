@@ -72,8 +72,8 @@
 
 (defn -handleMassHerateResend
   "Pyytää ehoksia lähettämäan viime 2 viikon herätteet uudestaan."
-  [_ _ _]
-  (log/info "Käynnistetään herätteiden massauudelleenlähetys")
+  [_ ^SQSEvent event context]
+  (log-caller-details-sqs "handleMassHerateResend" context)
   (let [now          (c/local-date-now)
         start        (str (.minusDays now 14))
         end          (str now)
@@ -87,6 +87,7 @@
 
 (defn -handleEhoksOpiskeluoikeusUpdate
   "Pyytää ehoksia päivittämään opiskeluoikeuksien hankintakoulutukset."
-  [_ _ _]
-  (log/info "Käynnistetään ehoksin opiskeluoikeuksien päivitys")
-  (ehoks/update-ehoks-opiskeluoikeudet))
+  [_ ^SQSEvent event context]
+  (log-caller-details-sqs "handleEhoksOpiskeluoikeusUpdate" context)
+  (let [result (ehoks/update-ehoks-opiskeluoikeudet)]
+    (log/info "update-ehoks-opiskeluoikeudet result:" result)))
