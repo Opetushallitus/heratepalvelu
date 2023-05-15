@@ -1,7 +1,6 @@
 (ns oph.heratepalvelu.db.dynamodb
   "Funktiot, joilla päivitetään tietokanta ja haetaan siitä tietoja."
-  (:require [environ.core :refer [env]]
-            [clojure.string :as s])
+  (:require [environ.core :refer [env]])
   (:import (clojure.lang Reflector)
            (software.amazon.awssdk.services.dynamodb DynamoDbClient)
            (software.amazon.awssdk.services.dynamodb.model
@@ -230,7 +229,7 @@
                                            (:expr-attr-vals options)
                                            (.expressionAttributeValues
                                              (map-vals-to-attribute-values
-                                              (:expr-attr-vals options))))
+                                               (:expr-attr-vals options))))
                                          ^QueryRequest (.build)))
          items (.items response)]
      (vec (map map-attribute-values-to-vals items)))))
