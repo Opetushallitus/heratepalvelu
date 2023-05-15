@@ -174,7 +174,7 @@
    (let [conditions (map-vals-to-conditions key-conds)
          response (.query ddb-client (-> (QueryRequest/builder)
                                          (.tableName table)
-                                         (.keyConditions conditions)
+                                         (.keyConditionExpression conditions)
                                          (cond->
                                            (:index options)
                                            (.indexName (:index options))
