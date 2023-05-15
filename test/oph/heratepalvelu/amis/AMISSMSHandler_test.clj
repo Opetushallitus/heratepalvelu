@@ -15,15 +15,19 @@
   (testing "Varmistaa, että query-lahetettavat toimii oikein."
     (with-redefs [oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2022 3 3))
-                  oph.heratepalvelu.db.dynamodb/query-items mock-query-items
+                  oph.heratepalvelu.db.dynamodb/query-items-with-expression
+                  mock-query-items
                   environ.core/env {:herate-table "herate-table-name"}]
       (is (= (ash/query-lahetettavat 20)
-             {:params
-              {:sms-lahetystila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-               :alkupvm         [:le [:s "2022-03-03"]]}
+             {:params "#smstila = :tila AND #alku <= :pvm"
               :options
               {:index "smsIndex"
-               :filter-expression "attribute_exists(kyselylinkki)"
+               :filter-expression "attribute_exists(#linkki)"
+               :expr-attr-names {"#smstila" "sms-lahetystila",
+                                 "#alku" "alkupvm",
+                                 "#linkki" "kyselylinkki"}
+               :expr-attr-vals {":tila" [:s "ei_lahetetty"],
+                                ":pvm" [:s "2022-03-03"]}
                :limit 20}
               :table "herate-table-name"})))))
 

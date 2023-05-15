@@ -194,6 +194,46 @@
          items (.items response)]
      (vec (map map-attribute-values-to-vals items)))))
 
+(defn query-items-with-expression
+  "Hakee tietueita tiettyjen ehtojen perusteella. Funktion key-expr
+  -argumentti seuraa expression-syntaksia.
+
+  Objektista options voi löytyä myös suodatusekspressio ja/tai muita ehdollisia
+  parametreja:
+    :index               - index, jota käytetään key-condsissa
+    :limit               - maksimimäärä palautettavia tietueita
+    :filter-expression   - DynamoDB-formaatissa oleva predikaatti, jonka
+                           perusteella palautettavat tietueet suodatetaan
+    :expr-attr-names     - lista avaimista ja kentännimiä, joilla avaimet
+                           korvataan filter-expressionissa
+    :expr-attr-vals      - lista avaimista ja attribuuttiarvoista, jotka
+                           laitetaan avaimien sijoihin, kun ekspressio
+                           evaluoidaan"
+  ([key-expr options]
+   (query-items-with-expression key-expr options (:herate-table env)))
+  ([key-expr options table]
+   (let [response (.query ddb-client (-> (QueryRequest/builder)
+                                         (.tableName table)
+                                         (.keyConditionExpression key-expr)
+                                         (cond->
+                                           (:index options)
+                                           (.indexName (:index options))
+                                           (:limit options)
+                                           (.limit (int (:limit options)))
+                                           (:filter-expression options)
+                                           (.filterExpression
+                                             (:filter-expression options))
+                                           (:expr-attr-names options)
+                                           (.expressionAttributeNames
+                                             (:expr-attr-names options))
+                                           (:expr-attr-vals options)
+                                           (.expressionAttributeValues
+                                             (map-vals-to-attribute-values
+                                               (:expr-attr-vals options))))
+                                         ^QueryRequest (.build)))
+         items (.items response)]
+     (vec (map map-attribute-values-to-vals items)))))
+
 (defn update-item
   "Päivittää yhden tietueen tietokantaan. Tietue identifioidaan key-condsissa
   annettujen primary keyn ja sort keyn perusteella, jotka seuraavat tätä mallia:

@@ -22,11 +22,15 @@
   lähetetty ja herätepäivämäärä on jo mennyt. Hakee vain herätteet, joihin
   kyselylinkki on jo luotu."
   [limit]
-  (ddb/query-items
-    {:sms-lahetystila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
-     :alkupvm         [:le [:s (str (c/local-date-now))]]}
+  (ddb/query-items-with-expression
+    "#smstila = :tila AND #alku <= :pvm"
     {:index "smsIndex"
-     :filter-expression "attribute_exists(kyselylinkki)"
+     :filter-expression "attribute_exists(#linkki)"
+     :expr-attr-names {"#smstila" "sms-lahetystila"
+                       "#alku" "alkupvm"
+                       "#linkki" "kyselylinkki"}
+     :expr-attr-vals {":tila" [:s (:ei-lahetetty c/kasittelytilat)]
+                      ":pvm" [:s (str (c/local-date-now))]}
      :limit limit}
     (:herate-table env)))
 
