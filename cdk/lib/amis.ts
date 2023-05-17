@@ -491,6 +491,21 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       new SqsEventSource(amisDeleteTunnusQueue, { batchSize: 1, })
     );
 
+    const updateSmsLahetystila = new lambda.Function(this, "updateSmsLahetystila", {
+      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        herate_table: AMISherateTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-updateSmsLahetystila`
+      },
+      handler: "oph.heratepalvelu.util.dbChanger::updateSmsLahetystila",
+      memorySize: 1024,
+      reservedConcurrentExecutions: 1,
+      timeout: Duration.seconds(900),
+      tracing: lambda.Tracing.ACTIVE
+    });
+
     const AMISherateArchive2019_2020Table = new dynamodb.Table(
       this,
       "AMISHerateArchive2019to2020Table",
@@ -669,6 +684,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISMassHerateResendHandler,
       EhoksOpiskeluoikeusUpdateHandler,
       dbChanger,
+      updateSmsLahetystila,
       // dbArchiver,
     ].forEach(
       lambdaFunction => {
