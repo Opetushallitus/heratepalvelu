@@ -61,12 +61,13 @@
     (if tila
       (try
         (log/info "Herätteellä on status" status "eli tila" tila)
+        (update-db-tila! herate tila)
         (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)
         (update-ehoks-if-not-muistutus! herate status tila)
-        (update-db-tila! herate tila)
         (catch Exception e
-          (log/error e "Lähetystilan tallennus Arvoon epäonnistui" herate)))
-      (log/info "Heräte" herate "odottaa lähetystä:" status))
+          (log/error e "Lähetystilan tallennus Arvoon/eHOKSiin epäonnistui"
+                     herate)))
+      (log/info "Heräte odottaa lähetystä:" status))
     tila))
 
 (defn -handleEmailStatus

@@ -124,12 +124,12 @@
            mock-get-email-status]
           (esh/-handleEmailStatus {} event context)
           (is (= @test-handleEmailStatus-results
-                 (str "kysely.linkki/123 lahetetty "
+                 (str "update-db {:viestintapalvelu-id \"12345\", "
+                      ":kyselylinkki \"kysely.linkki/123\"} lahetetty"
+                      "kysely.linkki/123 lahetetty "
                       "{:viestintapalvelu-id \"12345\", "
                       ":kyselylinkki \"kysely.linkki/123\"} "
-                      "{:numberOfSuccessfulSendings 1} lahetetty "
-                      "update-db {:viestintapalvelu-id \"12345\", "
-                      ":kyselylinkki \"kysely.linkki/123\"} lahetetty"))))
+                      "{:numberOfSuccessfulSendings 1} lahetetty "))))
         (reset! test-handleEmailStatus-results "")
         (with-redefs
           [oph.heratepalvelu.external.viestintapalvelu/get-email-status
