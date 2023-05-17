@@ -125,28 +125,33 @@
   kyselylinkki on jo luotu."
   [limit]
   (ddb/query-items-with-expression
-   "#smstila = :tila AND #alku <= :pvm"
-   {:index "smsIndex"
-    :filter-expression "attribute_not_exists(#linkki) AND #ltila = :latila"
-    :expr-attr-names {"#smstila" "sms-lahetystila"
-                      "#alku" "alkupvm"
-                      "#linkki" "kyselylinkki"
-                      "#ltila" "lahetystila"}
-    :expr-attr-vals {":tila" [:s (:ei-lahetetty c/kasittelytilat)]
-                     ":pvm" [:s (str (c/local-date-now))]
-                     ":latila" [:s (:ei-laheteta c/kasittelytilat)]}
-    :limit limit}
-   (:herate-table env)))
+    "#smstila = :eilahetetty AND #alku <= :pvm"
+    {:index "smsIndex"
+     :filter-expression "#ltila = :eilaheteta OR #ltila = :eilahetetaoo"
+     :expr-attr-names {"#smstila" "sms-lahetystila"
+                       "#alku" "alkupvm"
+                       "#ltila" "lahetystila"}
+     :expr-attr-vals {":eilahetetty" [:s (:ei-lahetetty c/kasittelytilat)]
+                      ":pvm" [:s (str (c/local-date-now))]
+                      ":eilaheteta" [:s (:ei-laheteta c/kasittelytilat)]
+                      ":eilahetetaoo"
+                      [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]}
+     :limit limit}
+    (:herate-table env)))
 
-(defn -updateSmsLahetystila [this event context]
+(defn -updateSmsLahetystila
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (cl/log-caller-details-scheduled "AMISSMSHandler" event context)
   (loop [lahetettavat (query-väärässä-tilassa-olevat 20)]
-    (log/info "Käsitellään" (count lahetettavat) "väärässä tilassa olevaa sms-lahetystilaa.")
+    (log/info
+      "Käsitellään" (count lahetettavat)
+      "väärässä tilassa olevaa sms-lahetystilaa.")
     (when (seq lahetettavat)
       (doseq [herate lahetettavat]
-        (try (ac/update-herate
-              herate
-              {:sms-lahetystila [:s (:ei-laheteta c/kasittelytilat)]})
+        (try
+          (ac/update-herate
+            herate
+            {:sms-lahetystila [:s (:ei-laheteta c/kasittelytilat)]})
           (catch Exception e
             (log/error "Virhe AMIS SMS-lähetystila päivityksessä kun"
                        "tila on väärä."
