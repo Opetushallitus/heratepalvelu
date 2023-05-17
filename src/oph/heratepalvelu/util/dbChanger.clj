@@ -119,7 +119,7 @@
                 :expr-attr-vals {":start" (attr "2021-11-01")
                                  ":end" (attr "2021-12-31")}})))))
 
-(defn query-väärässä-tilassa-olevat
+(defn queryWrongStatuses
   [limit]
   (ddb/query-items-with-expression
     "#smstila = :eilahetetty AND #alku <= :pvm"
@@ -139,7 +139,7 @@
 (defn -updateSmsLahetystila
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (cl/log-caller-details-scheduled "AMISSMSHandler" event context)
-  (loop [lahetettavat (query-väärässä-tilassa-olevat 20)]
+  (loop [lahetettavat (queryWrongStatuses 20)]
     (log/info
       "Käsitellään" (count lahetettavat)
       "väärässä tilassa olevaa sms-lahetystilaa.")
@@ -154,4 +154,4 @@
                        "tila on väärä."
                        e))))
       (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (query-väärässä-tilassa-olevat 20))))))
+        (recur (queryWrongStatuses 20))))))
