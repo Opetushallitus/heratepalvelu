@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler-test
   (:require [clj-time.core :as t]
             [clojure.test :refer :all]
+            [clojure.data :refer [diff]]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.tpk.tpkNiputusHandler :as tpk]
             [oph.heratepalvelu.test-util :as tu])
@@ -359,4 +360,9 @@
                       :jakso-id 5678
                       :new-value "ei_niputeta"}]]
         (tpk/-handleTpkNiputus {} event context)
-        (is (= results (vec (reverse @mock-handleTpkNiputus-results))))))))
+        (is (= results (vec (reverse @mock-handleTpkNiputus-results)))
+            (->> @mock-handleTpkNiputus-results
+                 (reverse)
+                 (diff results)
+                 (clojure.string/join "\n")
+                 (str "Eroavaisuudet:\n")))))))

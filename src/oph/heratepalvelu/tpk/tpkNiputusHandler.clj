@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler
   "Käsittelee TPK:n niputusta ja tallennusta herätepalvelun tietokantaan."
   (:require [clojure.tools.logging :as log]
+            [clojure.core.memoize :refer [memo]]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -125,27 +126,32 @@
     (log/info "TPK-Niputusfunktion scan" (count (:items resp)))
     resp))
 
+(def ensure-nippu!
+  "Huolehtii, että jaksolle on nippu tietokannassa, ja palauttaa sen."
+  (memo
+    ^{:clojure.core.memoize/args-fn (partial mapv create-nippu-id)}
+    (fn [jakso]
+      (or (not-empty (get-existing-nippu jakso))
+          (let [nippu (create-tpk-nippu jakso)]
+            (save-tpk-nippu nippu)
+            nippu)))))
+
+(defn handle-jakso!
+  "Luo tpk-nipun yhdestä työpaikkajaksosta tai lisää jakson olemassa olevaan."
+  [jakso]
+  (update-tpk-niputuspvm
+    jakso
+    (if (check-jakso? jakso)
+      (let [nippu (ensure-nippu! jakso)] (:niputuspvm nippu))
+      "ei_niputeta")))
+
 (defn -handleTpkNiputus
   "Käsittelee työpaikkajaksoja ja luo vastaavia TPK-nippuja. Yhteen nippuun voi
   kuulua useita jaksoja."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
-  (let [memoization (atom {})]
-    (loop [niputettavat (query-niputtamattomat nil)]
-      (doseq [jakso (:items niputettavat)]
-        (if (check-jakso? jakso)
-          (let [memoized-nippu (get @memoization (create-nippu-id jakso))
-                existing-nippu (when-not memoized-nippu
-                                 (get-existing-nippu jakso))]
-            (if (and (empty? existing-nippu) (not memoized-nippu))
-              (let [nippu (create-tpk-nippu jakso)]
-                (save-tpk-nippu nippu)
-                (swap! memoization assoc (create-nippu-id jakso) nippu)
-                (update-tpk-niputuspvm jakso (:niputuspvm nippu)))
-              (update-tpk-niputuspvm
-                jakso
-                (:niputuspvm (or memoized-nippu existing-nippu)))))
-          (update-tpk-niputuspvm jakso "ei_niputeta")))
-      (when (and (< 30000 (.getRemainingTimeInMillis context))
-                 (:last-evaluated-key niputettavat))
-        (recur (query-niputtamattomat (:last-evaluated-key niputettavat)))))))
+  (loop [niputettavat (query-niputtamattomat nil)]
+    (doseq [jakso (:items niputettavat)] (handle-jakso! jakso))
+    (when (and (< 30000 (.getRemainingTimeInMillis context))
+               (:last-evaluated-key niputettavat))
+      (recur (query-niputtamattomat (:last-evaluated-key niputettavat))))))
