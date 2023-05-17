@@ -120,9 +120,6 @@
                                  ":end" (attr "2021-12-31")}})))))
 
 (defn query-väärässä-tilassa-olevat
-  "Hakee eniten limit herätettä tietokannasta, joilta SMS-viestiä ei ole vielä
-  lähetetty ja herätepäivämäärä on jo mennyt. Hakee vain herätteet, joihin
-  kyselylinkki on jo luotu."
   [limit]
   (ddb/query-items-with-expression
     "#smstila = :eilahetetty AND #alku <= :pvm"
