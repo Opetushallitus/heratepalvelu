@@ -46,6 +46,38 @@
     (catch ExceptionInfo e
       (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
 
+(defn update-kyselylinkki-in-nippu!
+  "Päivittää nipun kyselylinkin Arvon API-vastauksesta."
+  [nippu arvo-resp request-id]
+  (try
+    (ddb/update-item
+      {:nippu-id            [:s (:nippu-id nippu)]}
+      {:update-expr (str "SET #linkki = :linkki, #tunnus = :tunnus, "
+                         "#pvm = :pvm, #req = :req")
+       :expr-attr-names {"#linkki" "kyselylinkki"
+                         "#tunnus" "tunnus"
+                         "#pvm"    "voimassa-loppupvm"
+                         "#req"    "request-id"}
+       :expr-attr-vals {":linkki" [:s (:kysely_linkki arvo-resp)]
+                        ":tunnus" [:s (:tunnus arvo-resp)]
+                        ":pvm"    [:s (:voimassa_loppupvm arvo-resp)]
+                        ":req"    [:s request-id]}}
+      (:tpk-nippu-table env))
+    (catch AwsServiceException e
+      (log/error "Virhe DynamoDBissa (TPK Arvo Calls). Nippu:" (:nippu-id nippu)
+                 "Request ID:" request-id
+                 "Virhe:" e))))
+
+(defn handle-single-nippu!
+  "Luo kyselylinkin yhdelle TPK-nipulle."
+  [nippu]
+  (let [request-id (c/generate-uuid)
+        arvo-resp (make-arvo-request nippu request-id)]
+    (if (some? (:kysely_linkki arvo-resp))
+      (update-kyselylinkki-in-nippu! nippu arvo-resp request-id)
+      (log/error "Kyselylinkkiä ei saatu Arvolta. Nippu:" (:nippu-id nippu)
+                 "Request ID:" request-id))))
+
 (defn -handleTpkArvoCalls
   "Hakee TPK-nipuille kyselylinkkejä Arvosta. Luo vain yhden kyselylinkin per
   nippu, vaikka siihen kuuluisi useita jaksoja."
@@ -54,34 +86,7 @@
   (loop [scan-results (do-scan)]
     (doseq [nippu (:items scan-results)]
       (when (< 30000 (.getRemainingTimeInMillis context))
-        (let [request-id (c/generate-uuid)
-              arvo-resp (make-arvo-request nippu request-id)]
-          (if (some? (:kysely_linkki arvo-resp))
-            (try
-              (ddb/update-item
-                {:nippu-id            [:s (:nippu-id nippu)]}
-                {:update-expr (str "SET #linkki = :linkki, #tunnus = :tunnus, "
-                                   "#pvm = :pvm, #req = :req")
-                 :expr-attr-names {"#linkki" "kyselylinkki"
-                                   "#tunnus" "tunnus"
-                                   "#pvm"    "voimassa-loppupvm"
-                                   "#req"    "request-id"}
-                 :expr-attr-vals {":linkki" [:s (:kysely_linkki arvo-resp)]
-                                  ":tunnus" [:s (:tunnus arvo-resp)]
-                                  ":pvm"    [:s (:voimassa_loppupvm arvo-resp)]
-                                  ":req"    [:s request-id]}}
-                (:tpk-nippu-table env))
-              (catch AwsServiceException e
-                (log/error "Virhe DynamoDBissa (TPK Arvo Calls). Nippu:"
-                           (:nippu-id nippu)
-                           "Request ID:"
-                           request-id
-                           "Virhe:"
-                           e)))
-            (log/error "Kyselylinkkiä ei saatu Arvolta. Nippu:"
-                       (:nippu-id nippu)
-                       "Request ID:"
-                       request-id)))))
+        (handle-single-nippu! nippu)))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key scan-results))
       (recur (do-scan (:last-evaluated-key scan-results))))))
