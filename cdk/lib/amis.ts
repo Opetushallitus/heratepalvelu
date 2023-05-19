@@ -492,7 +492,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     );
 
     const updateSmsLahetystila = new lambda.Function(this, "updateSmsLahetystila", {
-      runtime: lambda.Runtime.JAVA_8_CORRETTO,
+      runtime: this.runtime,
       code: lambdaCode,
       environment: {
         ...this.envVars,
