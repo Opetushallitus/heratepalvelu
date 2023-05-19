@@ -25,17 +25,14 @@
   niput. Muuten käsittelee seuraavan kauden niput."
   ([] (do-scan nil))
   ([exclusive-start-key]
-   (let [resp (ddb/scan {:filter-expression
-                         "attribute_not_exists(#linkki) AND #kausi = :kausi"
-                         :exclusive-start-key exclusive-start-key
-                         :expr-attr-names {"#kausi"  "tiedonkeruu-alkupvm"
-                                           "#linkki" "kyselylinkki"}
-                         :expr-attr-vals
-                         {":kausi" [:s (str
-                                         (tpkc/get-current-kausi-alkupvm))]}}
-                        (:tpk-nippu-table env))]
-     (log/info "TPK-Arvovälitysfunktion scan" (count (:items resp)))
-     resp)))
+   (ddb/scan {:filter-expression
+              "attribute_not_exists(#linkki) AND #kausi = :kausi"
+              :exclusive-start-key exclusive-start-key
+              :expr-attr-names {"#kausi"  "tiedonkeruu-alkupvm"
+                                "#linkki" "kyselylinkki"}
+              :expr-attr-vals
+              {":kausi" [:s (str (tpkc/get-current-kausi-alkupvm))]}}
+             (:tpk-nippu-table env))))
 
 (defn make-arvo-request
   "Pyytää TPK-kyselylinkin Arvosta."
@@ -44,11 +41,13 @@
     (arvo/create-tpk-kyselylinkki
       (arvo/build-tpk-request-body (assoc nippu :request-id request-id)))
     (catch ExceptionInfo e
-      (log/error "Ei luonut kyselylinkkiä nipulle:" (:nippu-id nippu)))))
+      (log/error e "Ei luonut kyselylinkkiä nipulle:" nippu))))
 
 (defn update-kyselylinkki-in-nippu!
   "Päivittää nipun kyselylinkin Arvon API-vastauksesta."
   [nippu arvo-resp request-id]
+  (log/info "Päivitetään nippuun" (:nippu-id nippu)
+            "kyselylinkki" (:kysely_linkki arvo-resp))
   (try
     (ddb/update-item
       {:nippu-id            [:s (:nippu-id nippu)]}
@@ -64,13 +63,12 @@
                         ":req"    [:s request-id]}}
       (:tpk-nippu-table env))
     (catch AwsServiceException e
-      (log/error "Virhe DynamoDBissa (TPK Arvo Calls). Nippu:" (:nippu-id nippu)
-                 "Request ID:" request-id
-                 "Virhe:" e))))
+      (log/error e "päivitettäessä Arvo-vastausta" arvo-resp))))
 
 (defn handle-single-nippu!
   "Luo kyselylinkin yhdelle TPK-nipulle."
   [nippu]
+  (log/info "Käsitellään nippu" (:nippu-id nippu))
   (let [request-id (c/generate-uuid)
         arvo-resp (make-arvo-request nippu request-id)]
     (if (some? (:kysely_linkki arvo-resp))
@@ -84,6 +82,7 @@
   [_ event ^Context context]
   (log-caller-details-scheduled "handleTpkArvoCalls" event context)
   (loop [scan-results (do-scan)]
+    (log/info "Käsitellään" (count (:items scan-results)) "nippua.")
     (doseq [nippu (:items scan-results)]
       (when (< 30000 (.getRemainingTimeInMillis context))
         (handle-single-nippu! nippu)))
