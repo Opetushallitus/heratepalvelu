@@ -3,6 +3,7 @@
             [environ.core :refer [env]]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.common :as c]
+            [oph.heratepalvelu.log.caller-log :as cl]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.tep.niputusHandler :as nip])
@@ -18,7 +19,7 @@
             [^:static handleDBUpdateTep
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]
-            [^:static deleteEmptyRowsFromJaksotunnusTable
+            [^:static updateSmsLahetystila
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
@@ -117,3 +118,40 @@
                      "AND attribute_not_exists(uudelleenlaskettu_kesto)")
                 :expr-attr-vals {":start" (attr "2021-11-01")
                                  ":end" (attr "2021-12-31")}})))))
+
+(defn queryWrongStatuses
+  [limit]
+  (ddb/query-items-with-expression
+    "#smstila = :eilahetetty AND #alku <= :pvm"
+    {:index "smsIndex"
+     :filter-expression "#ltila = :eilaheteta OR #ltila = :eilahetetaoo"
+     :expr-attr-names {"#smstila" "sms-lahetystila"
+                       "#alku" "alkupvm"
+                       "#ltila" "lahetystila"}
+     :expr-attr-vals {":eilahetetty" [:s (:ei-lahetetty c/kasittelytilat)]
+                      ":pvm" [:s (str (c/local-date-now))]
+                      ":eilaheteta" [:s (:ei-laheteta c/kasittelytilat)]
+                      ":eilahetetaoo"
+                      [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]}
+     :limit limit}
+    (:herate-table env)))
+
+(defn -updateSmsLahetystila
+  [_ event ^com.amazonaws.services.lambda.runtime.Context context]
+  (cl/log-caller-details-scheduled "AMISSMSHandler" event context)
+  (loop [lahetettavat (queryWrongStatuses 20)]
+    (log/info
+      "Käsitellään" (count lahetettavat)
+      "väärässä tilassa olevaa sms-lahetystilaa.")
+    (when (seq lahetettavat)
+      (doseq [herate lahetettavat]
+        (try
+          (ac/update-herate
+            herate
+            {:sms-lahetystila [:s (:ei-laheteta c/kasittelytilat)]})
+          (catch Exception e
+            (log/error "Virhe AMIS SMS-lähetystila päivityksessä kun"
+                       "tila on väärä."
+                       e))))
+      (when (< 60000 (.getRemainingTimeInMillis context))
+        (recur (queryWrongStatuses 20))))))

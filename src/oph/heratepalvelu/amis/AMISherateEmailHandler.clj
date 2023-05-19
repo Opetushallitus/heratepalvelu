@@ -39,7 +39,8 @@
                          ")"))
           (ac/update-herate
             herate
-            {:lahetystila [:s (:ei-laheteta c/kasittelytilat)]})
+            {:lahetystila [:s (:ei-laheteta c/kasittelytilat)]
+             :sms-lahetystila [:s (:ei-laheteta c/kasittelytilat)]})
           nil)
         (let [req-body (arvo/build-arvo-request-body
                          herate
@@ -80,7 +81,8 @@
       (do
         (ac/update-herate
           herate
-          {:lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]})
+          {:lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]
+           :sms-lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]})
         nil))))
 
 (defn save-email-to-db
