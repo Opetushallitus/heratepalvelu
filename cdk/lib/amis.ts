@@ -393,6 +393,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         ...this.envVars,
         herate_table: AMISherateTable.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISSMSHandler`,
+        send_messages: (this.envVars.stage === 'sade').toString()
       },
       memorySize: Token.asNumber(this.getParameterFromSsm("emailhandler-memory")),
       reservedConcurrentExecutions: 1,
