@@ -16,7 +16,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn check-jakso?
+(defn jakso-valid-for-tpk?
   "Varmistaa, että jaksossa on kaikki pakolliset kentät ja oppisopimuksen
   perusta ei ole 02 (yrittäjä)."
   [jakso]
@@ -141,7 +141,7 @@
   (log/info "Käsitellään jakso" jakso)
   (update-tpk-niputuspvm
     jakso
-    (if (check-jakso? jakso)
+    (if (jakso-valid-for-tpk? jakso)
       (let [nippu (ensure-nippu! jakso)] (:niputuspvm nippu))
       "ei_niputeta")))
 

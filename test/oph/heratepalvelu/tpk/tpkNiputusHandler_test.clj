@@ -7,8 +7,8 @@
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
 
-(deftest test-check-jakso
-  (testing "check-jakso? tarkistaa jaksot oikein"
+(deftest test-jakso-valid-for-tpk?
+  (testing "jakso-valid-for-tpk? tarkistaa jaksot oikein"
     (let [good-jakso1 {:koulutustoimija        "1.2.246.562.10.346830761110"
                        :tyopaikan_nimi         "Testi työpaikka"
                        :tyopaikan_ytunnus      "1234567-8"
@@ -65,15 +65,15 @@
                       :jakso_loppupvm         "2021-11-20"
                       :hankkimistapa_tyyppi   "oppisopimus"
                       :oppisopimuksen_perusta "01"}]
-      (is (tpk/check-jakso? good-jakso1))
-      (is (tpk/check-jakso? good-jakso2))
-      (is (tpk/check-jakso? good-jakso3))
-      (is (not (tpk/check-jakso? bad-jakso1)))
-      (is (not (tpk/check-jakso? bad-jakso2)))
-      (is (not (tpk/check-jakso? bad-jakso3)))
-      (is (not (tpk/check-jakso? bad-jakso4)))
-      (is (not (tpk/check-jakso? bad-jakso5)))
-      (is (not (tpk/check-jakso? bad-jakso6))))))
+      (is (tpk/jakso-valid-for-tpk? good-jakso1))
+      (is (tpk/jakso-valid-for-tpk? good-jakso2))
+      (is (tpk/jakso-valid-for-tpk? good-jakso3))
+      (is (not (tpk/jakso-valid-for-tpk? bad-jakso1)))
+      (is (not (tpk/jakso-valid-for-tpk? bad-jakso2)))
+      (is (not (tpk/jakso-valid-for-tpk? bad-jakso3)))
+      (is (not (tpk/jakso-valid-for-tpk? bad-jakso4)))
+      (is (not (tpk/jakso-valid-for-tpk? bad-jakso5)))
+      (is (not (tpk/jakso-valid-for-tpk? bad-jakso6))))))
 
 (deftest test-create-nippu-id
   (testing "create-nippu-id luo nipun ID:n oikein"
