@@ -113,18 +113,16 @@
         kausi-end-date (tpkc/get-current-kausi-loppupvm)
         end-date (if (.isAfter today kausi-end-date)
                    (str kausi-end-date)
-                   (str today))
-        resp (ddb/scan {:filter-expression
-                        "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :start AND :end"
-                        :exclusive-start-key exclusive-start-key
-                        :expr-attr-names {"#tpkNpvm" "tpk-niputuspvm"
-                                          "#jl"      "jakso_loppupvm"}
-                        :expr-attr-vals {":tpkNpvm" [:s "ei_maaritelty"]
-                                         ":end"     [:s end-date]
-                                         ":start"   [:s start-date]}}
-                       (:jaksotunnus-table env))]
-    (log/info "TPK-Niputusfunktion scan" (count (:items resp)))
-    resp))
+                   (str today))]
+    (ddb/scan {:filter-expression
+               "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :start AND :end"
+               :exclusive-start-key exclusive-start-key
+               :expr-attr-names {"#tpkNpvm" "tpk-niputuspvm"
+                                 "#jl"      "jakso_loppupvm"}
+               :expr-attr-vals {":tpkNpvm" [:s "ei_maaritelty"]
+                                ":end"     [:s end-date]
+                                ":start"   [:s start-date]}}
+              (:jaksotunnus-table env))))
 
 (def ensure-nippu!
   "Huolehtii, että jaksolle on nippu tietokannassa, ja palauttaa sen."
@@ -133,12 +131,14 @@
     (fn [jakso]
       (or (not-empty (get-existing-nippu jakso))
           (let [nippu (create-tpk-nippu jakso)]
+            (log/info "Luodaan uusi nippu tietokantaan:" nippu)
             (save-tpk-nippu nippu)
             nippu)))))
 
 (defn handle-jakso!
   "Luo tpk-nipun yhdestä työpaikkajaksosta tai lisää jakson olemassa olevaan."
   [jakso]
+  (log/info "Käsitellään jakso" jakso)
   (update-tpk-niputuspvm
     jakso
     (if (check-jakso? jakso)
@@ -151,6 +151,7 @@
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
   (loop [niputettavat (query-niputtamattomat nil)]
+    (log/info "Käsitellään" (count (:items niputettavat)) "työpaikkajaksoa")
     (doseq [jakso (:items niputettavat)] (handle-jakso! jakso))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key niputettavat))
