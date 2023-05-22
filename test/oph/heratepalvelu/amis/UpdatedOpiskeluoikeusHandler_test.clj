@@ -279,7 +279,7 @@
   (testing "Varmista, että -handleUpdatedOpiskeluoikeus tekee kutsuja oikein"
     (with-redefs
       [environ.core/env {:metadata-table "metadata-table-name"}
-       oph.heratepalvelu.amis.AMISCommon/save-herate mock-save-herate
+       oph.heratepalvelu.amis.AMISCommon/check-and-save-herate! mock-save-herate
        oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/check-tila
        mock-check-tila
        oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/get-kysely-type
@@ -291,7 +291,7 @@
        oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler/update-last-page
        mock-update-last-page
        c/whitelisted-organisaatio?! mock-whitelisted-organisaatio?!
-       c/check-valid-herate-date mock-check-valid-herate-date
+       c/valid-herate-date? mock-check-valid-herate-date
        c/get-koulutustoimija-oid mock-get-koulutustoimija-oid
        oph.heratepalvelu.db.dynamodb/get-item mock-get-item
        oph.heratepalvelu.external.ehoks/get-hoks-by-opiskeluoikeus

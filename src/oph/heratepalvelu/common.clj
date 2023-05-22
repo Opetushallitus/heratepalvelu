@@ -13,6 +13,7 @@
            (com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException)
            (java.text Normalizer Normalizer$Form)
            (java.time LocalDate)
+           (java.time.format DateTimeParseException)
            (java.util UUID)))
 
 (s/defschema herate-schema
@@ -244,31 +245,27 @@
                     (str (LocalDate/ofEpochDay (/ timestamp 86400000)))
                     "on ennen käyttöönotto päivämäärää")))))
 
-(defn check-duplicate-herate?
-  "Palauttaa true, jos ei ole vielä herätettä tallennettua tietokantaan samoilla
-  koulutustoimijalla, oppijalla, tyypillä ja laskentakaudella, tai jos olemassa
-  olevan herätteen saa ylikirjoittaa uuden herätteen tiedoilla. Heräte
-  ylikirjoitetaan, jos uudet tiedot tulevat ehoksista, tai jos olemassaolevan
-  herätteen tiedot tulivat Koskesta. Herätettä ei ylikirjoiteta, jos
-  kyselylinkki on jo muodostunut."
+(defn already-superseding-herate!
+  "Jos on jo heräte tallennettua tietokantaan samoilla koulutustoimijalla,
+  oppijalla, tyypillä ja laskentakaudella, eikä sitä saa ylikirjoittaa
+  uuden herätteen tiedoilla, palauttaa kyseisen herätteen, muuten nil.
+  eHOKSista tulleen herätteen tietoja ei saa ylikirjoittaa Koskesta tulevan
+  herätteen tiedoilla, eikä herätettä saa korvata,
+  jos kyselylinkki on jo muodostunut."
   [oppija toimija kausi kyselytyyppi herate-source]
-  (if (let [check-db?
-            (fn [tyyppi]
-              (let [existing (ddb/get-item
-                               {:toimija_oppija [:s (str toimija "/" oppija)]
-                                :tyyppi_kausi [:s (str tyyppi "/" kausi)]})]
-                (and (or (empty? existing)
-                         (= (:herate-source existing) (:koski herate-sources))
-                         (= herate-source (:ehoks herate-sources)))
-                     (nil? (:kyselylinkki existing)))))]
-        (if (or (= kyselytyyppi "tutkinnon_suorittaneet")
-                (= kyselytyyppi "tutkinnon_osia_suorittaneet"))
-          (and (check-db? "tutkinnon_suorittaneet")
-               (check-db? "tutkinnon_osia_suorittaneet"))
-          (check-db? kyselytyyppi)))
-    true
-    (log/info "Ei ylikirjoiteta olemassaolevaa herätettä. Oppija:" oppija
-              "koulutustoimija:" toimija ";" kyselytyyppi kausi)))
+  (let [superseding-herate-for-kyselytyyppi
+        (fn [tyyppi]
+          (let [existing (ddb/get-item
+                           {:toimija_oppija [:s (str toimija "/" oppija)]
+                            :tyyppi_kausi [:s (str tyyppi "/" kausi)]})]
+            (when (or (:kyselylinkki existing)
+                      (and (= (:herate-source existing) (:ehoks herate-sources))
+                           (= herate-source (:koski herate-sources))))
+              existing)))]
+    (if (#{"tutkinnon_suorittaneet" "tutkinnon_osia_suorittaneet"} kyselytyyppi)
+      (or (superseding-herate-for-kyselytyyppi "tutkinnon_suorittaneet")
+          (superseding-herate-for-kyselytyyppi "tutkinnon_osia_suorittaneet"))
+      (superseding-herate-for-kyselytyyppi kyselytyyppi))))
 
 (defn delete-other-paattoherate
   "Jos heräte on päättöheräte, poistaa tietokannasta kaikki eri tyyppiset
@@ -283,15 +280,16 @@
       (ddb/delete-item {:toimija_oppija [:s (str koulutustoimija "/" oppija)]
                         :tyyppi_kausi   [:s (str tyyppi "/" laskentakausi)]}))))
 
-(defn check-valid-herate-date
-  "Varmistaa, että herätteen päivämäärä ei ole ennen 1.7.2022."
+(defn valid-herate-date?
+  "onko herätteen päivämäärä aikaisintaan 1.7.2022?"
   [heratepvm]
   (try
-    (not (.isAfter (LocalDate/of 2022 7 1) (LocalDate/parse heratepvm)))
-    (catch Exception e
-      (log/error e))))
+    (not (.isAfter (LocalDate/of 2022 7 1) (LocalDate/parse (or heratepvm ""))))
+    (catch DateTimeParseException e
+      (log/warn "Bad date" heratepvm)
+      false)))
 
-(def herate-checker
+(def herate-schema-errors
   "Herätescheman tarkistusfunktio."
   (s/checker herate-schema))
 
