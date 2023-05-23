@@ -39,7 +39,7 @@
                                  :niputuspvm [:s (:niputuspvm email)]}
                                 (:nippu-table env))
             status (vp/get-email-status (:viestintapalvelu-id nippu))
-            tila (vp/convert-email-status status)
+            tila (vp/viestintapalvelu-status->kasittelytila status)
             new-loppupvm (tc/get-new-loppupvm nippu)]
         (if tila
           (do
