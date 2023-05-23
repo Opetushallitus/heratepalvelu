@@ -175,8 +175,9 @@
                   "ei ole kyselylinkkiä, ei voi lähettää")
 
         (not status)
-        (log/error "Kyselylinkin statuskysely epäonnistui linkille"
-                   (:kyselylinkki herate))
+        (do (log/error "Kyselylinkin statuskysely epäonnistui linkille"
+                       (:kyselylinkki herate))
+            (throw (ex-info "Statuskysely epäonnistui" {:data herate})))
 
         (c/has-time-to-answer? (:voimassa_loppupvm status))
         (let [id (:id (send-feedback-email herate))
@@ -189,7 +190,8 @@
         (do (log/info "Vastausaika loppunut hoksille" (:ehoks-id herate))
             (save-no-time-to-answer herate))))
     (catch Exception e
-      (log/error e "at send-email-for-palaute! for" herate))))
+      (log/error e "at send-email-for-palaute! for" herate)
+      (throw e))))
 
 (defn -handleSendAMISEmails
   "Hakee lähetettäviä herätteitä tietokannasta ja lähettää viestit
