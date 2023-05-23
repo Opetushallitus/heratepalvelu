@@ -73,10 +73,12 @@
                              (k/get-opiskeluoikeus-catch-404 oo-oid))]
       (cond
         (not opiskeluoikeus)
-        (update-and-return-herate!
-          herate
-          {:lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]
-           :sms-lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]})
+        (do
+          (log/warn "Ei löytynyt opiskeluoikeutta" oo-oid)
+          (update-and-return-herate!
+            herate
+            {:sms-lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]
+             :lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]}))
 
         (c/feedback-collecting-prevented? opiskeluoikeus (:heratepvm herate))
         (do
@@ -163,24 +165,29 @@
 (defn send-email-for-palaute!
   "Lähettää sähköpostia yhden palauteherätteen suhteen (jos tarpeen)."
   [herate]
+  (log/info "Käsitellään heräte:" herate)
   (try
     (let [kyselylinkki (:kyselylinkki herate)
           status (some-> kyselylinkki (arvo/get-kyselylinkki-status))]
       (cond
         (not kyselylinkki)
-        (log/warn "Herätteessä" herate "ei ole kyselylinkkiä, ei voi lähettää")
+        (log/warn "Hoksille" (:ehoks-id herate)
+                  "ei ole kyselylinkkiä, ei voi lähettää")
 
         (not status)
-        (log/error "Kyselylinkin statuskysely epäonnistui herätteelle" herate)
+        (log/error "Kyselylinkin statuskysely epäonnistui linkille"
+                   (:kyselylinkki herate))
 
         (c/has-time-to-answer? (:voimassa_loppupvm status))
         (let [id (:id (send-feedback-email herate))
               lahetyspvm (str (c/local-date-now))]
+          (log/info "Lähetetty sähköposti id" id ", tallennetaan tietokantaan")
           (save-email-to-db herate id lahetyspvm)
           (update-data-in-ehoks herate lahetyspvm))
 
         :else
-        (save-no-time-to-answer herate)))
+        (do (log/info "Vastausaika loppunut hoksille" (:ehoks-id herate))
+            (save-no-time-to-answer herate))))
     (catch Exception e
       (log/error e "at send-email-for-palaute! for" herate))))
 
