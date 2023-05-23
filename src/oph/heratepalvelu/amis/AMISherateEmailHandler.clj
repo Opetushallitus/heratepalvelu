@@ -20,15 +20,15 @@
 (defn update-kyselytunnus-in-ehoks!
   "Vie eHOKSiin tiedon uudesta kyselytunnuksesta."
   [herate]
-  (try
-    (ehoks/add-kyselytunnus-to-hoks
-      (:ehoks-id herate)
-      {:kyselylinkki (:kyselylinkki herate)
-       :tyyppi       (:kyselytyyppi herate)
-       :alkupvm      (:alkupvm herate)
-       :lahetystila  (:ei-lahetetty c/kasittelytilat)})
-    (catch Exception e
-      (log/error e "Virhe kyselylinkin lähetyksessä eHOKSiin"))))
+  (let [req {:kyselylinkki (:kyselylinkki herate)
+             :tyyppi       (:kyselytyyppi herate)
+             :alkupvm      (:alkupvm herate)
+             :lahetystila  (:ei-lahetetty c/kasittelytilat)}]
+    (try (ehoks/add-kyselytunnus-to-hoks (:ehoks-id herate) req)
+         (catch Exception e
+           (log/error e "Virhe kyselylinkin lähetyksessä eHOKSiin"
+                      "Request:" req
+                      "Response:" (:body (ex-data e)))))))
 
 (defn update-and-return-herate!
   "Makes the given updates to both DDB and the argument herate
@@ -52,7 +52,8 @@
         arvo-resp (try (arvo/create-amis-kyselylinkki req-body)
                        (catch Exception e
                          (log/error e "Virhe kyselylinkin hakemisessa Arvosta."
-                                    "Request:" req-body)
+                                    "Request:" req-body
+                                    "Response:" (:body (ex-data e)))
                          {}))]
     (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
       (update-and-return-herate! herate {:kyselylinkki [:s kyselylinkki]})
@@ -150,8 +151,7 @@
        :lahetyspvm  [:s (str (c/local-date-now))]})
     (catch Exception e
       (log/error "Virhe lähetystilan päivityksessä herätteelle,"
-                 "jonka vastausaika umpeutunut:"
-                 herate)
+                 "jonka vastausaika umpeutunut:" herate)
       (log/error e))))
 
 (defn do-query
