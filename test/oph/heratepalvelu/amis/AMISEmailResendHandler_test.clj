@@ -12,10 +12,10 @@
           bad1  {:sahkoposti "a@b.com"}
           bad2  {:kyselylinkki "kysely.linkki/2345"
                  :sahkoposti ""}]
-      (is (nil? (erh/resend-checker good1)))
-      (is (nil? (erh/resend-checker good2)))
-      (is (some? (erh/resend-checker bad1)))
-      (is (some? (erh/resend-checker bad2))))))
+      (is (nil? (erh/resend-schema-errors good1)))
+      (is (nil? (erh/resend-schema-errors good2)))
+      (is (some? (erh/resend-schema-errors bad1)))
+      (is (some? (erh/resend-schema-errors bad2))))))
 
 (def results (atom {}))
 
@@ -32,7 +32,7 @@
 
 (deftest test-handleEmailResend
   (testing "Varmista, että -handleEmailResend toimii oikein"
-    (with-redefs [oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
+    (with-redefs [oph.heratepalvelu.amis.AMISCommon/get-herate-by-kyselylinkki!
                   mock-get-item-by-kyselylinkki
                   oph.heratepalvelu.amis.AMISCommon/update-herate
                   mock-update-herate]
@@ -43,8 +43,7 @@
             good-event-no-email (tu/mock-sqs-event
                                   {:kyselylinkki "https://linkki.fi/1"})]
         (erh/-handleEmailResend {} bad-event context)
-        (is (true? (tu/did-log? ":herate {:asdf AMISEmailResendHandler xyz},"
-                                "ERROR")))
+        (is (true? (tu/did-log? "Epämuodostunut heräte" "ERROR")))
         (erh/-handleEmailResend {} good-event context)
         (is (= @results {:herate {:kyselylinkki "https://linkki.fi/1"
                                   :toimija_oppija "toimija-oppija"
@@ -65,13 +64,9 @@
                          :sahkoposti "a@b.com"}
                 :updates {:sahkoposti [:s "a@b.com"]
                           :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]}}))
-        (is (true?
-              (tu/did-log?
-                "Ei sähköpostia herätteessä {:kyselylinkki https://linkki.fi/1"
-                "WARN")))
+        (is (true? (tu/did-log? "Ei sähköpostia, käytetään" "WARN")))
         (with-redefs
-          [oph.heratepalvelu.amis.AMISCommon/get-item-by-kyselylinkki
+          [oph.heratepalvelu.amis.AMISCommon/get-herate-by-kyselylinkki!
            mock-return-nothing]
           (erh/-handleEmailResend {} good-event context)
-          (is (true? (tu/did-log? "Ei kyselylinkkiä https://linkki.fi/1"
-                                  "ERROR"))))))))
+          (is (true? (tu/did-log? "Ei löytynyt herätettä" "ERROR"))))))))

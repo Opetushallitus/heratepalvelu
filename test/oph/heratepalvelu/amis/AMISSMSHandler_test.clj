@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.amis.AMISSMSHandler-test
   "Testaa AMISSMSHandleriin liittyviä funktioita."
   (:require [clojure.test :refer :all]
+            [clojure.data :refer [diff]]
             [oph.heratepalvelu.amis.AMISSMSHandler :as ash]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.elisa :as elisa]
@@ -99,4 +100,7 @@
         (ash/-handleAMISSMS {}
                             (tu/mock-handler-event :scheduledherate)
                             (tu/mock-handler-context))
-        (is (= expected (vec (reverse @results))))))))
+        (is (= (vec (reverse @results)) expected)
+            (->> (diff (vec (reverse @results)) expected)
+                 (clojure.string/join "\n")
+                 (str "differing items:\n")))))))

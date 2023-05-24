@@ -34,18 +34,12 @@
       (log/error e))))
 
 (defn update-when-not-sent
-  "Päivittää herätteen tietokantaan, jos muistutusta ei lähetetty."
+  "Päivittää herätteen tilan tietokantaan, kun muistutusta ei lähetetty."
   [herate n status]
-  (try
-    (let [tila (if (:vastattu status)
-                 (:vastattu c/kasittelytilat)
-                 (:vastausaika-loppunut-m c/kasittelytilat))]
-      (ac/update-herate herate {:lahetystila [:s tila] :muistutukset [:n n]}))
-    (catch Exception e
-      (log/error "Virhe lähetystilan päivityksessä herätteelle, johon on"
-                 "vastattu tai jonka vastausaika umpeutunut"
-                 herate)
-      (log/error e))))
+  (let [tila (if (:vastattu status)
+               (:vastattu c/kasittelytilat)
+               (:vastausaika-loppunut-m c/kasittelytilat))]
+    (ac/update-herate herate {:lahetystila [:s tila] :muistutukset [:n n]})))
 
 (defn send-reminder-email
   "Lähettää muistutusviestin viestintäpalveluun."
@@ -64,16 +58,18 @@
   (log/info (str "Käsitellään " (count muistutettavat)
                  " lähetettävää " n ". muistutusta."))
   (doseq [herate muistutettavat]
-    (let [status (arvo/get-kyselylinkki-status (:kyselylinkki herate))]
-      (if (and (not (:vastattu status))
-               (c/has-time-to-answer? (:voimassa_loppupvm status)))
-        (try
+    (log/info "Käsitellään heräte" herate)
+    (try
+      (let [status (arvo/get-kyselylinkki-status (:kyselylinkki herate))
+            still-open? (c/has-time-to-answer? (:voimassa_loppupvm status))]
+        (log/info "Arvo-status" status)
+        (if (and (not (:vastattu status)) still-open?)
           (let [id (:id (send-reminder-email herate))]
             (update-after-send herate n id))
-          (catch Exception e
-            (log/error "Virhe muistutuksen lähetyksessä!" herate)
-            (log/error e)))
-        (update-when-not-sent herate n status)))))
+          (update-when-not-sent herate n status)))
+      (catch Exception e
+        (log/error e "virhe muistutuksen käsittelyssä")
+        (throw e)))))
 
 (defn query-muistutukset
   "Hakee tietokannasta herätteet, joilla on lähetettäviä muistutusviestejä."

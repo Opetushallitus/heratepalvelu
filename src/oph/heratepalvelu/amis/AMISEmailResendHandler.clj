@@ -23,9 +23,41 @@
   {:kyselylinkki (s/constrained s/Str not-empty)
    (s/optional-key :sahkoposti) (s/constrained s/Str not-empty)})
 
-(def resend-checker
+(def resend-schema-errors
   "Uudelleenlähetyksen herätteen scheman tarkistusfunktio."
   (s/checker resend-schema))
+
+(defn handle-single-herate!
+  "Käsittelee yhden pyynnön sähköpostin lähettämiseksi uudestaan."
+  [herate]
+  (log/info "Käsitellään resend-heräte" herate)
+  (let [kyselylinkki (:kyselylinkki herate)
+        schema-errors (resend-schema-errors herate)
+        db-herate (ac/get-herate-by-kyselylinkki! kyselylinkki)
+        sahkoposti (or (not-empty (:sahkoposti herate))
+                       (:sahkoposti db-herate))]
+    (cond (some? schema-errors)
+          (log/error "Epämuodostunut heräte:" schema-errors)
+
+          (not kyselylinkki)
+          (log/error "eHOKS ei lähettänyt kyselylinkkiä herätteessä")
+
+          (not db-herate)
+          (log/error "Ei löytynyt herätettä kyselylinkillä" kyselylinkki)
+
+          :else
+          (do
+            (when (empty? (:sahkoposti herate))
+              (log/warn "Ei sähköpostia, käytetään dynamoon tallennettua"
+                        sahkoposti))
+            (try
+              (ac/update-herate
+                db-herate
+                {:lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+                 :sahkoposti  [:s sahkoposti]})
+              (catch AwsServiceException e
+                (log/error e "Virhe tilan päivityksessä herätteelle" db-herate)
+                (throw e)))))))
 
 (defn -handleEmailResend
   "Merkistee sähköpostin lähetettäväksi uudestaan, jos osoite löytyy
@@ -35,29 +67,6 @@
   (let [messages (seq (.getRecords event))]
     (doseq [^SQSEvent$SQSMessage msg messages]
       (try
-        (let [herate (parse-string (.getBody msg) true)
-              kyselylinkki (:kyselylinkki herate)]
-          (if (some? (resend-checker herate))
-            (log/error {:herate herate :msg (resend-checker herate)})
-            (let [item (ac/get-item-by-kyselylinkki kyselylinkki)
-                  sahkoposti (or (not-empty (:sahkoposti herate))
-                                 (:sahkoposti item))]
-              (if item
-                (do
-                  (when (empty? (:sahkoposti herate))
-                    (log/warn "Ei sähköpostia herätteessä" herate
-                              ", käytetään dynamoon tallennettua" sahkoposti))
-                  (try
-                    (ac/update-herate
-                      item
-                      {:lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
-                       :sahkoposti  [:s sahkoposti]})
-                    (catch AwsServiceException e
-                      (log/error "Virhe kyselylinkin"
-                                 kyselylinkki
-                                 "päivityksessä"
-                                 e)
-                      (throw e))))
-                (log/error "Ei kyselylinkkiä" kyselylinkki)))))
+        (handle-single-herate! (parse-string (.getBody msg) true))
         (catch JsonParseException e
-          (log/error "Virhe viestin lukemisessa:" msg "\n" e))))))
+          (log/error e "Virhe viestin lukemisessa:" msg))))))
