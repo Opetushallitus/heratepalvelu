@@ -68,7 +68,8 @@
             (update-after-send herate n id))
           (update-when-not-sent herate n status)))
       (catch Exception e
-        (log/error e "virhe muistutuksen käsittelyssä")))))
+        (log/error e "virhe muistutuksen käsittelyssä")
+        (throw e)))))
 
 (defn query-muistutukset
   "Hakee tietokannasta herätteet, joilla on lähetettäviä muistutusviestejä."
