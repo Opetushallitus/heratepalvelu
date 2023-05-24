@@ -22,6 +22,7 @@
       (try
         (let [body (parse-string (.getBody msg) true)
               message (parse-string (:Message body) true)]
+          (log/info "Käsitellään SQS-heräte:" body)
           (ehoks/post-henkilomodify-event (:oidHenkilo message)))
-        (catch ExceptionInfo e
-          (log/error e))))))
+        (catch Exception e
+          (log/error e "käsiteltäessä viestiä" msg))))))

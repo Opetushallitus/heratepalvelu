@@ -107,8 +107,8 @@
    :tutkintotunnus                 (get-in suoritus [:koulutusmoduuli
                                                      :tunniste
                                                      :koodiarvo])
-   :tutkinnon_suorituskieli        (str/lower-case
-                                     (:koodiarvo (:suorituskieli suoritus)))
+   :tutkinnon_suorituskieli        (some-> suoritus :suorituskieli
+                                           :koodiarvo (str/lower-case))
    :osaamisala                     (get-osaamisalat suoritus (:oid oo))
    :koulutustoimija_oid            koulutustoimija
    :oppilaitos_oid                 (:oid (:oppilaitos oo))

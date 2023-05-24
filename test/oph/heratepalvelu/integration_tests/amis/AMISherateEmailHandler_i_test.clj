@@ -96,6 +96,10 @@
                 (str (:arvo-url mock-env) "vastauslinkki/v1/status/245")
                 {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
                 {:body {:voimassa_loppupvm "2022-02-01"}})
+  (mhc/bind-url :get
+                (str (:arvo-url mock-env) "vastauslinkki/v1/status/86423")
+                {:basic-auth [(:arvo-user mock-env) "arvo-pwd"] :as :json}
+                {:body {:voimassa_loppupvm "2022-01-28"}})
   (mhc/sloppy-bind-url :post
                        (str (:arvo-url mock-env) "vastauslinkki/v1")
                        {:body {:kysely_linkki "kysely.linkki/86423"}})
