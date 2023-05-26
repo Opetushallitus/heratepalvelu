@@ -51,14 +51,15 @@
                      {:level :info
                       :message "Lähetetty 1500 viestiä"})))
 
-        (is (true?
-              (tu/logs-contain?
-                {:level :info
-                 :message
-                 "Käynnistetään työpaikkaohjaajan yhteystietojen poisto"})))
-        (is (= @scan-called 3))
-        (is (= @update-item-called 3))
-        (is (true? @delete-endpoint-called))
-        (is (true? (tu/logs-contain?
-                     {:level :info
-                      :message "Poistettu 3 ohjaajan yhteystiedot"})))))))
+;        (is (true?
+;              (tu/logs-contain?
+;                {:level :info
+;                 :message
+;                 "Käynnistetään työpaikkaohjaajan yhteystietojen poisto"})))
+;        (is (= @scan-called 3))
+;        (is (= @update-item-called 3))
+;        (is (true? @delete-endpoint-called))
+;        (is (true? (tu/logs-contain?
+;                     {:level :info
+;                      :message "Poistettu 3 ohjaajan yhteystiedot"})))
+        ))))

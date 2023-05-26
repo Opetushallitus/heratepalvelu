@@ -1,9 +1,9 @@
 (ns oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler
   "Käsittelee ajastettuja operaatioita AMIS-puolella."
   (:require [clojure.tools.logging :as log]
-            [environ.core :refer [env]]
+;            [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.db.dynamodb :as ddb]
+;            [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.ehoks :as ehoks]))
 
 (gen-class
@@ -26,34 +26,34 @@
   (let [resp (ehoks/get-retry-kyselylinkit "2021-07-01"
                                            (str (c/local-date-now))
                                            1000)]
-    (log/info "Lähetetty" (:data (:body resp)) "viestiä"))
+    (log/info "Lähetetty" (:data (:body resp)) "viestiä")))
 
-  (log/info "Käynnistetään opiskelijan yhteystietojen poisto")
-  (let [hoksit (get-in (ehoks/delete-opiskelijan-yhteystiedot)
-                       [:body :data :hoks-ids])]
-    (log/info "Käydään läpi" (count hoksit) "hoksin tiedot")
-    (doseq [hoks hoksit]
-      (let [resp (ddb/scan {:filter-expression   "#id = :id"
-                            :expr-attr-names     {"#id" "ehoks-id"}
-                            :expr-attr-vals      {":id" [:n hoks]}}
-                           (:herate-table env))
-            items (:items resp)]
-        (doseq [item items]
-          (log/info
-            (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = "
-                 (:toimija_oppija item)
-                 ", tyyppi_kausi = "
-                 (:tyyppi_kausi item)
-                 ")"))
-          (ddb/update-item
-            {:toimija_oppija [:s (:toimija_oppija item)]
-             :tyyppi_kausi   [:s (:tyyppi_kausi item)]}
-            {:update-expr     "SET #eml = :eml_value, #puh = :puh_value"
-             :expr-attr-names {"#eml" "sahkoposti"
-                               "#puh" "puhelinnumero"}
-             :expr-attr-vals  {":eml_value" [:s ""] ":puh_value" [:s ""]}}
-            (:herate-table env)))))
-    (log/info "Opiskelijan yhteystietojen poisto valmis")))
+;  (log/info "Käynnistetään opiskelijan yhteystietojen poisto")
+;  (let [hoksit (get-in (ehoks/delete-opiskelijan-yhteystiedot)
+;                       [:body :data :hoks-ids])]
+;    (log/info "Käydään läpi" (count hoksit) "hoksin tiedot")
+;    (doseq [hoks hoksit]
+;      (let [resp (ddb/scan {:filter-expression   "#id = :id"
+;                            :expr-attr-names     {"#id" "ehoks-id"}
+;                            :expr-attr-vals      {":id" [:n hoks]}}
+;                           (:herate-table env))
+;            items (:items resp)]
+;        (doseq [item items]
+;          (log/info
+;            (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = "
+;                 (:toimija_oppija item)
+;                 ", tyyppi_kausi = "
+;                 (:tyyppi_kausi item)
+;                 ")"))
+;          (ddb/update-item
+;            {:toimija_oppija [:s (:toimija_oppija item)]
+;             :tyyppi_kausi   [:s (:tyyppi_kausi item)]}
+;            {:update-expr     "SET #eml = :eml_value, #puh = :puh_value"
+;             :expr-attr-names {"#eml" "sahkoposti"
+;                               "#puh" "puhelinnumero"}
+;             :expr-attr-vals  {":eml_value" [:s ""] ":puh_value" [:s ""]}}
+;            (:herate-table env)))))
+;    (log/info "Opiskelijan yhteystietojen poisto valmis")))
 
 (defn -handleMassHerateResend
   "Pyytää ehoksia lähettämäan viime 2 viikon herätteet uudestaan."
