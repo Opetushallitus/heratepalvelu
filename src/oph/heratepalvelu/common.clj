@@ -65,6 +65,11 @@
   []
   (str (UUID/randomUUID)))
 
+(defn current-time-millis
+  "Abstraktio System/currentTimeMillis:n ympäri, joka helpottaa testaamista."
+  ^Integer []
+  (System/currentTimeMillis))
+
 (defn local-date-now
   "Abstraktio LocalDate/now:n ympäri, joka helpottaa testaamista."
   ^LocalDate []
