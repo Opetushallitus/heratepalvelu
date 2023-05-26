@@ -28,7 +28,8 @@
          (catch Exception e
            (log/error e "Virhe kyselylinkin lähetyksessä eHOKSiin"
                       "Request:" req
-                      "Response:" (:body (ex-data e)))))))
+                      "Response:" (:body (ex-data e)))
+           (throw e)))))
 
 (defn update-and-return-herate!
   "Makes the given updates to both DDB and the argument herate
@@ -54,7 +55,7 @@
                          (log/error e "Virhe kyselylinkin hakemisessa Arvosta."
                                     "Request:" req-body
                                     "Response:" (:body (ex-data e)))
-                         {}))]
+                         (throw e)))]
     (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
       (update-and-return-herate! herate {:kyselylinkki [:s kyselylinkki]})
       (do (log/error "Arvo ei antanut kyselylinkkiä, heräte" herate)
