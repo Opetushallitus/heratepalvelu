@@ -71,21 +71,19 @@
                     :end "2022-02-02"
                     :limit 1000}
      :as :json}}
-;   {:method :delete
-;    :url "https://oph-ehoks.com/heratepalvelu/opiskelijan-yhteystiedot"
-;    :options
-;    {:headers {:ticket
-;               "service-ticket/ehoks-virkailija-backend/cas-security-check"}
-;     :as :json}}
-   ])
+   {:method :delete
+    :url "https://oph-ehoks.com/heratepalvelu/opiskelijan-yhteystiedot"
+    :options
+    {:headers {:ticket
+               "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+     :as :json}}])
 
 (def expected-cas-client-results [{:type :get-service-ticket
                                    :service "/ehoks-virkailija-backend"
                                    :suffix "cas-security-check"}
-;                                  {:type :get-service-ticket
-;                                   :service "/ehoks-virkailija-backend"
-;                                   :suffix "cas-security-check"}
-                                  ])
+                                  {:type :get-service-ticket
+                                   :service "/ehoks-virkailija-backend"
+                                   :suffix "cas-security-check"}])
 
 (deftest test-AMISehoksTimedOperationsHandler-integration
   (testing "AMISehoksTimedOperationsHandler integraatiotesti"
@@ -111,47 +109,47 @@
       (is (true? (tu/logs-contain? {:level :info
                                     :message "Lähetetty 2 viestiä"})))
 
-;      (is (true? (tu/logs-contain?
-;                   {:level :info
-;                    :message
-;                    "Käynnistetään opiskelijan yhteystietojen poisto"})))
-;      (is (true?
-;            (tu/logs-contain?
-;              {:level :info
-;               :message
-;              (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 1/1,"
-;                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
-;      (is (true?
-;            (tu/logs-contain?
-;              {:level :info
-;               :message
-;              (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 2/2,"
-;                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
-;      (is (true?
-;            (tu/logs-contain?
-;              {:level :info
-;               :message
-;              (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 3/3,"
-;                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
-;      (is (true? (tu/logs-contain?
-;                   {:level :info
-;                    :message "Opiskelijan yhteystietojen poisto valmis"})))
-;      (is (= (mdb/get-table-values (:herate-table mock-env))
-;             #{{:toimija_oppija [:s "1/1"]
-;                :tyyppi_kausi [:s "aloittaneet/2022-2023"]
-;                :ehoks-id [:n 1]
-;                :sahkoposti [:s ""]
-;                :puhelinnumero [:s ""]}
-;               {:toimija_oppija [:s "2/2"]
-;                :tyyppi_kausi [:s "aloittaneet/2022-2023"]
-;                :ehoks-id [:n 2]
-;                :sahkoposti [:s ""]
-;                :puhelinnumero [:s ""]}
-;               {:toimija_oppija [:s "3/3"]
-;                :tyyppi_kausi [:s "aloittaneet/2022-2023"]
-;                :ehoks-id [:n 3]
-;                :sahkoposti [:s ""]
-;                :puhelinnumero [:s ""]}}))
+      (is (true? (tu/logs-contain?
+                   {:level :info
+                    :message
+                    "Käynnistetään opiskelijan yhteystietojen poisto"})))
+      (is (true?
+            (tu/logs-contain?
+              {:level :info
+               :message
+               (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 1/1,"
+                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
+      (is (true?
+            (tu/logs-contain?
+              {:level :info
+               :message
+               (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 2/2,"
+                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
+      (is (true?
+            (tu/logs-contain?
+              {:level :info
+               :message
+               (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 3/3,"
+                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
+      (is (true? (tu/logs-contain?
+                   {:level :info
+                    :message "Opiskelijan yhteystietojen poisto valmis"})))
+      (is (= (mdb/get-table-values (:herate-table mock-env))
+             #{{:toimija_oppija [:s "1/1"]
+                :tyyppi_kausi [:s "aloittaneet/2022-2023"]
+                :ehoks-id [:n 1]
+                :sahkoposti [:s ""]
+                :puhelinnumero [:s ""]}
+               {:toimija_oppija [:s "2/2"]
+                :tyyppi_kausi [:s "aloittaneet/2022-2023"]
+                :ehoks-id [:n 2]
+                :sahkoposti [:s ""]
+                :puhelinnumero [:s ""]}
+               {:toimija_oppija [:s "3/3"]
+                :tyyppi_kausi [:s "aloittaneet/2022-2023"]
+                :ehoks-id [:n 3]
+                :sahkoposti [:s ""]
+                :puhelinnumero [:s ""]}}))
       (teardown-test))))
 
 ;; -handleMassHerateResend testi

@@ -51,19 +51,18 @@
                      {:level :info
                       :message "Lähetetty 1000 viestiä"})))
 
-;        (is (true?
-;              (tu/logs-contain?
-;                {:level :info
-;                 :message
-;                 "Käynnistetään opiskelijan yhteystietojen poisto"})))
-;        (is (true? @delete-endpoint-called))
-;        (is (= @scan-called 3))
-;        (is (= @update-item-called 3))
-;        (is (true?
-;              (tu/logs-contain?
-;                {:level :info
-;                 :message "Opiskelijan yhteystietojen poisto valmis"})))
-        ))))
+        (is (true?
+              (tu/logs-contain?
+                {:level :info
+                 :message
+                 "Käynnistetään opiskelijan yhteystietojen poisto"})))
+        (is (true? @delete-endpoint-called))
+        (is (= @scan-called 3))
+        (is (= @update-item-called 3))
+        (is (true?
+              (tu/logs-contain?
+                {:level :info
+                 :message "Opiskelijan yhteystietojen poisto valmis"})))))))
 
 (def mass-resend-results (atom []))
 
