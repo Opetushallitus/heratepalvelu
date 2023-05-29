@@ -97,12 +97,7 @@
   "Kertoo, onko herätteessä keskeytymisajanjakso, joka ei ole loppunut
   (avoin keskeytymisajanjakso)."
   [herate]
-  (and (seq (:keskeytymisajanjaksot herate))
-       (->> (:keskeytymisajanjaksot herate)
-            (sort-by :alku)
-            (last)
-            :loppu
-            (nil?))))
+  (not-every? #(some? (:loppu %)) (:keskeytymisajanjaksot herate)))
 
 (defn save-to-tables
   "Tallentaa jakso ja nipun tietokantaan."
