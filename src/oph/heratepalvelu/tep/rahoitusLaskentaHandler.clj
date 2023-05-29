@@ -152,7 +152,7 @@
                              (:oppisopimuksen-perusta herate)
                              #"_"))]))]
         (log/info "Uudelleenlaskettu kesto tapa-id:lle" tapa-id ":" kestot)
-        (when (jh/last-keskeytymisajanjakso-has-ended? herate)
+        (when (jh/has-open-keskeytymisajanjakso? herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
         (try
           ;; näille ei normaalikäsittelyssä luotu arvo-tunnusta.

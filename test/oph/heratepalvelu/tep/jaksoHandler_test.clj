@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.tep.jaksoHandler-test
   (:require [clojure.test :refer :all]
+            [clojure.data :refer [diff]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.tep.jaksoHandler :as jh]
             [oph.heratepalvelu.test-util :as tu])
@@ -73,17 +74,20 @@
       (is (not (jh/fully-keskeytynyt? herate3)))
       (is (not (jh/fully-keskeytynyt? herate4))))))
 
-(deftest test-last-keskeytymisajanjakso-has-ended?
-  (testing "Asd"
-    (let [herate1 {:keskeytymisajanjaksot [{:alku "2021-08-08"
-                                            :loppu "2021-08-10"}
-                                           {:alku "2021-08-01"
-                                            :loppu "2021-08-04"}]}
+(deftest test-has-open-keskeytymisajanjakso?
+  (testing "logic for testing whether a herate has an open keskeytymisajanjakso"
+    (let [herate1 {:keskeytymisajanjaksot
+                   [{:alku "2021-08-08" :loppu "2021-08-10"}
+                    {:alku "2021-08-01" :loppu "2021-08-04"}]}
           herate2 {}
-          herate3 {:keskeytymisajanjaksot [{:alku "2021-08-08"}]}]
-      (is (jh/last-keskeytymisajanjakso-has-ended? herate1))
-      (is (not (jh/last-keskeytymisajanjakso-has-ended? herate2)))
-      (is (not (jh/last-keskeytymisajanjakso-has-ended? herate3))))))
+          herate3 {:keskeytymisajanjaksot [{:alku "2021-08-08"}]}
+          herate4 {:keskeytymisajanjaksot
+                   [{:alku "2021-09-08"}
+                    {:alku "2021-08-01" :loppu "2021-08-04"}]}]
+      (is (not (jh/has-open-keskeytymisajanjakso? herate1)))
+      (is (not (jh/has-open-keskeytymisajanjakso? herate2)))
+      (is (jh/has-open-keskeytymisajanjakso? herate3))
+      (is (jh/has-open-keskeytymisajanjakso? herate4)))))
 
 (defn- mock-check-duplicate-hankkimistapa-get-item [query-params table]
   (when (and (= :n (first (:hankkimistapa_id query-params)))
@@ -278,7 +282,8 @@
                          :tyyppi "test-tyyppi"
                          :tutkinnonosa-id "test-tutkinnonosa-id"
                          :hankkimistapa-id 4
-                         :hankkimistapa-tyyppi "koulutussopimus_01"}
+                         :hankkimistapa-tyyppi "koulutussopimus_01"
+                         :keskeytymisajanjaksot []}
             results [{:type "mock-check-duplicate-hankkimistapa" :tapa-id 1}
                      {:type "mock-get-toimipiste"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}}}
@@ -518,7 +523,8 @@
                   (fn [_] nil)]
       (let [event (tu/mock-sqs-event {:opiskeluoikeus-oid "123.456.789"
                                       :loppupvm "2021-12-15"
-                                      :hankkimistapa-id 12345})
+                                      :hankkimistapa-id 12345
+                                      :keskeytymisajanjaksot []})
             context (tu/mock-handler-context)
             results [{:type "mock-get-opiskeluoikeus-catch-404"
                       :opiskeluoikeus-oid "123.456.789"}
@@ -534,7 +540,8 @@
                      {:type "mock-fully-keskeytynyt?"
                       :herate {:opiskeluoikeus-oid "123.456.789"
                                :loppupvm "2021-12-15"
-                               :hankkimistapa-id 12345}}
+                               :hankkimistapa-id 12345
+                               :keskeytymisajanjaksot []}}
                      {:type "mock-has-one-or-more-ammatillinen-tutkinto?"
                       :opiskeluoikeus
                       {:oid "123.456.789"
@@ -546,7 +553,8 @@
                      {:type "mock-save-jaksotunnus"
                       :herate {:opiskeluoikeus-oid "123.456.789"
                                :loppupvm "2021-12-15"
-                               :hankkimistapa-id 12345}
+                               :hankkimistapa-id 12345
+                               :keskeytymisajanjaksot []}
                       :opiskeluoikeus
                       {:oid "123.456.789"
                        :koulutustoimija "mock-koulutustoimija-oid"}
@@ -554,4 +562,9 @@
                      {:type "mock-patch-oht-tep-kasitelty"
                       :hankkimistapa-id 12345}]]
         (jh/-handleJaksoHerate {} event context)
-        (is (= results (vec (reverse @test-handleJaksoHerate-results))))))))
+        (is (= results (vec (reverse @test-handleJaksoHerate-results)))
+            (->> @test-handleJaksoHerate-results
+                 (reverse)
+                 (diff results)
+                 (clojure.string/join "\n")
+                 (str "Differences:\n")))))))
