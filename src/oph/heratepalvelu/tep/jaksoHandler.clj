@@ -93,11 +93,11 @@
     (when-let [kjakso-loppu (:loppu (last kjaksot))]
       (not (c/is-after (LocalDate/parse (:loppupvm herate)) kjakso-loppu)))))
 
-(defn last-keskeytymisajanjakso-has-ended?
-  "Palauttaa true, jos TEP-jakson viimeisessä keskeytymisajanjaksossa on
-  loppupäivämäärä."
+(defn has-open-keskeytymisajanjakso?
+  "Kertoo, onko herätteessä keskeytymisajanjakso, joka ei ole loppunut
+  (avoin keskeytymisajanjakso)."
   [herate]
-  (some? (:loppu (last (sort-by :alku (:keskeytymisajanjaksot herate))))))
+  (not-every? #(some? (:loppu %)) (:keskeytymisajanjaksot herate)))
 
 (defn save-to-tables
   "Tallentaa jakso ja nipun tietokantaan."
@@ -207,8 +207,7 @@
                :kasittelytila         [:s (:ei-niputettu c/kasittelytilat)]
                :sms_kasittelytila     [:s (:ei-lahetetty c/kasittelytilat)]
                :niputuspvm            [:s (str niputuspvm)]}]
-          (if (and (:keskeytymisajanjaksot herate)
-                   (not (last-keskeytymisajanjakso-has-ended? herate)))
+          (if (has-open-keskeytymisajanjakso? herate)
             (try
               (save-to-tables
                 jaksotunnus-table-data
