@@ -28,10 +28,7 @@
 (s/defschema herate-schema
   "AMIS-herätteen schema."
   (s/constrained herate-schema-base
-                 (fn [herate]
-                   (if (= (:kyselytyyppi herate) "aloittaneet")
-                     (not-empty (:sahkoposti herate))
-                     true))
+                 #(not (and (= (:kyselytyyppi ?) "aloittaneet") (empty? (:sahkoposti ?))))
                  "Aloituskyselyn herätteessä sahkoposti on pakollinen tieto"))
 
 (def kasittelytilat
