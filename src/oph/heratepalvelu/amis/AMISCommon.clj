@@ -99,9 +99,10 @@
               db-data
               {:toimija_oppija      [:s (str koulutustoimija "/" oppija)]
                :tyyppi_kausi        [:s (str kyselytyyppi "/" laskentakausi)]
-               :sahkoposti          [:s (:sahkoposti herate)]
                :suorituskieli       [:s suorituskieli]
-               :lahetystila         [:s (:ei-lahetetty c/kasittelytilat)]
+               :lahetystila         [:s (if (:sahkoposti herate)
+                                          (:ei-lahetetty c/kasittelytilat)
+                                          (:ei-laheteta c/kasittelytilat))]
                :sms-lahetystila     [:s (if (or
                                               (= kyselytyyppi
                                                  "tutkinnon_suorittaneet")
@@ -131,6 +132,8 @@
                :herate-source       [:s herate-source]}
               db-data-cond-values
               (cond-> db-data
+                (not-empty (:sahkoposti herate))
+                (assoc :sahkoposti [:s (:sahkoposti herate)])
                 (not-empty (:puhelinnumero herate))
                 (assoc :puhelinnumero [:s (:puhelinnumero herate)]))]
           (log/info "Tallennetaan kantaan" (str koulutustoimija "/" oppija)

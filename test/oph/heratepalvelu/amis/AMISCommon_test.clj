@@ -299,12 +299,12 @@
                                 :hankintakoulutuksen-toteuttaja
                                 [:s "test-hankintakoulutuksen-toteuttaja"],
                                 :suorituskieli [:s "fi"],
-                                :sahkoposti [:s nil],
                                 :toimija_oppija [:s "3.4.5.6/56.78.34"],
                                 :osaamisala [:s (str (seq ["a" "b" "c"]))],
                                 :heratepvm [:s "2021-12-16"],
                                 :herate-source [:s "sqs_viesti_ehoksista"],
-                                :lahetystila [:s "ei_lahetetty"],
+                                :lahetystila
+                                [:s (:ei-laheteta c/kasittelytilat)],
                                 :tallennuspvm [:s "2021-12-17"],
                                 :oppilaitos [:s "test-laitos-id"],
                                 :toimipiste-oid [:s "abc"],
@@ -316,7 +316,8 @@
                                 :koulutustoimija [:s "3.4.5.6"],
                                 :tutkintotunnus [:s "234"],
                                 :oppija-oid [:s "56.78.34"],
-                                :sms-lahetystila [:s "ei_lahetetty"],
+                                :sms-lahetystila
+                                [:s (:ei-lahetetty c/kasittelytilat)],
                                 :ehoks-id [:n "98"],
                                 :rahoituskausi [:s "2021-2022"],
                                 :puhelinnumero [:s "1234567"]},
