@@ -100,16 +100,16 @@
               {:toimija_oppija      [:s (str koulutustoimija "/" oppija)]
                :tyyppi_kausi        [:s (str kyselytyyppi "/" laskentakausi)]
                :suorituskieli       [:s suorituskieli]
-               :lahetystila         [:s (if (:sahkoposti herate)
+               :lahetystila         [:s (if (not-empty (:sahkoposti herate))
                                           (:ei-lahetetty c/kasittelytilat)
                                           (:ei-laheteta c/kasittelytilat))]
-               :sms-lahetystila     [:s (if (or
-                                              (= kyselytyyppi
-                                                 "tutkinnon_suorittaneet")
-                                              (= kyselytyyppi
-                                                 "tutkinnon_osia_suorittaneet"))
-                                          (:ei-lahetetty c/kasittelytilat)
-                                          (:ei-laheteta c/kasittelytilat))]
+               :sms-lahetystila
+               [:s (if (and
+                         (or (= kyselytyyppi "tutkinnon_suorittaneet")
+                             (= kyselytyyppi "tutkinnon_osia_suorittaneet"))
+                         (not-empty (:puhelinnumero herate)))
+                     (:ei-lahetetty c/kasittelytilat)
+                     (:ei-laheteta c/kasittelytilat))]
                :alkupvm             [:s alkupvm]
                :heratepvm           [:s heratepvm]
                :request-id          [:s uuid]

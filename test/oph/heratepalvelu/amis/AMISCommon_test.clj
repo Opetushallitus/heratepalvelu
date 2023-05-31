@@ -140,6 +140,12 @@
                       :opiskeluoikeus-oid "123.456.789"
                       :ehoks-id 98
                       :puhelinnumero "1234567"}
+            herate-5 {:kyselytyyppi "tutkinnon_suorittaneet"
+                      :alkupvm "2021-12-15"
+                      :oppija-oid "56.78.34"
+                      :opiskeluoikeus-oid "123.456.789"
+                      :ehoks-id 98
+                      :sahkoposti "a@b.com"}
             opiskeluoikeus {:oppilaitos {:oid "test-laitos-id"}
                             :oid "123.456.789"
                             :suoritukset
@@ -205,6 +211,7 @@
                        [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
                          :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
                          :suorituskieli {:koodiarvo "fi"}}]}}
+
                      {:type "mock-check-duplicate-herate?"
                       :oppija "56.78.34"
                       :koulutustoimija "3.4.5.6"
@@ -270,12 +277,13 @@
                        [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
                          :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
                          :suorituskieli {:koodiarvo "fi"}}]}}
+
                      {:type            "mock-check-duplicate-herate?",
                       :oppija          "56.78.34",
                       :koulutustoimija "3.4.5.6",
                       :laskentakausi   "2021-2022",
                       :kyselytyyppi    "tutkinnon_suorittaneet",
-                      :herate-source   "sqs_viesti_ehoksista"}
+                      :herate-source   (:ehoks c/herate-sources)}
                      {:type               "mock-get-osaamisalat",
                       :suoritus           {:tyyppi
                                            {:koodiarvo "ammatillinentutkinto"},
@@ -302,7 +310,7 @@
                                 :toimija_oppija [:s "3.4.5.6/56.78.34"],
                                 :osaamisala [:s (str (seq ["a" "b" "c"]))],
                                 :heratepvm [:s "2021-12-16"],
-                                :herate-source [:s "sqs_viesti_ehoksista"],
+                                :herate-source [:s (:ehoks c/herate-sources)],
                                 :lahetystila
                                 [:s (:ei-laheteta c/kasittelytilat)],
                                 :tallennuspvm [:s "2021-12-17"],
@@ -333,7 +341,66 @@
                                                   "ammatillinentutkinto"},
                                          :koulutusmoduuli {:tunniste
                                                            {:koodiarvo "234"}},
-                                         :suorituskieli {:koodiarvo "fi"}}]}}]]
+                                         :suorituskieli {:koodiarvo "fi"}}]}}
+
+                     {:type "mock-check-duplicate-herate?"
+                      :oppija "56.78.34"
+                      :koulutustoimija "3.4.5.6"
+                      :laskentakausi "2021-2022"
+                      :kyselytyyppi "tutkinnon_suorittaneet"
+                      :herate-source (:ehoks c/herate-sources)}
+                     {:type "mock-get-osaamisalat"
+                      :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}
+                                 :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
+                                 :suorituskieli {:koodiarvo "fi"}}
+                      :opiskeluoikeus-oid "123.456.789"}
+                     {:type "mock-get-toimipiste"
+                      :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}
+                                 :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
+                                 :suorituskieli {:koodiarvo "fi"}}}
+                     {:type "mock-get-hankintakoulutuksen-toteuttaja"
+                      :ehoks-id 98}
+                     {:type "mock-put-item"
+                      :item {:toimija_oppija [:s "3.4.5.6/56.78.34"]
+                             :tyyppi_kausi
+                             [:s "tutkinnon_suorittaneet/2021-2022"]
+                             :sahkoposti [:s "a@b.com"]
+                             :suorituskieli [:s "fi"]
+                             :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+                             :sms-lahetystila
+                             [:s (:ei-laheteta c/kasittelytilat)]
+                             :alkupvm [:s "2021-12-17"]
+                             :heratepvm [:s "2021-12-15"]
+                             :request-id [:s "test-uuid"]
+                             :oppilaitos [:s "test-laitos-id"]
+                             :ehoks-id [:n "98"]
+                             :opiskeluoikeus-oid [:s "123.456.789"]
+                             :oppija-oid [:s "56.78.34"]
+                             :koulutustoimija [:s "3.4.5.6"]
+                             :kyselytyyppi [:s "tutkinnon_suorittaneet"]
+                             :rahoituskausi [:s "2021-2022"]
+                             :viestintapalvelu-id [:n "-1"]
+                             :voimassa-loppupvm [:s "2022-01-15"]
+                             :tutkintotunnus [:s "234"]
+                             :osaamisala [:s (str (seq ["a" "b" "c"]))]
+                             :toimipiste-oid [:s "abc"]
+                             :hankintakoulutuksen-toteuttaja
+                             [:s "test-hankintakoulutuksen-toteuttaja"]
+                             :tallennuspvm [:s "2021-12-17"]
+                             :rahoitusryhma [:s "02"]
+                             :herate-source [:s (:ehoks c/herate-sources)]}
+                      :options
+                      {:cond-expr "attribute_not_exists(kyselylinkki)"}}
+                     {:type "mock-patch-amis-paattoherate-kasitelty"
+                      :ehoks-id 98}
+                     {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"
+                      :opiskeluoikeus
+                      {:oppilaitos {:oid "test-laitos-id"}
+                       :oid "123.456.789"
+                       :suoritukset
+                       [{:tyyppi {:koodiarvo "ammatillinentutkinto"}
+                         :koulutusmoduuli {:tunniste {:koodiarvo "234"}}
+                         :suorituskieli {:koodiarvo "fi"}}]}}]]
         (ac/check-and-save-herate! herate-1 opiskeluoikeus koulutustoimija
                                    (:ehoks c/herate-sources))
         (ac/check-and-save-herate! herate-2 opiskeluoikeus koulutustoimija
@@ -341,6 +408,8 @@
         (ac/check-and-save-herate! herate-3 opiskeluoikeus koulutustoimija
                                    (:ehoks c/herate-sources))
         (ac/check-and-save-herate! herate-4 opiskeluoikeus koulutustoimija
+                                   (:ehoks c/herate-sources))
+        (ac/check-and-save-herate! herate-5 opiskeluoikeus koulutustoimija
                                    (:ehoks c/herate-sources))
         (is (= results (vec (reverse @test-results))))))))
 
