@@ -16,15 +16,21 @@
            (java.time.format DateTimeParseException)
            (java.util UUID)))
 
-(s/defschema herate-schema
-  "AMIS-herätteen schema."
+(s/defschema herate-schema-base
   {:ehoks-id                       s/Num
    :kyselytyyppi                   s/Str
    :opiskeluoikeus-oid             s/Str
    :oppija-oid                     s/Str
-   :sahkoposti                     (s/constrained s/Str not-empty)
+   (s/optional-key :sahkoposti)    (s/maybe s/Str)
    (s/optional-key :puhelinnumero) (s/maybe s/Str)
    :alkupvm                        s/Str})
+
+(s/defschema herate-schema
+  "AMIS-herätteen schema."
+  (s/constrained herate-schema-base
+                 #(not (and (= (:kyselytyyppi %) "aloittaneet")
+                            (empty? (:sahkoposti %))))
+                 "Aloituskyselyn herätteessä sahkoposti on pakollinen tieto"))
 
 (def kasittelytilat
   "Heräteviestien lähetyksien käsittelytilat."
