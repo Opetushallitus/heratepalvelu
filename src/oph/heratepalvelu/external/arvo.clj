@@ -27,9 +27,12 @@
 (defn- arvo-get
   "Tekee GET-kyselyn Arvoon."
   [uri-path]
-  (client/get (str (:arvo-url env) uri-path)
-              {:basic-auth [(:arvo-user env) @pwd]
-               :as         :json}))
+  (try (client/get (str (:arvo-url env) uri-path)
+                   {:as :json :basic-auth [(:arvo-user env) @pwd]})
+       (catch ExceptionInfo e
+         (log/error e "Virhe Arvo-kutsussa. URI:" uri-path
+                    "Response:" (:body (ex-data e)))
+         (throw e))))
 
 (defn- arvo-patch
   "Tekee PATCH-kyselyn Arvoon."
@@ -145,8 +148,10 @@
 (defn get-kyselylinkki-status
   "Hakee Arvolta AMIS-kyselylinkin tilan."
   [linkki]
-  (:body (arvo-get (str "vastauslinkki/v1/status/"
-                        (last (str/split linkki #"/"))))))
+  (->> (last (str/split linkki #"/"))
+       (str "vastauslinkki/v1/status/")
+       (arvo-get)
+       :body))
 
 (defn get-nippulinkki-status
   "Hakee TEP-kyselylinkin tilan."
