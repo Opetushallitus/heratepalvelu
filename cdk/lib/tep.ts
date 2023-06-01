@@ -300,7 +300,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         caller_id: `1.2.246.562.10.00000000001.${id}-niputusHandler`,
       },
       memorySize: Token.asNumber(1024),
-      reservedConcurrentExecutions: 1,
+      reservedConcurrentExecutions: 0,
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tep.niputusHandler::handleNiputus",
       tracing: lambda.Tracing.ACTIVE
