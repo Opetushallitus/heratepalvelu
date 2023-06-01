@@ -8,7 +8,8 @@
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all])
-  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
+  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
+           (clojure.lang ExceptionInfo)))
 
 (gen-class
   :name "oph.heratepalvelu.amis.AMISMuistutusHandler"
@@ -65,8 +66,17 @@
         (log/info "Arvo-status" status)
         (if (and (not (:vastattu status)) still-open?)
           (let [id (:id (send-reminder-email herate))]
+            (log/info "Ei vielä vastattu, lähetetään muistutus")
             (update-after-send herate n id))
           (update-when-not-sent herate n status)))
+      (catch ExceptionInfo e
+        (if (= 404 (:status (ex-data e)))
+          (do
+            (log/warn "Kyselylinkkiä ei löytynyt!  Merkitään loppuneeksi.")
+            (update-when-not-sent herate n {}))
+          (do
+            (log/error e "virhe muistutuksen käsittelyssä, tiedot:" (ex-data e))
+            (throw e))))
       (catch Exception e
         (log/error e "virhe muistutuksen käsittelyssä")
         (throw e)))))
