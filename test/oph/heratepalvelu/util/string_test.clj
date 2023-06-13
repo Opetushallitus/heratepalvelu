@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.util.string-test 
+(ns oph.heratepalvelu.util.string-test
   (:require
    [clojure.test :refer [are deftest testing]]
    [oph.heratepalvelu.util.string :as s]))

@@ -205,8 +205,12 @@
                                (mock-get-opiskeluoikeus-catch-404 oo-oid))
                               expected)
       "1.2.3.4" (map c/alku-and-loppu-to-localdate
-                     [{:tila {:koodiarvo "lasna"} :alku "2022-01-01" :loppu "2022-01-29"}
-                      {:tila {:koodiarvo "loma"} :alku "2022-01-30" :loppu "2022-02-09"}
+                     [{:tila {:koodiarvo "lasna"}
+                       :alku "2022-01-01"
+                       :loppu "2022-01-29"}
+                      {:tila {:koodiarvo "loma"}
+                       :alku "2022-01-30"
+                       :loppu "2022-02-09"}
                       {:tila {:koodiarvo "lasna"} :alku "2022-02-10"}])
       "1.2.3.5" (map c/alku-and-loppu-to-localdate
                      [{:tila {:koodiarvo "lasna"}
@@ -410,7 +414,8 @@
 (deftest test-jakso-active?
   (let [jakso-1 {:alku (LocalDate/parse "2022-01-03")
                  :loppu (LocalDate/parse "2022-05-05")
-                 :keskeytymisajanjaksot [{:alku "2022-02-20" :loppu "2022-03-03"}
+                 :keskeytymisajanjaksot [{:alku "2022-02-20"
+                                          :loppu "2022-03-03"}
                                          {:alku "2022-04-08"}]}
         jakso-2 {:alku (LocalDate/parse "2022-01-01")}
         opiskeluoikeus-1 (mock-get-opiskeluoikeus-catch-404 "1.2.3.4")
@@ -418,9 +423,12 @@
     (testing "Funktio palauttaa"
       (testing (str "`true`, kun päivämäärä on jakson sisällä, eikä se kuulu "
                     "mihinkään keskeytymisajanjaksoon.")
-        (are [pvm] (nh/jakso-active? jakso-1 opiskeluoikeus-1 (LocalDate/parse pvm))
+        (are [pvm] (nh/jakso-active? jakso-1 opiskeluoikeus-1
+                                     (LocalDate/parse pvm))
           "2022-01-03" "2022-02-19" "2022-03-04" "2022-04-07" "2022-02-10")
-        (are [pvm] (nh/jakso-active? jakso-2 opiskeluoikeus-2 (LocalDate/parse pvm))
+        (are [pvm] (nh/jakso-active? jakso-2
+                                     opiskeluoikeus-2
+                                     (LocalDate/parse pvm))
           "2022-01-01" "2022-01-21" "2022-02-01"))
       (testing "`false`,"
         (testing "kun opiskeluoikeus on `nil`."
@@ -428,21 +436,30 @@
             "2022-01-03" "2022-02-19" "2022-03-04" "2022-04-07" "2022-02-10"))
         (testing "kun päivämäärä"
           (testing "sisältyy keskeytymisajanjaksoon."
-            (are [pvm] (not (nh/jakso-active? jakso-1 opiskeluoikeus-1 (LocalDate/parse pvm)))
+            (are [pvm] (not (nh/jakso-active? jakso-1
+                                              opiskeluoikeus-1
+                                              (LocalDate/parse pvm)))
               "2022-02-20" "2022-03-01" "2022-03-03" "2022-04-08" "2022-05-04")
-            (are [pvm] (not (nh/jakso-active? jakso-2 opiskeluoikeus-2 (LocalDate/parse pvm)))
+            (are [pvm] (not (nh/jakso-active? jakso-2
+                                              opiskeluoikeus-2
+                                              (LocalDate/parse pvm)))
               "2022-02-02" "2022-03-21" "2023-01-01"))
           (testing "ei ole jakson alku- ja loppupäivämäärien välillä."
-            (are [pvm] (not (nh/jakso-active? jakso-1 opiskeluoikeus-1 (LocalDate/parse pvm)))
+            (are [pvm] (not (nh/jakso-active? jakso-1
+                                              opiskeluoikeus-1
+                                              (LocalDate/parse pvm)))
               "2022-01-02" "2022-05-06" "2021-12-30" "2023-01-01")
-            (are [pvm] (not (nh/jakso-active? jakso-2 opiskeluoikeus-1 (LocalDate/parse pvm)))
+            (are [pvm] (not (nh/jakso-active? jakso-2
+                                              opiskeluoikeus-1
+                                              (LocalDate/parse pvm)))
               "2021-12-31" "2021-03-21" "2019-01-01")))))))
 
 (deftest test-get-keskeytymisajanjaksot
   (testing "Funktio palauttaa jakson tai tähän liitetyn opiskeluoikeuden
            sisältämät keskeytymisajanjaksot"
-    (are [jakso opiskeluoikeus expected] (= (nh/get-keskeytymisajanjaksot jakso opiskeluoikeus)
-                                            (map c/alku-and-loppu-to-localdate expected))
+    (are [jakso opiskeluoikeus expected]
+         (= (nh/get-keskeytymisajanjaksot jakso opiskeluoikeus)
+            (map c/alku-and-loppu-to-localdate expected))
       {} {} '()
       ; ---
       {:keskeytymisajanjaksot [{:alku "2022-01-12" :loppu "2022-01-12"}
@@ -469,7 +486,9 @@
                                      (mock-get-opiskeluoikeus-catch-404 %2))
                              {}
                              (map :opiskeluoikeus_oid jaksot-2))
-          jaksot (map (comp c/alku-and-loppu-to-localdate nh/harmonize-date-keys) jaksot-2)]
+          jaksot (map (comp c/alku-and-loppu-to-localdate
+                            nh/harmonize-date-keys)
+                      jaksot-2)]
       (are [pvm kesto jakso-ids] (= (do-rounding
                                       (nh/calculate-single-day-kestot
                                         jaksot

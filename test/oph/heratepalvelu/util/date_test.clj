@@ -1,4 +1,4 @@
-(ns oph.heratepalvelu.util.date-test 
+(ns oph.heratepalvelu.util.date-test
   (:require
    [clojure.test :refer [deftest is testing]]
    [oph.heratepalvelu.util.date :as d])

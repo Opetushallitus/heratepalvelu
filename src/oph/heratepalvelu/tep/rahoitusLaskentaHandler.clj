@@ -117,8 +117,9 @@
                      :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
                      :vanha-kesto           [:n kesto-vanha]
-                     ; NOTE: Uudessa laskutavassa osa-aikaisuutta ei oteta huomioon
-                     ; :uusi-kesto-with-oa    [:n kesto] 
+                     ; NOTE: Uudessa laskutavassa osa-aikaisuutta ei oteta
+                     ;       huomioon
+                     ; :uusi-kesto-with-oa    [:n kesto]
                      ; :uusi-kesto-without-oa [:n kesto]
                      :uusi-kesto [:n kesto]
                      :save-timestamp [:s (str start-time)]}
@@ -130,7 +131,8 @@
                     (assoc :ohjaaja_puhelinnumero
                            [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
                     (not-empty (:tutkinnonosa-koodi herate))
-                    (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
+                    (assoc :tutkinnonosa_koodi
+                           [:s (:tutkinnonosa-koodi herate)])
                     (not-empty (:tutkinnonosa-nimi herate))
                     (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
                     (some? (:osa-aikaisuus herate))
@@ -142,7 +144,10 @@
                                    (:oppisopimuksen-perusta herate)
                                    #"_"))]))
             ]
-        (log/info (str "Uudelleenlaskettu kesto tapa-id:lle " tapa-id ": " kesto))
+        (log/info (str "Uudelleenlaskettu kesto tapa-id:lle "
+                       tapa-id
+                       ": "
+                       kesto))
         (when (jh/has-open-keskeytymisajanjakso? herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
         (try

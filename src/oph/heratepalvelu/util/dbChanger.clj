@@ -106,7 +106,8 @@
                 (println "Vanha kesto"
                          (:kesto jakso)
                          "- Uudelleen laskettu kesto"
-                         (get uudelleenlasketut-kestot (:hankkimistapa_id jakso)))))))
+                         (get uudelleenlasketut-kestot
+                              (:hankkimistapa_id jakso)))))))
         (catch Exception e (log/error e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan

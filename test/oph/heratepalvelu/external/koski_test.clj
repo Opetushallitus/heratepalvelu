@@ -27,7 +27,8 @@
       (is (nil? (koski/get-opiskeluoikeus-catch-404! "1.2.3"))))
     (with-redefs [oph.heratepalvelu.external.koski/get-opiskeluoikeus
                   mock-throws-other-error]
-      (is (thrown? ExceptionInfo (koski/get-opiskeluoikeus-catch-404! "1.2"))))))
+      (is (thrown? ExceptionInfo
+                   (koski/get-opiskeluoikeus-catch-404! "1.2"))))))
 
 (def test-get-updated-opiskeluoikeudet-saved-params (atom {}))
 

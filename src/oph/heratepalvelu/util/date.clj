@@ -25,4 +25,3 @@
   [^LocalDate date]
   (not (or (= (.getDayOfWeek date) DayOfWeek/SATURDAY)
            (= (.getDayOfWeek date) DayOfWeek/SUNDAY))))
-

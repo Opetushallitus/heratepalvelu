@@ -14,4 +14,3 @@
   [& strs]
   (reduce #(let [s (cast String %2)]
              (if (neg? (compare % s)) % s)) strs))
-

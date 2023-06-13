@@ -131,9 +131,10 @@
   (let [do-one #(add-to-jaksot-by-day
                   %1 %2 (get opiskeluoikeudet (:opiskeluoikeus_oid %2)))]
     (round-vals
-      (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
-              {}
-              (map handle-one-day (vals (reduce do-one {} oppijan-jaksot)))))))
+      (reduce
+        (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
+        {}
+        (map handle-one-day (vals (reduce do-one {} oppijan-jaksot)))))))
 
 ; Alla on vaihtoehtoinen tapa laskea kestot vanhalla laskentatavalla. Erona
 ; yllä olevaan tapaan on se, että alla oleva antaa jakson kestoksi nolla, jos
@@ -156,9 +157,10 @@
 ;                                    jaksot
 ;                                    opiskeluoikeudet)
 ;                           ; Huomioidaan vain päivät maanantaista perjantaihin.
-;                           (filter d/weekday?
-;                                   (d/range (apply d/earliest (map :alku jaksot))
-;                                            (apply d/latest (map :loppu jaksot))))))
+;                           (filter
+;                             d/weekday?
+;                             (d/range (apply d/earliest (map :alku jaksot))
+;                                      (apply d/latest (map :loppu jaksot))))))
 ;                (get-osa-aikaisuus-kertoimet jaksot))))))
 
 ; (defn get-osa-aikaisuus-kertoimet
@@ -183,15 +185,16 @@
 (defn get-keskeytymisajanjaksot
   [jakso opiskeluoikeus]
   (let [keskeytynyt-tilat #{"valiaikaisestikeskeytynyt"} ; "loma"}
-        kjaksot-in-jakso (map c/alku-and-loppu-to-localdate (:keskeytymisajanjaksot jakso))
+        kjaksot-in-jakso (map c/alku-and-loppu-to-localdate
+                              (:keskeytymisajanjaksot jakso))
         kjaksot-in-opiskeluoikeus
         (filter #(contains? keskeytynyt-tilat (:koodiarvo (:tila %)))
                 (get-opiskeluoikeusjaksot opiskeluoikeus))]
   (concat kjaksot-in-jakso kjaksot-in-opiskeluoikeus)))
 
 (defn in-jakso?
-  "Tarkistaa sisältyykö päivämäärä `pvm` jaksoon `jakso`. Oletus on, että 
-  sekä pvm että jakson avaimet :alku ja :loppu ovat tyyppiä `LocalDate`. 
+  "Tarkistaa sisältyykö päivämäärä `pvm` jaksoon `jakso`. Oletus on, että
+  sekä pvm että jakson avaimet :alku ja :loppu ovat tyyppiä `LocalDate`.
   Palauttaa `true` jos päivämäärä sisältyy jaksoon, muuten `false`."
   [pvm jakso]
   (let [alku (:alku jakso) loppu (:loppu jakso)]
