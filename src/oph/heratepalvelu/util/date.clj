@@ -16,9 +16,10 @@
   "Rakentaa laiskan sekvenssin päivämääristä alkupäivämäärän `start` ja
   loppupäivämäärän `end` perusteella. `start` ja `end` kuuluvat mukaan
   sekvenssiin."
-  [^LocalDate start ^LocalDate end]
-  (let [end+1 (.plusDays end 1)]
-    (take-while #(.isBefore % end+1) (iterate #(.plusDays % 1) start))))
+  [start end]
+  (let [end+1 (.plusDays ^LocalDate end 1)]
+    (take-while #(.isBefore ^LocalDate % end+1)
+                (iterate #(.plusDays ^LocalDate % 1) start))))
 
 (defn weekday?
   "Tarkistaa, onko annettu päivämäärä arkipäivä."

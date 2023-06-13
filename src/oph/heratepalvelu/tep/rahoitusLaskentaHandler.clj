@@ -15,7 +15,6 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.tep.jaksoHandler :as jh]
             [oph.heratepalvelu.tep.niputusHandler :as nh]

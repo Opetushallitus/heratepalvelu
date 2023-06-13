@@ -26,7 +26,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn round-vals [m] (reduce-kv #(assoc %1 %2 (Math/round %3)) {} m))
+(defn round-vals [m] (reduce-kv #(assoc %1 %2 (Math/round ^Double %3)) {} m))
 
 (defn not-in-keskeytymisajanjakso?
   "Varmistaa, että annettu päivämäärä ei kuulu keskeytymisajanjaksoon."
@@ -177,7 +177,7 @@
        ; Add :loppu dates to each ajanjakso
        (reduce
          #(cons (if (first %1)
-                  (assoc %2 :loppu (.minusDays (:alku (first %1)) 1))
+                  (assoc %2 :loppu (.minusDays ^LocalDate (:alku (first %1)) 1))
                   %2)
                 %1)
          [])))
@@ -196,7 +196,7 @@
   "Tarkistaa sisältyykö päivämäärä `pvm` jaksoon `jakso`. Oletus on, että
   sekä pvm että jakson avaimet :alku ja :loppu ovat tyyppiä `LocalDate`.
   Palauttaa `true` jos päivämäärä sisältyy jaksoon, muuten `false`."
-  [pvm jakso]
+  [^LocalDate pvm jakso]
   (let [alku (:alku jakso) loppu (:loppu jakso)]
     (and (or (.isAfter pvm alku) (.isEqual pvm alku))
          (or (nil? loppu) (.isBefore pvm loppu) (.isEqual pvm loppu)))))
