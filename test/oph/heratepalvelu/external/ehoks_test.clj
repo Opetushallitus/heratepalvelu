@@ -241,8 +241,8 @@
                                        :end    "2021-10-05"}
                         :as :json}}}]
         (is (= (ehoks/get-tyoelamajaksot-active-between! "1.2.3.4"
-                                                        "2021-08-01"
-                                                        "2021-10-05")
+                                                         "2021-08-01"
+                                                         "2021-10-05")
                expected))))))
 
 (deftest test-patch-amis-aloitus-ja-paattoheratteet-kasitellyt

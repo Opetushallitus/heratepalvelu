@@ -190,7 +190,7 @@
         kjaksot-in-opiskeluoikeus
         (filter #(contains? keskeytynyt-tilat (:koodiarvo (:tila %)))
                 (get-opiskeluoikeusjaksot opiskeluoikeus))]
-  (concat kjaksot-in-jakso kjaksot-in-opiskeluoikeus)))
+    (concat kjaksot-in-jakso kjaksot-in-opiskeluoikeus)))
 
 (defn in-jakso?
   "Tarkistaa sisältyykö päivämäärä `pvm` jaksoon `jakso`. Oletus on, että
@@ -296,8 +296,8 @@
               memoized-opiskeluoikeudet
               (conj memoized-opiskeluoikeudet
                     [oid (koski/get-opiskeluoikeus-catch-404! oid)])))
-            {}
-            (map :opiskeluoikeus_oid jaksot)))
+          {}
+          (map :opiskeluoikeus_oid jaksot)))
 
 (defn calculate-kestot!
   [jaksot]
@@ -308,16 +308,15 @@
            (let [concurrent-jaksot (get-concurrent-jaksot-from-ehoks!
                                      oppijan-jaksot)
                  opiskeluoikeudet  (get-and-memoize-opiskeluoikeudet!
-                                    concurrent-jaksot)]
-            ; Tilapäinen: Työpaikkajaksojen kestot lasketaan sekä uudella
-            ; että vanhalla laskentatavalla. Samanaikaiset jaksot ja
-            ; opiskeluoikeudet haettu yllä, jotta niitä ei tarvitse hakea
-            ; eHOKSista ja Koskesta kahteen kertaan.
-            [(calculate-kestot     concurrent-jaksot opiskeluoikeudet)
-             (calculate-kestot-old concurrent-jaksot opiskeluoikeudet)]))
+                                     concurrent-jaksot)]
+             ; Tilapäinen: Työpaikkajaksojen kestot lasketaan sekä uudella
+             ; että vanhalla laskentatavalla. Samanaikaiset jaksot ja
+             ; opiskeluoikeudet haettu yllä, jotta niitä ei tarvitse hakea
+             ; eHOKSista ja Koskesta kahteen kertaan.
+             [(calculate-kestot     concurrent-jaksot opiskeluoikeudet)
+              (calculate-kestot-old concurrent-jaksot opiskeluoikeudet)]))
          ; Ryhmitellään jaksot oppija-oid:n perusteella:
          (vals (group-by :oppija_oid jaksot)))))
-
 
 (defn retrieve-and-update-jaksot!
   "Hakee nippuun kuuluvat jaksot tietokannasta, laskee niiden kestot, päivittää

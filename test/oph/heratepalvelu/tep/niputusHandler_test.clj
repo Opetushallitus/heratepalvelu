@@ -180,8 +180,8 @@
 
 (deftest test-get-and-memoize-opiskeluoikeudet
   (with-redefs
-   [oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404!
-    mock-get-opiskeluoikeus-catch-404]
+    [oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404!
+     mock-get-opiskeluoikeus-catch-404]
     (testing "Funktio palauttaa samat opiskeluoikeudet kun
              `get-test-opiskeluoikeudet` ja `get-opiskeluoikeus-catch-404!`
              -kutsujen määrä on yhtä suuri kuin uniikkien haettavien
@@ -189,7 +189,7 @@
       (are [oids]
            (= (do (reset! mock-get-opiskeluoikeus-catch-404-count 0)
                   [(nh/get-and-memoize-opiskeluoikeudet!
-                   (map #(assoc {} :opiskeluoikeus_oid %) oids))
+                     (map #(assoc {} :opiskeluoikeus_oid %) oids))
                    @mock-get-opiskeluoikeus-catch-404-count])
               [(get-test-opiskeluoikeudet oids) (count (distinct oids))])
         []
@@ -198,11 +198,10 @@
         ["1.2.3.a" "1.2.3.a" "1.2.3.8" "1.2.3.b" "1.2.3.8" "1.2.3.b"]
         (map str (repeat "1.2.3.") [9 10 6 6 7 10 6 8 10])))))
 
-
 (deftest test-get-opiskeluoikeusjaksot
   (testing "Funktio hakee onnistuneesti opiskeluoikeuden opiskeluoikeusjaksot."
     (are [oo-oid expected] (= (nh/get-opiskeluoikeusjaksot
-                               (mock-get-opiskeluoikeus-catch-404 oo-oid))
+                                (mock-get-opiskeluoikeus-catch-404 oo-oid))
                               expected)
       "1.2.3.4" (map c/alku-and-loppu-to-localdate
                      [{:tila {:koodiarvo "lasna"}
@@ -495,28 +494,28 @@
                                         opiskeluoikeudet
                                         (LocalDate/parse pvm)))
                                     (zipmap jakso-ids (repeat kesto)))
-           "2021-01-12" 0     []
-           "2021-01-27" 1.0   [7]
-           "2021-02-03" 0.5   [7 16]
-           "2021-05-15" 0.333 [4 7 16]
-           "2021-06-15" 0.5   [4 7]
-           "2021-08-19" 0.333 [4 7 9]
-           "2021-08-24" 0.25  [4 7 9 10]
-           "2021-08-28" 0.333 [4 7 10]
-           "2021-09-02" 0.167 [2 4 5 7 10 14]
-           "2021-09-03" 0.143 [2 4 5 7 10 11 14]
-           "2021-09-06" 0.125 [2 4 5 7 10 11 13 14]
-           "2021-09-18" 0.143 [2 4 5 7 11 13 14]
-           "2021-10-01" 0.167 [2 4 5 7 13 14]
-           "2021-10-15" 0.125 [2 3 4 5 7 8 14 15]
-           "2021-10-31" 0.167 [2 4 5 7 8 14]
-           "2021-11-14" 0.143 [2 4 5 7 8 12 14]
-           "2021-11-22" 0.167 [2 4 5 7 8 14]
-           "2021-12-05" 0.167 [2 5 7 8 12 14]
-           "2021-12-17" 0.333 [5 7 14]
-           "2022-06-04" 0.5   [5 14]
-           "2024-07-21" 1.0   [14]
-           "2024-12-16" 0     []))))
+        "2021-01-12" 0     []
+        "2021-01-27" 1.0   [7]
+        "2021-02-03" 0.5   [7 16]
+        "2021-05-15" 0.333 [4 7 16]
+        "2021-06-15" 0.5   [4 7]
+        "2021-08-19" 0.333 [4 7 9]
+        "2021-08-24" 0.25  [4 7 9 10]
+        "2021-08-28" 0.333 [4 7 10]
+        "2021-09-02" 0.167 [2 4 5 7 10 14]
+        "2021-09-03" 0.143 [2 4 5 7 10 11 14]
+        "2021-09-06" 0.125 [2 4 5 7 10 11 13 14]
+        "2021-09-18" 0.143 [2 4 5 7 11 13 14]
+        "2021-10-01" 0.167 [2 4 5 7 13 14]
+        "2021-10-15" 0.125 [2 3 4 5 7 8 14 15]
+        "2021-10-31" 0.167 [2 4 5 7 8 14]
+        "2021-11-14" 0.143 [2 4 5 7 8 12 14]
+        "2021-11-22" 0.167 [2 4 5 7 8 14]
+        "2021-12-05" 0.167 [2 5 7 8 12 14]
+        "2021-12-17" 0.333 [5 7 14]
+        "2022-06-04" 0.5   [5 14]
+        "2024-07-21" 1.0   [14]
+        "2024-12-16" 0     []))))
 
 (deftest test-calculate-kestot-old
   (testing "`calculate-kestot-old` laskee kestot oikein."
@@ -531,38 +530,37 @@
 
 (deftest test-calculate-kestot
   (testing "`calculate-kestot` laskee kestot oikein."
-      (is (= (nh/calculate-kestot
-                            jaksot-2
-                            (get-test-opiskeluoikeudet
-                              (map :opiskeluoikeus_oid jaksot-2)))
-             {1 1
-              2 15
-              3 1
-              4 53
-              5 359
-              6 0
-              7 169
-              8 9
-              9 18
-              10 5
-              11 4
-              12 4
-              13 5
-              14 725
-              15 2
-              16 62
-              17 0}))))
+    (is (= (nh/calculate-kestot
+             jaksot-2
+             (get-test-opiskeluoikeudet (map :opiskeluoikeus_oid jaksot-2)))
+           {1 1
+            2 15
+            3 1
+            4 53
+            5 359
+            6 0
+            7 169
+            8 9
+            9 18
+            10 5
+            11 4
+            12 4
+            13 5
+            14 725
+            15 2
+            16 62
+            17 0}))))
 
 (deftest test-calculate-kestot!
   (testing "`calculate-kestot!` laskee oikein työpaikkajakson kestot sekä
             uudella ja vanhalla laskentatavalla."
     (with-redefs
-     [oph.heratepalvelu.external.ehoks/get-tyoelamajaksot-active-between!
-      (fn [oppija-oid start end]
-        (reset! get-tyoelamajaksot-active-between-call-params
-                {:start start :end end :oppija oppija-oid})
-        jaksot-1)
-      koski/get-opiskeluoikeus-catch-404! mock-get-opiskeluoikeus-catch-404]
+      [oph.heratepalvelu.external.ehoks/get-tyoelamajaksot-active-between!
+       (fn [oppija-oid start end]
+         (reset! get-tyoelamajaksot-active-between-call-params
+                 {:start start :end end :oppija oppija-oid})
+         jaksot-1)
+       koski/get-opiskeluoikeus-catch-404! mock-get-opiskeluoikeus-catch-404]
       (is (= (nh/calculate-kestot! [{:oppija_oid "4.4.4.4"
                                      :jakso_alkupvm "2022-01-05"
                                      :jakso_loppupvm "2022-02-28"}

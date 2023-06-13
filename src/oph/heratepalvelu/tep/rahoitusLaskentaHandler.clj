@@ -124,25 +124,24 @@
                      :save-timestamp [:s (str start-time)]}
             results-table-data
             (cond-> db-data
-                    (not-empty (:tyopaikkaohjaaja-email herate))
-                    (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
-                    (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
-                    (assoc :ohjaaja_puhelinnumero
-                           [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
-                    (not-empty (:tutkinnonosa-koodi herate))
-                    (assoc :tutkinnonosa_koodi
-                           [:s (:tutkinnonosa-koodi herate)])
-                    (not-empty (:tutkinnonosa-nimi herate))
-                    (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
-                    (some? (:osa-aikaisuus herate))
-                    (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)])
-                    (some? (:oppisopimuksen-perusta herate))
-                    (assoc :oppisopimuksen_perusta
-                           [:s (last
-                                 (str/split
-                                   (:oppisopimuksen-perusta herate)
-                                   #"_"))]))
-            ]
+              (not-empty (:tyopaikkaohjaaja-email herate))
+              (assoc :ohjaaja_email [:s (:tyopaikkaohjaaja-email herate)])
+              (not-empty (:tyopaikkaohjaaja-puhelinnumero herate))
+              (assoc :ohjaaja_puhelinnumero
+                     [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
+              (not-empty (:tutkinnonosa-koodi herate))
+              (assoc :tutkinnonosa_koodi
+                     [:s (:tutkinnonosa-koodi herate)])
+              (not-empty (:tutkinnonosa-nimi herate))
+              (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
+              (some? (:osa-aikaisuus herate))
+              (assoc :osa_aikaisuus [:n (:osa-aikaisuus herate)])
+              (some? (:oppisopimuksen-perusta herate))
+              (assoc :oppisopimuksen_perusta
+                     [:s (last
+                           (str/split
+                             (:oppisopimuksen-perusta herate)
+                             #"_"))]))]
         (log/info (str "Uudelleenlaskettu kesto tapa-id:lle "
                        tapa-id
                        ": "
