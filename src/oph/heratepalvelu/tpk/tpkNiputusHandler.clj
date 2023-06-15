@@ -23,6 +23,7 @@
        (:tyopaikan_nimi jakso)
        (:tyopaikan_ytunnus jakso)
        (:jakso_loppupvm jakso)
+       (:tunnus jakso)
        (or (not= (:hankkimistapa_tyyppi jakso) "oppisopimus")
            (not= (:oppisopimuksen_perusta jakso) "02"))))
 

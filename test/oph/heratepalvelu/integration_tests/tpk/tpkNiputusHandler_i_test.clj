@@ -14,7 +14,8 @@
                                   :koulutustoimija [:s "test-kt"]
                                   :hankkimistapa_tyyppi [:s "koulutussopimus"]
                                   :jakso_loppupvm [:s "2021-09-09"]
-                                  :tpk-niputuspvm [:s "ei_maaritelty"]}
+                                  :tpk-niputuspvm [:s "ei_maaritelty"]
+                                  :tunnus "ABC123"}
                                  {:hankkimistapa_id [:n 124]
                                   :tyopaikan_nimi [:s "Työ Paikka"]
                                   :tyopaikan_ytunnus [:s "123456-7"]
@@ -22,13 +23,22 @@
                                   :hankkimistapa_tyyppi [:s "oppisopimus"]
                                   :oppisopimuksen_perusta [:s "01"]
                                   :jakso_loppupvm [:s "2021-09-09"]
-                                  :tpk-niputuspvm [:s "ei_maaritelty"]}
+                                  :tpk-niputuspvm [:s "ei_maaritelty"]
+                                  :tunnus "DEF456"}
                                  {:hankkimistapa_id [:n 222]
                                   :tyopaikan_nimi [:s "Ääkköset"]
                                   :tyopaikan_ytunnus [:s "333333-7"]
                                   :koulutustoimija [:s "test-kt2"]
                                   :hankkimistapa_tyyppi [:s "koulutussopimus"]
                                   :jakso_loppupvm [:s "2021-08-01"]
+                                  :tpk-niputuspvm [:s "ei_maaritelty"]
+                                  :tunnus "GHI789"}
+                                 {:hankkimistapa_id [:n 333]
+                                  :tyopaikan_nimi [:s "Yet-Another-Tyopaikka"]
+                                  :tyopaikan_ytunnus [:s "1234567-8"]
+                                  :koulutustoimija [:s "test-kt3"]
+                                  :hankkimistapa_tyyppi [:s "koulutussopimus"]
+                                  :jakso_loppupvm [:s "2021-10-10"]
                                   :tpk-niputuspvm [:s "ei_maaritelty"]}])
 
 (def starting-tpk-nippu-table
@@ -59,7 +69,8 @@
                                    :koulutustoimija [:s "test-kt"]
                                    :hankkimistapa_tyyppi [:s "koulutussopimus"]
                                    :jakso_loppupvm [:s "2021-09-09"]
-                                   :tpk-niputuspvm [:s "2022-01-01"]}
+                                   :tpk-niputuspvm [:s "2022-01-01"]
+                                   :tunnus "ABC123"}
                                   {:hankkimistapa_id [:n 124]
                                    :tyopaikan_nimi [:s "Työ Paikka"]
                                    :tyopaikan_ytunnus [:s "123456-7"]
@@ -67,14 +78,23 @@
                                    :hankkimistapa_tyyppi [:s "oppisopimus"]
                                    :oppisopimuksen_perusta [:s "01"]
                                    :jakso_loppupvm [:s "2021-09-09"]
-                                   :tpk-niputuspvm [:s "2022-01-01"]}
+                                   :tpk-niputuspvm [:s "2022-01-01"]
+                                   :tunnus "DEF456"}
                                   {:hankkimistapa_id [:n 222]
                                    :tyopaikan_nimi [:s "Ääkköset"]
                                    :tyopaikan_ytunnus [:s "333333-7"]
                                    :koulutustoimija [:s "test-kt2"]
                                    :hankkimistapa_tyyppi [:s "koulutussopimus"]
                                    :jakso_loppupvm [:s "2021-08-01"]
-                                   :tpk-niputuspvm [:s "2021-07-25"]}})
+                                   :tpk-niputuspvm [:s "2021-07-25"]
+                                   :tunnus "GHI789"}
+                                  {:hankkimistapa_id [:n 333]
+                                   :tyopaikan_nimi [:s "Yet-Another-Tyopaikka"]
+                                   :tyopaikan_ytunnus [:s "1234567-8"]
+                                   :koulutustoimija [:s "test-kt3"]
+                                   :hankkimistapa_tyyppi [:s "koulutussopimus"]
+                                   :jakso_loppupvm [:s "2021-10-10"]
+                                   :tpk-niputuspvm [:s "ei_niputeta"]}})
 
 (def expected-tpk-nippu-table
   #{{:nippu-id [:s "tyo_paikka/123456-7/test-kt/2021-07-01_2021-12-31"]
