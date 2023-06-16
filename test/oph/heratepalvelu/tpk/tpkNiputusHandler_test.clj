@@ -12,42 +12,56 @@
                        :tyopaikan_nimi         "Testi työpaikka"
                        :tyopaikan_ytunnus      "1234567-8"
                        :jakso_loppupvm         "2021-11-20"
-                       :hankkimistapa_tyyppi   "koulutussopimus"}
+                       :hankkimistapa_tyyppi   "koulutussopimus"
+                       :tunnus                 "ABC123"}
           good-jakso2 {:koulutustoimija        "1.2.246.562.10.346830761110"
                        :tyopaikan_nimi         "Testi työpaikka"
                        :tyopaikan_ytunnus      "1234567-8"
                        :jakso_loppupvm         "2021-11-20"
                        :hankkimistapa_tyyppi   "oppisopimus"
-                       :oppisopimuksen_perusta "01"}
+                       :oppisopimuksen_perusta "01"
+                       :tunnus                 "DEF456"}
           good-jakso3 {:koulutustoimija        "1.2.246.562.10.346830761110"
                        :tyopaikan_nimi         "Testi työpaikka"
                        :tyopaikan_ytunnus      "1234567-8"
                        :jakso_loppupvm         "2021-11-20"
-                       :hankkimistapa_tyyppi   "oppisopimus"}
+                       :hankkimistapa_tyyppi   "oppisopimus"
+                       :tunnus                 "GHI789"}
           bad-jakso1 {:koulutustoimija        "1.2.246.562.10.346830761110"
                       :tyopaikan_nimi         "Testi työpaikka"
                       :tyopaikan_ytunnus      "1234567-8"
                       :jakso_loppupvm         "2021-11-20"
                       :hankkimistapa_tyyppi   "oppisopimus"
-                      :oppisopimuksen_perusta "02"}
+                      :oppisopimuksen_perusta "02"
+                      :tunnus                 "ASDFGH"}
           bad-jakso2 {:koulutustoimija        "1.2.246.562.10.346830761110"
                       :tyopaikan_ytunnus      "1234567-8"
                       :jakso_loppupvm         "2021-11-20"
                       :hankkimistapa_tyyppi   "oppisopimus"
-                      :oppisopimuksen_perusta "01"}
+                      :oppisopimuksen_perusta "01"
+                      :tunnus                 "QWERTY"}
           bad-jakso3 {:tyopaikan_nimi         "Testi työpaikka"
                       :tyopaikan_ytunnus      "1234567-8"
                       :jakso_loppupvm         "2021-11-20"
                       :hankkimistapa_tyyppi   "oppisopimus"
-                      :oppisopimuksen_perusta "01"}
+                      :oppisopimuksen_perusta "01"
+                      :tunnus                 "ZXCVBN"}
           bad-jakso4 {:koulutustoimija        "1.2.246.562.10.346830761110"
                       :tyopaikan_nimi         "Testi työpaikka"
                       :jakso_loppupvm         "2021-11-20"
                       :hankkimistapa_tyyppi   "oppisopimus"
-                      :oppisopimuksen_perusta "01"}
+                      :oppisopimuksen_perusta "01"
+                      :tunnus                 "SDFGHJ"}
           bad-jakso5 {:koulutustoimija        "1.2.246.562.10.346830761110"
                       :tyopaikan_nimi         "Testi työpaikka"
                       :tyopaikan_ytunnus      "1234567-8"
+                      :hankkimistapa_tyyppi   "oppisopimus"
+                      :oppisopimuksen_perusta "01"
+                      :tunnus                 "WERTYU"}
+          bad-jakso6 {:koulutustoimija        "1.2.246.562.10.346830761110"
+                      :tyopaikan_nimi         "Yet-Another-Tyopaikka"
+                      :tyopaikan_ytunnus      "1234567-8"
+                      :jakso_loppupvm         "2021-11-20"
                       :hankkimistapa_tyyppi   "oppisopimus"
                       :oppisopimuksen_perusta "01"}]
       (is (tpk/check-jakso? good-jakso1))
@@ -57,7 +71,8 @@
       (is (not (tpk/check-jakso? bad-jakso2)))
       (is (not (tpk/check-jakso? bad-jakso3)))
       (is (not (tpk/check-jakso? bad-jakso4)))
-      (is (not (tpk/check-jakso? bad-jakso5))))))
+      (is (not (tpk/check-jakso? bad-jakso5)))
+      (is (not (tpk/check-jakso? bad-jakso6))))))
 
 (deftest test-create-nippu-id
   (testing "create-nippu-id luo nipun ID:n oikein"
@@ -235,14 +250,17 @@
     :tyopaikan_ytunnus [:s "123456-7"]
     :jakso_loppupvm [:s "2021-12-20"]
     :hankkimistapa_tyyppi [:s "oppisopimus"]
-    :oppisopimuksen_perusta [:s "02"]}
+    :oppisopimuksen_perusta [:s "02"]
+    :tunnus [:s "ASDFGH"]}
+
    {:hankkimistapa_id [:n 1]
     :koulutustoimija [:s "12345"]
     :tyopaikan_nimi [:s "Työ Paikka"]
     :tyopaikan_ytunnus [:s "123456-7"]
     :jakso_loppupvm [:s "2021-12-20"]
     :hankkimistapa_tyyppi [:s "koulutussopimus"]
-    :oppisopimuksen_perusta [:s "02"]}
+    :oppisopimuksen_perusta [:s "02"]
+    :tunnus [:s "ABC123"]}
 
    ;; Tämä jakso kuuluu memoized-nippuun
    {:hankkimistapa_id [:n 2]
@@ -251,7 +269,8 @@
     :tyopaikan_ytunnus [:s "123456-7"]
     :jakso_loppupvm [:s "2021-12-20"]
     :hankkimistapa_tyyppi [:s "koulutussopimus"]
-    :oppisopimuksen_perusta [:s "02"]}
+    :oppisopimuksen_perusta [:s "02"]
+    :tunnus [:s "DEF456"]}
 
    ;; Tämä jakso kuuluu olemassa olevaan nippuun
    {:hankkimistapa_id [:n 1234]
@@ -259,6 +278,16 @@
     :tyopaikan_nimi [:s "Toinen Työ Paikka"]
     :tyopaikan_ytunnus [:s "123890-6"]
     :jakso_loppupvm [:s "2021-12-20"]
+    :hankkimistapa_tyyppi [:s "koulutussopimus"]
+    :oppisopimuksen_perusta [:s "02"]
+    :tunnus [:s "GHI789"]}
+
+   ;; Jaksolla ei ole tunnusta, joten ei niputeta.
+   {:hankkimistapa_id [:n 5678]
+    :koulutustoimija [:s "23456"]
+    :tyopaikan_nimi [:s "Yet-Another-Tyopaikka"]
+    :tyopaikan_ytunnus [:s "1234567-8"]
+    :jakso_loppupvm [:s "2021-10-10"]
     :hankkimistapa_tyyppi [:s "koulutussopimus"]
     :oppisopimuksen_perusta [:s "02"]}])
 
@@ -323,6 +352,11 @@
                       :jakso (get-specific-niputtamaton 3)}
                      {:type "mock-update-tpk-niputuspvm"
                       :jakso-id 1234
-                      :new-value "2021-12-15"}]]
+                      :new-value "2021-12-15"}
+
+                     ;; Jakson tiedoissa ei vastaajatunnusta, joten ei niputeta.
+                     {:type "mock-update-tpk-niputuspvm"
+                      :jakso-id 5678
+                      :new-value "ei_niputeta"}]]
         (tpk/-handleTpkNiputus {} event context)
         (is (= results (vec (reverse @mock-handleTpkNiputus-results))))))))
