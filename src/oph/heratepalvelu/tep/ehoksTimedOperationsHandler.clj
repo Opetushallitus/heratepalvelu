@@ -28,6 +28,7 @@
                 [:body :data :hankkimistapa-ids])
         counter (atom 0)]
     (doseq [hankkimistapa_id hankkimistavat]
+      (log/info "Käsitellään oht" hankkimistapa_id)
       (let [resp (ddb/scan {:filter-expression   "#id = :id"
                             :expr-attr-names     {"#id" "hankkimistapa_id"}
                             :expr-attr-vals      {":id" [:n hankkimistapa_id]}}
