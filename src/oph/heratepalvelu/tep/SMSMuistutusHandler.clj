@@ -27,6 +27,7 @@
     (log/info "Kyselylinkin tunnusosa:"
               (last (str/split (:kyselylinkki nippu) #"_")))
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
+      (log/info "Arvo-status:" status)
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (try
@@ -39,10 +40,11 @@
                                    :messages
                                    (keyword (:lahetettynumeroon nippu))
                                    :status])]
-            (tc/update-nippu nippu {:sms_kasittelytila [:s tila]
-                                    :sms_muistutuspvm [:s (str
-                                                            (c/local-date-now))]
-                                    :sms_muistutukset [:n 1]}))
+            (log/info "Muistutus lähetetty, vastaus" resp)
+            (tc/update-nippu nippu
+                             {:sms_kasittelytila [:s tila]
+                              :sms_muistutuspvm [:s (str (c/local-date-now))]
+                              :sms_muistutukset [:n 1]}))
           (catch AwsServiceException e
             (log/error "Muistutus "
                        nippu
@@ -55,6 +57,8 @@
           (let [kasittely-status (if (:vastattu status)
                                    (:vastattu c/kasittelytilat)
                                    (:vastausaika-loppunut-m c/kasittelytilat))]
+            (log/warn "Ei voida lähettää, status" status
+                      "tila" kasittely-status)
             (tc/update-nippu nippu {:sms_kasittelytila [:s kasittely-status]
                                     :sms_muistutukset  [:n 1]}))
           (catch Exception e
