@@ -34,6 +34,7 @@
                    :limit 100}
                   (:nippu-table env))]
     (doseq [email emails]
+      (log/info "Päivitetään tila viestintäpalvelussa olevalle nipulle" email)
       (let [nippu (ddb/get-item {:ohjaaja_ytunnus_kj_tutkinto
                                  [:s (:ohjaaja_ytunnus_kj_tutkinto email)]
                                  :niputuspvm [:s (:niputuspvm email)]}
@@ -41,35 +42,37 @@
             status (vp/get-email-status (:viestintapalvelu-id nippu))
             tila (vp/viestintapalvelu-status->kasittelytila status)
             new-loppupvm (tc/get-new-loppupvm nippu)]
-        (if tila
-          (do
-            (when-not @new-changes?
-              (reset! new-changes? true))
-            (try
-              (when-not (or (str/includes? (:kyselylinkki nippu) ",")
-                            (str/includes? (:kyselylinkki nippu) ";"))
-                (arvo/patch-nippulinkki
-                  (:kyselylinkki nippu)
-                  (if (and new-loppupvm (= tila (:success c/kasittelytilat)))
-                    {:tila tila :voimassa_loppupvm new-loppupvm}
-                    {:tila tila})))
-              (tc/update-nippu
-                nippu
-                {:kasittelytila [:s tila]
-                 :voimassaloppupvm [:s (or new-loppupvm
-                                           (:voimassaloppupvm nippu))]})
-              (catch AwsServiceException e
-                (log/error "Lähetystilan tallennus kantaan epäonnistui" nippu)
-                (log/error e))
-              (catch Exception e
-                (log/error "Lähetystilan tallennus Arvoon epäonnistui" nippu)
-                (log/error e))))
-          (do
-            (log/info "Odottaa lähetystä viestintäpalvelussa")
-            (log/info email)
-            (log/info status)))))
+        (if-not tila
+          (log/info "Odottaa lähetystä viestintäpalvelussa:" status)
+          (try
+            (when-not @new-changes? (reset! new-changes? true))
+            (log/info "Päivitetään Arvoon tila" tila "loppupvm" new-loppupvm)
+            (if (or (str/includes? (:kyselylinkki nippu) ",")
+                    (str/includes? (:kyselylinkki nippu) ";"))
+              (log/warn "Kyselylinkissä outoja merkkejä, ei päivitetä Arvoon:"
+                        (:kyselylinkki nippu))
+              (arvo/patch-nippulinkki
+                (:kyselylinkki nippu)
+                (if (and new-loppupvm (= tila (:success c/kasittelytilat)))
+                  {:tila tila :voimassa_loppupvm new-loppupvm}
+                  {:tila tila})))
+            (log/info "Päivitetään tietokantaan tila" tila
+                      "loppupvm" new-loppupvm)
+            (tc/update-nippu
+              nippu
+              {:kasittelytila [:s tila]
+               :voimassaloppupvm [:s (or new-loppupvm
+                                         (:voimassaloppupvm nippu))]})
+            (catch AwsServiceException e
+              (log/error "Lähetystilan tallennus kantaan epäonnistui" nippu)
+              (log/error e))
+            (catch Exception e
+              (log/error "Lähetystilan tallennus Arvoon epäonnistui" nippu)
+              (log/error e))))))
     (when (and @new-changes?
                (< 60000 (.getRemainingTimeInMillis context)))
+      ;; XXX: here too, if 100 (or 10, as below) messages have not yet been
+      ;; sent, we stop processing; it's probably not correct
       (reset! new-changes? false)
       (recur (ddb/query-items
                {:kasittelytila
