@@ -77,6 +77,7 @@
   (avaimet :en, :fi, ja :sv); parametri osoite on sähköpostiosoite stringinä."
   [nippu oppilaitokset osoite]
   (try
+    (log/info "Lähetetään sähköposti osoitteeseen" osoite)
     (vp/send-email {:subject (str "Työpaikkaohjaajakysely - "
                                   "Enkät till arbetsplatshandledaren - "
                                   "Survey to workplace instructors")
@@ -110,21 +111,27 @@
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
+        (log/info "Lähetetään nippu" nippu)
         (let [jaksot (tc/get-jaksot-for-nippu nippu)
               oppilaitokset (c/get-oppilaitokset jaksot)
               osoite (lahetysosoite nippu jaksot)]
-          (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
-            (when (some? osoite)
-              (let [id (:id (send-survey-email nippu oppilaitokset osoite))
-                    lahetyspvm (str (c/local-date-now))]
-                (email-sent-update-item nippu id lahetyspvm osoite)
-                (when-not (= (:niputuspvm nippu) lahetyspvm)
-                  (log/warn
-                    (str "Nipun "
-                         (:ohjaaja_ytunnus_kj_tutkinto nippu)
-                         " niputuspvm " (:niputuspvm nippu)
-                         " ja lahetyspvm " lahetyspvm
-                         " eroavat toisistaan.")))))
-            (no-time-to-answer-update-item nippu))))
+          (cond
+            (not (c/has-time-to-answer? (:voimassaloppupvm nippu)))
+            (do (log/warn "Vastausaika loppunut.")
+                (no-time-to-answer-update-item nippu))
+
+            (nil? osoite)
+            (log/warn "Ei lähetysosoitetta.")
+
+            :else
+            (let [id (:id (send-survey-email nippu oppilaitokset osoite))
+                  lahetyspvm (str (c/local-date-now))]
+              (log/info "Sähköposti lähetetty viestintäpalveluun:" id)
+              (email-sent-update-item nippu id lahetyspvm osoite)
+              (when-not (= (:niputuspvm nippu) lahetyspvm)
+                (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
+                          "niputuspvm" (:niputuspvm nippu)
+                          "ja lahetyspvm" lahetyspvm
+                          "eroavat toisistaan."))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (do-nippu-query))))))
