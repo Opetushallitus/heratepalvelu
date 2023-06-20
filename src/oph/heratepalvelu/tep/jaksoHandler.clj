@@ -111,12 +111,14 @@
                          {:ohjaaja_ytunnus_kj_tutkinto [:s oykt]
                           :niputuspvm                  [:s niputuspvm]}
                          (:nippu-table env))]
-    (when (or (empty? existing-nippu)
-              (and (= (:kasittelytila existing-nippu)
-                      (:ei-niputeta c/kasittelytilat))
-                   (= (:sms_kasittelytila existing-nippu)
-                      (:ei-niputeta c/kasittelytilat))))
-      (ddb/put-item nippu-table-data {} (:nippu-table env)))))
+    (log/info "Tallennetaan nippu:" oykt "niputuspvm" niputuspvm)
+    (if (or (empty? existing-nippu)
+            (and (= (:kasittelytila existing-nippu)
+                    (:ei-niputeta c/kasittelytilat))
+                 (= (:sms_kasittelytila existing-nippu)
+                    (:ei-niputeta c/kasittelytilat))))
+      (ddb/put-item nippu-table-data {} (:nippu-table env))
+      (log/info "Tietokannassa on jo nippu" existing-nippu))))
 
 (defn save-jaksotunnus
   "Käsittelee herätteen, varmistaa, että se tulee tallentaa, hakee
@@ -124,6 +126,7 @@
   tietokantaan."
   [herate opiskeluoikeus koulutustoimija]
   (let [tapa-id (:hankkimistapa-id herate)]
+    (log/info "Tallennetaan oht" tapa-id)
     (when (check-duplicate-hankkimistapa tapa-id)
       (try
         (let [request-id    (c/generate-uuid)
@@ -209,6 +212,8 @@
                :niputuspvm            [:s (str niputuspvm)]}]
           (if (has-open-keskeytymisajanjakso? herate)
             (try
+              (log/info "Jakso on keskeytynyt, tätä ei niputeta:"
+                        jaksotunnus-table-data)
               (save-to-tables
                 jaksotunnus-table-data
                 (assoc nippu-table-data
@@ -232,11 +237,15 @@
                                 suoritus
                                 (str alkupvm)))
                   tunnus (:tunnus (:body arvo-resp))]
+              (log/info "Vastaajatunnus muodostettu, Arvon vastaus:" arvo-resp
+                        "; muut kantaan tallennettavat tiedot:"
+                        jaksotunnus-table-data)
               (try
-                (when (and (some? tunnus) (check-duplicate-tunnus tunnus))
+                (if (and (some? tunnus) (check-duplicate-tunnus tunnus))
                   (save-to-tables
                     (assoc jaksotunnus-table-data :tunnus [:s tunnus])
-                    nippu-table-data))
+                    nippu-table-data)
+                  (log/error "Tunnus oli tyhjä."))
                 (catch ConditionalCheckFailedException _
                   (log/warn "Osaamisenhankkimistapa id:llä"
                             tapa-id
@@ -260,25 +269,38 @@
   (log-caller-details-sqs "handleTPOherate" context)
   (let [messages (seq (.getRecords event))]
     (doseq [^SQSEvent$SQSMessage msg messages]
+      (log/info "Käsitellään heräte" (.getBody msg))
       (try
         (let [herate (parse-string (.getBody msg) true)
-              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
-                               (:opiskeluoikeus-oid herate))]
-          (when (some? opiskeluoikeus)
-            (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
-              (if (some? (tep-herate-checker herate))
-                (log/error {:herate herate :msg (tep-herate-checker herate)})
-                (and (not (c/terminaalitilassa? opiskeluoikeus
-                                                (:loppupvm herate)))
-                     (not (fully-keskeytynyt? herate))
-                     (c/has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus)
-                     (not (c/feedback-collecting-prevented? opiskeluoikeus
-                                                            (:loppupvm herate)))
-                     (not (c/sisaltyy-toiseen-opiskeluoikeuteen?
-                            opiskeluoikeus))
-                     (save-jaksotunnus herate
-                                       opiskeluoikeus
-                                       koulutustoimija)))))
+              oo (:opiskeluoikeus-oid herate)
+              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404 oo)]
+          (if (nil? opiskeluoikeus)
+            (log/warn "Ei löytynyt opiskeluoikeutta:" oo)
+            (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)
+                  herate-schema-errors (tep-herate-checker herate)]
+              (cond
+                (some? herate-schema-errors)
+                (log/error "Heräte ei vastaa skeemaa." herate-schema-errors)
+
+                (c/terminaalitilassa? opiskeluoikeus (:loppupvm herate))
+                (log/warn "Opiskeluoikeus terminaalitilassa:" opiskeluoikeus)
+
+                (fully-keskeytynyt? herate)
+                (log/warn "Jakso on täysin keskeytynyt.")
+
+                (not (c/has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus))
+                (log/warn "Ei ole ammatillinen tutkinto:" opiskeluoikeus)
+
+                (c/feedback-collecting-prevented? opiskeluoikeus
+                                                  (:loppupvm herate))
+                (log/warn "Palautetta ei kerätä rahoituspohjan vuoksi:"
+                          opiskeluoikeus)
+
+                (c/sisaltyy-toiseen-opiskeluoikeuteen? opiskeluoikeus)
+                (log/warn "Opiskeluoikeus sisältyy toiseen:" opiskeluoikeus)
+
+                :else
+                (save-jaksotunnus herate opiskeluoikeus koulutustoimija))))
           (ehoks/patch-oht-tep-kasitelty (:hankkimistapa-id herate)))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa:" e))
