@@ -174,32 +174,39 @@
   joitakin tarkistaksia ja tallentaa herätteen tietokantaan, jos testit
   läpäistään."
   [_ ^SQSEvent event context]
-  (log/info "handling rahoitusheräte " event)
   (log-caller-details-sqs "-handleRahoitusHerate" context)
+  (log/info "handling rahoitusheräte" event)
   (let [messages (seq (.getRecords event))]
     (doseq [^SQSEvent$SQSMessage msg messages]
+      (log/info "heräte:" (.getBody msg))
       (try
         (let [herate (parse-string (.getBody msg) true)
               opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
                                (:opiskeluoikeus-oid herate))]
-          (if (some? opiskeluoikeus)
-            (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)]
-              (if (some? (jh/tep-herate-checker herate))
-                (log/error {:herate herate :msg (jh/tep-herate-checker herate)})
-                (and (not (c/terminaalitilassa? opiskeluoikeus
-                                                (:loppupvm herate)))
-                     (not (jh/fully-keskeytynyt? herate))
-                     (c/has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus)
-                     (not (c/sisaltyy-toiseen-opiskeluoikeuteen?
-                            opiskeluoikeus))
-                     (jh/save-jaksotunnus herate
-                                          opiskeluoikeus
-                                          koulutustoimija))))
-            (do
-              (log/info "No opiskeluoikeus found for oid"
-                        (:opiskeluoikeus-oid herate))
-              (log/info "Not saving heräte - hankkimistapa-id"
-                        (:hankkimistapa-id herate)))))
+          (if (nil? opiskeluoikeus)
+            (log/warn "No opiskeluoikeus found for oid"
+                      (:opiskeluoikeus-oid herate)
+                      "hankkimistapa-id" (:hankkimistapa-id herate))
+            (let [koulutustoimija (c/get-koulutustoimija-oid opiskeluoikeus)
+                  schema-errors (jh/tep-herate-checker herate)]
+              (cond
+                (some? schema-errors)
+                (log/error "Skeemavirhe:" schema-errors)
+
+                (c/terminaalitilassa? opiskeluoikeus (:loppupvm herate))
+                (log/warn "opiskeluoikeus loppunut:" opiskeluoikeus)
+
+                (jh/fully-keskeytynyt? herate)
+                (log/warn "jakso keskeytynyt:" herate)
+
+                (not (c/has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus))
+                (log/warn "Tutkinto ei ole ammatillinen:" opiskeluoikeus)
+
+                (c/sisaltyy-toiseen-opiskeluoikeuteen? opiskeluoikeus)
+                (log/warn "Opiskeluoikeus sisältyy toiseen:" opiskeluoikeus)
+
+                :else
+                (jh/save-jaksotunnus herate opiskeluoikeus koulutustoimija)))))
         (catch JsonParseException e
           (log/error "Virhe viestin lukemisessa:" e))
         (catch ExceptionInfo e
