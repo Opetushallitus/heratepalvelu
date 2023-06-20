@@ -1,7 +1,6 @@
 (ns oph.heratepalvelu.tep.EmailMuistutusHandler
   "Käsittelee ja lähettää TEP-sähköpostimuistutuksia"
-  (:require [clojure.string :as str]
-            [clojure.tools.logging :as log]
+  (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -74,14 +73,15 @@
   [muistutettavat]
   (log/info "Käsitellään" (count muistutettavat) "lähetettävää muistutusta.")
   (doseq [nippu muistutettavat]
-    (log/info "Kyselylinkin tunnusosa:"
-              (last (str/split (:kyselylinkki nippu) #"_")))
+    (log/info "Käsitellään kyselylinkki" (:kyselylinkki nippu))
     (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
+      (log/info "Arvo-status:" status)
       (if (and (not (:vastattu status))
                (c/has-time-to-answer? (:voimassa_loppupvm status)))
         (let [jaksot (tc/get-jaksot-for-nippu nippu)
               oppilaitokset (c/get-oppilaitokset jaksot)
               id (:id (send-reminder-email nippu oppilaitokset))]
+          (log/info "Lähetetty muistutusviesti" id)
           (update-item-email-sent nippu id))
         (update-item-cannot-answer nippu status)))))
 

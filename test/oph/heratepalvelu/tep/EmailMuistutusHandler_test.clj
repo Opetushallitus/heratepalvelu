@@ -179,18 +179,9 @@
                   "{:vastattu false, :voimassa_loppupvm \"2021-10-08\"}")]]
         (emh/sendEmailMuistutus muistutettavat)
         (is (= @test-sendEmailMuistutus-call-log (reverse expected-call-log)))
-        (is (true? (tu/logs-contain?
-                     {:level :info
-                      :message "Käsitellään 3 lähetettävää muistutusta."})))
-        (is (true? (tu/logs-contain?
-                     {:level :info
-                      :message "Kyselylinkin tunnusosa: QWERTY"})))
-        (is (true? (tu/logs-contain?
-                     {:level :info
-                      :message "Kyselylinkin tunnusosa: YUOIOP"})))
-        (is (true? (tu/logs-contain?
-                     {:level :info
-                      :message "Kyselylinkin tunnusosa: GHKJJK"})))))))
+        (is (tu/logs-contain?
+              {:level :info
+               :message "Käsitellään 3 lähetettävää muistutusta."}))))))
 
 (defn- mock-query-items [query-params options table]
   (when (and (= :eq (first (:muistutukset query-params)))
