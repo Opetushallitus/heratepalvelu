@@ -1,6 +1,6 @@
 (ns oph.heratepalvelu.common-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.common :refer :all]
+            [oph.heratepalvelu.common :refer :all :as c]
             [oph.heratepalvelu.test-util :refer :all]
             [clj-time.core :as t]
             [clojure.string :as str])
@@ -199,13 +199,18 @@
                           "arvizturo_tukorfurogep"))))
 
 (deftest test-valid-herate-date?
-  (testing "True if heratepvm is >= 2022-07-01"
-    (is (true? (valid-herate-date? "2022-07-02")))
-    (is (true? (valid-herate-date? "2022-07-01")))
-    (is (not (true? (valid-herate-date? "2022-06-01"))))
-    (is (not (true? (valid-herate-date? "2022-07-01xxxx"))))
-    (is (not (true? (valid-herate-date? ""))))
-    (is (not (true? (valid-herate-date? nil))))))
+  (testing "True if heratepvm is >= [rahoituskausi start year]-07-01"
+    (with-redefs [c/local-date-now (constantly (LocalDate/of 2023 6 22))]
+      (is (true? (valid-herate-date? "2022-07-02")))
+      (is (true? (valid-herate-date? "2022-07-01")))
+      (is (not (true? (valid-herate-date? "2022-06-01"))))
+      (is (not (true? (valid-herate-date? "2022-07-01xxxx"))))
+      (is (not (true? (valid-herate-date? ""))))
+      (is (not (true? (valid-herate-date? nil))))))
+  (testing "Not true if heratepvm is < [rahoituskausi start year]-07-01"
+    (with-redefs [c/local-date-now (constantly (LocalDate/of 2023 7 22))]
+      (is (not (true? (valid-herate-date? "2022-07-02"))))
+      (is (not (true? (valid-herate-date? "2022-07-01")))))))
 
 (deftest test-sisaltyy-toiseen-opiskeluoikeuteen
   (testing "Sisältyy toiseen opiskeluoikeuteen"
