@@ -263,7 +263,9 @@
   [nippu]
   (let [jaksot (query-jaksot nippu)
         kestot (group-jaksot-and-compute-kestot jaksot)]
-    (map #(let [kesto (math-round (get kestot (:hankkimistapa_id %) 0.0))]
+    (map #(let [oht-id (:hankkimistapa_id %)
+                kesto (math-round (get kestot oht-id 0.0))]
+            (log/info "Päivitetään jaksoon" oht-id "kesto" kesto)
             (tc/update-jakso % {:kesto [:n kesto]})
             (assoc % :kesto kesto))
          jaksot)))
@@ -272,7 +274,7 @@
   "Luo nippukyselylinkin jokaiselle alustavalle nipulle, jos sillä on vielä
   jaksoja, joilla on vielä aikaa vastata."
   [nippu]
-  (log/info "Niputetaan " nippu)
+  (log/info "Niputetaan" nippu)
   (let [request-id (c/generate-uuid)
         jaksot (retrieve-and-update-jaksot nippu)
         tunnukset (vec (map (fn [x] {:tunnus                (:tunnus x)
@@ -280,9 +282,11 @@
                             jaksot))]
     (if (not-empty tunnukset)
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))
-            arvo-resp (arvo/create-nippu-kyselylinkki
-                        (arvo/build-niputus-request-body
-                          tunniste nippu tunnukset request-id))]
+            arvo-req (arvo/build-niputus-request-body
+                       tunniste nippu tunnukset request-id)
+            arvo-resp (arvo/create-nippu-kyselylinkki arvo-req)]
+        (log/info "Luotu kyselylinkki pyynnöllä" arvo-req
+                  "; arvon vastaus" arvo-resp)
         (if (some? (:nippulinkki arvo-resp))
           (try
             (tc/update-nippu
@@ -302,7 +306,7 @@
               (log/error "Virhe DynamoDB tallennuksessa " e)
               (arvo/delete-nippukyselylinkki tunniste)
               (throw e)))
-          (do (log/error "Virhe niputuksessa " nippu request-id)
+          (do (log/error "Virhe niputuksessa" nippu request-id)
               (log/error arvo-resp)
               (tc/update-nippu
                 nippu
@@ -343,8 +347,9 @@
       (log/info "Käsitellään" (count niputettavat) "niputusta.")
       (when (seq niputettavat)
         (doseq [nippu niputettavat]
-          (when-not (get @processed-niput (get-nippu-key nippu))
-            (niputa nippu)
-            (swap! processed-niput assoc (get-nippu-key nippu) true)))
+          (if (get @processed-niput (get-nippu-key nippu))
+            (log/warn "Nippu on jo käsitelty" nippu)
+            (do (niputa nippu)
+                (swap! processed-niput assoc (get-nippu-key nippu) true))))
         (when (< 120000 (.getRemainingTimeInMillis context))
           (recur (do-query)))))))

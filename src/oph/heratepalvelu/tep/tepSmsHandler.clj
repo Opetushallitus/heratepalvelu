@@ -22,6 +22,8 @@
   "Päivittää tiedot tietokantaan, kun SMS-viesti on lähetetty
   viestintäpalveluun. Parametrin status pitäisi olla string."
   [status puhelinnumero nippu new-loppupvm lahetyspvm]
+  (log/info "Päivitetään tietokantaan status" status "lahetyspvm" lahetyspvm
+            "uusi loppupvm" new-loppupvm)
   (try
     (let [updates {:sms_kasittelytila [:s status]
                    :sms_lahetyspvm    [:s lahetyspvm]
@@ -57,20 +59,20 @@
     (if (and (some? number) (c/valid-number? number))
       number
       (do
+        (log/warn "Epäselvää, mihin numeroon nippu lähetetään; numero on"
+                  number "jaksoissa" jaksot)
         (tc/update-nippu
           nippu
           (if (some? number)
             {:sms_kasittelytila [:s (:phone-invalid c/kasittelytilat)]
              :lahetettynumeroon [:s number]}
             (let [numerot (set (keep :ohjaaja_puhelinnumero jaksot))]
-              (log/warn "Ei yksiselitteistä ohjaajan puhelinnumeroa,"
-                        (count numerot)
-                        "numeroa löydetty")
               {:sms_kasittelytila [:s (if (empty? numerot)
                                         (:no-phone c/kasittelytilat)
                                         (:phone-mismatch c/kasittelytilat))]})))
         (when (or (= (:email-mismatch c/kasittelytilat) (:kasittelytila nippu))
                   (= (:no-email c/kasittelytilat) (:kasittelytila nippu)))
+          (log/info "Päivitetään tila Arvoon" (:kyselylinkki nippu))
           (arvo/patch-nippulinkki (:kyselylinkki nippu)
                                   {:tila (:ei-yhteystietoja c/kasittelytilat)}))
         nil))))
@@ -95,16 +97,30 @@
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
-        (when-not (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
-          (if (c/has-time-to-answer? (:voimassaloppupvm nippu))
+        (log/info "Lähetetään SMS nipulle" nippu)
+        (if (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
+          (log/error "Nipulla on käsittelytila ei-niputettu")
+          (if-not (c/has-time-to-answer? (:voimassaloppupvm nippu))
+            (try
+              (log/info "Vastausaika päättynyt" (:voimassaloppupvm nippu))
+              (tc/update-nippu nippu
+                               {:sms_lahetyspvm [:s (str (c/local-date-now))]
+                                :sms_kasittelytila
+                                [:s (:vastausaika-loppunut c/kasittelytilat)]})
+              (catch Exception e
+                (log/error "Virhe sms-lähetystilan päivityksessä nipulle,"
+                           "jonka vastausaika umpeutunut")
+                (log/error e)))
             (let [jaksot (tc/get-jaksot-for-nippu nippu)
                   oppilaitokset (c/get-oppilaitokset jaksot)
                   puhelinnumero (ohjaaja-puhnro nippu jaksot)
                   sms-kasittelytila (:sms_kasittelytila nippu)]
-              (when (and (some? puhelinnumero)
-                         (or (nil? sms-kasittelytila)
-                             (= sms-kasittelytila
-                                (:ei-lahetetty c/kasittelytilat))))
+              (if (or (nil? puhelinnumero)
+                      (and (some? sms-kasittelytila)
+                           (not= sms-kasittelytila
+                                 (:ei-lahetetty c/kasittelytilat))))
+                (log/warn "SMS:a ei voi lähettää, numero" puhelinnumero
+                          "käsittelytila" sms-kasittelytila)
                 (try
                   (let [body (elisa/tep-msg-body (:kyselylinkki nippu)
                                                  oppilaitokset)
@@ -119,21 +135,21 @@
                                                 :converted])
                         new-loppupvm (tc/get-new-loppupvm nippu)
                         lahetyspvm (str (c/local-date-now))]
+                    (log/info "SMS lähetetty, vastaus" resp)
                     (update-status-to-db status
                                          (or converted puhelinnumero)
                                          nippu
                                          new-loppupvm
                                          lahetyspvm)
+                    (log/info "Päivitetään tiedot Arvoon" (:kyselylinkki nippu))
                     (arvo/patch-nippulinkki (:kyselylinkki nippu)
                                             (update-arvo-obj-sms status
                                                                  new-loppupvm))
                     (when-not (= (:niputuspvm nippu) lahetyspvm)
-                      (log/warn
-                        (str "Nipun "
-                             (:ohjaaja_ytunnus_kj_tutkinto nippu)
-                             " niputuspvm " (:niputuspvm nippu)
-                             " ja sms-lahetyspvm " lahetyspvm
-                             " eroavat toisistaan."))))
+                      (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
+                                "niputuspvm" (:niputuspvm nippu)
+                                "ja sms-lahetyspvm" lahetyspvm
+                                "eroavat toisistaan.")))
                   (catch AwsServiceException e
                     (log/error "SMS-viestin lähetysvaiheen kantapäivityksessä"
                                "tapahtui virhe!")
@@ -147,15 +163,6 @@
                         (log/error "Server error while sending sms")
                         (log/error e))))
                   (catch Exception e
-                    (log/error "Unhandled exception " e)))))
-            (try
-              (tc/update-nippu nippu
-                               {:sms_lahetyspvm [:s (str (c/local-date-now))]
-                                :sms_kasittelytila
-                                [:s (:vastausaika-loppunut c/kasittelytilat)]})
-              (catch Exception e
-                (log/error "Virhe sms-lähetystilan päivityksessä nipulle,"
-                           "jonka vastausaika umpeutunut")
-                (log/error e))))))
+                    (log/error "Unhandled exception " e))))))))
       (when (< 60000 (.getRemainingTimeInMillis context))
         (recur (query-lahetettavat 10))))))
