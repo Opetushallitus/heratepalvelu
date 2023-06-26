@@ -103,9 +103,6 @@
                                       (tu/mock-handler-context))
       (is (= (mcc/get-results) expected-cas-client-results))
       (is (= (mhc/get-results) expected-http-results))
-      (is (true? (tu/logs-contain?
-                   {:level :info
-                    :message "Käynnistetään herätteiden lähetys"})))
       (is (true? (tu/logs-contain? {:level :info
                                     :message "Lähetetty 2 viestiä"})))
 
@@ -117,23 +114,23 @@
             (tu/logs-contain?
               {:level :info
                :message
-               (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 1/1,"
-                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
+               (str "Poistetaan opiskelijan yhteystiedot; "
+                    "toimija_oppija = 1/1 , "
+                    "tyyppi_kausi = aloittaneet/2022-2023")})))
       (is (true?
             (tu/logs-contain?
               {:level :info
                :message
-               (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 2/2,"
-                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
+               (str "Poistetaan opiskelijan yhteystiedot; "
+                    "toimija_oppija = 2/2 , "
+                    "tyyppi_kausi = aloittaneet/2022-2023")})))
       (is (true?
             (tu/logs-contain?
               {:level :info
                :message
-               (str "Poistetaan opiskelijan yhteystiedot (toimija_oppija = 3/3,"
-                    " tyyppi_kausi = aloittaneet/2022-2023)")})))
-      (is (true? (tu/logs-contain?
-                   {:level :info
-                    :message "Opiskelijan yhteystietojen poisto valmis"})))
+               (str "Poistetaan opiskelijan yhteystiedot; "
+                    "toimija_oppija = 3/3 , "
+                    "tyyppi_kausi = aloittaneet/2022-2023")})))
       (is (= (mdb/get-table-values (:herate-table mock-env))
              #{{:toimija_oppija [:s "1/1"]
                 :tyyppi_kausi [:s "aloittaneet/2022-2023"]
@@ -218,10 +215,6 @@
                                    (tu/mock-handler-context))
       (is (= (mcc/get-results) expected-mass-cas-client-results))
       (is (= (mhc/get-results) expected-mass-http-results))
-      (is (true?
-            (tu/logs-contain?
-              {:level :info
-               :message "Käynnistetään herätteiden massauudelleenlähetys"})))
       (is (true? (tu/logs-contain?
                    {:level :info
                     :message "Lähetetty 2 aloitusviestiä ja 3 päättöviestiä"})))

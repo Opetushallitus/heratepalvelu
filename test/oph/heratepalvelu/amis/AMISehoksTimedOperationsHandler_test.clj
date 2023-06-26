@@ -31,22 +31,20 @@
 
 (deftest test-handleAMISTimedOperations
   (testing "Varmista, että -handleAMISTimedOperations toimii oikein"
-    (with-redefs [clojure.tools.logging/log* tu/mock-log*
-                  oph.heratepalvelu.common/local-date-now
-                  (fn [] (LocalDate/of 2022 2 2))
-                  oph.heratepalvelu.external.ehoks/get-retry-kyselylinkit
-                  mock-get-retry-kyselylinkit
-                  ehoks/delete-opiskelijan-yhteystiedot mock-delete-call
-                  ddb/scan mock-scan
-                  ddb/update-item mock-update-item]
+    (with-redefs
+      [clojure.tools.logging/log* tu/mock-log*
+       oph.heratepalvelu.common/local-date-now
+       (fn [] (LocalDate/of 2022 2 2))
+       oph.heratepalvelu.external.ehoks/send-kasittelemattomat-heratteet!
+       mock-get-retry-kyselylinkit
+       ehoks/delete-opiskelijan-yhteystiedot mock-delete-call
+       ddb/scan mock-scan
+       ddb/update-item mock-update-item]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
             expected {:start "2021-07-01" :end "2022-02-02"}]
         (etoh/-handleAMISTimedOperations {} event context)
         (is (= @results expected))
-        (is (true? (tu/logs-contain?
-                     {:level :info
-                      :message "Käynnistetään herätteiden lähetys"})))
         (is (true? (tu/logs-contain?
                      {:level :info
                       :message "Lähetetty 1000 viestiä"})))
@@ -58,11 +56,7 @@
                  "Käynnistetään opiskelijan yhteystietojen poisto"})))
         (is (true? @delete-endpoint-called))
         (is (= @scan-called 3))
-        (is (= @update-item-called 3))
-        (is (true?
-              (tu/logs-contain?
-                {:level :info
-                 :message "Opiskelijan yhteystietojen poisto valmis"})))))))
+        (is (= @update-item-called 3))))))
 
 (def mass-resend-results (atom []))
 
@@ -97,10 +91,6 @@
               {:type  "mock-resend-paattoheratteet"
                :start "2022-01-19"
                :end   "2022-02-02"}]))
-      (is (true?
-            (tu/logs-contain?
-              {:level :info
-               :message "Käynnistetään herätteiden massauudelleenlähetys"})))
       (is
         (true?
           (tu/logs-contain?

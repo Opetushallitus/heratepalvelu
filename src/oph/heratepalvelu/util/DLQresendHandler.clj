@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.util.DLQresendHandler
   "Lähettää AMISin dead letter queuessa olevia herätteitä uudestaan."
   (:require [environ.core :refer [env]]
+            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [clojure.tools.logging :as log])
   (:import (software.amazon.awssdk.core.client.config
              ClientOverrideConfiguration)
@@ -31,7 +32,8 @@
 (defn -handleDLQresend
   "Ottaa herätteitä vastaan AMISin dead letter queuesta ja lähettää ne
   uudestaan."
-  [_ ^SQSEvent event _]
+  [_ ^SQSEvent event context]
+  (log-caller-details-sqs "handleDLQresend" context)
   (let [messages (seq (.getRecords event))
         queue-url (.queueUrl
                     (.getQueueUrl
@@ -40,12 +42,13 @@
                           (.queueName (:queue-name env))
                           ^GetQueueUrlRequest (.build))))]
     (doseq [^SQSEvent$SQSMessage msg messages]
-      (log/info "Uudelleenlähetetään viesti:" (.getBody msg))
-      (try
-        (.sendMessage sqs-client
-                      (-> (SendMessageRequest/builder)
-                          (.queueUrl queue-url)
-                          (.messageBody (.getBody msg))
-                          ^SendMessageRequest (.build)))
-        (catch Exception e
-          (log/error e))))))
+      (let [body (.getBody msg)]
+        (log/info "käsitellään heräte" body)
+        (try
+          (.sendMessage sqs-client
+                        (-> (SendMessageRequest/builder)
+                            (.queueUrl queue-url)
+                            (.messageBody body)
+                            ^SendMessageRequest (.build)))
+          (catch Exception e
+            (log/error e "at -handleDLQresend")))))))

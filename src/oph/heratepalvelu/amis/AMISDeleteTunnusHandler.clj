@@ -21,14 +21,15 @@
   "Tunnuksen poistoherätteen schema."
   {:kyselylinkki (s/constrained s/Str not-empty)})
 
-(def delete-tunnus-checker
+(def deletion-schema-errors
   "Tunnuksen poistoherätteen scheman tarkistusfunktio."
   (s/checker delete-tunnus-schema))
 
 (defn delete-one-item
-  "Poistaa yhden tietueen tietokannasta, jos item on olemassa."
+  "Poistaa yhden tietueen tietokannasta, jos se on olemassa."
   [item]
-  (when item
+  (if-not item
+    (log/warn "Ei löytynyt tietuetta tällä kyselylinkillä")
     (try
       (ddb/delete-item {:toimija_oppija [:s (:toimija_oppija item)]
                         :tyyppi_kausi   [:s (:tyyppi_kausi item)]})
@@ -44,10 +45,11 @@
     (doseq [^SQSEvent$SQSMessage msg messages]
       (try
         (let [herate (parse-string (.getBody msg) true)
-              tunnus-checked (delete-tunnus-checker herate)]
-          (if (some? tunnus-checked)
-            (log/error {:herate herate :msg tunnus-checked})
+              schema-errors (deletion-schema-errors herate)]
+          (log/info "Käsitellään heräte" herate)
+          (if (some? schema-errors)
+            (log/error "schema validation:" schema-errors)
             (delete-one-item
               (ac/get-herate-by-kyselylinkki! (:kyselylinkki herate)))))
         (catch JsonParseException e
-          (log/error "Virhe viestin lukemisessa: " msg "\n" e))))))
+          (log/error e "Virhe viestin lukemisessa: " msg))))))
