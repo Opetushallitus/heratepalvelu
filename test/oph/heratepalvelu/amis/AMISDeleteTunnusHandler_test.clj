@@ -8,9 +8,9 @@
     (let [good {:kyselylinkki "https://a.b.com/tunnus"}
           bad1 {:ei-kyselylinkki 1324}
           bad2 {:kyselylinkki ""}]
-      (is (nil? (dth/delete-tunnus-checker good)))
-      (is (some? (dth/delete-tunnus-checker bad1)))
-      (is (some? (dth/delete-tunnus-checker bad2))))))
+      (is (nil? (dth/deletion-schema-errors good)))
+      (is (some? (dth/deletion-schema-errors bad1)))
+      (is (some? (dth/deletion-schema-errors bad2))))))
 
 (defn- mock-delete-item [params]
   (and (:toimija_oppija params)
@@ -56,5 +56,5 @@
                     ":other-fields \"other fields\"}")))
         (reset! store-full-call-results "")
         (dth/-handleDeleteTunnus {} bad-event context)
-        (is (true? (tu/did-log? ":herate {}, :msg" "ERROR")))
+        (is (true? (tu/did-log? "schema validation:" "ERROR")))
         (is (= @store-full-call-results ""))))))
