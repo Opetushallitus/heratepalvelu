@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler
   "Käsittelee TPK:n niputusta ja tallennusta herätepalvelun tietokantaan."
   (:require [clojure.tools.logging :as log]
+            [clojure.core.memoize :refer [memo]]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -15,7 +16,7 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(defn check-jakso?
+(defn jakso-valid-for-tpk?
   "Varmistaa, että jaksossa on kaikki pakolliset kentät ja oppisopimuksen
   perusta ei ole 02 (yrittäjä)."
   [jakso]
@@ -112,40 +113,46 @@
         kausi-end-date (tpkc/get-current-kausi-loppupvm)
         end-date (if (.isAfter today kausi-end-date)
                    (str kausi-end-date)
-                   (str today))
-        resp (ddb/scan {:filter-expression
-                        "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :start AND :end"
-                        :exclusive-start-key exclusive-start-key
-                        :expr-attr-names {"#tpkNpvm" "tpk-niputuspvm"
-                                          "#jl"      "jakso_loppupvm"}
-                        :expr-attr-vals {":tpkNpvm" [:s "ei_maaritelty"]
-                                         ":end"     [:s end-date]
-                                         ":start"   [:s start-date]}}
-                       (:jaksotunnus-table env))]
-    (log/info "TPK-Niputusfunktion scan" (count (:items resp)))
-    resp))
+                   (str today))]
+    (ddb/scan {:filter-expression
+               "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :start AND :end"
+               :exclusive-start-key exclusive-start-key
+               :expr-attr-names {"#tpkNpvm" "tpk-niputuspvm"
+                                 "#jl"      "jakso_loppupvm"}
+               :expr-attr-vals {":tpkNpvm" [:s "ei_maaritelty"]
+                                ":end"     [:s end-date]
+                                ":start"   [:s start-date]}}
+              (:jaksotunnus-table env))))
+
+(def ensure-nippu!
+  "Huolehtii, että jaksolle on nippu tietokannassa, ja palauttaa sen."
+  (memo
+    ^{:clojure.core.memoize/args-fn (partial mapv create-nippu-id)}
+    (fn [jakso]
+      (or (not-empty (get-existing-nippu jakso))
+          (let [nippu (create-tpk-nippu jakso)]
+            (log/info "Luodaan uusi nippu tietokantaan:" nippu)
+            (save-tpk-nippu nippu)
+            nippu)))))
+
+(defn handle-jakso!
+  "Luo tpk-nipun yhdestä työpaikkajaksosta tai lisää jakson olemassa olevaan."
+  [jakso]
+  (log/info "Käsitellään jakso" jakso)
+  (update-tpk-niputuspvm
+    jakso
+    (if (jakso-valid-for-tpk? jakso)
+      (let [nippu (ensure-nippu! jakso)] (:niputuspvm nippu))
+      "ei_niputeta")))
 
 (defn -handleTpkNiputus
   "Käsittelee työpaikkajaksoja ja luo vastaavia TPK-nippuja. Yhteen nippuun voi
   kuulua useita jaksoja."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleTpkNiputus" event context)
-  (let [memoization (atom {})]
-    (loop [niputettavat (query-niputtamattomat nil)]
-      (doseq [jakso (:items niputettavat)]
-        (if (check-jakso? jakso)
-          (let [memoized-nippu (get @memoization (create-nippu-id jakso))
-                existing-nippu (when-not memoized-nippu
-                                 (get-existing-nippu jakso))]
-            (if (and (empty? existing-nippu) (not memoized-nippu))
-              (let [nippu (create-tpk-nippu jakso)]
-                (save-tpk-nippu nippu)
-                (swap! memoization assoc (create-nippu-id jakso) nippu)
-                (update-tpk-niputuspvm jakso (:niputuspvm nippu)))
-              (update-tpk-niputuspvm
-                jakso
-                (:niputuspvm (or memoized-nippu existing-nippu)))))
-          (update-tpk-niputuspvm jakso "ei_niputeta")))
-      (when (and (< 30000 (.getRemainingTimeInMillis context))
-                 (:last-evaluated-key niputettavat))
-        (recur (query-niputtamattomat (:last-evaluated-key niputettavat)))))))
+  (loop [niputettavat (query-niputtamattomat nil)]
+    (log/info "Käsitellään" (count (:items niputettavat)) "työpaikkajaksoa")
+    (doseq [jakso (:items niputettavat)] (handle-jakso! jakso))
+    (when (and (< 30000 (.getRemainingTimeInMillis context))
+               (:last-evaluated-key niputettavat))
+      (recur (query-niputtamattomat (:last-evaluated-key niputettavat))))))

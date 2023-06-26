@@ -4,6 +4,7 @@
                  ["snapshots" "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"]]
   :dependencies [[org.clojure/clojure "1.10.1"]
                  [org.clojure/tools.logging "1.0.0"]
+                 [org.clojure/core.memoize "1.0.257"]
                  [environ "1.1.0"]
                  [clj-http "3.10.0"]
                  [cheshire "5.8.1"]
