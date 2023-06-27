@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.integration-tests.tep.jaksoHandler-i-test
   (:require [clojure.test :refer :all]
+            [clojure.data :refer [diff]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.integration-tests.mock-cas-client :as mcc]
             [oph.heratepalvelu.integration-tests.mock-db :as mdb]
@@ -44,6 +45,11 @@
          :opiskeluoikeus-oid "test-oo-oid-externalfunding"
          :hankkimistapa-id 456
          :hoks-id 345))
+
+(def test-herate-missing-osa-aikaisuus
+  (assoc test-herate
+         :osa-aikaisuus nil
+         :loppupvm "2023-09-20"))
 
 (def duplicate-herate {:tyyppi "aloittaneet"
                        :alkupvm "2022-01-01"
@@ -237,6 +243,16 @@
               :content-type "application/json"
               :as :json}}
    {:method :get
+    :url "https://oph-koski.com/opiskeluoikeus/test-oo-oid"
+    :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
+   {:method :patch
+    :url (str (:ehoks-url mock-env)
+              "heratepalvelu/osaamisenhankkimistavat/234/kasitelty")
+    :options {:headers {:ticket (str "service-ticket/ehoks-virkailija-backend"
+                                     "/cas-security-check")}
+              :content-type "application/json"
+              :as :json}}
+   {:method :get
     :url (str (:koski-url mock-env)
               "/opiskeluoikeus/test-oo-oid-externalfunding")
     :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
@@ -250,7 +266,7 @@
      :content-type "application/json"}}])
 
 (def expected-cas-client-results
-  (repeat 3 {:type :get-service-ticket
+  (repeat 4 {:type :get-service-ticket
              :service "/ehoks-virkailija-backend"
              :suffix "cas-security-check"}))
 
@@ -275,11 +291,16 @@
         (jh/-handleJaksoHerate {} (tu/mock-sqs-event test-herate) context)
         (jh/-handleJaksoHerate {} (tu/mock-sqs-event duplicate-herate) context)
         (jh/-handleJaksoHerate
+          {} (tu/mock-sqs-event test-herate-missing-osa-aikaisuus) context)
+        (jh/-handleJaksoHerate
           {} (tu/mock-sqs-event test-herate-externalfunding) context))
       (is (= (mdb/get-table-values (:jaksotunnus-table mock-env))
              expected-jaksotunnus-table))
       (is (= (mdb/get-table-values (:nippu-table mock-env))
              expected-nippu-table))
-      (is (= (mhc/get-results) expected-http-results))
+      (is (= (mhc/get-results) expected-http-results)
+          (->> (diff (mhc/get-results) expected-http-results)
+               (clojure.string/join "\n")
+               (str "Differences: ")))
       (is (= (mcc/get-results) expected-cas-client-results))
       (teardown-test))))
