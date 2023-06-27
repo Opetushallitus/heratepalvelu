@@ -292,10 +292,18 @@
                         :tyyppi_kausi   [:s (str tyyppi "/" laskentakausi)]}))))
 
 (defn valid-herate-date?
-  "onko herätteen päivämäärä aikaisintaan 1.7.2022?"
+  "onko herätteen päivämäärä aikaisintaan kuluvan rahoituskauden alkupvm
+  (1.7.)?"
   [heratepvm]
   (try
-    (not (.isAfter (LocalDate/of 2022 7 1) (LocalDate/parse (or heratepvm ""))))
+    (let [current-year (.getYear (local-date-now))
+          rahoituskausi-alkuvuosi (if (< (.getMonthValue (local-date-now)) 7)
+                                    (dec current-year)
+                                    current-year)
+          rahoituskausi-alkupvm (LocalDate/of
+                                  ^long rahoituskausi-alkuvuosi 7 1)]
+      (not (.isAfter rahoituskausi-alkupvm
+                     (LocalDate/parse (or heratepvm "")))))
     (catch DateTimeParseException e
       (log/warn "Bad date" heratepvm)
       false)))
