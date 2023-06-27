@@ -2,11 +2,242 @@
   (:require [clojure.test :refer [are deftest is testing]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.tep.niputusHandler :as nh]
+            [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.test-util :as tu])
   (:import (java.time LocalDate)))
+
+(def jakso-1 {:opiskeluoikeus_oid "1.2.3.8"
+              :oppija_oid "4.4.4.4"
+              :hankkimistapa_id 1
+              :jakso_alkupvm "2021-10-22"
+              :jakso_loppupvm "2021-10-25"
+              :osa_aikaisuus 40
+              :keskeytymisajanjaksot [{:id 1032
+                                       :osaamisen-hankkimistapa-id 1
+                                       :alku "2022-02-11"
+                                       :loppu "3022-03-01"}]})
+
+(def jakso-2 {:opiskeluoikeus_oid "1.2.3.8"
+              :oppija_oid "4.4.4.4"
+              :hankkimistapa_id 2
+              :jakso_alkupvm "2021-09-01"
+              :jakso_loppupvm "2021-12-15"
+              :osa_aikaisuus 80
+              :keskeytymisajanjaksot [{:id 1033
+                                       :osaamisen-hankkimistapa-id 2
+                                       :alku "2021-10-22"
+                                       :loppu "2021-10-30"}]})
+
+(def jakso-3 {:opiskeluoikeus_oid "1.2.3.8"
+              :oppija_oid "4.4.4.4"
+              :hankkimistapa_id 3
+              :jakso_alkupvm "2021-10-11"
+              :jakso_loppupvm "2021-10-21"
+              :osa_aikaisuus 100
+              :keskeytymisajanjaksot [{:id 1030
+                                       :osaamisen-hankkimistapa-id 3
+                                       :alku "2021-10-13"
+                                       :loppu "2021-10-14"}]})
+
+(def jakso-4 {:opiskeluoikeus_oid "1.2.3.8"
+              :oppija_oid "4.4.4.4"
+              :hankkimistapa_id 4
+              :jakso_alkupvm "2021-05-15"
+              :jakso_loppupvm "2021-12-01"
+              :osa_aikaisuus 70
+              :keskeytymisajanjaksot []})
+
+(def jakso-5 {:opiskeluoikeus_oid "1.2.3.7"
+              :oppija_oid "4.4.4.4"
+              :hankkimistapa_id 5
+              :jakso_alkupvm "2021-09-01"
+              :jakso_loppupvm "2023-12-15"
+              :osa_aikaisuus 60
+              :keskeytymisajanjaksot []})
+
+(def jakso-6 {:opiskeluoikeus_oid "1.2.3.8"
+              :oppija_oid "4.4.4.4"
+              :hankkimistapa_id 6
+              :jakso_alkupvm "2021-10-11"
+              :jakso_loppupvm "2021-10-21"
+              :osa_aikaisuus 100
+              :keskeytymisajanjaksot [{:id 1031
+                                       :osaamisen-hankkimistapa-id 6
+                                       :alku "2021-10-13"
+                                       :loppu "2021-10-14"}]})
+
+(def jakso-7 {:opiskeluoikeus_oid "1.2.3.10"
+              :oppija_oid "4.4.4.4"
+              :hankkimistapa_id 7
+              :jakso_alkupvm "2021-01-15"
+              :jakso_loppupvm "2022-04-29"
+              :osa_aikaisuus 50
+              :keskeytymisajanjaksot []})
+
+(def jakso-8 {:opiskeluoikeus_oid "1.2.3.8"
+              :oppija_oid "4.4.4.4"
+              :hankkimistapa_id 8
+              :jakso_alkupvm "2021-10-15"
+              :jakso_loppupvm "2021-12-11"
+              :osa_aikaisuus 100
+              :keskeytymisajanjaksot []})
+
+(def jakso-9 {:opiskeluoikeus_oid "1.2.3.6"
+              :oppija_oid "4.4.4.4"
+              :hankkimistapa_id 9
+              :jakso_alkupvm "2021-07-03"
+              :jakso_loppupvm "2021-08-26"
+              :osa_aikaisuus 100
+              :keskeytymisajanjaksot []})
+
+(def jakso-10 {:opiskeluoikeus_oid "1.2.3.7"
+               :oppija_oid "4.4.4.4"
+               :hankkimistapa_id 10
+               :jakso_alkupvm "2021-08-20"
+               :jakso_loppupvm "2021-09-10"
+               :osa_aikaisuus 100
+               :keskeytymisajanjaksot [{:id 1191
+                                        :osaamisen-hankkimistapa-id 10
+                                        :alku  "2021-08-25"
+                                        :loppu "2021-08-28"}]})
+
+(def jakso-11 {:opiskeluoikeus_oid "1.2.3.7"
+               :oppija_oid "4.4.4.4"
+               :hankkimistapa_id 11
+               :jakso_alkupvm "2021-09-03"
+               :jakso_loppupvm "2021-09-30"
+               :osa_aikaisuus 100
+               :keskeytymisajanjaksot []})
+
+(def jakso-12 {:opiskeluoikeus_oid "1.2.3.7"
+               :oppija_oid "4.4.4.4"
+               :hankkimistapa_id 12
+               :jakso_alkupvm "2021-11-12"
+               :jakso_loppupvm "2021-12-15"
+               :osa_aikaisuus 100
+               :keskeytymisajanjaksot [{:id 1192
+                                        :osaamisen-hankkimistapa-id 12
+                                        :alku "2021-11-18"
+                                        :loppu "2021-11-25"}]})
+
+(def jakso-13 {:opiskeluoikeus_oid "1.2.3.8"
+               :oppija_oid "4.4.4.4"
+               :hankkimistapa_id 13
+               :jakso_alkupvm "2021-09-06"
+               :jakso_loppupvm "2021-10-19"
+               :osa_aikaisuus 100
+               :keskeytymisajanjaksot [{:id 1029
+                                        :osaamisen-hankkimistapa-id 13
+                                        :alku "2021-10-13"}]})
+
+(def jakso-14 {:opiskeluoikeus_oid "1.2.3.7"
+               :oppija_oid "4.4.4.4"
+               :hankkimistapa_id 14
+               :jakso_alkupvm "2021-09-01"
+               :jakso_loppupvm "2024-12-15"
+               :osa_aikaisuus 100
+               :keskeytymisajanjaksot []})
+
+(def jakso-15 {:opiskeluoikeus_oid "1.2.3.8"
+               :oppija_oid "4.4.4.4"
+               :hankkimistapa_id 15
+               :jakso_alkupvm "2021-10-04"
+               :jakso_loppupvm "2021-10-19"
+               :osa_aikaisuus 100
+               :keskeytymisajanjaksot []})
+
+(def jakso-16 {:opiskeluoikeus_oid "1.2.3.9"
+               :oppija_oid "4.4.4.4"
+               :hankkimistapa_id 16
+               :jakso_alkupvm "2021-02-01"
+               :jakso_loppupvm "2021-08-30"
+               :osa_aikaisuus 100
+               :keskeytymisajanjaksot [{:id 1034
+                                        :osaamisen-hankkimistapa-id 16
+                                        :alku "2021-06-15"}]})
+
+(def jakso-17 {:opiskeluoikeus_oid "1.2.3.10.onnea.etsintaan"
+               :oppija_oid "4.4.4.4"
+               :hankkimistapa_id 17
+               :jakso_alkupvm "2021-08-27"
+               :jakso_loppupvm "2022-04-29"
+               :osa_aikaisuus 100
+               :keskeytymisajanjaksot []})
+
+(def jakso-21 {:hankkimistapa_id 21
+               :oppija_oid "3.3.3.3"
+               :osa_aikaisuus 100
+               :jakso_alkupvm "2022-01-03"
+               :jakso_loppupvm "2022-02-05"
+               :keskeytymisajanjaksot []
+               :opiskeluoikeus_oid "1.2.3.1"})
+
+(def jakso-22 {:hankkimistapa_id 22
+               :oppija_oid "3.3.3.3"
+               :osa_aikaisuus 50
+               :jakso_alkupvm "2022-02-07"
+               :jakso_loppupvm "2022-04-04"
+               :opiskeluoikeus_oid "1.2.3.2"})
+
+(def jakso-23 {:hankkimistapa_id 23
+               :oppija_oid "3.3.3.3"
+               :osa_aikaisuus 20
+               :jakso_alkupvm "2022-01-31"
+               :jakso_loppupvm "2022-02-20"
+               :keskeytymisajanjaksot [{:alku "2022-02-16"
+                                        :loppu "2022-02-18"}]
+               :opiskeluoikeus_oid "1.2.3.3"})
+
+(def jakso-24 {:hankkimistapa_id 24
+               :oppija_oid "3.3.3.3"
+               :osa_aikaisuus 90
+               :jakso_alkupvm "2022-01-17"
+               :jakso_loppupvm "2022-02-20"
+               :opiskeluoikeus_oid "1.2.3.4"})
+
+(def jakso-25 {:hankkimistapa_id 25
+               :oppija_oid "3.3.3.3"
+               :osa_aikaisuus 100
+               :jakso_alkupvm "2022-01-01"
+               :jakso_loppupvm "2022-04-01"
+               :keskeytymisajanjaksot [{:alku "2022-01-12" :loppu "2022-01-12"}
+                                       {:alku "2022-01-16" :loppu "2022-01-18"}]
+               :opiskeluoikeus_oid "1.2.3.5"})
+
+(def jaksot-1-17
+  [jakso-1  jakso-2  jakso-3 jakso-4 jakso-5 jakso-6 jakso-7 jakso-8 jakso-9
+   jakso-10 jakso-11 jakso-12 jakso-13 jakso-14 jakso-15 jakso-16 jakso-17])
+
+(def jaksot-21-25 [jakso-21 jakso-22 jakso-23 jakso-24 jakso-25])
+
+(def jaksot-1-25 (concat jaksot-1-17 jaksot-21-25))
+
+(def opiskeluoikeudet
+  {"1.2.3.1" {:tila {:opiskeluoikeusjaksot
+                     [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}]}}
+   "1.2.3.2" {:tila {:opiskeluoikeusjaksot
+                     [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}]}}
+   "1.2.3.4" {:tila {:opiskeluoikeusjaksot
+                     [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
+                      {:alku "2022-01-30" :tila {:koodiarvo "loma"}}
+                      {:alku "2022-02-10" :tila {:koodiarvo "lasna"}}]}}
+   "1.2.3.5" {:tila {:opiskeluoikeusjaksot
+                     [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
+                      {:alku "2022-02-02"
+                       :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}]}}
+   "1.2.3.6" {:tila {:opiskeluoikeusjaksot
+                     [{:alku "2020-03-05", :tila {:koodiarvo "lasna"}}]}}
+   "1.2.3.7" {:tila {:opiskeluoikeusjaksot
+                     [{:alku "2020-04-06", :tila {:koodiarvo "lasna"}}]}}
+   "1.2.3.8" {:tila {:opiskeluoikeusjaksot
+                     [{:alku "2020-01-01", :tila {:koodiarvo "lasna"}}]}}
+   "1.2.3.9" {:tila {:opiskeluoikeusjaksot
+                     [{:alku "2022-08-25", :tila {:koodiarvo "lasna"}}]}}
+   "1.2.3.10" {:tila {:opiskeluoikeusjaksot
+                      [{:alku "2020-10-27", :tila {:koodiarvo "lasna"}}]}}})
 
 (deftest test-not-in-keskeytymisajanjakso?
   (testing "Varmistaa, että not-in-keskeytymisajanjakso? toimii oikein."
@@ -28,175 +259,40 @@
       (is (false? (nh/not-in-keskeytymisajanjakso? (LocalDate/of 2022 4 10)
                                                    kjaksot))))))
 
-(deftest test-filtered-jakso-days
-  (testing "Varmistaa, että filtered-jakso-days toimii oikein."
-    (let [test-jakso1 {:jakso_alkupvm "2022-04-27" :jakso_loppupvm "2022-05-02"}
-          test-jakso2 {:jakso_alkupvm "2022-04-24" :jakso_loppupvm "2022-04-30"}
-          days1 (seq [(LocalDate/of 2022 4 27)
-                      (LocalDate/of 2022 4 28)
-                      (LocalDate/of 2022 4 29)
-                      (LocalDate/of 2022 5 2)])
-          days2 (seq [(LocalDate/of 2022 4 25)
-                      (LocalDate/of 2022 4 26)
-                      (LocalDate/of 2022 4 27)
-                      (LocalDate/of 2022 4 28)
-                      (LocalDate/of 2022 4 29)])]
-      (is (= (nh/filtered-jakso-days test-jakso1) days1))
-      (is (= (nh/filtered-jakso-days test-jakso2) days2)))))
-
-(deftest test-add-to-jaksot-by-day
-  (testing "Varmistaa, että add-to-jaksot-by-day toimii oikein."
-    (let [opiskeluoikeus {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
-                            {:alku "2022-01-17" :tila {:koodiarvo "loma"}}
-                            {:alku "2022-01-19" :tila {:koodiarvo "lasna"}}
-                            {:alku "2022-01-21"
-                             :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}
-                            {:alku "2022-02-25" :tila {:koodiarvo "lasna"}}]}}
-          existing-jakso {:jakso_alkupvm "2022-01-10"
-                          :jakso_loppupvm "2022-01-16"}
-          jaksot-by-day {(LocalDate/of 2022 1 10) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 11) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 12) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 13) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 14) (seq [existing-jakso])}
-          jakso {:jakso_alkupvm "2022-01-09"
-                 :jakso_loppupvm "2022-01-24"
-                 :keskeytymisajanjaksot [{:alku "2022-01-12"
-                                          :loppu "2022-01-12"}]
-                 :opiskeluoikeus_oid "asdf"}
-          results {(LocalDate/of 2022 1 10) (seq [jakso existing-jakso])
-                   (LocalDate/of 2022 1 11) (seq [jakso existing-jakso])
-                   (LocalDate/of 2022 1 12) (seq [existing-jakso])
-                   (LocalDate/of 2022 1 13) (seq [jakso existing-jakso])
-                   (LocalDate/of 2022 1 14) (seq [jakso existing-jakso])
-                   (LocalDate/of 2022 1 19) (seq [jakso])
-                   (LocalDate/of 2022 1 20) (seq [jakso])}]
-      (is (= (nh/add-to-jaksot-by-day jaksot-by-day jakso opiskeluoikeus)
-             results)))))
-
-(deftest test-add-to-jaksot-by-day-new
-  (testing "Varmistaa, että add-to-jaksot-by-day-new toimii oikein."
-    (let [opiskeluoikeus {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
-                            {:alku "2022-01-17" :tila {:koodiarvo "loma"}}
-                            {:alku "2022-01-19" :tila {:koodiarvo "lasna"}}
-                            {:alku "2022-01-21"
-                             :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}
-                            {:alku "2022-02-25" :tila {:koodiarvo "lasna"}}]}}
-          existing-jakso {:jakso_alkupvm "2022-01-10"
-                          :jakso_loppupvm "2022-01-16"}
-          jaksot-by-day {(LocalDate/of 2022 1 10) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 11) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 12) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 13) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 14) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 15) (seq [existing-jakso])
-                         (LocalDate/of 2022 1 16) (seq [existing-jakso])}
-          jakso {:jakso_alkupvm "2022-01-09"
-                 :jakso_loppupvm "2022-01-28"
-                 :keskeytymisajanjaksot [{:alku "2022-01-12"
-                                          :loppu "2022-01-12"}]
-                 :opiskeluoikeus_oid "asdf"}
-          expected {(LocalDate/of 2022 1  9) (seq [jakso])
-                    (LocalDate/of 2022 1 10) (seq [jakso existing-jakso])
-                    (LocalDate/of 2022 1 11) (seq [jakso existing-jakso])
-                    (LocalDate/of 2022 1 12) (seq [existing-jakso])
-                    (LocalDate/of 2022 1 13) (seq [jakso existing-jakso])
-                    (LocalDate/of 2022 1 14) (seq [jakso existing-jakso])
-                    (LocalDate/of 2022 1 15) (seq [jakso existing-jakso])
-                    (LocalDate/of 2022 1 16) (seq [jakso existing-jakso])
-                    (LocalDate/of 2022 1 17) (seq [jakso])
-                    (LocalDate/of 2022 1 18) (seq [jakso])
-                    (LocalDate/of 2022 1 19) (seq [jakso])
-                    (LocalDate/of 2022 1 20) (seq [jakso])}]
-      (is (= expected (nh/add-to-jaksot-by-day-new
-                        jaksot-by-day jakso opiskeluoikeus))))))
-
-(deftest test-handle-one-day
-  (testing "Varmistaa, että handle-one-day toimii oikein."
-    (let [jaksot (seq [{:hankkimistapa_id 1 :osa_aikaisuus 100}
-                       {:hankkimistapa_id 2 :osa_aikaisuus 50}
-                       {:hankkimistapa_id 3 :osa_aikaisuus 10}
-                       {:hankkimistapa_id 4}])
-          results {1 0.25
-                   2 0.125
-                   3 0.025
-                   4 0.25}]
-      (is (= (nh/handle-one-day jaksot) results)))))
-
-(def get-tyoelamajaksot-active-between-call-params (atom {}))
 (def mock-get-opiskeluoikeus-catch-404-count (atom 0))
 
 (defn- do-rounding [values]
-  ; FIXME: map-values
-  (reduce-kv #(assoc %1 %2 (/ (Math/round (* %3 1000.0)) 1000.0)) {} values))
+  (reduce-kv #(assoc %1 %2 (/ (Math/round (* %3 100.0)) 100.0)) {} values))
 
 (defn- mock-get-opiskeluoikeus-catch-404 [oo-oid]
   (swap! mock-get-opiskeluoikeus-catch-404-count inc)
-  (cond
-    (= oo-oid "1.2.3.1") {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}]}}
-    (= oo-oid "1.2.3.2") {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}]}}
-    (= oo-oid "1.2.3.4") {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
-                            {:alku "2022-01-30" :tila {:koodiarvo "loma"}}
-                            {:alku "2022-02-10" :tila {:koodiarvo "lasna"}}]}}
-    (= oo-oid "1.2.3.5") {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2022-01-01" :tila {:koodiarvo "lasna"}}
-                            {:alku "2022-02-02"
-                             :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}]}}
-    (= oo-oid "1.2.3.8") {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2020-01-01", :tila {:koodiarvo "lasna"}}]}}
-    (= oo-oid "1.2.3.7") {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2020-04-06",
-                             :tila {:koodiarvo "lasna"}}]}}
-    (= oo-oid "1.2.3.9") {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2022-08-25",
-                             :tila {:koodiarvo "lasna"}}]}}
-    (= oo-oid "1.2.3.6") {:tila
-                          {:opiskeluoikeusjaksot
-                           [{:alku "2020-03-05",
-                             :tila {:koodiarvo "lasna"}}]}}
-    (= oo-oid "1.2.3.10") {:tila
-                           {:opiskeluoikeusjaksot
-                            [{:alku "2020-10-27",
-                              :tila {:koodiarvo "lasna"}}]}}
-    :else nil))
-
-(defn- get-test-opiskeluoikeudet
-  [oids]
-  (reduce #(assoc % %2 (mock-get-opiskeluoikeus-catch-404 %2)) {} oids))
+  (get opiskeluoikeudet oo-oid))
 
 (deftest test-get-and-memoize-opiskeluoikeudet
   (with-redefs
-    [oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404!
-     mock-get-opiskeluoikeus-catch-404]
-    (testing "Funktio palauttaa samat opiskeluoikeudet kun
-             `get-test-opiskeluoikeudet` ja `get-opiskeluoikeus-catch-404!`
-             -kutsujen määrä on yhtä suuri kuin uniikkien haettavien
-             opiskeluoikeuksien määrä."
-      (are [oids]
-           (= (do (reset! mock-get-opiskeluoikeus-catch-404-count 0)
-                  [(nh/get-and-memoize-opiskeluoikeudet!
-                     (map #(assoc {} :opiskeluoikeus_oid %) oids))
-                   @mock-get-opiskeluoikeus-catch-404-count])
-              [(get-test-opiskeluoikeudet oids) (count (distinct oids))])
-        []
-        ["1.2.3.a"]
-        ["1.2.3.7" "1.2.3.9" "1.2.3.10.onnea.matkaan"]
-        ["1.2.3.a" "1.2.3.a" "1.2.3.8" "1.2.3.b" "1.2.3.8" "1.2.3.b"]
-        (map str (repeat "1.2.3.") [9 10 6 6 7 10 6 8 10])))))
+    [clojure.tools.logging/log* tu/mock-log*
+     koski/get-opiskeluoikeus-catch-404! mock-get-opiskeluoikeus-catch-404]
+    (testing
+      (str "Funktio pitää entuudestaan haetut opiskeluoikeudet muistitssa, "
+           "eikä hae niitä toistamiseen. Funktio lokitaa varoituksen, jos "
+           "opiskeluoikeutta ei saada koskesta")
+      (is (= (nh/get-and-memoize-opiskeluoikeudet! []) {}))
+      (reset! mock-get-opiskeluoikeus-catch-404-count 0)
+      (is (= (nh/get-and-memoize-opiskeluoikeudet!
+               [jakso-1   ; 1.2.3.8
+                jakso-2   ; 1.2.3.8
+                jakso-5   ; 1.2.3.7
+                jakso-6   ; 1.2.3.8
+                jakso-10  ; 1.2.3.7
+                {:hankkimistapa_id 123 :opiskeluoikeus_oid "1.2.3.4.ei.loydy"}])
+             {"1.2.3.7" (get opiskeluoikeudet "1.2.3.7")
+              "1.2.3.8" (get opiskeluoikeudet "1.2.3.8")}))
+      (is (= @mock-get-opiskeluoikeus-catch-404-count 3))
+      (is (tu/logs-contain?
+            {:level   :warn
+             :message
+             (str "Opiskeluoikeutta `1.2.3.4.ei.loydy` ei saatu Koskesta. "
+                  "Jakson 123 kestoksi asetetaan nolla.")})))))
 
 (deftest test-get-opiskeluoikeusjaksot
   (testing "Funktio hakee onnistuneesti opiskeluoikeuden opiskeluoikeusjaksot."
@@ -218,177 +314,12 @@
                       {:tila {:koodiarvo "valiaikaisestikeskeytynyt"}
                        :alku "2022-02-02"}]))))
 
-(def jaksot-1 [{:hankkimistapa_id 1
-                :oppija_oid "4.4.4.4"
-                :osa_aikaisuus 100
-                :jakso_alkupvm "2022-01-03"
-                :jakso_loppupvm "2022-02-05"
-                :keskeytymisajanjaksot []
-                :opiskeluoikeus_oid "1.2.3.1"}
-               {:hankkimistapa_id 2
-                :oppija_oid "4.4.4.4"
-                :osa_aikaisuus 50
-                :jakso_alkupvm "2022-02-07"
-                :jakso_loppupvm "2022-04-04"
-                :opiskeluoikeus_oid "1.2.3.2"}
-               {:hankkimistapa_id 3
-                :oppija_oid "4.4.4.4"
-                :osa_aikaisuus 0
-                :jakso_alkupvm "2022-01-31"
-                :jakso_loppupvm "2022-02-20"
-                :keskeytymisajanjaksot [{:alku "2022-02-16"
-                                         :loppu "2022-02-18"}]
-                :opiskeluoikeus_oid "1.2.3.3"}
-               {:hankkimistapa_id 4
-                :oppija_oid "4.4.4.4"
-                :jakso_alkupvm "2022-01-17"
-                :jakso_loppupvm "2022-02-20"
-                :opiskeluoikeus_oid "1.2.3.4"}
-               {:hankkimistapa_id 5
-                :oppija_oid "4.4.4.4"
-                :jakso_alkupvm "2022-01-01"
-                :jakso_loppupvm "2022-04-01"
-                :opiskeluoikeus_oid "1.2.3.5"}])
-
-(def jaksot-2 [{:opiskeluoikeus_oid "1.2.3.6",
-                :hankkimistapa_id 9,
-                :jakso_alkupvm "2021-07-03",
-                :jakso_loppupvm "2021-08-26",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot []},
-               {:opiskeluoikeus_oid "1.2.3.7",
-                :hankkimistapa_id 14,
-                :jakso_alkupvm "2021-09-01",
-                :jakso_loppupvm "2024-12-15",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot []}
-               {:opiskeluoikeus_oid "1.2.3.7",
-                :hankkimistapa_id 5,
-                :jakso_alkupvm "2021-09-01",
-                :jakso_loppupvm "2023-12-15",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot []}
-               {:opiskeluoikeus_oid "1.2.3.7",
-                :hankkimistapa_id 11,
-                :jakso_alkupvm "2021-09-03",
-                :jakso_loppupvm "2021-09-30",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot []}
-               {:opiskeluoikeus_oid "1.2.3.7",
-                :hankkimistapa_id 10,
-                :jakso_alkupvm "2021-08-20",
-                :jakso_loppupvm "2021-09-10",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot [{:id 1191,
-                                         :osaamisen-hankkimistapa-id 10,
-                                         :alku "2021-09-21"}]}
-               {:opiskeluoikeus_oid "1.2.3.7",
-                :hankkimistapa_id 12,
-                :jakso_alkupvm "2021-11-12",
-                :jakso_loppupvm "2021-12-15",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot [{:id 1192,
-                                         :osaamisen-hankkimistapa-id 12,
-                                         :alku "2021-11-18",
-                                         :loppu "2021-11-25"}]}
-               {:opiskeluoikeus_oid "1.2.3.8",
-                :hankkimistapa_id 13,
-                :jakso_alkupvm "2021-09-06",
-                :jakso_loppupvm "2021-10-19",
-                :osa_aikaisuus 60,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot [{:id 1029,
-                                         :osaamisen-hankkimistapa-id 13,
-                                         :alku "2021-10-13"}]}
-               {:opiskeluoikeus_oid "1.2.3.8",
-                :hankkimistapa_id 3,
-                :jakso_alkupvm "2021-10-11",
-                :jakso_loppupvm "2021-10-21",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot [{:id 1030,
-                                         :osaamisen-hankkimistapa-id 3,
-                                         :alku "2021-10-13",
-                                         :loppu "2021-10-14"}]}
-               {:opiskeluoikeus_oid "1.2.3.8",
-                :hankkimistapa_id 6,
-                :jakso_alkupvm "2021-10-11",
-                :jakso_loppupvm "2021-10-21",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot [{:id 1031,
-                                         :osaamisen-hankkimistapa-id 6,
-                                         :alku "2021-10-13"}]}
-               {:opiskeluoikeus_oid "1.2.3.8",
-                :hankkimistapa_id 1,
-                :jakso_alkupvm "2021-10-22",
-                :jakso_loppupvm "2021-10-25",
-                :osa_aikaisuus 40,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot [{:id 1032,
-                                         :osaamisen-hankkimistapa-id 1,
-                                         :alku "2022-02-11",
-                                         :loppu "3022-03-01"}]}
-               {:opiskeluoikeus_oid "1.2.3.8",
-                :hankkimistapa_id 15,
-                :jakso_alkupvm "2021-10-04",
-                :jakso_loppupvm "2021-10-19",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot []}
-               {:opiskeluoikeus_oid "1.2.3.8",
-                :hankkimistapa_id 8,
-                :jakso_alkupvm "2021-10-15",
-                :jakso_loppupvm "2021-12-11",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot []}
-               {:opiskeluoikeus_oid "1.2.3.8",
-                :hankkimistapa_id 2,
-                :jakso_alkupvm "2021-09-01",
-                :jakso_loppupvm "2021-12-15",
-                :osa_aikaisuus 80,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot [{:id 1033,
-                                         :osaamisen-hankkimistapa-id 2,
-                                         :alku "2021-10-22",
-                                         :loppu "2021-10-30"}]}
-               {:opiskeluoikeus_oid "1.2.3.8",
-                :hankkimistapa_id 4,
-                :jakso_alkupvm "2021-05-15",
-                :jakso_loppupvm "2021-12-01",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot []}
-               {:opiskeluoikeus_oid "1.2.3.9",
-                :hankkimistapa_id 16,
-                :jakso_alkupvm "2021-02-01",
-                :jakso_loppupvm "2021-08-30",
-                :osa_aikaisuus nil,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot [{:id 1034,
-                                         :osaamisen-hankkimistapa-id 16,
-                                         :alku "2021-06-15"}]}
-               {:opiskeluoikeus_oid "1.2.3.10",
-                :hankkimistapa_id 7,
-                :jakso_alkupvm "2021-01-15",
-                :jakso_loppupvm "2022-04-29",
-                :osa_aikaisuus 50,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot []}
-               {:opiskeluoikeus_oid "1.2.3.10.onnea.etsintaan",
-                :hankkimistapa_id 17,
-                :jakso_alkupvm "2021-08-27",
-                :jakso_loppupvm "2022-04-29",
-                :osa_aikaisuus 100,
-                :tyyppi "hato",
-                :keskeytymisajanjaksot []}])
+(defn- mock-get-tyoelamajaksot-active-between!
+  [oppija-oid start end]
+  (filter #(and (= (:oppija_oid %) oppija-oid)
+                (<= (compare (:jakso_alkupvm %) end) 0)
+                (>= (compare (:jakso_loppupvm %) start) 0))
+          jaksot-1-25))
 
 (deftest test-in-jakso?
   (testing "Funktio palauttaa"
@@ -453,122 +384,175 @@
                                               (LocalDate/parse pvm)))
               "2021-12-31" "2021-03-21" "2019-01-01")))))))
 
+(deftest test-osa-aikaisuuskerroin
+  (with-redefs [clojure.tools.logging/log* tu/mock-log*]
+    (testing (str "Jos osa-aikaisuustieto puuttuu jakson tiedosta, tulkitaan "
+                  "jakson osa-aikaisuudeksi 0 %.")
+      (is (= (nh/osa-aikaisuuskerroin {:hankkimistapa_id 123}) 0))
+      (is (tu/logs-contain?
+            {:level   :error
+             :message (str "Osa-aikaisuustieto puuttuu jakson 123 tiedoista. "
+                           "Jakson kestoksi asetetaan nolla.")})))
+    (testing (str "Osa-aikaisuustiedon ollessa ei-validi, osa-aikaisuuden "
+                  "katsotaan olevan 0 %.")
+      (are [oa] (true? (and (= (nh/osa-aikaisuuskerroin {:hankkimistapa_id 123
+                                                         :osa_aikaisuus oa})
+                               0)
+                            (tu/logs-contain?
+                              {:level :error
+                               :message (str "Jakson 123 osa-aikaisuus `" oa
+                                             "` ei ole validi. Jakson kestoksi "
+                                             "asetetaan nolla.")})))
+        -1 0 120 5.5 "100")))
+  (testing (str "Osa-aikaisuustiedon ollessa validi, funktio hakee "
+                "osa-aikaisuustiedon jaksosta ja palauttaa tämän "
+                "perusteella lasketun osa-aikaisuuskertoimen.")
+    (are [oa] (= (nh/osa-aikaisuuskerroin {:osa_aikaisuus oa})
+                 (/ oa 100.0))
+      1 15 50 98 100)))
+
 (deftest test-get-keskeytymisajanjaksot
-  (testing "Funktio palauttaa jakson tai tähän liitetyn opiskeluoikeuden
-           sisältämät keskeytymisajanjaksot"
-    (are [jakso opiskeluoikeus expected]
-         (= (nh/get-keskeytymisajanjaksot jakso opiskeluoikeus)
-            (map c/alku-and-loppu-to-localdate expected))
-      {} {} '()
-      ; ---
-      {:keskeytymisajanjaksot [{:alku "2022-01-12" :loppu "2022-01-12"}
-                               {:alku "2022-03-03" :loppu "2022-04-30"}]}
-      {}
-      [{:alku "2022-01-12" :loppu "2022-01-12"}
-       {:alku "2022-03-03" :loppu "2022-04-30"}]
-      ; ---
-      {} (mock-get-opiskeluoikeus-catch-404 "1.2.3.4")
-      []
-      ; ---
-      {} (mock-get-opiskeluoikeus-catch-404 "1.2.3.5")
-      [{:tila {:koodiarvo "valiaikaisestikeskeytynyt"} :alku "2022-02-02"}]
-      ; ---
-      (nth jaksot-1 2) (mock-get-opiskeluoikeus-catch-404 "1.2.3.5")
-      [{:alku "2022-02-16" :loppu "2022-02-18"}
-       {:alku "2022-02-02" :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}])))
+  (testing
+    (str "Funktio ei palauta yhtään keskeytymisajanjaksoa, kun parametreiksi "
+         "ei ole annettu yhtään jaksoa eikä opiskeluoikeutta.")
+    (is (= (nh/get-keskeytymisajanjaksot {} {}) '())))
+  (testing
+    (str "Funktio ei palauta yhtään keskeytymisajanjaksoa, kun jakson eikä "
+         "opiskeluoikeuden tietoihin ole merkitty keskeytymisajanjaksoja.")
+    (is (= (nh/get-keskeytymisajanjaksot
+             jakso-4 {mock-get-opiskeluoikeus-catch-404 "1.2.3.8"})
+           '())))
+  (let [jakso-kjaksot  [{:alku "2022-01-12" :loppu "2022-01-12"}
+                        {:alku "2022-01-16" :loppu "2022-01-18"}]
+        opiskeluoikeus (mock-get-opiskeluoikeus-catch-404 "1.2.3.5")
+        oo-kjaksot     (map c/alku-and-loppu-to-localdate
+                            [{:alku "2022-02-02"
+                              :tila {:koodiarvo "valiaikaisestikeskeytynyt"}}])]
+    (testing
+      (str "Keskeytymisajanjakso jaksossa, muttei opiskeluoikeudessa. Funktio "
+           "palauttaa pelkästään jakson keskeytymisajanjaksot.")
+      (is (= (nh/get-keskeytymisajanjaksot
+               {:keskeytymisajanjaksot jakso-kjaksot} {})
+             (map nh/harmonize-alku-and-loppu-dates jakso-kjaksot))))
+    (testing
+      (str "Keskeytymisajanjakso opiskeluoikeudessa, muttei jaksossa. Funktio "
+           "palauttaa pelkästään opiskeluoikeuden keskeytymisajanjaksot.")
+      (is (= (nh/get-keskeytymisajanjaksot {} opiskeluoikeus) oo-kjaksot)))
+    (testing
+      (str "Keskeytymisajanjaksoja sekä jaksossa että tämän "
+           "opiskeluoikeudessa. Funktio palauttaa molempien kjaksot.")
+      (is (= (nh/get-keskeytymisajanjaksot jakso-25 opiskeluoikeus)
+             (concat (map nh/harmonize-alku-and-loppu-dates jakso-kjaksot)
+                     oo-kjaksot))))))
 
 (deftest test-calculate-single-day-kestot
-  (testing "Funktio palauttaa yhden päivän aktiivisten jaksojen kestot"
-    (let [opiskeluoikeudet (reduce
-                             #(assoc %
-                                     %2
-                                     (mock-get-opiskeluoikeus-catch-404 %2))
-                             {}
-                             (map :opiskeluoikeus_oid jaksot-2))
-          jaksot (map (comp c/alku-and-loppu-to-localdate
-                            nh/harmonize-date-keys)
-                      jaksot-2)]
-      (are [pvm kesto jakso-ids] (= (do-rounding
-                                      (nh/calculate-single-day-kestot
-                                        jaksot
-                                        opiskeluoikeudet
-                                        (LocalDate/parse pvm)))
-                                    (zipmap jakso-ids (repeat kesto)))
-        "2021-01-12" 0     []
-        "2021-01-27" 1.0   [7]
-        "2021-02-03" 0.5   [7 16]
-        "2021-05-15" 0.333 [4 7 16]
-        "2021-06-15" 0.5   [4 7]
-        "2021-08-19" 0.333 [4 7 9]
-        "2021-08-24" 0.25  [4 7 9 10]
-        "2021-08-28" 0.333 [4 7 10]
-        "2021-09-02" 0.167 [2 4 5 7 10 14]
-        "2021-09-03" 0.143 [2 4 5 7 10 11 14]
-        "2021-09-06" 0.125 [2 4 5 7 10 11 13 14]
-        "2021-09-18" 0.143 [2 4 5 7 11 13 14]
-        "2021-10-01" 0.167 [2 4 5 7 13 14]
-        "2021-10-15" 0.125 [2 3 4 5 7 8 14 15]
-        "2021-10-31" 0.167 [2 4 5 7 8 14]
-        "2021-11-14" 0.143 [2 4 5 7 8 12 14]
-        "2021-11-22" 0.167 [2 4 5 7 8 14]
-        "2021-12-05" 0.167 [2 5 7 8 12 14]
-        "2021-12-17" 0.333 [5 7 14]
-        "2022-06-04" 0.5   [5 14]
-        "2024-07-21" 1.0   [14]
-        "2024-12-16" 0     []))))
-
-(deftest test-calculate-kestot-old
-  (testing "`calculate-kestot-old` laskee kestot oikein."
-    (is (= (nh/calculate-kestot-old jaksot-1
-                                    (get-test-opiskeluoikeudet
-                                      (map :opiskeluoikeus_oid jaksot-1)))
-           {1 11
-            2 18
-            3 5
-            4 6
-            5 9}))))
+  (testing
+    (str "Yhden päivän kesto jaetaan tasaisesti aktiivisena oleville "
+         "jaksoille. Jos yksikään jaksoista ei ole aktiivinen, palautuu "
+         "tyhjä taulu.")
+    (are [y m d jaksot kestot]
+         (let [oos (map :opiskeluoikeus_oid jaksot)]
+           (= (do-rounding
+                (nh/calculate-single-day-kestot
+                  (map nh/harmonize-alku-and-loppu-dates jaksot)
+                  (zipmap oos (map mock-get-opiskeluoikeus-catch-404 oos))
+                  (LocalDate/of y m d)))
+              kestot))
+      2021 10 13  [jakso-3]   {}  ; keskeytynyt (jakso)
+      2021 10 14  [jakso-6]   {}  ; keskeytynyt (jakso)
+      2021 10 14  [jakso-10]  {}  ; keskeytynyt (jakso)
+      2022  2  2  [jakso-25]  {}  ; keskeytynyt (opiskeluoikeus)
+      2021 10 12  [jakso-3]   {3 1.0}
+      2021  7 31  [jakso-9]   {9 1.0}
+      2021 10 13  [jakso-3 jakso-4]  {4 1.0}  ; 3 keskeytynyt
+      2021 10 12  [jakso-3 jakso-4]  {3 0.5  4 0.5}
+      ; 2 keskeytynyt, 3 päättynyt:
+      2021 10 25  [jakso-1 jakso-2 jakso-3 jakso-4] {1 0.5 4 0.5}
+      ; 1 ei vielä alkanut:
+      2021 10 21  [jakso-1 jakso-2 jakso-3 jakso-4]  {2 0.33 3 0.33 4 0.33}
+      ; 1 ei vielä alkanut, 11 ei vielä alkanut:
+      2021  9  1
+      [jakso-1 jakso-5 jakso-10 jakso-11 jakso-14]
+      {5 0.33 10 0.33 14 0.33}
+      ; 1 ei vielä alkanut
+      2021  9  9
+      [jakso-1 jakso-5 jakso-10 jakso-11 jakso-14]
+      {5 0.25 10 0.25 11 0.25 14 0.25}
+      ; 10 päättynyt, 11 päättynyt
+      2021 10 22
+      [jakso-1 jakso-5 jakso-10 jakso-11 jakso-14]
+      {1 0.33 5 0.33 14 0.33})))
 
 (deftest test-calculate-kestot
-  (testing "`calculate-kestot` laskee kestot oikein."
-    (is (= (nh/calculate-kestot
-             jaksot-2
-             (get-test-opiskeluoikeudet (map :opiskeluoikeus_oid jaksot-2)))
-           {1 1
-            2 15
-            3 1
-            4 53
-            5 359
-            6 0
-            7 169
-            8 9
-            9 18
-            10 5
-            11 4
-            12 4
-            13 5
-            14 725
-            15 2
-            16 62
-            17 0}))))
+  (testing (str "Funktio palauttaa `nil`, jos jaksot sisältävässä HashMapissa "
+                "ei ole jaksoja.")
+    (is (= (nh/calculate-kestot {} {:voi-sisaltaa-mita-tahansa nil}) nil)))
+  (testing (str "Funktio antaa jakson kestoksi nollan, mikäli "
+                "osa-aikaisuustieto puuttuu tai ei ole validi.")
+    (are [oa] (let [oo-oid (:opiskeluoikeus_oid jakso-2)]
+                (= (nh/calculate-kestot [(assoc jakso-2 :osa_aikaisuus oa)]
+                                        {oo-oid (get opiskeluoikeudet
+                                                     oo-oid)})
+                   {2 0}))
+      nil -1 0 101 55.5 "merkkijono" true false {}))
+  (testing (str "Funktio antaa jakson kestoksi nollan, mikäli jakson "
+                "opiskeluoikeus on `nil` tai sitä ei löydy "
+                "`opiskeluoikeudet` hashmapista.")
+    (are [opiskeluoikeudet]
+         (= (nh/calculate-kestot [jakso-2] opiskeluoikeudet) {2 0})
+      {} {"1.2.3.8" nil}))
+  (testing "Yhden jakson tapauksessa jakson kesto on jakson päivien
+           yhteenlaskettu lukumäärä (pois lukien keskeytymisajanjakson päivät)
+           kerrottuna osa-aikaisuuskertoimella"
+    (are [jakso expected-kesto]
+         (let [oo-oid (:opiskeluoikeus_oid jakso)]
+           (= (nh/calculate-kestot [jakso]
+                                   {oo-oid (get opiskeluoikeudet oo-oid)})
+              expected-kesto))
+      jakso-1 {1 2}   ; 4 päivää • 0.4 = 1.6 päivää ≈ 2 päivää
+      jakso-2 {2 78}  ; (107 päivää - 9 k.jakson. päivää) • 0.8 = 78.4 päivää
+                      ;                                         ≈ 78 päivää
+      jakso-3 {3 9}   ; (10 päivää - 1 k.jakson. päivää) • 1.0 = 9 päivää
+      jakso-6 {6 9})) ; (10 päivää - 1 k.jakson. päivää) • 1.0 = 9 päivää
+  (testing
+    "Useamman jakson tapauksessa kestot ovat pienempiä jyvityksen seurauksena."
+    (are [jaksot expected-kestot]
+         (= (nh/calculate-kestot jaksot
+                                 (select-keys opiskeluoikeudet
+                                              (map :opiskeluoikeus_oid jaksot)))
+            expected-kestot)
+      [jakso-2 jakso-3] {2 74 3 5}
+      [jakso-2 jakso-4 jakso-8] {2 35 4 104 8 23}
+      [jakso-1 jakso-4 jakso-9 jakso-16] {1 1 4 109 9 28 16 119})))
 
 (deftest test-calculate-kestot!
-  (testing "`calculate-kestot!` laskee oikein työpaikkajakson kestot sekä
-            uudella ja vanhalla laskentatavalla."
-    (with-redefs
-      [oph.heratepalvelu.external.ehoks/get-tyoelamajaksot-active-between!
-       (fn [oppija-oid start end]
-         (reset! get-tyoelamajaksot-active-between-call-params
-                 {:start start :end end :oppija oppija-oid})
-         jaksot-1)
-       koski/get-opiskeluoikeus-catch-404! mock-get-opiskeluoikeus-catch-404]
-      (is (= (nh/calculate-kestot! [{:oppija_oid "4.4.4.4"
-                                     :jakso_alkupvm "2022-01-05"
-                                     :jakso_loppupvm "2022-02-28"}
-                                    {:oppija_oid "4.4.4.4"
-                                     :jakso_alkupvm "2022-01-10"
-                                     :jakso_loppupvm "2022-03-03"}])
-             [{1 14  2 50  3 0  4 15  5 14}      ; uudella laskentatavalla
-              {1 11  2 18  3 5  4 6   5 9}]))))) ; vanhalla laskentatavalla
+  (with-redefs
+    [ehoks/get-tyoelamajaksot-active-between!
+     mock-get-tyoelamajaksot-active-between!
+     koski/get-opiskeluoikeus-catch-404! mock-get-opiskeluoikeus-catch-404]
+    (testing "Funktio laskee kestot oikein"
+      (are [jaksot kestot] (= (nh/calculate-kestot! jaksot) kestot)
+        [jakso-2] {2 12}
+        [jakso-9] {9 18}
+        [jakso-21] {21 16}
+        [jakso-1 jakso-4] {1 0 4 37}
+        [jakso-9 jakso-21] {9 18 21 16}
+        jaksot-1-25 {1 0, 2 12, 3 1, 4 37, 5 215, 6 1, 7 85, 8 9, 9 18, 10 4,
+                     11 4, 12 4, 13 5, 14 725, 15 2, 16 62, 17 0, 21 16,
+                     22 25, 23 0, 24 14, 25 13}))
+    (testing (str "Lopputulos on sama kuin kestot laskettaisiin kunkin oppijan "
+                  "jaksoille erikseen. Ts. funktio erottelee eri oppijoiden "
+                  "jaksot kestoja laskiessaan.")
+      (are [jaksot] (= (nh/calculate-kestot! jaksot)
+                       (zipmap (map :hankkimistapa_id jaksot)
+                               (map #(get (nh/calculate-kestot! [%])
+                                          (:hankkimistapa_id %))
+                                    jaksot)))
+        [jakso-9 jakso-23]
+        [jakso-3 jakso-6 jakso-15 jakso-22 jakso-23]
+        jaksot-1-17
+        jaksot-21-25
+        jaksot-1-25))))
 
 (deftest test-query-jaksot
   (testing "Varmistaa, että query-jaksot toimii oikein."
@@ -605,7 +589,7 @@
 (defn- mock-trauj-group-jaksot-and-calculate-kestot [jaksot]
   (add-to-trauj-results {:type "group-jaksot-and-calculate-kestot"
                          :jaksot jaksot})
-  [{1 1 2 3 3 5} {1 1 2 2 3 4}])
+  {1 1 2 3 3 5})
 
 (defn- mock-trauj-update-jakso [jakso updates]
   (add-to-trauj-results {:type "update-jakso" :jakso jakso :updates updates}))
@@ -625,13 +609,13 @@
                                {:hankkimistapa_id 3}]}
                      {:type "update-jakso"
                       :jakso {:hankkimistapa_id 1}
-                      :updates {:kesto [:n 1] :kesto-vanha [:n 1]}}
+                      :updates {:kesto [:n 1]}}
                      {:type "update-jakso"
                       :jakso {:hankkimistapa_id 2}
-                      :updates {:kesto [:n 3] :kesto-vanha [:n 2]}}
+                      :updates {:kesto [:n 3]}}
                      {:type "update-jakso"
                       :jakso {:hankkimistapa_id 3}
-                      :updates {:kesto [:n 5] :kesto-vanha [:n 4]}}]
+                      :updates {:kesto [:n 5]}}]
             updated-jaksot [{:hankkimistapa_id 1 :kesto 1}
                             {:hankkimistapa_id 2 :kesto 3}
                             {:hankkimistapa_id 3 :kesto 5}]]
