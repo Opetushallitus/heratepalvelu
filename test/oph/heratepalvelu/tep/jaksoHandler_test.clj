@@ -89,6 +89,17 @@
       (is (jh/has-open-keskeytymisajanjakso? herate3))
       (is (jh/has-open-keskeytymisajanjakso? herate4)))))
 
+(deftest test-osa-aikaisuus-missing?
+  (testing "logic for whether a herate should be discarded because of
+           osa-aikaisuus"
+    (is (jh/osa-aikaisuus-missing? {:osa-aikaisuus nil :loppupvm "2023-08-01"}))
+    (is (jh/osa-aikaisuus-missing? {:loppupvm "2023-08-01"}))
+    (is (not (jh/osa-aikaisuus-missing?
+               {:osa-aikaisuus nil :loppupvm "2023-06-30"})))
+    (is (not (jh/osa-aikaisuus-missing? {:loppupvm "2023-06-30"})))
+    (is (not (jh/osa-aikaisuus-missing?
+               {:osa-aikaisuus 30 :loppupvm "2023-08-01"})))))
+
 (defn- mock-check-duplicate-hankkimistapa-get-item [query-params table]
   (when (and (= :n (first (:hankkimistapa_id query-params)))
              (= "jaksotunnus-table-name" table))
@@ -492,6 +503,12 @@
      :opiskeluoikeus opiskeluoikeus})
   false)
 
+(defn- mock-osa-aikaisuus-missing? [herate]
+  (add-to-test-handleJaksoHerate-results
+    {:type "mock-osa-aikaisuus-missing?"
+     :osa-aikaisuus (:osa-aikaisuus herate)})
+  false)
+
 (defn- mock-save-jaksotunnus [herate opiskeluoikeus koulutustoimija]
   (add-to-test-handleJaksoHerate-results {:type "mock-save-jaksotunnus"
                                           :herate herate
@@ -515,6 +532,8 @@
                   mock-patch-oht-tep-kasitelty
                   oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
                   mock-get-opiskeluoikeus-catch-404
+                  oph.heratepalvelu.tep.jaksoHandler/osa-aikaisuus-missing?
+                  mock-osa-aikaisuus-missing?
                   oph.heratepalvelu.tep.jaksoHandler/fully-keskeytynyt?
                   mock-fully-keskeytynyt?
                   oph.heratepalvelu.tep.jaksoHandler/save-jaksotunnus
@@ -537,6 +556,7 @@
                       {:oid "123.456.789"
                        :koulutustoimija "mock-koulutustoimija-oid"}
                       :loppupvm "2021-12-15"}
+                     {:type "mock-osa-aikaisuus-missing?" :osa-aikaisuus nil}
                      {:type "mock-fully-keskeytynyt?"
                       :herate {:opiskeluoikeus-oid "123.456.789"
                                :loppupvm "2021-12-15"

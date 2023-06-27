@@ -86,6 +86,13 @@
   (map c/alku-and-loppu-to-localdate
        (sort-by :alku (:keskeytymisajanjaksot herate))))
 
+(defn osa-aikaisuus-missing?
+  "Puuttuuko tieto osa-aikaisuudesta jaksosta, jossa sen pitäisi olla?"
+  [herate]
+  (and (not (:osa-aikaisuus herate))
+       (c/is-after (LocalDate/parse (:loppupvm herate))
+                   (LocalDate/of 2023 6 30))))
+
 (defn fully-keskeytynyt?
   "Palauttaa true, jos TEP-jakso on keskeytynyt sen loppupäivämäärällä."
   [herate]
@@ -284,6 +291,9 @@
 
                 (c/terminaalitilassa? opiskeluoikeus (:loppupvm herate))
                 (log/warn "Opiskeluoikeus terminaalitilassa:" opiskeluoikeus)
+
+                (osa-aikaisuus-missing? herate)
+                (log/warn "Jakso ei sisällä osa-aikaisuustietoa.")
 
                 (fully-keskeytynyt? herate)
                 (log/warn "Jakso on täysin keskeytynyt.")
