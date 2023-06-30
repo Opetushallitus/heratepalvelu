@@ -97,7 +97,7 @@
                                       ":end" (attr "2021-12-31")}}
                     (:table env))
                   uudelleenlasketut-kestot
-                  (nip/calculate-kestot! oppijan-kaikki-jaksot)]
+                  (nip/jaksojen-kestot! oppijan-kaikki-jaksot)]
               (println uudelleenlasketut-kestot)
               (doseq [jakso oppijan-kaikki-jaksot]
                 (println "Päivitetään jaksolle"

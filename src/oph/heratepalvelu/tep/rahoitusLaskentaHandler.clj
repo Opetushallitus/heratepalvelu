@@ -74,7 +74,7 @@
                    :jakso_alkupvm (:alkupvm herate)
                    :jakso_loppupvm (:loppupvm herate)}
             [kesto kesto-vanha] (map #(get % (:hankkimistapa_id jakso))
-                                     (nh/calculate-kestot! [jakso]))
+                                     (nh/jaksojen-kestot! [jakso]))
             db-data {:hankkimistapa_id     [:n tapa-id]
                      :hankkimistapa_tyyppi
                      [:s (last (str/split (:hankkimistapa-tyyppi herate) #"_"))]

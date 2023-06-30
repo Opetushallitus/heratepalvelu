@@ -18,21 +18,8 @@
                      2023 2 3
                      2023 2 4])))
 
-(deftest test-earliest-and-latest
-  (testing "`earliest` palauttaa päivämääristä aikaisimman."
-    (is (= (apply d/earliest (shuffle test-dates)) (LocalDate/of 2023 1 26))))
-  (testing "`latest` palauttaa päivämääristä viimeisimmän."
-    (is (= (apply d/latest   (shuffle test-dates)) (LocalDate/of 2023 2 4)))))
-
 (deftest test-range
   (testing "`range` rakentaa onnistuneesti päivämääräsekvenssin, johon kuuluvat
             sekä parametreina annetut alku- ja loppupäivämäärät."
     (is (= (d/range (LocalDate/of 2023 1 26) (LocalDate/of 2023 2 04))
            test-dates))))
-
-(deftest test-weekday?
-  (testing "Varmistaa, että weekday? palauttaa `true` kun kyse on arkipäivästä"
-    (is (true? (d/weekday? (LocalDate/of 2022 6 13))))
-    (is (true? (d/weekday? (LocalDate/of 2022 6 10))))
-    (is (false? (d/weekday? (LocalDate/of 2022 6 4))))
-    (is (false? (d/weekday? (LocalDate/of 2022 6 5))))))

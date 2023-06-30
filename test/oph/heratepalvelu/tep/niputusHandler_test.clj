@@ -265,6 +265,7 @@
   (reduce-kv #(assoc %1 %2 (/ (Math/round (* %3 100.0)) 100.0)) {} values))
 
 (defn- mock-get-opiskeluoikeus-catch-404 [oo-oid]
+  (assert oo-oid "Opiskeluoikeus OID `oo-oid` puuttuu")
   (swap! mock-get-opiskeluoikeus-catch-404-count inc)
   (get opiskeluoikeudet oo-oid))
 
@@ -316,6 +317,9 @@
 
 (defn- mock-get-tyoelamajaksot-active-between!
   [oppija-oid start end]
+  (assert oppija-oid "oppija-oid puuttuu")
+  (assert start "aikavälin alkupäivämäärä `start` puuttuu")
+  (assert end "aikavälin päättymispäivämäärä `end` puuttuu")
   (filter #(and (= (:oppija_oid %) oppija-oid)
                 (<= (compare (:jakso_alkupvm %) end) 0)
                 (>= (compare (:jakso_loppupvm %) start) 0))
@@ -411,15 +415,15 @@
                  (/ oa 100.0))
       1 15 50 98 100)))
 
-(deftest test-get-keskeytymisajanjaksot
+(deftest test-keskeytymisajanjaksot
   (testing
     (str "Funktio ei palauta yhtään keskeytymisajanjaksoa, kun parametreiksi "
          "ei ole annettu yhtään jaksoa eikä opiskeluoikeutta.")
-    (is (= (nh/get-keskeytymisajanjaksot {} {}) '())))
+    (is (= (nh/keskeytymisajanjaksot {} {}) '())))
   (testing
     (str "Funktio ei palauta yhtään keskeytymisajanjaksoa, kun jakson eikä "
          "opiskeluoikeuden tietoihin ole merkitty keskeytymisajanjaksoja.")
-    (is (= (nh/get-keskeytymisajanjaksot
+    (is (= (nh/keskeytymisajanjaksot
              jakso-4 {mock-get-opiskeluoikeus-catch-404 "1.2.3.8"})
            '())))
   (let [jakso-kjaksot  [{:alku "2022-01-12" :loppu "2022-01-12"}
@@ -431,21 +435,21 @@
     (testing
       (str "Keskeytymisajanjakso jaksossa, muttei opiskeluoikeudessa. Funktio "
            "palauttaa pelkästään jakson keskeytymisajanjaksot.")
-      (is (= (nh/get-keskeytymisajanjaksot
+      (is (= (nh/keskeytymisajanjaksot
                {:keskeytymisajanjaksot jakso-kjaksot} {})
              (map nh/harmonize-alku-and-loppu-dates jakso-kjaksot))))
     (testing
       (str "Keskeytymisajanjakso opiskeluoikeudessa, muttei jaksossa. Funktio "
            "palauttaa pelkästään opiskeluoikeuden keskeytymisajanjaksot.")
-      (is (= (nh/get-keskeytymisajanjaksot {} opiskeluoikeus) oo-kjaksot)))
+      (is (= (nh/keskeytymisajanjaksot {} opiskeluoikeus) oo-kjaksot)))
     (testing
       (str "Keskeytymisajanjaksoja sekä jaksossa että tämän "
            "opiskeluoikeudessa. Funktio palauttaa molempien kjaksot.")
-      (is (= (nh/get-keskeytymisajanjaksot jakso-25 opiskeluoikeus)
+      (is (= (nh/keskeytymisajanjaksot jakso-25 opiskeluoikeus)
              (concat (map nh/harmonize-alku-and-loppu-dates jakso-kjaksot)
                      oo-kjaksot))))))
 
-(deftest test-calculate-single-day-kestot
+(deftest test-oppijan-jaksojen-yhden-paivan-kestot
   (testing
     (str "Yhden päivän kesto jaetaan tasaisesti aktiivisena oleville "
          "jaksoille. Jos yksikään jaksoista ei ole aktiivinen, palautuu "
@@ -453,7 +457,7 @@
     (are [y m d jaksot kestot]
          (let [oos (map :opiskeluoikeus_oid jaksot)]
            (= (do-rounding
-                (nh/calculate-single-day-kestot
+                (nh/oppijan-jaksojen-yhden-paivan-kestot
                   (map nh/harmonize-alku-and-loppu-dates jaksot)
                   (zipmap oos (map mock-get-opiskeluoikeus-catch-404 oos))
                   (LocalDate/of y m d)))
@@ -483,31 +487,32 @@
       [jakso-1 jakso-5 jakso-10 jakso-11 jakso-14]
       {1 0.33 5 0.33 14 0.33})))
 
-(deftest test-calculate-kestot
+(deftest test-oppijan-jaksojen-kestot
   (testing (str "Funktio palauttaa `nil`, jos jaksot sisältävässä HashMapissa "
                 "ei ole jaksoja.")
-    (is (= (nh/calculate-kestot {} {:voi-sisaltaa-mita-tahansa nil}) nil)))
+    (is (= (nh/oppijan-jaksojen-kestot {} {:voi-sisaltaa-mita-tahansa nil})
+           nil)))
   (testing (str "Funktio antaa jakson kestoksi nollan, mikäli "
                 "osa-aikaisuustieto puuttuu tai ei ole validi.")
     (are [oa] (let [oo-oid (:opiskeluoikeus_oid jakso-2)]
-                (= (nh/calculate-kestot [(assoc jakso-2 :osa_aikaisuus oa)]
-                                        {oo-oid (get opiskeluoikeudet
-                                                     oo-oid)})
+                (= (nh/oppijan-jaksojen-kestot
+                     [(assoc jakso-2 :osa_aikaisuus oa)]
+                     {oo-oid (get opiskeluoikeudet oo-oid)})
                    {2 0}))
       nil -1 0 101 55.5 "merkkijono" true false {}))
   (testing (str "Funktio antaa jakson kestoksi nollan, mikäli jakson "
                 "opiskeluoikeus on `nil` tai sitä ei löydy "
                 "`opiskeluoikeudet` hashmapista.")
     (are [opiskeluoikeudet]
-         (= (nh/calculate-kestot [jakso-2] opiskeluoikeudet) {2 0})
+         (= (nh/oppijan-jaksojen-kestot [jakso-2] opiskeluoikeudet) {2 0})
       {} {"1.2.3.8" nil}))
   (testing "Yhden jakson tapauksessa jakson kesto on jakson päivien
            yhteenlaskettu lukumäärä (pois lukien keskeytymisajanjakson päivät)
            kerrottuna osa-aikaisuuskertoimella"
     (are [jakso expected-kesto]
          (let [oo-oid (:opiskeluoikeus_oid jakso)]
-           (= (nh/calculate-kestot [jakso]
-                                   {oo-oid (get opiskeluoikeudet oo-oid)})
+           (= (nh/oppijan-jaksojen-kestot
+                [jakso] {oo-oid (get opiskeluoikeudet oo-oid)})
               expected-kesto))
       jakso-1 {1 2}   ; 4 päivää • 0.4 = 1.6 päivää ≈ 2 päivää
       jakso-2 {2 78}  ; (107 päivää - 9 k.jakson. päivää) • 0.8 = 78.4 päivää
@@ -517,21 +522,21 @@
   (testing
     "Useamman jakson tapauksessa kestot ovat pienempiä jyvityksen seurauksena."
     (are [jaksot expected-kestot]
-         (= (nh/calculate-kestot jaksot
-                                 (select-keys opiskeluoikeudet
-                                              (map :opiskeluoikeus_oid jaksot)))
+         (= (nh/oppijan-jaksojen-kestot
+              jaksot
+              (select-keys opiskeluoikeudet (map :opiskeluoikeus_oid jaksot)))
             expected-kestot)
       [jakso-2 jakso-3] {2 74 3 5}
       [jakso-2 jakso-4 jakso-8] {2 35 4 104 8 23}
       [jakso-1 jakso-4 jakso-9 jakso-16] {1 1 4 109 9 28 16 119})))
 
-(deftest test-calculate-kestot!
+(deftest test-jaksojen-kestot!
   (with-redefs
     [ehoks/get-tyoelamajaksot-active-between!
      mock-get-tyoelamajaksot-active-between!
      koski/get-opiskeluoikeus-catch-404! mock-get-opiskeluoikeus-catch-404]
     (testing "Funktio laskee kestot oikein"
-      (are [jaksot kestot] (= (nh/calculate-kestot! jaksot) kestot)
+      (are [jaksot kestot] (= (nh/jaksojen-kestot! jaksot) kestot)
         [jakso-2] {2 12}
         [jakso-9] {9 18}
         [jakso-21] {21 16}
@@ -543,16 +548,26 @@
     (testing (str "Lopputulos on sama kuin kestot laskettaisiin kunkin oppijan "
                   "jaksoille erikseen. Ts. funktio erottelee eri oppijoiden "
                   "jaksot kestoja laskiessaan.")
-      (are [jaksot] (= (nh/calculate-kestot! jaksot)
+      (are [jaksot] (= (nh/jaksojen-kestot! jaksot)
                        (zipmap (map :hankkimistapa_id jaksot)
-                               (map #(get (nh/calculate-kestot! [%])
+                               (map #(get (nh/jaksojen-kestot! [%])
                                           (:hankkimistapa_id %))
                                     jaksot)))
         [jakso-9 jakso-23]
         [jakso-3 jakso-6 jakso-15 jakso-22 jakso-23]
         jaksot-1-17
         jaksot-21-25
-        jaksot-1-25))))
+        jaksot-1-25))
+    (testing (str "Funktio palauttaa tyhjän listan, jos eHOKSista ei saada "
+                  "`get-tyoelamajaksot-active-between!`-kutsulla.")
+      (with-redefs
+        [ehoks/get-tyoelamajaksot-active-between! (constantly {})]
+        (is (= (nh/jaksojen-kestot! jaksot-1-25) {}))))
+    (testing "Kestot ovat nollia, jos Koskesta ei saada opiskeluoikeuksia."
+      (with-redefs
+        [koski/get-opiskeluoikeus-catch-404! (constantly nil)]
+        (is (= (nh/jaksojen-kestot! jaksot-1-25)
+               (zipmap (map :hankkimistapa_id jaksot-1-25) (repeat 0))))))))
 
 (deftest test-query-jaksot
   (testing "Varmistaa, että query-jaksot toimii oikein."
@@ -586,8 +601,8 @@
   (add-to-trauj-results {:type "query-jaksot" :nippu nippu})
   [{:hankkimistapa_id 1} {:hankkimistapa_id 2} {:hankkimistapa_id 3}])
 
-(defn- mock-trauj-group-jaksot-and-calculate-kestot [jaksot]
-  (add-to-trauj-results {:type "group-jaksot-and-calculate-kestot"
+(defn- mock-trauj-jaksojen-kestot [jaksot]
+  (add-to-trauj-results {:type "jaksojen-kestot!"
                          :jaksot jaksot})
   {1 1 2 3 3 5})
 
@@ -597,13 +612,12 @@
 (deftest test-retrieve-and-update-jaksot
   (testing "Varmistaa, että retrieve-and-update-jaksot toimii oikein."
     (with-redefs
-      [nh/calculate-kestot!
-       mock-trauj-group-jaksot-and-calculate-kestot
+      [nh/jaksojen-kestot! mock-trauj-jaksojen-kestot
        nh/query-jaksot! mock-trauj-query-jaksot
        oph.heratepalvelu.tep.tepCommon/update-jakso mock-trauj-update-jakso]
       (let [nippu {:mock-nippu-contents "asdf"}
             results [{:type "query-jaksot" :nippu {:mock-nippu-contents "asdf"}}
-                     {:type "group-jaksot-and-calculate-kestot"
+                     {:type "jaksojen-kestot!"
                       :jaksot [{:hankkimistapa_id 1}
                                {:hankkimistapa_id 2}
                                {:hankkimistapa_id 3}]}

@@ -4,18 +4,14 @@
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.util.date :as d]
-            [oph.heratepalvelu.util.string :as s]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.log.caller-log :refer :all]
             [oph.heratepalvelu.tep.tepCommon :as tc])
-  (:import (clojure.lang ExceptionInfo)
-           (com.amazonaws.services.lambda.runtime Context)
-           (java.lang Math)
+  (:import (java.lang Math)
            (java.time LocalDate)
-           (java.time.temporal ChronoUnit)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
@@ -49,7 +45,7 @@
           (nil? osa-aikaisuus)
           (log/error "Osa-aikaisuustieto puuttuu jakson" id "tiedoista. Jakson"
                      "kestoksi asetetaan nolla.")
-          (not (and (instance? Long osa-aikaisuus)
+          (not (and (integer? osa-aikaisuus)
                     (pos? osa-aikaisuus)
                     (>= 100 osa-aikaisuus)))
           (log/error "Jakson" id "osa-aikaisuus" (str "`" osa-aikaisuus "`")
@@ -57,26 +53,31 @@
           :else (/ osa-aikaisuus 100.0))
         0)))
 
+(defn add-loppu-to-jaksot
+  "Lisää jokaiseen paitsi viimeiseen jaksoon kentän :loppu, joka on päivää
+  ennen kuin seuraavan :alku"
+  [jaksot]
+  (conj (mapv (fn [current next]
+                (let [^LocalDate next-starts (:alku next)]
+                  (assoc current :loppu (.minusDays next-starts 1))))
+              jaksot
+              (rest jaksot))
+        (last jaksot)))
+
 (defn get-opiskeluoikeusjaksot
   [opiskeluoikeus]
   (->> (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
        (map c/alku-and-loppu-to-localdate)
-       (sort-by :alku #(compare %2 %1)) ; reverse order
-       ; Add :loppu dates to each ajanjakso
-       (reduce
-         #(cons (if (first %1)
-                  (assoc %2 :loppu (.minusDays ^LocalDate (:alku (first %1)) 1))
-                  %2)
-                %1)
-         [])))
+       (sort-by :alku)
+       add-loppu-to-jaksot))
 
-(defn get-keskeytymisajanjaksot
+(defn keskeytymisajanjaksot
   [jakso opiskeluoikeus]
-  (let [keskeytynyt-tilat #{"valiaikaisestikeskeytynyt"} ; "loma"}
+  (let [keskeytynyt-tila? #{"valiaikaisestikeskeytynyt"}
         kjaksot-in-jakso (map c/alku-and-loppu-to-localdate
                               (:keskeytymisajanjaksot jakso))
         kjaksot-in-opiskeluoikeus
-        (filter #(contains? keskeytynyt-tilat (:koodiarvo (:tila %)))
+        (filter #(keskeytynyt-tila? (:koodiarvo (:tila %)))
                 (get-opiskeluoikeusjaksot opiskeluoikeus))]
     (concat kjaksot-in-jakso kjaksot-in-opiskeluoikeus)))
 
@@ -97,14 +98,29 @@
   (and (in-jakso? pvm jakso)
        (some? opiskeluoikeus)
        (not-any? #(in-jakso? pvm %)
-                 (get-keskeytymisajanjaksot jakso opiskeluoikeus))))
+                 (keskeytymisajanjaksot jakso opiskeluoikeus))))
 
-(defn calculate-single-day-kestot
-  "Laskee aktiivisena olevien jaksojen kestot yhden päivän osalta, eli
-  suorittaa niin sanotun 'jyvityksen'. Tällä tarkoitetaan sitä, että yhden
-  päivän kesto jaetaan tasaisesti kaikille samanaikaisesti aktiivisena
-  oleville jaksoille. Funktio palauttaa hashmapissa ainoastaan aktiivisena
-  olevien jaksojen kestot."
+(defn oppijan-jaksojen-yhden-paivan-kestot
+  "Laskee yhden oppijan aktiivisena olevien jaksojen kestot yhden päivän osalta,
+  eli suorittaa niin sanotun 'jyvityksen'. Tällä tarkoitetaan sitä, että yhden
+  päivän kesto jaetaan tasaisesti kaikille samanaikaisesti aktiivisena oleville
+  (ei keskeytyneille) jaksoille kyseisen päivän osalta.
+
+  Funktio olettaa, että parametrina saadut `jaksot` ovat kaikki saman oppijan
+  jaksoja. `opiskeluoikeudet` hashmap (oid -> opiskeluoikeus) voi sisältää
+  muidenkin oppijoiden opiskeluoikeuksia, sillä kutakin jaksoa vastaava
+  opiskeluoikeus haetaan `opiskeluoikeudet` hashmapista käyttäen jakson
+  tiedoista löytyvää opiskeluoikeuden oid:ta.
+
+  Funktio palauttaa päivänä `pvm` aktiivisena olleiden jaksojen jyvittämällä
+  lasketut kestot hashmapissa, jossa avaimina jaksojen id:t
+  (osaamisenhankkimistapojen) ja arvoina lasketut kestot reaalilukuina.
+
+  Esimerkki:
+  `jaksot` listassa on 4 jaksoa id:illä 1, 2, 3 ja 4. Näistä 1, 2 ja 4 ovat
+  aktiivisia päivänä `pvm` ja 3 on keskeytynyt. Tällöin funktio palauttaa
+  {1 0.333... 2 0.333... 4 0.333...}. Keskeytyneen jakson nollakesto ei ole
+  siis mukana palautettavassa hashmapissa."
   [jaksot opiskeluoikeudet pvm]
   (let [active-jakso-ids ; Päivänä `pvm` aktiivisena olevien jaksojen id:t
         (map :hankkimistapa_id
@@ -132,13 +148,22 @@
   [jakso]
   (c/alku-and-loppu-to-localdate (harmonize-date-keys jakso)))
 
-(defn calculate-kestot
-  "Laskee oppijan jaksojen kestot. Funktio olettaa, että `jaksot` pitävät
-  sisällään ainoastaan yhden oppijan jaksoja. Yksittäisen jakson kesto voi olla
-  nolla, jos kyseiselle jaksolle ei löydy opiskeluoikeutta Koskesta. Tällaista
-  jaksoa ei kuitenkaan oteta jyvityksessä huomioon muiden jaksojen kestoja
-  laskettaessa. Jakson kesto voi myös pyöristyä nollaan, mikäli kokonaiskesto
-  on jotain 0 ja 0.5 väliltä."
+(defn oppijan-jaksojen-kestot
+  "Laskee kestot jaksoille `jaksot`. Funktio olettaa, että `jaksot` pitävät
+  sisällään ainoastaan yhden oppijan jaksoja. `opiskeluoikeudet` tulee olla
+  hashmap (oid -> opiskeluoikeus). Se voi sisältää muidenkin oppijoiden
+  opiskeluoikeuksia, sillä jaksoja `jaksot` vastaavat opiskeluoikeudet haetaan
+  `opiskeluoikeudet` hashmapista jakson tiedoista löytyvän opiskeluoikeus oid:n
+  perusteella.
+
+  Funktio palauttaa yhden oppijan jaksojen kestot aikavälillä, missä aikavälin
+  alku on jaksojen `jaksot` alkupäivämääristä varhaisin ja loppu vastaavasi
+  päättymispäivistä myöhäisin. Palautuva arvo on hashmap, jossa avaimina
+  jaksojen id:t (osaamisenhankkimistapojen) ja arvoina kestot kokonaislukuina.
+  Yksittäisen jakson kesto voi olla nolla, jos kyseiselle jaksolle ei saada
+  opiskeluoikeutta Koskesta 404-virheen vuoksi, tai jos jakson
+  osa-aikaisuustieto puuttuu tai on virheellinen. Jakson kesto voi myös
+  pyöristyä nollaan, mikäli kokonaiskesto on jotain 0 ja 0.5 väliltä."
   [oppijan-jaksot opiskeluoikeudet]
   (when (not-empty oppijan-jaksot)
     (let [jaksot (map harmonize-alku-and-loppu-dates oppijan-jaksot)
@@ -146,15 +171,14 @@
       (round-vals ; Pyöristetään kestot lähimpään kokonaislukuun.
         (merge-with
           * ; Kerrotaan kestot osa-aikaisuuskertoimilla
-          (apply merge-with
-                 + ; Summataan yksittäisten päivien kestot
-                 ; Alustetaan alla kaikki kestot nollaksi:
-                 (zipmap ids (repeat 0))
-                 (map (partial calculate-single-day-kestot
-                               jaksot
-                               opiskeluoikeudet)
-                      (d/range (apply d/earliest (map :alku jaksot))
-                               (apply d/latest   (map :loppu jaksot)))))
+          (reduce (partial merge-with +) ; Summataan yksittäisten päivien kestot
+                  ; Alustetaan alla kaikki kestot nollaksi:
+                  (zipmap ids (repeat 0))
+                  (map (partial oppijan-jaksojen-yhden-paivan-kestot
+                                jaksot
+                                opiskeluoikeudet)
+                       (d/range (first (sort (map :alku jaksot)))
+                                (last  (sort (map :loppu jaksot))))))
           (zipmap ids (map osa-aikaisuuskerroin jaksot)))))))
 
 (defn query-jaksot!
@@ -174,12 +198,12 @@
 
 (defn get-concurrent-jaksot-from-ehoks!
   "Hakee kaikki `jaksot` listassa olevien jaksojen kanssa päällekäin olevat
-  jaksot eHOKSista."
+  saman oppijan jaksot eHOKSista."
   [jaksot]
   (ehoks/get-tyoelamajaksot-active-between!
     (:oppija_oid (first jaksot))
-    (apply s/first (map :jakso_alkupvm jaksot))
-    (apply s/last  (map :jakso_loppupvm jaksot))))
+    (first (sort (map :jakso_alkupvm jaksot)))
+    (last  (sort (map :jakso_loppupvm jaksot)))))
 
 (defn get-and-memoize-opiskeluoikeudet!
   "Funktio hakee `jaksot` listan jaksojen opiskeluoikeuksia Koskesta.
@@ -202,29 +226,39 @@
     {}
     jaksot))
 
-(defn calculate-kestot!
+(defn jaksojen-kestot!
+  "Laskee kestot kaikille `jaksot` listan jaksoille. Lista jaksoista `jaksot`
+  voi pitää sisällään useamman oppijan työpaikkajaksoja: Kestonlaskenta tehdään
+  varsinaisesti aina saman oppijan jaksoille (kts. `oppijan-jaksojen-kestot`),
+  mutta tässä funktiossa `jaksot` ryhmitellään oppija oid:n mukaan ennen
+  `oppijan-jaksojen-kestot`-funktion tekemää kestojen laskemista.
+
+  Palauttaa hashmapin, joka sisältää `jaksot` listan jaksoille lasketut kestot.
+  Hashmapin avaimina jaksojen id:t (osaamisenhankkimistapojen) ja arvoina kestot
+  kokonaislukuina."
   [jaksot]
-  (select-keys
-    (apply
-      merge
-      ; Haetaan kunkin jakson tapauksessa päällekäiset jaksot eHOKSista
-      ; sekä viimeisin opiskeluoikeustieto Koskesta.
-      (map (fn [oppijan-jaksot]
-             (let [concurrent-jaksot (get-concurrent-jaksot-from-ehoks!
-                                       oppijan-jaksot)
-                   opiskeluoikeudet  (get-and-memoize-opiskeluoikeudet!
-                                       concurrent-jaksot)]
-               (calculate-kestot concurrent-jaksot opiskeluoikeudet)))
-           ; Ryhmitellään jaksot oppija-oid:n perusteella:
-           (vals (group-by :oppija_oid jaksot))))
-    (map :hankkimistapa_id jaksot)))
+  (->> (group-by :oppija_oid jaksot) ; Ryhmitellään jaksot oppijan perusteella
+       vals
+       ; Haetaan kunkin jakson tapauksessa päällekäiset jaksot eHOKSista
+       ; sekä viimeisin opiskeluoikeustieto Koskesta:
+       (map (fn [oppijan-jaksot]
+              (let [concurrent-jaksot (get-concurrent-jaksot-from-ehoks!
+                                        oppijan-jaksot)
+                    opiskeluoikeudet  (get-and-memoize-opiskeluoikeudet!
+                                        concurrent-jaksot)]
+                (oppijan-jaksojen-kestot concurrent-jaksot opiskeluoikeudet))))
+       ; Yhdistetään eri oppijoiden jaksoille lasketut kestot yhdeksi
+       ; hashmapiksi:
+       (apply merge)
+       ; Palautetaan vain niiden jaksojen kestot, jotka ovat `jaksot` listassa:
+       (#(select-keys % (map :hankkimistapa_id jaksot)))))
 
 (defn retrieve-and-update-jaksot!
   "Hakee nippuun kuuluvat jaksot tietokannasta, laskee niiden kestot, päivittää
   kestotiedot tietokantaan, ja palauttaa päivitetyt jaksot."
   [nippu]
   (let [jaksot (query-jaksot! nippu)
-        kestot (calculate-kestot! jaksot)]
+        kestot (jaksojen-kestot! jaksot)]
     (map #(let [oht-id (:hankkimistapa_id %)
                 kesto  (get kestot oht-id 0)]
             (log/info "Päivitetään jaksoon" oht-id "kesto" kesto)
