@@ -44,6 +44,7 @@
                   mock-get-opiskeluoikeus
                   oph.heratepalvelu.common/already-superseding-herate!
                   mock-check-duplicate-herate?-nil
+                  valid-herate-date? (constantly true)
                   whitelisted-organisaatio?!
                   mock-whitelisted-organisaatio-true?
                   oph.heratepalvelu.db.dynamodb/put-item
@@ -72,6 +73,7 @@
        mock-get-opiskeluoikeus
        oph.heratepalvelu.common/already-superseding-herate!
        mock-check-duplicate-herate?-nil
+       valid-herate-date? (constantly true)
        whitelisted-organisaatio?!
        mock-whitelisted-organisaatio-true?
        oph.heratepalvelu.db.dynamodb/put-item
