@@ -7,8 +7,7 @@
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.test-util :as tu])
-  (:import (java.time LocalDate)
-           (java.time.temporal ChronoUnit)))
+  (:import (java.time LocalDate)))
 
 (def jakso-1 {:opiskeluoikeus_oid "1.2.3.8"
               :oppija_oid "4.4.4.4"
@@ -215,82 +214,6 @@
 (def jaksot-21-25 [jakso-21 jakso-22 jakso-23 jakso-24 jakso-25])
 
 (def jaksot-1-25 (concat jaksot-1-17 jaksot-21-25))
-
-(defn not-in-keskeytymisajanjakso?
-  "Varmistaa, että annettu päivämäärä ei kuulu keskeytymisajanjaksoon."
-  [^LocalDate date keskeytymisajanjaksot]
-  (or (empty? keskeytymisajanjaksot)
-      (every? #(or (and (:alku %) (.isBefore date (:alku %)))
-                   (and (:loppu %) (.isAfter date (:loppu %))))
-              keskeytymisajanjaksot)))
-
-(defn jakso-days
-  "Luo listan jakson arkipäivistä LocalDate:ina."
-  [jakso]
-  (let [start (LocalDate/parse (:jakso_alkupvm jakso))
-        end (LocalDate/parse (:jakso_loppupvm jakso))]
-    (map #(.plusDays start %)
-         (range (inc (.between ChronoUnit/DAYS start end))))))
-
-(defn add-to-jaksot-by-day
-  "Lisää jaksoon viittaavan referenssin jokaiselle päivälle jaksot-by-day
-  -objektissa, jolloin jakso on voimassa eikä ole keskeytynyt. Objekti
-  jaksot-by-day on map LocalDate-päivämääristä sekvensseihin jaksoista, jotka
-  ovat voimassa ja keskeytymättömiä sinä päivänä."
-  [jaksot-by-day jakso opiskeluoikeus]
-  (let [oo-tilat (->> (:opiskeluoikeusjaksot (:tila opiskeluoikeus))
-                      (map c/alku-and-loppu-to-localdate)
-                      (sort-by :alku)
-                      (nh/add-loppu-to-jaksot))
-        kjaksot-parsed (map c/alku-and-loppu-to-localdate
-                            (:keskeytymisajanjaksot jakso))
-        kjaksot-oo (filter #(= "valiaikaisestikeskeytynyt"
-                               (:koodiarvo (:tila %)))
-                           oo-tilat)
-        kjaksot (concat kjaksot-parsed kjaksot-oo)]
-    (reduce #(if (not-in-keskeytymisajanjakso? %2 kjaksot)
-               (assoc %1 %2 (cons jakso (get %1 %2)))
-               %1)
-            jaksot-by-day
-            (jakso-days jakso))))
-
-(defn get-osa-aikaisuus
-  "Hakee osa-aikaisuutta jaksosta ja varmistaa, että se on sallittujen rajojen
-  sisällä."
-  [jakso]
-  (if (and (some? (:osa_aikaisuus jakso))
-           (pos? (:osa_aikaisuus jakso))
-           (> 100 (:osa_aikaisuus jakso)))
-    (:osa_aikaisuus jakso)
-    100))
-
-(defn handle-one-day
-  "Jakaa yhden päivän aikaa silloin keskeytymättömien jaksojen välillä."
-  [jaksot]
-  (let [fraction (/ 1.0 (count jaksot))]
-    (into {} (map #(vector (:hankkimistapa_id %)
-                           (/ (* fraction (get-osa-aikaisuus %)) 100))
-                  jaksot))))
-
-(defn compute-kestot
-  "Laskee jaksojen kestot ja palauttaa mapin OHT ID:stä kestoihin. Olettaa, että
-  kaikki jaksot kuuluvat samalle oppilaalle."
-  [jaksot]
-  (let [first-start-date  (first (sort (map :jakso_alkupvm jaksot)))
-        last-end-date     (first (reverse (sort (map :jakso_loppupvm jaksot))))
-        concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between!
-                            (:oppija_oid (first jaksot))
-                            first-start-date
-                            last-end-date)
-        oo-map (reduce #(assoc %1 %2 (koski/get-opiskeluoikeus-catch-404! %2))
-                       {}
-                       (set (map :opiskeluoikeus_oid concurrent-jaksot)))
-        do-one #(add-to-jaksot-by-day %1
-                                      %2
-                                      (get oo-map (:opiskeluoikeus_oid %2)))]
-    (reduce (fn [acc m] (reduce-kv #(assoc %1 %2 (+ %3 (get %1 %2 0.0))) acc m))
-            {}
-            (map handle-one-day (vals (reduce do-one {} concurrent-jaksot))))))
 
 (def opiskeluoikeudet
   {"1.2.3.1" {:tila {:opiskeluoikeusjaksot
@@ -645,33 +568,6 @@
         [koski/get-opiskeluoikeus-catch-404! (constantly nil)]
         (is (= (nh/jaksojen-kestot! jaksot-1-25)
                (zipmap (map :hankkimistapa_id jaksot-1-25) (repeat 0))))))))
-
-(deftest test-jaksojen-kestot!-sanity-check
-  ; Vanha kestonlaskentafunktio laskee kiltisti keston jaksoille, joihin
-  ; kytkeytyvää opiskeluoikeutta ei löydy Koskesta. Tästä syystä jaksot id:illä
-  ; 17 ja 23 on pudotettu pois, jotta tulokset ovat vertailukelpoisia. Vanhan
-  ; kestonlaskentafunktion tulokset on myös pyöristettävä. Vanhassa funktiossa
-  ; on oletettu, että parametrina saadut jaksot ovat saman oppijan.
-  (testing (str "Uusi kestonlaskentafunktio tuottaa samat tulokset kuin vanha "
-                "kestonlaskentafunktio, kun vanhassa funktiossa huomioidaan "
-                "kaikki viikonpäivät ja kun \"loma\" tilaa opiskeluoikeudessa "
-                "ei katsota keskeytymisajanjaksoksi.")
-    (let [not-17-or-23 #(not (#{17 23} (:hankkimistapa_id %)))]
-      (with-redefs
-        [ehoks/get-tyoelamajaksot-active-between!
-         (fn [oppija alku loppu]
-           (filter not-17-or-23
-                   (mock-get-tyoelamajaksot-active-between! oppija alku loppu)))
-         koski/get-opiskeluoikeus-catch-404! mock-get-opiskeluoikeus-catch-404]
-        (are [jaksot] (= (nh/jaksojen-kestot! (filter not-17-or-23 jaksot))
-                         (-> (compute-kestot (filter not-17-or-23 jaksot))
-                             nh/round-vals
-                             (select-keys (map :hankkimistapa_id jaksot))))
-          [jakso-4]
-          [jakso-1 jakso-5 jakso-8 jakso-12]
-          [jakso-22 jakso-24]
-          (filter not-17-or-23 jaksot-1-17)
-          (filter not-17-or-23 jaksot-21-25))))))
 
 (deftest test-query-jaksot
   (testing "Varmistaa, että query-jaksot toimii oikein."
