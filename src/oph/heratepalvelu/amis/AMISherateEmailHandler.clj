@@ -71,8 +71,8 @@
   (if (:kyselylinkki herate)
     herate
     (let [oo-oid (:opiskeluoikeus-oid herate)
-          opiskeluoikeus (or (k/get-opiskeluoikeus-catch-404 oo-oid)
-                             (k/get-opiskeluoikeus-catch-404 oo-oid))]
+          opiskeluoikeus (or (k/get-opiskeluoikeus-catch-404! oo-oid)
+                             (k/get-opiskeluoikeus-catch-404! oo-oid))]
       (cond
         (not opiskeluoikeus)
         (do

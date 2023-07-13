@@ -221,7 +221,7 @@
                expected))))))
 
 (deftest test-get-tyoelamajaksot-active-between
-  (testing "Varmista, että get-tyoelamajaksot-active-between toimii oikein."
+  (testing "Varmista, että get-tyoelamajaksot-active-between! toimii oikein."
     (with-redefs [environ.core/env {:ehoks-url "example.com/"}
                   oph.heratepalvelu.external.cas-client/get-service-ticket
                   mock-get-service-ticket
@@ -240,9 +240,9 @@
                                        :start  "2021-08-01"
                                        :end    "2021-10-05"}
                         :as :json}}}]
-        (is (= (ehoks/get-tyoelamajaksot-active-between "1.2.3.4"
-                                                        "2021-08-01"
-                                                        "2021-10-05")
+        (is (= (ehoks/get-tyoelamajaksot-active-between! "1.2.3.4"
+                                                         "2021-08-01"
+                                                         "2021-10-05")
                expected))))))
 
 (deftest test-patch-amis-aloitus-ja-paattoheratteet-kasitellyt

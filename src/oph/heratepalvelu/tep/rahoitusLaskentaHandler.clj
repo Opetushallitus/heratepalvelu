@@ -15,7 +15,6 @@
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
-            [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.tep.jaksoHandler :as jh]
             [oph.heratepalvelu.tep.niputusHandler :as nh]
@@ -74,16 +73,8 @@
                    :oppija_oid (:oppija-oid herate)
                    :jakso_alkupvm (:alkupvm herate)
                    :jakso_loppupvm (:loppupvm herate)}
-            concurrent-jaksot (ehoks/get-tyoelamajaksot-active-between
-                                (:oppija_oid jakso)
-                                (:jakso_alkupvm jakso)
-                                (:jakso_loppupvm jakso))
-            opiskeluoikeudet (nh/get-jaksojen-opiskeluoikeudet
-                               (assoc {} (:opiskeluoikeus-oid herate)
-                                      opiskeluoikeus)
-                               (map :opiskeluoikeus_oid concurrent-jaksot))
-            kestot (nh/compute-kesto-old-and-new
-                     jakso concurrent-jaksot opiskeluoikeudet)
+            [kesto kesto-vanha] (map #(get % (:hankkimistapa_id jakso))
+                                     (nh/jaksojen-kestot! [jakso]))
             db-data {:hankkimistapa_id     [:n tapa-id]
                      :hankkimistapa_tyyppi
                      [:s (last (str/split (:hankkimistapa-tyyppi herate) #"_"))]
@@ -124,13 +115,12 @@
                      [:s (c/normalize-string (:tyopaikan-nimi herate))]
                      :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
-                     :vanha-kesto
-                     [:n (math-round (or (get kestot :vanha) 0.0))]
-                     :uusi-kesto-with-oa
-                     [:n (math-round (or (get-in kestot [:uusi :with-oa]) 0.0))]
-                     :uusi-kesto-without-oa
-                     [:n (math-round (or (get-in kestot [:uusi :without-oa])
-                                         0.0))]
+                     :vanha-kesto           [:n kesto-vanha]
+                     ; NOTE: Uudessa laskutavassa osa-aikaisuutta ei oteta
+                     ;       huomioon
+                     ; :uusi-kesto-with-oa    [:n kesto]
+                     ; :uusi-kesto-without-oa [:n kesto]
+                     :uusi-kesto [:n kesto]
                      :save-timestamp [:s (str start-time)]}
             results-table-data
             (cond-> db-data
@@ -140,7 +130,8 @@
               (assoc :ohjaaja_puhelinnumero
                      [:s (:tyopaikkaohjaaja-puhelinnumero herate)])
               (not-empty (:tutkinnonosa-koodi herate))
-              (assoc :tutkinnonosa_koodi [:s (:tutkinnonosa-koodi herate)])
+              (assoc :tutkinnonosa_koodi
+                     [:s (:tutkinnonosa-koodi herate)])
               (not-empty (:tutkinnonosa-nimi herate))
               (assoc :tutkinnonosa_nimi [:s (:tutkinnonosa-nimi herate)])
               (some? (:osa-aikaisuus herate))
@@ -151,7 +142,10 @@
                            (str/split
                              (:oppisopimuksen-perusta herate)
                              #"_"))]))]
-        (log/info "Uudelleenlaskettu kesto tapa-id:lle" tapa-id ":" kestot)
+        (log/info (str "Uudelleenlaskettu kesto tapa-id:lle "
+                       tapa-id
+                       ": "
+                       kesto))
         (when (jh/has-open-keskeytymisajanjakso? herate)
           (log/warn "Herätteellä on avoin keskeytymisajanjakso: " herate))
         (try
@@ -181,7 +175,7 @@
       (log/info "heräte:" (.getBody msg))
       (try
         (let [herate (parse-string (.getBody msg) true)
-              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
+              opiskeluoikeus (koski/get-opiskeluoikeus-catch-404!
                                (:opiskeluoikeus-oid herate))]
           (if (nil? opiskeluoikeus)
             (log/warn "No opiskeluoikeus found for oid"

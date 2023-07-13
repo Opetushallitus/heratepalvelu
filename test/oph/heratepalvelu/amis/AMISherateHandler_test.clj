@@ -52,7 +52,7 @@
                   c/sisaltyy-toiseen-opiskeluoikeuteen?
                   mock-sisaltyy-toiseen-opiskeluoikeuteen?
 
-                  oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404
+                  oph.heratepalvelu.external.koski/get-opiskeluoikeus-catch-404!
                   mock-get-opiskeluoikeus-catch-404]
       (let [event (tu/mock-sqs-event {:alkupvm "2021-10-10"
                                       :opiskeluoikeus-oid "1234.5.6678"

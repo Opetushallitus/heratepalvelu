@@ -47,7 +47,7 @@
                      :expr-attr-vals {":pvm" (attr "2022-08-11")}})]
     (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
       (try
-        (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404
+        (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404!
                                (:opiskeluoikeus-oid item))
               rahoitusryhma (c/get-rahoitusryhma
                               opiskeluoikeus (LocalDate/parse (:alkupvm item)))]
@@ -97,7 +97,7 @@
                                       ":end" (attr "2021-12-31")}}
                     (:table env))
                   uudelleenlasketut-kestot
-                  (nip/compute-kestot oppijan-kaikki-jaksot)]
+                  (nip/jaksojen-kestot! oppijan-kaikki-jaksot)]
               (println uudelleenlasketut-kestot)
               (doseq [jakso oppijan-kaikki-jaksot]
                 (println "Päivitetään jaksolle"
@@ -106,9 +106,8 @@
                 (println "Vanha kesto"
                          (:kesto jakso)
                          "- Uudelleen laskettu kesto"
-                         (nip/math-round (get uudelleenlasketut-kestot
-                                              (:hankkimistapa_id jakso)
-                                              0.0)))))))
+                         (get uudelleenlasketut-kestot
+                              (:hankkimistapa_id jakso)))))))
         (catch Exception e (log/error e))))
     (when (.hasLastEvaluatedKey resp)
       (recur (scan
