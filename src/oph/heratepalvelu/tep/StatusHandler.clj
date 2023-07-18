@@ -27,12 +27,11 @@
   jos kyselyyn ei ole vielä vastattu ja kyselyä ei ole vielä lähetetty."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (loop [emails (ddb/query-items
-                  {:kasittelytila
-                   [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
-                  {:index "niputusIndex"
-                   :limit 100}
-                  (:nippu-table env))]
+  (let [emails (ddb/query-items
+                 {:kasittelytila
+                  [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
+                 {:index "niputusIndex"}
+                 (:nippu-table env))]
     (doseq [email emails]
       (log/info "Päivitetään tila viestintäpalvelussa olevalle nipulle" email)
       (let [nippu (ddb/get-item {:ohjaaja_ytunnus_kj_tutkinto
@@ -68,15 +67,4 @@
               (log/error e))
             (catch Exception e
               (log/error "Lähetystilan tallennus Arvoon epäonnistui" nippu)
-              (log/error e))))))
-    (when (and @new-changes?
-               (< 60000 (.getRemainingTimeInMillis context)))
-      ;; XXX: here too, if 100 (or 10, as below) messages have not yet been
-      ;; sent, we stop processing; it's probably not correct
-      (reset! new-changes? false)
-      (recur (ddb/query-items
-               {:kasittelytila
-                [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
-               {:index "niputusIndex"
-                :limit 10}
-               (:nippu-table env))))))
+              (log/error e))))))))

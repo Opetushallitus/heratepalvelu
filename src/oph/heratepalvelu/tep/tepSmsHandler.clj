@@ -80,12 +80,11 @@
 (defn query-lahetettavat
   "Hakee enintään limit nippua tietokannasta, joilta SMS-viesti ei ole vielä
   lähetetty ja niputuspäivämäärä on jo mennyt."
-  [limit]
+  []
   (ddb/query-items
     {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
      :niputuspvm    [:le [:s (str (c/local-date-now))]]}
-    {:index "smsIndex"
-     :limit limit}
+    {:index "smsIndex"}
     (:nippu-table env)))
 
 (defn -handleTepSmsSending
@@ -93,7 +92,7 @@
   käsittelee viestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
-  (loop [lahetettavat (query-lahetettavat 20)]
+  (let [lahetettavat (query-lahetettavat)]
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
@@ -163,6 +162,4 @@
                         (log/error "Server error while sending sms")
                         (log/error e))))
                   (catch Exception e
-                    (log/error "Unhandled exception " e))))))))
-      (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (query-lahetettavat 10))))))
+                    (log/error "Unhandled exception " e)))))))))))

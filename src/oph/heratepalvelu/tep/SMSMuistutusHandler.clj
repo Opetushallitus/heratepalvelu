@@ -76,17 +76,12 @@
                                                             10))]
                                        [:s (str (.minusDays (c/local-date-now)
                                                             5))]]]}
-                   {:index "smsMuistutusIndex"
-                    :limit 10}
+                   {:index "smsMuistutusIndex"}
                    (:nippu-table env)))
 
 (defn -handleSendSMSMuistutus
   "Hakee SMS-muistutettavia nippuja tietokannasta ja lähettää viestejä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendSMSMuistutus" event context)
-  (loop [muistutettavat (query-muistutukset)]
-    (sendSmsMuistutus muistutettavat)
-    (when (and
-            (seq muistutettavat)
-            (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistutukset)))))
+  (let [muistutettavat (query-muistutukset)]
+    (sendSmsMuistutus muistutettavat)))

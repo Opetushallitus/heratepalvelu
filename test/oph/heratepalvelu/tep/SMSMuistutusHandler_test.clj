@@ -131,7 +131,6 @@
        (= "2021-12-10"
           (second (second (second (:sms_lahetyspvm query-params)))))
        (= "smsMuistutusIndex" (:index options))
-       (= 10 (:limit options))
        (= "nippu-table-name" table)))
 
 (deftest test-query-muistutukset

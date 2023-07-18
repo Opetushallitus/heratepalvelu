@@ -46,8 +46,7 @@
                 (second (second (:kasittelytila query-params))))
              (= "niputusIndex" (:index options))
              (= "nippu-table-name" table))
-    (add-to-test-results {:type "mock-query-items"
-                          :limit (:limit options)})
+    (add-to-test-results {:type "mock-query-items"})
     [{:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
       :niputuspvm "2021-12-15"}
      {:ohjaaja_ytunnus_kj_tutkinto "test-id-2"
@@ -88,8 +87,7 @@
                   mock-update-nippu]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
-            results [{:type "mock-query-items"
-                      :limit 100}
+            results [{:type "mock-query-items"}
                      {:type "mock-get-item"
                       :value "test-id-1"}
                      {:type "mock-get-email-status" :id 1}

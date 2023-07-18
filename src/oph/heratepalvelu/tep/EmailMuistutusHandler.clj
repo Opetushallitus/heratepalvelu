@@ -92,16 +92,12 @@
     {:muistutukset [:eq [:n 0]]
      :lahetyspvm   [:between [[:s (str (.minusDays (c/local-date-now) 10))]
                               [:s (str (.minusDays (c/local-date-now) 5))]]]}
-    {:index "emailMuistutusIndex"
-     :limit 10}
+    {:index "emailMuistutusIndex"}
     (:nippu-table env)))
 
 (defn -handleSendEmailMuistutus
   "Käsittelee muistettavia nippuja."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
-  (loop [muistutettavat (query-muistutukset)]
-    (sendEmailMuistutus muistutettavat)
-    (when (and (seq muistutettavat)
-               (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistutukset)))))
+  (let [muistutettavat (query-muistutukset)]
+    (sendEmailMuistutus muistutettavat)))

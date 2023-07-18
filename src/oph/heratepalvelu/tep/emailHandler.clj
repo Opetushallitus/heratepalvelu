@@ -51,8 +51,7 @@
   []
   (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                     :niputuspvm    [:le [:s (str (c/local-date-now))]]}
-                   {:index "niputusIndex"
-                    :limit 20}
+                   {:index "niputusIndex"}
                    (:nippu-table env)))
 
 (defn email-sent-update-item
@@ -107,7 +106,7 @@
   käsittelee näiden viestien lähettämisen viestinäpalveluun."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
-  (loop [lahetettavat (do-nippu-query)]
+  (let [lahetettavat (do-nippu-query)]
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
@@ -132,6 +131,4 @@
                 (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
                           "niputuspvm" (:niputuspvm nippu)
                           "ja lahetyspvm" lahetyspvm
-                          "eroavat toisistaan."))))))
-      (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (do-nippu-query))))))
+                          "eroavat toisistaan.")))))))))

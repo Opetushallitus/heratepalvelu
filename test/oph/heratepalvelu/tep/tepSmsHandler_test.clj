@@ -200,8 +200,8 @@
                   (fn [] (LocalDate/of 2021 12 15))
                   oph.heratepalvelu.db.dynamodb/query-items
                   mock-query-lahetettavat-query-items]
-      (sh/query-lahetettavat 10)
-      (is (= @test-query-lahetettavat-results {:limit 10
+      (sh/query-lahetettavat)
+      (is (= @test-query-lahetettavat-results {:limit nil
                                                :niputuspvm "2021-12-15"})))))
 
 (def test-handleTepSmsSending-results (atom []))
@@ -254,9 +254,8 @@
      :kyselylinkki kyselylinkki
      :data data}))
 
-(defn- mock-query-lahetettavat [limit]
-  (add-to-test-handleTepSmsSending-results {:type "mock-query-lahetettavat"
-                                            :limit limit})
+(defn- mock-query-lahetettavat []
+  (add-to-test-handleTepSmsSending-results {:type "mock-query-lahetettavat"})
   [{:ohjaaja_ytunnus_kj_tutkinto "test-id-0"
     :niputuspvm "2021-12-15"
     :voimassaloppupvm "2021-12-20"
@@ -303,8 +302,7 @@
        mock-handleTepSmsSending-update-status-to-db]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
-            results [{:type "mock-query-lahetettavat"
-                      :limit 20}
+            results [{:type "mock-query-lahetettavat"}
                      {:type (str "mock-handleTepSmsSending-update-vastausaika"
                                  "-loppunut-to-db")
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-0"

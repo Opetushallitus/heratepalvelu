@@ -92,7 +92,6 @@
              (= :le (first (:niputuspvm query-params)))
              (= :s (first (second (:niputuspvm query-params))))
              (= "niputusIndex" (:index options))
-             (= 20 (:limit options))
              (= "nippu-table-name" table))
     (reset! test-do-nippu-query-results
             (second (second (:niputuspvm query-params))))))

@@ -19,7 +19,7 @@
                   oph.heratepalvelu.db.dynamodb/query-items-with-expression
                   mock-query-items
                   environ.core/env {:herate-table "herate-table-name"}]
-      (is (= (ash/query-lahetettavat 20)
+      (is (= (ash/query-lahetettavat)
              {:params "#smstila = :tila AND #alku <= :pvm"
               :options
               {:index "smsIndex"
@@ -28,16 +28,15 @@
                                  "#alku" "alkupvm",
                                  "#linkki" "kyselylinkki"}
                :expr-attr-vals {":tila" [:s "ei_lahetetty"],
-                                ":pvm" [:s "2022-03-03"]}
-               :limit 20}
+                                ":pvm" [:s "2022-03-03"]}}
               :table "herate-table-name"})))))
 
 (def results (atom []))
 
 (defn- add-to-results [object] (reset! results (cons object @results)))
 
-(defn- mock-query-lahetettavat [limit]
-  (add-to-results {:type "mock-query-lahetettavat" :limit limit})
+(defn- mock-query-lahetettavat []
+  (add-to-results {:type "mock-query-lahetettavat"})
   [{:voimassa-loppupvm "2022-02-02"}
    {:voimassa-loppupvm "2022-04-04"
     :puhelinnumero "lkj12hl34kj1hl3412"}
@@ -71,7 +70,7 @@
                   oph.heratepalvelu.external.organisaatio/get-organisaatio
                   mock-get-organisaatio
                   oph.heratepalvelu.external.elisa/send-sms mock-send-sms]
-      (let [expected [{:type "mock-query-lahetettavat" :limit 20}
+      (let [expected [{:type "mock-query-lahetettavat"}
                       {:type "mock-update-herate"
                        :herate {:voimassa-loppupvm "2022-02-02"}
                        :options {:sms-lahetyspvm [:s "2022-03-03"]

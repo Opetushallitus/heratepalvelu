@@ -21,7 +21,7 @@
   "Hakee eniten limit herätettä tietokannasta, joilta SMS-viestiä ei ole vielä
   lähetetty ja herätepäivämäärä on jo mennyt. Hakee vain herätteet, joihin
   kyselylinkki on jo luotu."
-  [limit]
+  []
   (ddb/query-items-with-expression
     "#smstila = :tila AND #alku <= :pvm"
     {:index "smsIndex"
@@ -30,8 +30,7 @@
                        "#alku" "alkupvm"
                        "#linkki" "kyselylinkki"}
      :expr-attr-vals {":tila" [:s (:ei-lahetetty c/kasittelytilat)]
-                      ":pvm" [:s (str (c/local-date-now))]}
-     :limit limit}
+                      ":pvm" [:s (str (c/local-date-now))]}}
     (:herate-table env)))
 
 (defn update-status-in-db!
@@ -85,12 +84,10 @@
   käsittelee viestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (cl/log-caller-details-scheduled "AMISSMSHandler" event context)
-  (loop [lahetettavat (query-lahetettavat 20)]
+  (let [lahetettavat (query-lahetettavat)]
     (log/info "Käsitellään" (count lahetettavat) "lähetettävää SMS-viestiä.")
     (when (seq lahetettavat)
       (doseq [herate lahetettavat]
         (->> herate
              (send-sms-and-return-status!)
-             (update-status-in-db! herate)))
-      (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (query-lahetettavat 20))))))
+             (update-status-in-db! herate))))))

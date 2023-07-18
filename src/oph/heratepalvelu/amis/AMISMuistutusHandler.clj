@@ -90,19 +90,13 @@
                                                         (- (* 5 (+ n 1)) 1)))]
                                    [:s (str (.minusDays (c/local-date-now)
                                                         (* 5 n)))]]]}
-                   {:index "muistutusIndex"
-                    :limit 50}))
+                   {:index "muistutusIndex"}))
 
 (defn -handleSendAMISMuistutus
   "Käsittelee AMISin muistutusviestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
-  (loop [muistutettavat1 (query-muistutukset 1)
-         muistutettavat2 (query-muistutukset 2)]
+  (let [muistutettavat1 (query-muistutukset 1)
+        muistutettavat2 (query-muistutukset 2)]
     (sendAMISMuistutus muistutettavat1 1)
-    (sendAMISMuistutus muistutettavat2 2)
-    (when (and
-            (or (seq muistutettavat1) (seq muistutettavat2))
-            (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistutukset 1)
-             (query-muistutukset 2)))))
+    (sendAMISMuistutus muistutettavat2 2)))

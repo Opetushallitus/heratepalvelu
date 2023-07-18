@@ -191,7 +191,6 @@
              (= :s (first (first (second (:lahetyspvm query-params)))))
              (= :s (first (second (second (:lahetyspvm query-params)))))
              (= "emailMuistutusIndex" (:index options))
-             (= 10 (:limit options))
              (= "nippu-table-name" table))
     {:start-date (second (first (second (:lahetyspvm query-params))))
      :end-date (second (second (second (:lahetyspvm query-params))))}))

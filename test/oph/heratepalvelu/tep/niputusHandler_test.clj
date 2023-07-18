@@ -779,7 +779,6 @@
              (= :le (first (:niputuspvm query-params)))
              (= :s (first (second (:niputuspvm query-params))))
              (= "niputusIndex" (:index options))
-             (= 10 (:limit options))
              (= "nippu-table-name" table))
     (add-to-handler-results
       {:type "mock-handler-query-items"

@@ -48,8 +48,7 @@
   []
   (ddb/query-items {:lahetystila
                     [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
-                   {:index "lahetysIndex"
-                    :limit 10}))
+                   {:index "lahetysIndex"}))
 
 (defn handle-single-herate!
   "Hakee yhden viestin tilan viestintäpalvelusta ja päivittää sen tietokantaan.
@@ -74,11 +73,8 @@
   "Päivittää viestintäpalvelussa olevien sähköpostien tilat tietokantaan."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (loop [heratteet (do-query!)]
-    ;; this logic is weird, though.  If we have 10 messages that have not
-    ;; been sent yet, we stop querying for more that might be.  Is it correct?
-    (let [changed? (->> heratteet
-                        (map handle-single-herate!)  ; avoid short circuit here
-                        (reduce #(or %2 %1) false))]
-      (when (and changed? (< 120000 (.getRemainingTimeInMillis context)))
-        (recur (do-query!))))))
+  (let [heratteet (do-query!)
+        changed? (->> heratteet
+                      (map handle-single-herate!)  ; avoid short circuit here
+                      (reduce #(or %2 %1) false))]
+    (log/info (if changed? "Handled" "Nothing to update"))))
