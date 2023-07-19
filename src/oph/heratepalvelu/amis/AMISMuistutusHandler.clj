@@ -96,7 +96,6 @@
   "Käsittelee AMISin muistutusviestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
-  (let [muistutettavat1 (query-muistutukset 1)
-        muistutettavat2 (query-muistutukset 2)]
-    (sendAMISMuistutus muistutettavat1 1)
-    (sendAMISMuistutus muistutettavat2 2)))
+  (doseq [kerta [1 2]]
+    (sendAMISMuistutus
+      (filter (c/time-left? context 60000) (query-muistutukset kerta)) kerta)))

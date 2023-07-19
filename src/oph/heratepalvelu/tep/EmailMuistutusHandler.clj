@@ -99,5 +99,5 @@
   "Käsittelee muistettavia nippuja."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
-  (let [muistutettavat (query-muistutukset)]
-    (sendEmailMuistutus muistutettavat)))
+  (sendEmailMuistutus (filter (c/time-left? context 60000)
+                              (query-muistutukset))))

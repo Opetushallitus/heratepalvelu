@@ -204,8 +204,8 @@
   viestintäpalveluun."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendAMISEmails" event context)
-  (let [lahetettavat (do-query)]
-    (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
+  (let [lahetettavat (filter (c/time-left? context 60000) (do-query))]
     (when (seq lahetettavat)
       (doseq [lahetettava lahetettavat]
-        (-> lahetettava (with-kyselylinkki!) (send-email-for-palaute!))))))
+        (-> lahetettava (with-kyselylinkki!) (send-email-for-palaute!))))
+    (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää viestiä.")))

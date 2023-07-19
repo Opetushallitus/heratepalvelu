@@ -83,5 +83,4 @@
   "Hakee SMS-muistutettavia nippuja tietokannasta ja lähettää viestejä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendSMSMuistutus" event context)
-  (let [muistutettavat (query-muistutukset)]
-    (sendSmsMuistutus muistutettavat)))
+  (sendSmsMuistutus (filter (c/time-left? context 60000) (query-muistutukset))))

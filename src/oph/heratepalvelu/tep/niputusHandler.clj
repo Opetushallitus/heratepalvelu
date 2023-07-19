@@ -339,9 +339,9 @@
   (log-caller-details-scheduled "handleNiputus" event context)
   (let [processed-niput (atom {})
         niputettavat (sort-by :niputuspvm #(- (compare %1 %2)) (do-query))]
-    (log/info "Käsitellään" (count niputettavat) "niputusta.")
+    (log/info "Käsitellään enintään" (count niputettavat) "niputusta.")
     (when (seq niputettavat)
-      (doseq [nippu niputettavat]
+      (doseq [nippu (filter (c/time-left? context 60000) niputettavat)]
         (if (get @processed-niput (get-nippu-key nippu))
           (log/warn "Nippu on jo käsitelty" nippu)
           (do (niputa nippu)

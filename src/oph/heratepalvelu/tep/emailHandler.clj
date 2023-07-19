@@ -106,8 +106,7 @@
   käsittelee näiden viestien lähettämisen viestinäpalveluun."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
-  (let [lahetettavat (do-nippu-query)]
-    (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
+  (let [lahetettavat (filter (c/time-left? context 60000) (do-nippu-query))]
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
         (log/info "Lähetetään nippu" nippu)
@@ -131,4 +130,5 @@
                 (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
                           "niputuspvm" (:niputuspvm nippu)
                           "ja lahetyspvm" lahetyspvm
-                          "eroavat toisistaan.")))))))))
+                          "eroavat toisistaan.")))))))
+    (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää viestiä.")))

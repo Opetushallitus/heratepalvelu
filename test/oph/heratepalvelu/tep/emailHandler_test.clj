@@ -276,4 +276,4 @@
         (is (= @test-handleSendTEPEmails-call-log (reverse expected-call-log)))
         (is (true? (tu/logs-contain?
                      {:level :info
-                      :message "Käsitellään 3 lähetettävää viestiä."})))))))
+                      :message "Käsiteltiin 3 lähetettävää viestiä."})))))))

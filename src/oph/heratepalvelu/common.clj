@@ -330,6 +330,13 @@
       last
       normal)))
 
+(defn time-left?
+  "Tarkoitettu laiskojen sekvenssien filtteröintiin.  Ei päästä elementtejä
+  läpi, mikäli suorituskontekstissa on aikaa liian vähän jäljellä.  Aikaraja
+  annetaan millisekunteina."
+  [^com.amazonaws.services.lambda.runtime.Context context limit]
+  (fn [_] (< (.getRemainingTimeInMillis context) limit)))
+
 (defn- make-set-pair
   "Luo '#x = :x' -pareja update-expreja varten."
   [item-key]

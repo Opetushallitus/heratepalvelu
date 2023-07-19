@@ -92,8 +92,7 @@
   käsittelee viestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
-  (let [lahetettavat (query-lahetettavat)]
-    (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
+  (let [lahetettavat (filter (c/time-left? context 60000) (query-lahetettavat))]
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
         (log/info "Lähetetään SMS nipulle" nippu)
@@ -162,4 +161,5 @@
                         (log/error "Server error while sending sms")
                         (log/error e))))
                   (catch Exception e
-                    (log/error "Unhandled exception " e)))))))))))
+                    (log/error "Unhandled exception " e)))))))))
+    (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää viestiä.")))

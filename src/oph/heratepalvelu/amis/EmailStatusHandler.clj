@@ -73,7 +73,7 @@
   "Päivittää viestintäpalvelussa olevien sähköpostien tilat tietokantaan."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleEmailStatus" event context)
-  (let [heratteet (do-query!)
+  (let [heratteet (filter (c/time-left? context 60000) (do-query!))
         changed? (->> heratteet
                       (map handle-single-herate!)  ; avoid short circuit here
                       (reduce #(or %2 %1) false))]

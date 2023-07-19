@@ -84,10 +84,10 @@
   käsittelee viestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (cl/log-caller-details-scheduled "AMISSMSHandler" event context)
-  (let [lahetettavat (query-lahetettavat)]
-    (log/info "Käsitellään" (count lahetettavat) "lähetettävää SMS-viestiä.")
+  (let [lahetettavat (filter (c/time-left? context 60000) (query-lahetettavat))]
     (when (seq lahetettavat)
       (doseq [herate lahetettavat]
         (->> herate
              (send-sms-and-return-status!)
-             (update-status-in-db! herate))))))
+             (update-status-in-db! herate))))
+    (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää SMS-viestiä.")))
