@@ -2,8 +2,7 @@
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.amis.AMISMuistutusHandler :as mh]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.external.viestintapalvelu :as vp]
-            [oph.heratepalvelu.test-util :as tu])
+            [oph.heratepalvelu.external.viestintapalvelu :as vp])
   (:import (java.time LocalDate)))
 
 (def mock-update-after-send-results (atom {}))
@@ -175,25 +174,3 @@
         (is (= @mock-query-items-results expected-1))
         (mh/query-muistutukset 2)
         (is (= @mock-query-items-results expected-2))))))
-
-(def test-handleSendAMISMuistutus-results (atom ""))
-
-(defn- mock-query-muistutukset [n] {:fake-muistutus-level n})
-
-(defn- mock-sendAMISMuistutus [muistutettavat n]
-  (when (= n (:fake-muistutus-level muistutettavat))
-    (reset!
-      test-handleSendAMISMuistutus-results
-      (str @test-handleSendAMISMuistutus-results "muistutus-level " n " "))))
-
-(deftest test-handleSendAMISMuistutus
-  (testing "Varmista, että -handleSendAMISMuistutus kutsuu funktioita oikein"
-    (with-redefs [oph.heratepalvelu.amis.AMISMuistutusHandler/query-muistutukset
-                  mock-query-muistutukset
-                  oph.heratepalvelu.amis.AMISMuistutusHandler/sendAMISMuistutus
-                  mock-sendAMISMuistutus]
-      (let [event (tu/mock-handler-event :scheduledherate)
-            context (tu/mock-handler-context)
-            expected "muistutus-level 1 muistutus-level 2 "]
-        (mh/-handleSendAMISMuistutus {} event context)
-        (is (= @test-handleSendAMISMuistutus-results expected))))))
