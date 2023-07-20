@@ -59,3 +59,41 @@
         (is (= (client/get test-url test-options) get-results))
         (is (= (client/patch test-url test-options) patch-results))
         (is (= (client/post test-url test-options) post-results))))))
+
+(defn mock-http-request-failing-times [times status]
+  (let [left (atom times)]
+    (fn [options]
+      (when (< 0 @left)
+        (swap! left dec)
+        (throw (ex-info "clj-http error" {:status status})))
+      {:status 200 :body "great"})))
+
+(deftest test-retries-temp-errors
+  (testing "Väliaikaisista virheistä kokeillaan uudelleen"
+    (with-redefs [clj-http.client/request
+                  (mock-http-request-failing-times 1 503)
+                  oph.heratepalvelu.external.aws-xray/wrap-aws-xray
+                  (fn [_ _ f] (f))
+                  oph.heratepalvelu.external.http-client/client-options
+                  mock-client-options]
+      (is (= (client/get "http://foo.bar") {:status 200 :body "great"})))))
+
+(deftest test-retries-too-many-errors
+  (testing "Väliaikaisista virheistä kokeillaan uudelleen vain kahdesti"
+    (with-redefs [clj-http.client/request
+                  (mock-http-request-failing-times 3 503)
+                  oph.heratepalvelu.external.aws-xray/wrap-aws-xray
+                  (fn [_ _ f] (f))
+                  oph.heratepalvelu.external.http-client/client-options
+                  mock-client-options]
+      (is (thrown? clojure.lang.ExceptionInfo (client/get "http://foo.bar"))))))
+
+(deftest test-retries-permanent-errors
+  (testing "Pysyvistä virheistä ei kokeilla uudelleen"
+    (with-redefs [clj-http.client/request
+                  (mock-http-request-failing-times 1 403)
+                  oph.heratepalvelu.external.aws-xray/wrap-aws-xray
+                  (fn [_ _ f] (f))
+                  oph.heratepalvelu.external.http-client/client-options
+                  mock-client-options]
+      (is (thrown? clojure.lang.ExceptionInfo (client/get "http://foo.bar"))))))
