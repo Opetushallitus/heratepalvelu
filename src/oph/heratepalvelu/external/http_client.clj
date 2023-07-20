@@ -19,6 +19,12 @@
   (merge (update-in client-options [:headers] merge (:headers options))
          (dissoc options :headers)))
 
+(defn request
+  "Tekee HTTP-kutsun X-Rayn avulla."
+  [options]
+  (wrap-aws-xray (:url options) (:method options)
+                 #(client/request (merge-options options))))
+
 (defn get
   "Tekee GET-kyselyn X-Rayn clj-http clientin kautta."
   [url & [options]]
