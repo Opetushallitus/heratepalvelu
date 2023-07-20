@@ -22,15 +22,13 @@
 (defn- mock-wrap-aws-xray [url method request-func]
   {:url url :method method :request-func-result (request-func)})
 
-(defn- generate-mock-client-method [method-name]
-  (fn [url options] {:method-name method-name :url url :options options}))
+(defn mock-http-request [options]
+  {:method-name (:method options) :url (:url options)
+   :options (dissoc options :method :url)})
 
 (deftest test-method-calls
   (testing "Varmista, että http-client metodit toimivat oikein"
-    (with-redefs [clj-http.client/delete (generate-mock-client-method :delete)
-                  clj-http.client/get (generate-mock-client-method :get)
-                  clj-http.client/patch (generate-mock-client-method :patch)
-                  clj-http.client/post (generate-mock-client-method :post)
+    (with-redefs [clj-http.client/request mock-http-request
                   oph.heratepalvelu.external.aws-xray/wrap-aws-xray
                   mock-wrap-aws-xray
                   oph.heratepalvelu.external.http-client/client-options
