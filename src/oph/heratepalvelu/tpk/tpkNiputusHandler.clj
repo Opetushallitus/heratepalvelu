@@ -152,7 +152,10 @@
   (log-caller-details-scheduled "handleTpkNiputus" event context)
   (loop [niputettavat (query-niputtamattomat nil)]
     (log/info "Käsitellään" (count (:items niputettavat)) "työpaikkajaksoa")
-    (doseq [jakso (:items niputettavat)] (handle-jakso! jakso))
+    (doseq [jakso (:items niputettavat)]
+      (try (handle-jakso! jakso)
+           (catch Exception e
+             (log/error e "jaksossa" jakso))))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key niputettavat))
       (recur (query-niputtamattomat (:last-evaluated-key niputettavat))))))

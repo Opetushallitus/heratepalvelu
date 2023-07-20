@@ -207,5 +207,6 @@
   (let [lahetettavat (filter (c/time-left? context 60000) (do-query))]
     (when (seq lahetettavat)
       (doseq [lahetettava lahetettavat]
-        (-> lahetettava (with-kyselylinkki!) (send-email-for-palaute!))))
+        (try (-> lahetettava (with-kyselylinkki!) (send-email-for-palaute!))
+             (catch Exception e (log/error e "herätteessä" lahetettava)))))
     (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää viestiä.")))

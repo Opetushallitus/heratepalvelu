@@ -110,25 +110,28 @@
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
         (log/info "Lähetetään nippu" nippu)
-        (let [jaksot (tc/get-jaksot-for-nippu nippu)
-              oppilaitokset (c/get-oppilaitokset jaksot)
-              osoite (lahetysosoite nippu jaksot)]
-          (cond
-            (not (c/has-time-to-answer? (:voimassaloppupvm nippu)))
-            (do (log/warn "Vastausaika loppunut.")
-                (no-time-to-answer-update-item nippu))
+        (try
+          (let [jaksot (tc/get-jaksot-for-nippu nippu)
+                oppilaitokset (c/get-oppilaitokset jaksot)
+                osoite (lahetysosoite nippu jaksot)]
+            (cond
+              (not (c/has-time-to-answer? (:voimassaloppupvm nippu)))
+              (do (log/warn "Vastausaika loppunut.")
+                  (no-time-to-answer-update-item nippu))
 
-            (nil? osoite)
-            (log/warn "Ei lähetysosoitetta.")
+              (nil? osoite)
+              (log/warn "Ei lähetysosoitetta.")
 
-            :else
-            (let [id (:id (send-survey-email nippu oppilaitokset osoite))
-                  lahetyspvm (str (c/local-date-now))]
-              (log/info "Sähköposti lähetetty viestintäpalveluun:" id)
-              (email-sent-update-item nippu id lahetyspvm osoite)
-              (when-not (= (:niputuspvm nippu) lahetyspvm)
-                (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
-                          "niputuspvm" (:niputuspvm nippu)
-                          "ja lahetyspvm" lahetyspvm
-                          "eroavat toisistaan.")))))))
+              :else
+              (let [id (:id (send-survey-email nippu oppilaitokset osoite))
+                    lahetyspvm (str (c/local-date-now))]
+                (log/info "Sähköposti lähetetty viestintäpalveluun:" id)
+                (email-sent-update-item nippu id lahetyspvm osoite)
+                (when-not (= (:niputuspvm nippu) lahetyspvm)
+                  (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
+                            "niputuspvm" (:niputuspvm nippu)
+                            "ja lahetyspvm" lahetyspvm
+                            "eroavat toisistaan.")))))
+          (catch Exception e
+            (log/error e "nipussa" nippu)))))
     (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää viestiä.")))

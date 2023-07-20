@@ -344,5 +344,7 @@
       (doseq [nippu (filter (c/time-left? context 60000) niputettavat)]
         (if (get @processed-niput (get-nippu-key nippu))
           (log/warn "Nippu on jo käsitelty" nippu)
-          (do (niputa nippu)
-              (swap! processed-niput assoc (get-nippu-key nippu) true)))))))
+          (try (niputa nippu)
+               (swap! processed-niput assoc (get-nippu-key nippu) true)
+               (catch Exception e
+                 (log/error e "nipussa" nippu))))))))

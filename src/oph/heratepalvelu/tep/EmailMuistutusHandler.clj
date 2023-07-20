@@ -73,17 +73,20 @@
   [muistutettavat]
   (log/info "Käsitellään" (count muistutettavat) "lähetettävää muistutusta.")
   (doseq [nippu muistutettavat]
-    (log/info "Käsitellään kyselylinkki" (:kyselylinkki nippu))
-    (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
-      (log/info "Arvo-status:" status)
-      (if (and (not (:vastattu status))
-               (c/has-time-to-answer? (:voimassa_loppupvm status)))
-        (let [jaksot (tc/get-jaksot-for-nippu nippu)
-              oppilaitokset (c/get-oppilaitokset jaksot)
-              id (:id (send-reminder-email nippu oppilaitokset))]
-          (log/info "Lähetetty muistutusviesti" id)
-          (update-item-email-sent nippu id))
-        (update-item-cannot-answer nippu status)))))
+    (try
+      (log/info "Käsitellään kyselylinkki" (:kyselylinkki nippu))
+      (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
+        (log/info "Arvo-status:" status)
+        (if (and (not (:vastattu status))
+                 (c/has-time-to-answer? (:voimassa_loppupvm status)))
+          (let [jaksot (tc/get-jaksot-for-nippu nippu)
+                oppilaitokset (c/get-oppilaitokset jaksot)
+                id (:id (send-reminder-email nippu oppilaitokset))]
+            (log/info "Lähetetty muistutusviesti" id)
+            (update-item-email-sent nippu id))
+          (update-item-cannot-answer nippu status)))
+      (catch Exception e
+        (log/error e "nipussa" nippu)))))
 
 (defn query-muistutukset
   "Hakee tietokannasta nippuja, joista on aika lähettää muistutus."

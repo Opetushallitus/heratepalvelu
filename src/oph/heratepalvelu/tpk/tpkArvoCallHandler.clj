@@ -85,7 +85,9 @@
     (log/info "Käsitellään" (count (:items scan-results)) "nippua.")
     (doseq [nippu (:items scan-results)]
       (when (< 30000 (.getRemainingTimeInMillis context))
-        (handle-single-nippu! nippu)))
+        (try (handle-single-nippu! nippu)
+             (catch Exception e
+               (log/error e "nipussa" nippu)))))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key scan-results))
       (recur (do-scan (:last-evaluated-key scan-results))))))

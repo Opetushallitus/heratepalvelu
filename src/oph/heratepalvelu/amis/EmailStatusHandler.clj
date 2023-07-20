@@ -55,19 +55,18 @@
   Palauttaa, päivitettiinkö viestin tila."
   [herate]
   (log/info "Kysytään herätteen" herate "viestintäpalvelun tila")
-  (let [status (vp/get-email-status (:viestintapalvelu-id herate))
-        tila (vp/viestintapalvelu-status->kasittelytila status)]
-    (if tila
-      (try
-        (log/info "Herätteellä on status" status "eli tila" tila)
-        (update-db-tila! herate tila)
-        (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)
-        (update-ehoks-if-not-muistutus! herate status tila)
-        (catch Exception e
-          (log/error e "Lähetystilan tallennus Arvoon/eHOKSiin epäonnistui"
-                     herate)))
-      (log/info "Heräte odottaa lähetystä:" status))
-    tila))
+  (try
+    (let [status (vp/get-email-status (:viestintapalvelu-id herate))
+          tila (vp/viestintapalvelu-status->kasittelytila status)]
+      (if tila
+        (do
+          (log/info "Herätteellä on status" status "eli tila" tila)
+          (update-db-tila! herate tila)
+          (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)
+          (update-ehoks-if-not-muistutus! herate status tila))
+        (log/info "Heräte odottaa lähetystä:" status))
+      tila)
+    (catch Exception e (log/error e "herätteellä" herate))))
 
 (defn -handleEmailStatus
   "Päivittää viestintäpalvelussa olevien sähköpostien tilat tietokantaan."

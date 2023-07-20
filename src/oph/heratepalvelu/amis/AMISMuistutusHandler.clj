@@ -74,12 +74,8 @@
           (do
             (log/warn "Kyselylinkkiä ei löytynyt!  Merkitään loppuneeksi.")
             (update-when-not-sent herate n {}))
-          (do
-            (log/error e "virhe muistutuksen käsittelyssä, tiedot:" (ex-data e))
-            (throw e))))
-      (catch Exception e
-        (log/error e "virhe muistutuksen käsittelyssä")
-        (throw e)))))
+          (log/error e "tiedot:" (ex-data e))))
+      (catch Exception e (log/error e "herätteellä" herate)))))
 
 (defn query-muistutukset
   "Hakee tietokannasta herätteet, joilla on lähetettäviä muistutusviestejä."

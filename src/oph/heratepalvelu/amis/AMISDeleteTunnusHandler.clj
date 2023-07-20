@@ -52,4 +52,6 @@
             (delete-one-item
               (ac/get-herate-by-kyselylinkki! (:kyselylinkki herate)))))
         (catch JsonParseException e
-          (log/error e "Virhe viestin lukemisessa: " msg))))))
+          (log/error e "Virhe viestin lukemisessa: " msg))
+        (catch Exception e
+          (log/error e "herätteessä" msg))))))

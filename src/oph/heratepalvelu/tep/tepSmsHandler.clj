@@ -95,31 +95,28 @@
   (let [lahetettavat (filter (c/time-left? context 60000) (query-lahetettavat))]
     (when (seq lahetettavat)
       (doseq [nippu lahetettavat]
-        (log/info "Lähetetään SMS nipulle" nippu)
-        (if (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
-          (log/error "Nipulla on käsittelytila ei-niputettu")
-          (if-not (c/has-time-to-answer? (:voimassaloppupvm nippu))
-            (try
-              (log/info "Vastausaika päättynyt" (:voimassaloppupvm nippu))
-              (tc/update-nippu nippu
-                               {:sms_lahetyspvm [:s (str (c/local-date-now))]
-                                :sms_kasittelytila
-                                [:s (:vastausaika-loppunut c/kasittelytilat)]})
-              (catch Exception e
-                (log/error "Virhe sms-lähetystilan päivityksessä nipulle,"
-                           "jonka vastausaika umpeutunut")
-                (log/error e)))
-            (let [jaksot (tc/get-jaksot-for-nippu nippu)
-                  oppilaitokset (c/get-oppilaitokset jaksot)
-                  puhelinnumero (ohjaaja-puhnro nippu jaksot)
-                  sms-kasittelytila (:sms_kasittelytila nippu)]
-              (if (or (nil? puhelinnumero)
-                      (and (some? sms-kasittelytila)
-                           (not= sms-kasittelytila
-                                 (:ei-lahetetty c/kasittelytilat))))
-                (log/warn "SMS:a ei voi lähettää, numero" puhelinnumero
-                          "käsittelytila" sms-kasittelytila)
-                (try
+        (try
+          (log/info "Lähetetään SMS nipulle" nippu)
+          (if (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
+            (log/error "Nipulla on käsittelytila ei-niputettu")
+            (if-not (c/has-time-to-answer? (:voimassaloppupvm nippu))
+              (do
+                (log/info "Vastausaika päättynyt" (:voimassaloppupvm nippu))
+                (tc/update-nippu
+                  nippu
+                  {:sms_lahetyspvm [:s (str (c/local-date-now))]
+                   :sms_kasittelytila
+                   [:s (:vastausaika-loppunut c/kasittelytilat)]}))
+              (let [jaksot (tc/get-jaksot-for-nippu nippu)
+                    oppilaitokset (c/get-oppilaitokset jaksot)
+                    puhelinnumero (ohjaaja-puhnro nippu jaksot)
+                    sms-kasittelytila (:sms_kasittelytila nippu)]
+                (if (or (nil? puhelinnumero)
+                        (and (some? sms-kasittelytila)
+                             (not= sms-kasittelytila
+                                   (:ei-lahetetty c/kasittelytilat))))
+                  (log/warn "SMS:a ei voi lähettää, numero" puhelinnumero
+                            "käsittelytila" sms-kasittelytila)
                   (let [body (elisa/tep-msg-body (:kyselylinkki nippu)
                                                  oppilaitokset)
                         resp (elisa/send-sms puhelinnumero body)
@@ -147,19 +144,7 @@
                       (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
                                 "niputuspvm" (:niputuspvm nippu)
                                 "ja sms-lahetyspvm" lahetyspvm
-                                "eroavat toisistaan.")))
-                  (catch AwsServiceException e
-                    (log/error "SMS-viestin lähetysvaiheen kantapäivityksessä"
-                               "tapahtui virhe!")
-                    (log/error e))
-                  (catch ExceptionInfo e
-                    (if (c/client-error? e)
-                      (do
-                        (log/error "Client error while sending sms")
-                        (log/error e))
-                      (do
-                        (log/error "Server error while sending sms")
-                        (log/error e))))
-                  (catch Exception e
-                    (log/error "Unhandled exception " e)))))))))
+                                "eroavat toisistaan.")))))))
+          (catch Exception e
+            (log/error e "nipussa" nippu)))))
     (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää viestiä.")))

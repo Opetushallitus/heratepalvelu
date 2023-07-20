@@ -87,7 +87,8 @@
   (let [lahetettavat (filter (c/time-left? context 60000) (query-lahetettavat))]
     (when (seq lahetettavat)
       (doseq [herate lahetettavat]
-        (->> herate
-             (send-sms-and-return-status!)
-             (update-status-in-db! herate))))
+        (try (->> herate
+                  (send-sms-and-return-status!)
+                  (update-status-in-db! herate))
+             (catch Exception e (log/error e "herätteessä" herate)))))
     (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää SMS-viestiä.")))
