@@ -43,7 +43,8 @@
     (if (or (:no-retries options) (<= retries 0))
       (try (client/request options)
            (catch Exception e
-             (log/error e "while doing" options ", not retrying")
+             (log/error e "error" (ex-data e)
+                        "for request" options ", not retrying")
              (throw e)))
       (let [result (try (client/request options) (catch Exception e e))]
         (cond
@@ -56,7 +57,7 @@
               (recur (dec retries)))
 
           :else
-          (do (log/error result "while doing request" options)
+          (do (log/error result "error" (ex-data result) "for request" options)
               (throw result)))))))
 
 (defn request
