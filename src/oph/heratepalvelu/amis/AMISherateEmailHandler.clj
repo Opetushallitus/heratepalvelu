@@ -71,8 +71,11 @@
   (if (:kyselylinkki herate)
     herate
     (let [oo-oid (:opiskeluoikeus-oid herate)
-          opiskeluoikeus (or (k/get-opiskeluoikeus-catch-404! oo-oid)
-                             (k/get-opiskeluoikeus-catch-404! oo-oid))]
+          opiskeluoikeus (k/get-opiskeluoikeus-catch-404! oo-oid)
+          [terminal? ext-funded?]
+          (and opiskeluoikeus
+               ((juxt c/terminaalitilassa? c/feedback-collecting-prevented?)
+                opiskeluoikeus (:heratepvm herate)))]
       (cond
         (not opiskeluoikeus)
         (do
@@ -82,10 +85,13 @@
             {:sms-lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]
              :lahetystila [:s (:ei-laheteta-oo-ei-loydy c/kasittelytilat)]}))
 
-        (c/feedback-collecting-prevented? opiskeluoikeus (:heratepvm herate))
+        (or terminal? ext-funded?)
         (do
-          (log/info "Palautteen kerääminen estetty rahoituspohjan vuoksi;"
-                    "opiskeluoikeus" (:oid opiskeluoikeus)
+          (log/info "Palautteen kerääminen estetty"
+                    (clojure.string/join
+                      " ja " (concat (when terminal? ["opiskeluoikeuden tilan"])
+                                     (when ext-funded? ["rahoituspohjan"])))
+                    "vuoksi; opiskeluoikeus" (:oid opiskeluoikeus)
                     "ehoks-id" (:ehoks-id herate)
                     "herätepvm" (:heratepvm herate))
           (update-and-return-herate!
