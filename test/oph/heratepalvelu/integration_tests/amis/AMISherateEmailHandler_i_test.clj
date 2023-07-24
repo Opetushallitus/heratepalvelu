@@ -270,7 +270,7 @@
     :options
     {:content-type "application/json"
      :body (str "{\"vastaamisajan_alkupvm\":\"2022-01-15\","
-                "\"osaamisala\":null,\"heratepvm\":\"2022-01-15\","
+                "\"osaamisala\":[],\"heratepvm\":\"2022-01-15\","
                 "\"koulutustoimija_oid\":null,"
                 "\"tutkinnon_suorituskieli\":\"fi\",\"toimipiste_oid\":null,"
                 "\"oppilaitos_oid\":null,"

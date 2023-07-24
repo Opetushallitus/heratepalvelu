@@ -351,7 +351,7 @@
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "765432-1"
                              :oppisopimuksen_perusta nil
-                             :osaamisala nil
+                             :osaamisala []
                              :koulutustoimija_oid "koulutustoimija-id"
                              :paikallinen_tutkinnon_osa nil
                              :tyopaikkajakson_alkupvm "2021-09-09"
@@ -374,7 +374,7 @@
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "111111-1"
                              :oppisopimuksen_perusta nil
-                             :osaamisala nil
+                             :osaamisala []
                              :koulutustoimija_oid "koulutustoimija-id"
                              :paikallinen_tutkinnon_osa nil
                              :tyopaikkajakson_alkupvm "2021-09-09"
@@ -397,7 +397,7 @@
                              :vastaamisajan_alkupvm "2021-12-16"
                              :tyonantaja "123456-7"
                              :oppisopimuksen_perusta nil
-                             :osaamisala nil
+                             :osaamisala []
                              :koulutustoimija_oid "koulutustoimija-id"
                              :paikallinen_tutkinnon_osa nil
                              :tyopaikkajakson_alkupvm "2021-09-09"
