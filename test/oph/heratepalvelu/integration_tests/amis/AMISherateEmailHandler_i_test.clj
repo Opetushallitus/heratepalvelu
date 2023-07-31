@@ -83,7 +83,18 @@
     :kyselytyyppi [:s "aloittaneet"]
     :alkupvm [:s "2022-01-15"]
     :heratepvm [:s "2022-01-15"]
-    :opiskeluoikeus-oid [:s "1242"]}])
+    :opiskeluoikeus-oid [:s "1242"]}
+   {:toimija_oppija [:s "abc/348"]
+    :ehoks-id [:n 189439]
+    :tyyppi_kausi [:s "aloittaneet/2021-2022"]
+    :sahkoposti [:s "sahko.posti5@esimerkki.fi"]
+    :lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+    :sms-lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+    :suorituskieli [:s "fi"]
+    :kyselytyyppi [:s "tutkinnon_suorittaneet"]
+    :alkupvm [:s "2022-01-15"]
+    :heratepvm [:s "2022-01-15"]
+    :opiskeluoikeus-oid [:s "1243"]}])
 
 (defn- setup-test []
   (mhc/clear-results)
@@ -129,6 +140,14 @@
                                 {:alku "2022-01-05"
                                  :tila {:koodiarvo "lasna"}
                                  :opintojenRahoitus {:koodiarvo "14"}}]}}})
+  (mhc/bind-url :get
+                (str (:koski-url mock-env) "/opiskeluoikeus/1243")
+                {:basic-auth [(:koski-user mock-env) "koski-pwd"] :as :json}
+                {:body {:oid "1243"
+                        :tila {:opiskeluoikeusjaksot
+                               [{:alku "2022-01-10"
+                                 :tila {:koodiarvo "eronnut"}
+                                 :opintojenRahoitus {:koodiarvo "1"}}]}}})
   (mcc/bind-url :post
                 (:viestintapalvelu-url mock-env)
                 {:recipient [{:email "sahko.posti@esimerkki.fi"}]
@@ -227,7 +246,18 @@
      :kyselylinkki [:s "kysely.linkki/86423"]
      :alkupvm [:s "2022-01-15"]
      :heratepvm [:s "2022-01-15"]
-     :opiskeluoikeus-oid [:s "1242"]}})
+     :opiskeluoikeus-oid [:s "1242"]}
+    {:kyselytyyppi [:s "tutkinnon_suorittaneet"],
+     :suorituskieli [:s "fi"],
+     :sahkoposti [:s "sahko.posti5@esimerkki.fi"],
+     :toimija_oppija [:s "abc/348"],
+     :heratepvm [:s "2022-01-15"],
+     :lahetystila [:s "ei_laheteta"],
+     :tyyppi_kausi [:s "aloittaneet/2021-2022"],
+     :opiskeluoikeus-oid [:s "1243"],
+     :alkupvm [:s "2022-01-15"],
+     :sms-lahetystila [:s "ei_laheteta"],
+     :ehoks-id [:n 189439]}})
 
 (def expected-http-results
   [{:method :get
@@ -249,9 +279,6 @@
     :options {:basic-auth ["arvo-user" "arvo-pwd"] :as :json}}
    {:method :get
     :url "koski-example.com/opiskeluoikeus/1234"
-    :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
-   {:method :get
-    :url "koski-example.com/opiskeluoikeus/1241"
     :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
    {:method :get
     :url "koski-example.com/opiskeluoikeus/1241"
@@ -290,7 +317,10 @@
                 "\"lahetystila\":\"ei_lahetetty\"}")}}
    {:method :get
     :url "arvo-example.com/vastauslinkki/v1/status/86423"
-    :options {:basic-auth ["arvo-user" "arvo-pwd"], :as :json}}])
+    :options {:basic-auth ["arvo-user" "arvo-pwd"], :as :json}}
+   {:method :get,
+    :url "koski-example.com/opiskeluoikeus/1243",
+    :options {:basic-auth ["koski-user" "koski-pwd"], :as :json}}])
 
 (def expected-cas-client-results
   [{:method :post
