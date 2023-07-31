@@ -106,6 +106,8 @@
   (reset! test-sendAMISMuistutus-results
           (str @test-sendAMISMuistutus-results email " " n " " status " ")))
 
+(defn- timeout? [] false)
+
 (deftest test-sendAMISMuistutus
   (testing "Varmista, että sendAMISMuistutus kutsuu muita funktioita oikein"
     (with-redefs
@@ -133,16 +135,20 @@
             expected4 (str "{:kyselylinkki \"kysely.linkki/4\"} 1 "
                            "{:vastattu true, "
                            ":voimassa_loppupvm \"2021-10-10\"} ")]
-        (mh/sendAMISMuistutus muistutettavat1 1)
+        ;; timeout case
+        (mh/sendAMISMuistutus (fn [] true) muistutettavat1 1)
+        (is (= @test-sendAMISMuistutus-results ""))
+        ;; normal cases
+        (mh/sendAMISMuistutus timeout? muistutettavat1 1)
         (is (= @test-sendAMISMuistutus-results expected1))
         (reset! test-sendAMISMuistutus-results "")
-        (mh/sendAMISMuistutus muistutettavat2 1)
+        (mh/sendAMISMuistutus timeout? muistutettavat2 1)
         (is (= @test-sendAMISMuistutus-results expected2))
         (reset! test-sendAMISMuistutus-results "")
-        (mh/sendAMISMuistutus muistutettavat3 1)
+        (mh/sendAMISMuistutus timeout? muistutettavat3 1)
         (is (= @test-sendAMISMuistutus-results expected3))
         (reset! test-sendAMISMuistutus-results "")
-        (mh/sendAMISMuistutus muistutettavat4 1)
+        (mh/sendAMISMuistutus timeout? muistutettavat4 1)
         (is (= @test-sendAMISMuistutus-results expected4))))))
 
 (def mock-query-items-results (atom {}))

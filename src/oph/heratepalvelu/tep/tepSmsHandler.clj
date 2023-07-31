@@ -92,9 +92,12 @@
   käsittelee viestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
-  (let [lahetettavat (filter (c/time-left? context 60000) (query-lahetettavat))]
+  (let [lahetettavat (query-lahetettavat)
+        timeout? (c/no-time-left? context 60000)]
     (when (seq lahetettavat)
-      (doseq [nippu lahetettavat]
+      (c/doseq-with-timeout
+        timeout?
+        [nippu lahetettavat]
         (try
           (log/info "Lähetetään SMS nipulle" nippu)
           (if (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))

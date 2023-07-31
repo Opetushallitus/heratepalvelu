@@ -338,10 +338,13 @@
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleNiputus" event context)
   (let [processed-niput (atom {})
+        timeout? (c/no-time-left? context 60000)
         niputettavat (sort-by :niputuspvm #(- (compare %1 %2)) (do-query))]
     (log/info "Käsitellään enintään" (count niputettavat) "niputusta.")
     (when (seq niputettavat)
-      (doseq [nippu (filter (c/time-left? context 60000) niputettavat)]
+      (c/doseq-with-timeout
+        timeout?
+        [nippu niputettavat]
         (if (get @processed-niput (get-nippu-key nippu))
           (log/warn "Nippu on jo käsitelty" nippu)
           (try (niputa nippu)

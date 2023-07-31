@@ -249,7 +249,8 @@
        mock-get-oppilaitokset]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)
-            expected-call-log ["do-nippu-query"
+            expected-call-log ["do-nippu-query"  ; from timeout case
+                               "do-nippu-query"
                                "get-jaksot-for-nippu: email-1"
                                (str "get-oppilaitokset: "
                                     "[{:oppilaitos \"123.456.789\"}]")
@@ -272,6 +273,10 @@
                                     "[{:oppilaitos \"123.456.789\"}]")
                                (str "lahetysosoite: email-3 "
                                     "[{:oppilaitos \"123.456.789\"}]")]]
+        ;; timeout case
+        (eh/-handleSendTEPEmails {} event (tu/mock-handler-context 100))
+        (is (= @test-handleSendTEPEmails-call-log ["do-nippu-query"]))
+        ;; normal case
         (eh/-handleSendTEPEmails {} event context)
         (is (= @test-handleSendTEPEmails-call-log (reverse expected-call-log)))
         (is (true? (tu/logs-contain?

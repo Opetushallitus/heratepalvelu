@@ -70,9 +70,11 @@
 (defn sendEmailMuistutus
   "Käsittelee ryhmää muistutuksia. Hakee niiden statuksia Arvosta ja lähettää
   ne, jos niihin ei ole vastattu ja vastausaika ei ole loppunut."
-  [muistutettavat]
+  [timeout? muistutettavat]
   (log/info "Käsitellään" (count muistutettavat) "lähetettävää muistutusta.")
-  (doseq [nippu muistutettavat]
+  (c/doseq-with-timeout
+    timeout?
+    [nippu muistutettavat]
     (try
       (log/info "Käsitellään kyselylinkki" (:kyselylinkki nippu))
       (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
@@ -102,5 +104,5 @@
   "Käsittelee muistettavia nippuja."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
-  (sendEmailMuistutus (filter (c/time-left? context 60000)
-                              (query-muistutukset))))
+  (sendEmailMuistutus (c/no-time-left? context 60000)
+                      (query-muistutukset)))

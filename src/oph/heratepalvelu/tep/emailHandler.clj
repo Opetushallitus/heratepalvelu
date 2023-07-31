@@ -106,9 +106,12 @@
   käsittelee näiden viestien lähettämisen viestinäpalveluun."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
-  (let [lahetettavat (filter (c/time-left? context 60000) (do-nippu-query))]
+  (let [lahetettavat (do-nippu-query)
+        timeout? (c/no-time-left? context 60000)]
     (when (seq lahetettavat)
-      (doseq [nippu lahetettavat]
+      (c/doseq-with-timeout
+        timeout?
+        [nippu lahetettavat]
         (log/info "Lähetetään nippu" nippu)
         (try
           (let [jaksot (tc/get-jaksot-for-nippu nippu)

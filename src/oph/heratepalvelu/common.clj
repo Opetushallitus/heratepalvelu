@@ -330,12 +330,28 @@
       last
       normal)))
 
-(defn time-left?
-  "Tarkoitettu laiskojen sekvenssien filtteröintiin.  Ei päästä elementtejä
-  läpi, mikäli suorituskontekstissa on aikaa liian vähän jäljellä.  Aikaraja
-  annetaan millisekunteina."
+(defmacro doseq-with-timeout
+  "Sama kuin doseq, mutta ottaa vastaan timeout?-predikaatin,
+  jota testataan joka iteraation jälkeen.  Jos se palauttaa true,
+  keskeytetään doseq ja lokitetaan 'syy'."
+  [timeout? seqs & body]
+  `(try
+     (doseq ~seqs
+       (let [to# (~timeout?)]
+         (when to# (throw (ex-info "Timeout" {:timeout to#}))))
+       ~@body)
+     (catch ExceptionInfo e#
+       (let [to# (:timeout (ex-data e#))]
+         (if to#
+           (log/info "Ending processing because of timeout:" to#)
+           (throw e#))))))
+
+(defn no-time-left?
+  "Palauttaa funktion joka palauttaa true,
+  mikäli suorituskontekstissa on liian vähän aikaa jäljellä.
+  Aikaraja annetaan millisekunteina."
   [^com.amazonaws.services.lambda.runtime.Context context limit]
-  (fn [_] (< (.getRemainingTimeInMillis context) limit)))
+  (fn [] (< (.getRemainingTimeInMillis context) limit)))
 
 (defn- make-set-pair
   "Luo '#x = :x' -pareja update-expreja varten."

@@ -84,9 +84,12 @@
   käsittelee viestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (cl/log-caller-details-scheduled "AMISSMSHandler" event context)
-  (let [lahetettavat (filter (c/time-left? context 60000) (query-lahetettavat))]
+  (let [lahetettavat (query-lahetettavat)
+        timeout? (c/no-time-left? context 60000)]
     (when (seq lahetettavat)
-      (doseq [herate lahetettavat]
+      (c/doseq-with-timeout
+        timeout?
+        [herate lahetettavat]
         (try (->> herate
                   (send-sms-and-return-status!)
                   (update-status-in-db! herate))

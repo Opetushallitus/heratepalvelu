@@ -117,7 +117,7 @@
                       :updates {:sms_kasittelytila
                                 [:s (:vastausaika-loppunut-m c/kasittelytilat)]
                                 :sms_muistutukset [:n 1]}}]]
-        (smh/sendSmsMuistutus muistutettavat)
+        (smh/sendSmsMuistutus (fn [] false) muistutettavat)
         (is (= results (vec (reverse @test-sendSmsMuistutus-results))))))))
 
 (defn- mock-query-muistutukset-query-items [query-params options table]
@@ -150,7 +150,7 @@
                 @test-handleSendSMSMuistutus-results))
   [{:type "Muistutettava"}])
 
-(defn- mock-sendSmsMuistutus [muistutettavat]
+(defn- mock-sendSmsMuistutus [_ muistutettavat]
   (reset! test-handleSendSMSMuistutus-results
           (cons {:type "mock-sendSmsMuistutus"
                  :value muistutettavat}

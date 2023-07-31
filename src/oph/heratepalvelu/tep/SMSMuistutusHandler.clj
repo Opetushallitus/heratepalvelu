@@ -21,9 +21,11 @@
 (defn sendSmsMuistutus
   "Hakee jaksot ja oppilaitokset tietokannasta nipun sisällön perusteella ja
   lähettää niistä luodut SMS-muistutukset viestintäpalveluun."
-  [muistutettavat]
+  [timeout? muistutettavat]
   (log/info (str "Käsitellään" (count muistutettavat) "muistutusta."))
-  (doseq [nippu muistutettavat]
+  (c/doseq-with-timeout
+    timeout?
+    [nippu muistutettavat]
     (try
       (log/info "Kyselylinkin tunnusosa:"
                 (last (str/split (:kyselylinkki nippu) #"_")))
@@ -71,4 +73,4 @@
   "Hakee SMS-muistutettavia nippuja tietokannasta ja lähettää viestejä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendSMSMuistutus" event context)
-  (sendSmsMuistutus (filter (c/time-left? context 60000) (query-muistutukset))))
+  (sendSmsMuistutus (c/no-time-left? context 60000) (query-muistutukset)))

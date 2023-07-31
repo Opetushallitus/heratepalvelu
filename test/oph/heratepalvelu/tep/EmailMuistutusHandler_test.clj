@@ -177,7 +177,7 @@
              (str "update-item-cannot-answer: "
                   "{:kyselylinkki \"kysely.linkki/xyz_GHKJJK\"} "
                   "{:vastattu false, :voimassa_loppupvm \"2021-10-08\"}")]]
-        (emh/sendEmailMuistutus muistutettavat)
+        (emh/sendEmailMuistutus (fn [] false) muistutettavat)
         (is (= @test-sendEmailMuistutus-call-log (reverse expected-call-log)))
         (is (tu/logs-contain?
               {:level :info
@@ -207,7 +207,7 @@
 
 (defn- mock-query-muistutukset [] [{:muistutus-contents "test-data"}])
 
-(defn- mock-sendEmailMuistutus [muistutettavat]
+(defn- mock-sendEmailMuistutus [_ muistutettavat]
   (reset! test-handleSendEmailMuistutus-result
           {:muistutettavat muistutettavat}))
 

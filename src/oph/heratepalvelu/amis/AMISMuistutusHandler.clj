@@ -55,10 +55,12 @@
 (defn sendAMISMuistutus
   "Lähettää muistutusviestin ja tallentaa sen tilan tietokantaan, jos kyselyyn
   ei ole vastattu ja vastausaika ei ole umpeutunut."
-  [muistutettavat n]
+  [timeout? muistutettavat n]
   (log/info (str "Käsitellään " (count muistutettavat)
                  " lähetettävää " n ". muistutusta."))
-  (doseq [herate muistutettavat]
+  (c/doseq-with-timeout
+    timeout?
+    [herate muistutettavat]
     (log/info "Käsitellään heräte" herate)
     (try
       (let [status (arvo/get-kyselylinkki-status (:kyselylinkki herate))
@@ -93,5 +95,6 @@
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
   (doseq [kerta [1 2]]
-    (sendAMISMuistutus
-      (filter (c/time-left? context 60000) (query-muistutukset kerta)) kerta)))
+    (sendAMISMuistutus (c/no-time-left? context 60000)
+                       (query-muistutukset kerta)
+                       kerta)))

@@ -31,8 +31,12 @@
                  {:kasittelytila
                   [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                  {:index "niputusIndex"}
-                 (:nippu-table env))]
-    (doseq [email emails]
+                 (:nippu-table env))
+        timeout? (c/no-time-left? context 60000)]
+    (log/info "Aiotaan käsitellä" (count emails) "sähköpostiviestiä.")
+    (c/doseq-with-timeout
+      timeout?
+      [email emails]
       (log/info "Päivitetään tila viestintäpalvelussa olevalle nipulle" email)
       (try
         (let [nippu (ddb/get-item {:ohjaaja_ytunnus_kj_tutkinto
