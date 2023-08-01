@@ -63,7 +63,7 @@
                                     :koodiarvo "lkhlkhjl"}]}
             expected ["test1" "test2"]]
         (is (= (arvo/get-osaamisalat suoritus "1.2.3.4") expected))
-        (is (nil? (arvo/get-osaamisalat {:osaamisala []} "1.2.3.4")))))))
+        (is (empty? (arvo/get-osaamisalat {:osaamisala []} "1.2.3.4")))))))
 
 (deftest test-get-hankintakoulutuksen-toteuttaja
   (testing "Get hoks hankintakoulutuksen toteuttaja"

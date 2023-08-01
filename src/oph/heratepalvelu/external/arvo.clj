@@ -66,22 +66,17 @@
 (defn get-osaamisalat
   "Hakee voimassa olevat osaamisalat suorituksesta."
   [suoritus opiskeluoikeus-oid]
-  (let [osaamisalat (filter
-                      #(and
-                         (or (nil? (:loppu %1))
-                             (>= (compare (:loppu %1)
-                                          (str (c/local-date-now)))
-                                 0))
-                         (or (nil? (:alku %1))
-                             (<= (compare (:alku %1)
-                                          (str (c/local-date-now)))
-                                 0)))
-                      (:osaamisala suoritus))]
-    (if (not-empty osaamisalat)
-      (map #(or (:koodiarvo (:osaamisala %1))
-                (:koodiarvo %1))
-           osaamisalat)
-      (log/info "Ei osaamisaloja opiskeluoikeudessa" opiskeluoikeus-oid))))
+  (->> (:osaamisala suoritus)
+       (filter #(and (or (nil? (:loppu %1))
+                         (>= (compare (:loppu %1)
+                                      (str (c/local-date-now)))
+                             0))
+                     (or (nil? (:alku %1))
+                         (<= (compare (:alku %1)
+                                      (str (c/local-date-now)))
+                             0))))
+       (map #(or (:koodiarvo (:osaamisala %1))
+                 (:koodiarvo %1)))))
 
 (defn get-hankintakoulutuksen-toteuttaja
   "Hakee hankintakoulutuksen toteuttajan OID:n eHOKS-palvelusta ja Koskesta."
