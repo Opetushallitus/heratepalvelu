@@ -3,6 +3,7 @@
   (:refer-clojure :exclude [get])
   (:require [clj-http.client :as client]
             [environ.core :refer [env]]
+            [clojure.tools.logging :as log]
             [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]]))
 
 (def client-options
@@ -19,26 +20,59 @@
   (merge (update-in client-options [:headers] merge (:headers options))
          (dissoc options :headers)))
 
-(defn get
-  "Tekee GET-kyselyn X-Rayn clj-http clientin kautta."
-  [url & [options]]
-  (wrap-aws-xray url :get
-                 #(client/get url (merge-options options))))
+(def temporary-conditions
+  #{java.net.SocketTimeoutException java.net.ConnectException
+    ; these should not be temporary but often are
+    400 401 404 500
+    ; these are allowed to be temporary
+    408 425 429 502 503 504
+    ; these are non-standard extensions; probably doesn't do harm to include
+    520 521 522 524 529 598 599})
 
-(defn post
-  "Tekee POST-kyselyn X-Rayn clj-http clientin kautta."
-  [url & [options]]
-  (wrap-aws-xray url :post
-                 #(client/post url (merge-options options))))
+(defn temporary-error?
+  "Kertoo poikkeuksesta, voiko sen aiheuttaja olla väliaikainen."
+  [e]
+  (contains? temporary-conditions (or (:status (ex-data e)) (type e))))
 
-(defn delete
-  "Tekee DELETE-kyselyn X-Rayn clj-http clientin kautta."
-  [url & [options]]
-  (wrap-aws-xray url :delete
-                 #(client/delete url (merge-options options))))
+(defn request-with-retries
+  "Tekee HTTP-kutsun enintään 3 kertaa siten, että samaa kutsua yritetään
+  uudestaan, mikäli se epäonnistuu tavalla joka saattaa olla väliaikainen.
+  Raportoi epäonnistuneet kutsut."
+  [options]
+  (loop [retries 2]
+    (if (or (:no-retries options) (<= retries 0))
+      (try (client/request options)
+           (catch Exception e
+             (log/error e "error" (ex-data e)
+                        "for request" options ", not retrying")
+             (throw e)))
+      (let [result (try (client/request options) (catch Exception e e))]
+        (cond
+          (not (instance? Exception result)) result
 
-(defn patch
-  "Tekee PATCH-kyselyn X-Rayn clj-http clientin kautta."
-  [url & [options]]
-  (wrap-aws-xray url :patch
-                 #(client/patch url (merge-options options))))
+          (temporary-error? result)
+          (do (log/info "Got temporary error" (:status (ex-data result))
+                        "/" (.getName ^Class (type result))
+                        "; retrying" retries "times")
+              (recur (dec retries)))
+
+          :else
+          (do (log/error result "error" (ex-data result) "for request" options)
+              (throw result)))))))
+
+(defn request
+  "Tekee HTTP-kutsun X-Rayn avulla."
+  [options]
+  (wrap-aws-xray (:url options) (:method options)
+                 #(request-with-retries (merge-options options))))
+
+(defn method-function
+  "Luo HTTP-kyselyfunktion jollekin tietylle HTTP-verbille."
+  [method]
+  (fn [url & [options]]
+    (request (merge {:url url :method method} options))))
+
+(def get (method-function :get))
+(def post (method-function :post))
+(def delete (method-function :delete))
+(def patch (method-function :patch))

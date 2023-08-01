@@ -5,8 +5,7 @@
             [clj-cas.client :as cl]
             [environ.core :refer [env]]
             [cheshire.core :as json]
-            [clj-http.client :refer [request]]
-            [oph.heratepalvelu.external.aws-xray :refer [wrap-aws-xray]]
+            [oph.heratepalvelu.external.http-client :refer [request]]
             [oph.heratepalvelu.external.aws-ssm :as ssm])
   (:import (fi.vm.sade.utils.cas CasClient
                                  CasParams
@@ -84,14 +83,12 @@
 (defn cas-authenticated-get
   "Tekee Cas-autentikoidun GET-requestin."
   [url & [options]]
-  (wrap-aws-xray url :get
-                 #(cas-http :get url options nil)))
+  (cas-http :get url options nil))
 
 (defn cas-authenticated-post
   "Tekee Cas-autentikoidun POST-requestin."
   [url body & [options]]
-  (wrap-aws-xray url :post
-                 #(cas-http :post url options body)))
+  (cas-http :post url options body))
 
 (defn- get-uri
   "Muuttaa stringin Uri-objektiksi."
