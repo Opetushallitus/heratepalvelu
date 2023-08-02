@@ -94,6 +94,7 @@
   (log-caller-details-scheduled "tepSmsHandler" event context)
   (let [lahetettavat (query-lahetettavat)
         timeout? (c/no-time-left? context 60000)]
+    (log/info "Aiotaan käsitellä" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
       (c/doseq-with-timeout
         timeout?
@@ -149,5 +150,4 @@
                                 "ja sms-lahetyspvm" lahetyspvm
                                 "eroavat toisistaan.")))))))
           (catch Exception e
-            (log/error e "nipussa" nippu)))))
-    (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää viestiä.")))
+            (log/error e "nipussa" nippu)))))))

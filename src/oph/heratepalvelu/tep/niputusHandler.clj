@@ -340,7 +340,7 @@
   (let [processed-niput (atom {})
         timeout? (c/no-time-left? context 60000)
         niputettavat (sort-by :niputuspvm #(- (compare %1 %2)) (do-query))]
-    (log/info "Käsitellään enintään" (count niputettavat) "niputusta.")
+    (log/info "Aiotaan käsitellä" (count niputettavat) "niputusta.")
     (when (seq niputettavat)
       (c/doseq-with-timeout
         timeout?

@@ -74,8 +74,8 @@
   (log-caller-details-scheduled "handleEmailStatus" event context)
   (let [heratteet (do-query!)
         timeout? (c/no-time-left? context 60000)]
+    (log/info "Aiotaan käsitellä" (count heratteet) "herätettä")
     (c/doseq-with-timeout
       timeout?
       [herate heratteet]
-      (handle-single-herate! herate))
-    (log/info "Käsiteltiin" (count heratteet) "herätettä")))
+      (handle-single-herate! herate))))

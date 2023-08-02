@@ -279,6 +279,6 @@
         ;; normal case
         (eh/-handleSendTEPEmails {} event context)
         (is (= @test-handleSendTEPEmails-call-log (reverse expected-call-log)))
-        (is (true? (tu/logs-contain?
-                     {:level :info
-                      :message "Käsiteltiin 3 lähetettävää viestiä."})))))))
+        (is (tu/logs-contain?
+              {:level :info
+               :message "Aiotaan käsitellä 3 lähetettävää viestiä."}))))))

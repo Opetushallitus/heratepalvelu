@@ -180,8 +180,7 @@
         (emh/sendEmailMuistutus (fn [] false) muistutettavat)
         (is (= @test-sendEmailMuistutus-call-log (reverse expected-call-log)))
         (is (tu/logs-contain?
-              {:level :info
-               :message "Käsitellään 3 lähetettävää muistutusta."}))))))
+              {:level :info :message "Aiotaan käsitellä 3 muistutusta."}))))))
 
 (defn- mock-query-items [query-params options table]
   (when (and (= :eq (first (:muistutukset query-params)))

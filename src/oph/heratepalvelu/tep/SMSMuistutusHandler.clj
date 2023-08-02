@@ -22,7 +22,7 @@
   "Hakee jaksot ja oppilaitokset tietokannasta nipun sisällön perusteella ja
   lähettää niistä luodut SMS-muistutukset viestintäpalveluun."
   [timeout? muistutettavat]
-  (log/info (str "Käsitellään" (count muistutettavat) "muistutusta."))
+  (log/info (str "Aiotaan käsitellä" (count muistutettavat) "muistutusta."))
   (c/doseq-with-timeout
     timeout?
     [nippu muistutettavat]

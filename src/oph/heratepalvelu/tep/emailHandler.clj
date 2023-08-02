@@ -108,6 +108,7 @@
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
   (let [lahetettavat (do-nippu-query)
         timeout? (c/no-time-left? context 60000)]
+    (log/info "Aiotaan käsitellä" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
       (c/doseq-with-timeout
         timeout?
@@ -136,5 +137,4 @@
                             "ja lahetyspvm" lahetyspvm
                             "eroavat toisistaan.")))))
           (catch Exception e
-            (log/error e "nipussa" nippu)))))
-    (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää viestiä.")))
+            (log/error e "nipussa" nippu)))))))

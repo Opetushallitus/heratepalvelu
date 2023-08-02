@@ -56,8 +56,8 @@
   "Lähettää muistutusviestin ja tallentaa sen tilan tietokantaan, jos kyselyyn
   ei ole vastattu ja vastausaika ei ole umpeutunut."
   [timeout? muistutettavat n]
-  (log/info (str "Käsitellään " (count muistutettavat)
-                 " lähetettävää " n ". muistutusta."))
+  (log/info "Aiotaan käsitellä" (count muistutettavat) "lähetettävää"
+            (str n ".") "muistutusta.")
   (c/doseq-with-timeout
     timeout?
     [herate muistutettavat]

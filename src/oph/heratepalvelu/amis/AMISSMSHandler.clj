@@ -86,6 +86,7 @@
   (cl/log-caller-details-scheduled "AMISSMSHandler" event context)
   (let [lahetettavat (query-lahetettavat)
         timeout? (c/no-time-left? context 60000)]
+    (log/info "Aiotaan käsitellä" (count lahetettavat) "SMS-viestiä.")
     (when (seq lahetettavat)
       (c/doseq-with-timeout
         timeout?
@@ -93,5 +94,4 @@
         (try (->> herate
                   (send-sms-and-return-status!)
                   (update-status-in-db! herate))
-             (catch Exception e (log/error e "herätteessä" herate)))))
-    (log/info "Käsiteltiin" (count lahetettavat) "lähetettävää SMS-viestiä.")))
+             (catch Exception e (log/error e "herätteessä" herate)))))))

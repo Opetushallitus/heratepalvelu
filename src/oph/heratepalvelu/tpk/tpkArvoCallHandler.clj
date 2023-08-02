@@ -82,7 +82,7 @@
   [_ event ^Context context]
   (log-caller-details-scheduled "handleTpkArvoCalls" event context)
   (loop [scan-results (do-scan)]
-    (log/info "Käsitellään" (count (:items scan-results)) "nippua.")
+    (log/info "Aiotaan käsitellä" (count (:items scan-results)) "nippua.")
     (doseq [nippu (:items scan-results)]
       (when (< 30000 (.getRemainingTimeInMillis context))
         (try (handle-single-nippu! nippu)

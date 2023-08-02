@@ -71,7 +71,7 @@
   "Käsittelee ryhmää muistutuksia. Hakee niiden statuksia Arvosta ja lähettää
   ne, jos niihin ei ole vastattu ja vastausaika ei ole loppunut."
   [timeout? muistutettavat]
-  (log/info "Käsitellään" (count muistutettavat) "lähetettävää muistutusta.")
+  (log/info "Aiotaan käsitellä" (count muistutettavat) "muistutusta.")
   (c/doseq-with-timeout
     timeout?
     [nippu muistutettavat]
