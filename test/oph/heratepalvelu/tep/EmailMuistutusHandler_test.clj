@@ -177,11 +177,10 @@
              (str "update-item-cannot-answer: "
                   "{:kyselylinkki \"kysely.linkki/xyz_GHKJJK\"} "
                   "{:vastattu false, :voimassa_loppupvm \"2021-10-08\"}")]]
-        (emh/sendEmailMuistutus muistutettavat)
+        (emh/sendEmailMuistutus (fn [] false) muistutettavat)
         (is (= @test-sendEmailMuistutus-call-log (reverse expected-call-log)))
         (is (tu/logs-contain?
-              {:level :info
-               :message "Käsitellään 3 lähetettävää muistutusta."}))))))
+              {:level :info :message "Aiotaan käsitellä 3 muistutusta."}))))))
 
 (defn- mock-query-items [query-params options table]
   (when (and (= :eq (first (:muistutukset query-params)))
@@ -191,7 +190,6 @@
              (= :s (first (first (second (:lahetyspvm query-params)))))
              (= :s (first (second (second (:lahetyspvm query-params)))))
              (= "emailMuistutusIndex" (:index options))
-             (= 10 (:limit options))
              (= "nippu-table-name" table))
     {:start-date (second (first (second (:lahetyspvm query-params))))
      :end-date (second (second (second (:lahetyspvm query-params))))}))
@@ -208,7 +206,7 @@
 
 (defn- mock-query-muistutukset [] [{:muistutus-contents "test-data"}])
 
-(defn- mock-sendEmailMuistutus [muistutettavat]
+(defn- mock-sendEmailMuistutus [_ muistutettavat]
   (reset! test-handleSendEmailMuistutus-result
           {:muistutettavat muistutettavat}))
 

@@ -93,7 +93,7 @@
     event))
 
 (defn mock-handler-context
-  ([] (mock-handler-context 100))
+  ([] (mock-handler-context 100000))
   ([milliseconds]
    (reify com.amazonaws.services.lambda.runtime.Context
      (getAwsRequestId [this] dummy-request-id)

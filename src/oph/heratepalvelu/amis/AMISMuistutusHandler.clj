@@ -55,10 +55,12 @@
 (defn sendAMISMuistutus
   "Lähettää muistutusviestin ja tallentaa sen tilan tietokantaan, jos kyselyyn
   ei ole vastattu ja vastausaika ei ole umpeutunut."
-  [muistutettavat n]
-  (log/info (str "Käsitellään " (count muistutettavat)
-                 " lähetettävää " n ". muistutusta."))
-  (doseq [herate muistutettavat]
+  [timeout? muistutettavat n]
+  (log/info "Aiotaan käsitellä" (count muistutettavat) "lähetettävää"
+            (str n ".") "muistutusta.")
+  (c/doseq-with-timeout
+    timeout?
+    [herate muistutettavat]
     (log/info "Käsitellään heräte" herate)
     (try
       (let [status (arvo/get-kyselylinkki-status (:kyselylinkki herate))
@@ -74,12 +76,8 @@
           (do
             (log/warn "Kyselylinkkiä ei löytynyt!  Merkitään loppuneeksi.")
             (update-when-not-sent herate n {}))
-          (do
-            (log/error e "virhe muistutuksen käsittelyssä, tiedot:" (ex-data e))
-            (throw e))))
-      (catch Exception e
-        (log/error e "virhe muistutuksen käsittelyssä")
-        (throw e)))))
+          (log/error e "tiedot:" (ex-data e))))
+      (catch Exception e (log/error e "herätteellä" herate)))))
 
 (defn query-muistutukset
   "Hakee tietokannasta herätteet, joilla on lähetettäviä muistutusviestejä."
@@ -90,19 +88,13 @@
                                                         (- (* 5 (+ n 1)) 1)))]
                                    [:s (str (.minusDays (c/local-date-now)
                                                         (* 5 n)))]]]}
-                   {:index "muistutusIndex"
-                    :limit 50}))
+                   {:index "muistutusIndex"}))
 
 (defn -handleSendAMISMuistutus
   "Käsittelee AMISin muistutusviestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendAMISMuistutus" event context)
-  (loop [muistutettavat1 (query-muistutukset 1)
-         muistutettavat2 (query-muistutukset 2)]
-    (sendAMISMuistutus muistutettavat1 1)
-    (sendAMISMuistutus muistutettavat2 2)
-    (when (and
-            (or (seq muistutettavat1) (seq muistutettavat2))
-            (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistutukset 1)
-             (query-muistutukset 2)))))
+  (doseq [kerta [1 2]]
+    (sendAMISMuistutus (c/no-time-left? context 60000)
+                       (query-muistutukset kerta)
+                       kerta)))

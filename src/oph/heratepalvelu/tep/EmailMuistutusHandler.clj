@@ -70,20 +70,25 @@
 (defn sendEmailMuistutus
   "Käsittelee ryhmää muistutuksia. Hakee niiden statuksia Arvosta ja lähettää
   ne, jos niihin ei ole vastattu ja vastausaika ei ole loppunut."
-  [muistutettavat]
-  (log/info "Käsitellään" (count muistutettavat) "lähetettävää muistutusta.")
-  (doseq [nippu muistutettavat]
-    (log/info "Käsitellään kyselylinkki" (:kyselylinkki nippu))
-    (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
-      (log/info "Arvo-status:" status)
-      (if (and (not (:vastattu status))
-               (c/has-time-to-answer? (:voimassa_loppupvm status)))
-        (let [jaksot (tc/get-jaksot-for-nippu nippu)
-              oppilaitokset (c/get-oppilaitokset jaksot)
-              id (:id (send-reminder-email nippu oppilaitokset))]
-          (log/info "Lähetetty muistutusviesti" id)
-          (update-item-email-sent nippu id))
-        (update-item-cannot-answer nippu status)))))
+  [timeout? muistutettavat]
+  (log/info "Aiotaan käsitellä" (count muistutettavat) "muistutusta.")
+  (c/doseq-with-timeout
+    timeout?
+    [nippu muistutettavat]
+    (try
+      (log/info "Käsitellään kyselylinkki" (:kyselylinkki nippu))
+      (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
+        (log/info "Arvo-status:" status)
+        (if (and (not (:vastattu status))
+                 (c/has-time-to-answer? (:voimassa_loppupvm status)))
+          (let [jaksot (tc/get-jaksot-for-nippu nippu)
+                oppilaitokset (c/get-oppilaitokset jaksot)
+                id (:id (send-reminder-email nippu oppilaitokset))]
+            (log/info "Lähetetty muistutusviesti" id)
+            (update-item-email-sent nippu id))
+          (update-item-cannot-answer nippu status)))
+      (catch Exception e
+        (log/error e "nipussa" nippu)))))
 
 (defn query-muistutukset
   "Hakee tietokannasta nippuja, joista on aika lähettää muistutus."
@@ -92,16 +97,12 @@
     {:muistutukset [:eq [:n 0]]
      :lahetyspvm   [:between [[:s (str (.minusDays (c/local-date-now) 10))]
                               [:s (str (.minusDays (c/local-date-now) 5))]]]}
-    {:index "emailMuistutusIndex"
-     :limit 10}
+    {:index "emailMuistutusIndex"}
     (:nippu-table env)))
 
 (defn -handleSendEmailMuistutus
   "Käsittelee muistettavia nippuja."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendEmailMuistutus" event context)
-  (loop [muistutettavat (query-muistutukset)]
-    (sendEmailMuistutus muistutettavat)
-    (when (and (seq muistutettavat)
-               (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistutukset)))))
+  (sendEmailMuistutus (c/no-time-left? context 60000)
+                      (query-muistutukset)))

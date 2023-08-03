@@ -201,8 +201,6 @@
 
                 :else
                 (jh/save-jaksotunnus herate opiskeluoikeus koulutustoimija)))))
-        (catch JsonParseException e
-          (log/error "Virhe viestin lukemisessa:" e))
         (catch ExceptionInfo e
           (if (and (:status (ex-data e))
                    (= 404 (:status (ex-data e))))
@@ -212,4 +210,6 @@
                           (parse-string (.getBody msg) true)))
               (log/error "Virhe:" e))
             (do (log/error e)
-                (throw e))))))))
+                (throw e))))
+        (catch Exception e
+          (log/error e "herätteessä" msg))))))

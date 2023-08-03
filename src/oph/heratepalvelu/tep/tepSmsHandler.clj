@@ -80,12 +80,11 @@
 (defn query-lahetettavat
   "Hakee enintään limit nippua tietokannasta, joilta SMS-viesti ei ole vielä
   lähetetty ja niputuspäivämäärä on jo mennyt."
-  [limit]
+  []
   (ddb/query-items
     {:sms_kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
      :niputuspvm    [:le [:s (str (c/local-date-now))]]}
-    {:index "smsIndex"
-     :limit limit}
+    {:index "smsIndex"}
     (:nippu-table env)))
 
 (defn -handleTepSmsSending
@@ -93,35 +92,35 @@
   käsittelee viestien lähetystä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "tepSmsHandler" event context)
-  (loop [lahetettavat (query-lahetettavat 20)]
-    (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
+  (let [lahetettavat (query-lahetettavat)
+        timeout? (c/no-time-left? context 60000)]
+    (log/info "Aiotaan käsitellä" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
-      (doseq [nippu lahetettavat]
-        (log/info "Lähetetään SMS nipulle" nippu)
-        (if (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
-          (log/error "Nipulla on käsittelytila ei-niputettu")
-          (if-not (c/has-time-to-answer? (:voimassaloppupvm nippu))
-            (try
-              (log/info "Vastausaika päättynyt" (:voimassaloppupvm nippu))
-              (tc/update-nippu nippu
-                               {:sms_lahetyspvm [:s (str (c/local-date-now))]
-                                :sms_kasittelytila
-                                [:s (:vastausaika-loppunut c/kasittelytilat)]})
-              (catch Exception e
-                (log/error "Virhe sms-lähetystilan päivityksessä nipulle,"
-                           "jonka vastausaika umpeutunut")
-                (log/error e)))
-            (let [jaksot (tc/get-jaksot-for-nippu nippu)
-                  oppilaitokset (c/get-oppilaitokset jaksot)
-                  puhelinnumero (ohjaaja-puhnro nippu jaksot)
-                  sms-kasittelytila (:sms_kasittelytila nippu)]
-              (if (or (nil? puhelinnumero)
-                      (and (some? sms-kasittelytila)
-                           (not= sms-kasittelytila
-                                 (:ei-lahetetty c/kasittelytilat))))
-                (log/warn "SMS:a ei voi lähettää, numero" puhelinnumero
-                          "käsittelytila" sms-kasittelytila)
-                (try
+      (c/doseq-with-timeout
+        timeout?
+        [nippu lahetettavat]
+        (try
+          (log/info "Lähetetään SMS nipulle" nippu)
+          (if (= (:ei-niputettu c/kasittelytilat) (:kasittelytila nippu))
+            (log/error "Nipulla on käsittelytila ei-niputettu")
+            (if-not (c/has-time-to-answer? (:voimassaloppupvm nippu))
+              (do
+                (log/info "Vastausaika päättynyt" (:voimassaloppupvm nippu))
+                (tc/update-nippu
+                  nippu
+                  {:sms_lahetyspvm [:s (str (c/local-date-now))]
+                   :sms_kasittelytila
+                   [:s (:vastausaika-loppunut c/kasittelytilat)]}))
+              (let [jaksot (tc/get-jaksot-for-nippu nippu)
+                    oppilaitokset (c/get-oppilaitokset jaksot)
+                    puhelinnumero (ohjaaja-puhnro nippu jaksot)
+                    sms-kasittelytila (:sms_kasittelytila nippu)]
+                (if (or (nil? puhelinnumero)
+                        (and (some? sms-kasittelytila)
+                             (not= sms-kasittelytila
+                                   (:ei-lahetetty c/kasittelytilat))))
+                  (log/warn "SMS:a ei voi lähettää, numero" puhelinnumero
+                            "käsittelytila" sms-kasittelytila)
                   (let [body (elisa/tep-msg-body (:kyselylinkki nippu)
                                                  oppilaitokset)
                         resp (elisa/send-sms puhelinnumero body)
@@ -149,20 +148,6 @@
                       (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
                                 "niputuspvm" (:niputuspvm nippu)
                                 "ja sms-lahetyspvm" lahetyspvm
-                                "eroavat toisistaan.")))
-                  (catch AwsServiceException e
-                    (log/error "SMS-viestin lähetysvaiheen kantapäivityksessä"
-                               "tapahtui virhe!")
-                    (log/error e))
-                  (catch ExceptionInfo e
-                    (if (c/client-error? e)
-                      (do
-                        (log/error "Client error while sending sms")
-                        (log/error e))
-                      (do
-                        (log/error "Server error while sending sms")
-                        (log/error e))))
-                  (catch Exception e
-                    (log/error "Unhandled exception " e))))))))
-      (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (query-lahetettavat 10))))))
+                                "eroavat toisistaan.")))))))
+          (catch Exception e
+            (log/error e "nipussa" nippu)))))))

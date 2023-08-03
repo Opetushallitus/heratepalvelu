@@ -51,8 +51,7 @@
   []
   (ddb/query-items {:kasittelytila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                     :niputuspvm    [:le [:s (str (c/local-date-now))]]}
-                   {:index "niputusIndex"
-                    :limit 20}
+                   {:index "niputusIndex"}
                    (:nippu-table env)))
 
 (defn email-sent-update-item
@@ -107,31 +106,35 @@
   käsittelee näiden viestien lähettämisen viestinäpalveluun."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendTEPEmails" event context)
-  (loop [lahetettavat (do-nippu-query)]
-    (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
+  (let [lahetettavat (do-nippu-query)
+        timeout? (c/no-time-left? context 60000)]
+    (log/info "Aiotaan käsitellä" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
-      (doseq [nippu lahetettavat]
+      (c/doseq-with-timeout
+        timeout?
+        [nippu lahetettavat]
         (log/info "Lähetetään nippu" nippu)
-        (let [jaksot (tc/get-jaksot-for-nippu nippu)
-              oppilaitokset (c/get-oppilaitokset jaksot)
-              osoite (lahetysosoite nippu jaksot)]
-          (cond
-            (not (c/has-time-to-answer? (:voimassaloppupvm nippu)))
-            (do (log/warn "Vastausaika loppunut.")
-                (no-time-to-answer-update-item nippu))
+        (try
+          (let [jaksot (tc/get-jaksot-for-nippu nippu)
+                oppilaitokset (c/get-oppilaitokset jaksot)
+                osoite (lahetysosoite nippu jaksot)]
+            (cond
+              (not (c/has-time-to-answer? (:voimassaloppupvm nippu)))
+              (do (log/warn "Vastausaika loppunut.")
+                  (no-time-to-answer-update-item nippu))
 
-            (nil? osoite)
-            (log/warn "Ei lähetysosoitetta.")
+              (nil? osoite)
+              (log/warn "Ei lähetysosoitetta.")
 
-            :else
-            (let [id (:id (send-survey-email nippu oppilaitokset osoite))
-                  lahetyspvm (str (c/local-date-now))]
-              (log/info "Sähköposti lähetetty viestintäpalveluun:" id)
-              (email-sent-update-item nippu id lahetyspvm osoite)
-              (when-not (= (:niputuspvm nippu) lahetyspvm)
-                (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
-                          "niputuspvm" (:niputuspvm nippu)
-                          "ja lahetyspvm" lahetyspvm
-                          "eroavat toisistaan."))))))
-      (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (do-nippu-query))))))
+              :else
+              (let [id (:id (send-survey-email nippu oppilaitokset osoite))
+                    lahetyspvm (str (c/local-date-now))]
+                (log/info "Sähköposti lähetetty viestintäpalveluun:" id)
+                (email-sent-update-item nippu id lahetyspvm osoite)
+                (when-not (= (:niputuspvm nippu) lahetyspvm)
+                  (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
+                            "niputuspvm" (:niputuspvm nippu)
+                            "ja lahetyspvm" lahetyspvm
+                            "eroavat toisistaan.")))))
+          (catch Exception e
+            (log/error e "nipussa" nippu)))))))

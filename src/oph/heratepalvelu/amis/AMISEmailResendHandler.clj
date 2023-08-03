@@ -50,14 +50,10 @@
             (when (empty? (:sahkoposti herate))
               (log/warn "Ei sähköpostia, käytetään dynamoon tallennettua"
                         sahkoposti))
-            (try
-              (ac/update-herate
-                db-herate
-                {:lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
-                 :sahkoposti  [:s sahkoposti]})
-              (catch AwsServiceException e
-                (log/error e "Virhe tilan päivityksessä herätteelle" db-herate)
-                (throw e)))))))
+            (ac/update-herate
+              db-herate
+              {:lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
+               :sahkoposti  [:s sahkoposti]})))))
 
 (defn -handleEmailResend
   "Merkistee sähköpostin lähetettäväksi uudestaan, jos osoite löytyy
@@ -69,4 +65,6 @@
       (try
         (handle-single-herate! (parse-string (.getBody msg) true))
         (catch JsonParseException e
-          (log/error e "Virhe viestin lukemisessa:" msg))))))
+          (log/error e "Virhe viestin lukemisessa:" msg))
+        (catch Exception e
+          (log/error e "herätteellä" msg))))))

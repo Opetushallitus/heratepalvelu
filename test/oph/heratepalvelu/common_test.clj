@@ -233,6 +233,32 @@
     (is (= (LocalDate/of 2021 5 1) (next-niputus-date "2021-04-25")))
     (is (= (LocalDate/of 2022 6 30) (next-niputus-date "2022-06-24")))))
 
+(deftest test-doseq-with-timeout
+  (testing "Doseq with timeout goes over seq and stops if timeout happens"
+    (let [timeout-counter (atom 0)
+          my-timeout? (fn [] (if (<= @timeout-counter 0) true
+                                 (do (swap! timeout-counter dec) false)))
+          doseq-results (atom [])]
+      (doseq-with-timeout
+        my-timeout?
+        [x [:foo :bar]]
+        (swap! doseq-results conj x))
+      (is (= [] @doseq-results))
+      (reset! timeout-counter 2)
+      (doseq-with-timeout
+        my-timeout?
+        [x [:foo :bar :baz :quux]]
+        (swap! doseq-results conj x))
+      (is (= [:foo :bar] @doseq-results))
+      (is (= 0 @timeout-counter))
+      (reset! timeout-counter 2)
+      (doseq-with-timeout
+        my-timeout?
+        [x [:foo]]
+        (swap! doseq-results conj x))
+      (is (= [:foo :bar :foo] @doseq-results))
+      (is (= 1 @timeout-counter)))))
+
 (deftest test-create-update-item-options
   (testing "Create update item options"
     (is (= (create-update-item-options {:field-1 [:s "value"]

@@ -166,8 +166,7 @@
   []
   (ddb/query-items {:lahetystila [:eq [:s (:ei-lahetetty c/kasittelytilat)]]
                     :alkupvm     [:le [:s (str (c/local-date-now))]]}
-                   {:index "lahetysIndex"
-                    :limit 10}))
+                   {:index "lahetysIndex"}))
 
 (defn send-email-for-palaute!
   "Lähettää sähköpostia yhden palauteherätteen suhteen (jos tarpeen)."
@@ -205,10 +204,12 @@
   viestintäpalveluun."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendAMISEmails" event context)
-  (loop [lahetettavat (do-query)]
-    (log/info "Käsitellään" (count lahetettavat) "lähetettävää viestiä.")
+  (let [lahetettavat (do-query)
+        timeout? (c/no-time-left? context 60000)]
+    (log/info "Aiotaan käsitellä" (count lahetettavat) "lähetettävää viestiä.")
     (when (seq lahetettavat)
-      (doseq [lahetettava lahetettavat]
-        (-> lahetettava (with-kyselylinkki!) (send-email-for-palaute!)))
-      (when (< 60000 (.getRemainingTimeInMillis context))
-        (recur (do-query))))))
+      (c/doseq-with-timeout
+        timeout?
+        [lahetettava lahetettavat]
+        (try (-> lahetettava (with-kyselylinkki!) (send-email-for-palaute!))
+             (catch Exception e (log/error e "herätteessä" lahetettava)))))))

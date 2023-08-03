@@ -21,16 +21,18 @@
 (defn sendSmsMuistutus
   "Hakee jaksot ja oppilaitokset tietokannasta nipun sisällön perusteella ja
   lähettää niistä luodut SMS-muistutukset viestintäpalveluun."
-  [muistutettavat]
-  (log/info (str "Käsitellään" (count muistutettavat) "muistutusta."))
-  (doseq [nippu muistutettavat]
-    (log/info "Kyselylinkin tunnusosa:"
-              (last (str/split (:kyselylinkki nippu) #"_")))
-    (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
-      (log/info "Arvo-status:" status)
-      (if (and (not (:vastattu status))
-               (c/has-time-to-answer? (:voimassa_loppupvm status)))
-        (try
+  [timeout? muistutettavat]
+  (log/info (str "Aiotaan käsitellä" (count muistutettavat) "muistutusta."))
+  (c/doseq-with-timeout
+    timeout?
+    [nippu muistutettavat]
+    (try
+      (log/info "Kyselylinkin tunnusosa:"
+                (last (str/split (:kyselylinkki nippu) #"_")))
+      (let [status (arvo/get-nippulinkki-status (:kyselylinkki nippu))]
+        (log/info "Arvo-status:" status)
+        (if (and (not (:vastattu status))
+                 (c/has-time-to-answer? (:voimassa_loppupvm status)))
           (let [jaksot (tc/get-jaksot-for-nippu nippu)
                 laitokset (c/get-oppilaitokset jaksot)
                 body (elisa/tep-muistutus-msg-body (:kyselylinkki nippu)
@@ -45,27 +47,15 @@
                              {:sms_kasittelytila [:s tila]
                               :sms_muistutuspvm [:s (str (c/local-date-now))]
                               :sms_muistutukset [:n 1]}))
-          (catch AwsServiceException e
-            (log/error "Muistutus "
-                       nippu
-                       "lähetty viestintäpalveluun, muttei päivitetty kantaan!")
-            (log/error e))
-          (catch Exception e
-            (log/error "Virhe muistutuksen lähetyksessä!" nippu)
-            (log/error e)))
-        (try
           (let [kasittely-status (if (:vastattu status)
                                    (:vastattu c/kasittelytilat)
                                    (:vastausaika-loppunut-m c/kasittelytilat))]
             (log/warn "Ei voida lähettää, status" status
                       "tila" kasittely-status)
             (tc/update-nippu nippu {:sms_kasittelytila [:s kasittely-status]
-                                    :sms_muistutukset  [:n 1]}))
-          (catch Exception e
-            (log/error "Virhe lähetystilan päivityksessä herätteelle,"
-                       "johon on vastattu tai jonka vastausaika umpeutunut"
-                       nippu)
-            (log/error e)))))))
+                                    :sms_muistutukset  [:n 1]}))))
+      (catch Exception e
+        (log/error e "nipussa" nippu)))))
 
 (defn query-muistutukset
   "Hakee nippuja tietokannasta, joilla on aika lähettää SMS-muistutus."
@@ -76,17 +66,11 @@
                                                             10))]
                                        [:s (str (.minusDays (c/local-date-now)
                                                             5))]]]}
-                   {:index "smsMuistutusIndex"
-                    :limit 10}
+                   {:index "smsMuistutusIndex"}
                    (:nippu-table env)))
 
 (defn -handleSendSMSMuistutus
   "Hakee SMS-muistutettavia nippuja tietokannasta ja lähettää viestejä."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleSendSMSMuistutus" event context)
-  (loop [muistutettavat (query-muistutukset)]
-    (sendSmsMuistutus muistutettavat)
-    (when (and
-            (seq muistutettavat)
-            (< 60000 (.getRemainingTimeInMillis context)))
-      (recur (query-muistutukset)))))
+  (sendSmsMuistutus (c/no-time-left? context 60000) (query-muistutukset)))

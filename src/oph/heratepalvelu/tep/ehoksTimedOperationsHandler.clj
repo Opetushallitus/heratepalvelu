@@ -17,9 +17,8 @@
    työpaikkaohjaajan yhteystietojen poiston."
   [_ _ _]
   (log/info "Käynnistetään jaksojen lähetys")
-  (let [resp (ehoks/get-paattyneet-tyoelamajaksot "2021-07-01"
-                                                  (str (c/local-date-now))
-                                                  1500)]
+  (let [resp (ehoks/get-paattyneet-tyoelamajaksot
+               "2021-07-01" (str (c/local-date-now)) 1500)]
     (log/info "Lähetetty" (:data (:body resp)) "viestiä"))
 
   (log/info "Käynnistetään työpaikkaohjaajan yhteystietojen poisto")

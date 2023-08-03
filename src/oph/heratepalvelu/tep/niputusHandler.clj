@@ -324,8 +324,7 @@
   []
   (ddb/query-items {:kasittelytila [:eq [:s (:ei-niputettu c/kasittelytilat)]]
                     :niputuspvm    [:le [:s (str (c/local-date-now))]]}
-                   {:index "niputusIndex"
-                    :limit 10}
+                   {:index "niputusIndex"}
                    (:nippu-table env)))
 
 (defn get-nippu-key
@@ -338,14 +337,17 @@
   "Hakee ja niputtaa niputtamattomat jaksot."
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleNiputus" event context)
-  (let [processed-niput (atom {})]
-    (loop [niputettavat (sort-by :niputuspvm #(- (compare %1 %2)) (do-query))]
-      (log/info "Käsitellään" (count niputettavat) "niputusta.")
-      (when (seq niputettavat)
-        (doseq [nippu niputettavat]
-          (if (get @processed-niput (get-nippu-key nippu))
-            (log/warn "Nippu on jo käsitelty" nippu)
-            (do (niputa nippu)
-                (swap! processed-niput assoc (get-nippu-key nippu) true))))
-        (when (< 120000 (.getRemainingTimeInMillis context))
-          (recur (do-query)))))))
+  (let [processed-niput (atom {})
+        timeout? (c/no-time-left? context 60000)
+        niputettavat (sort-by :niputuspvm #(- (compare %1 %2)) (do-query))]
+    (log/info "Aiotaan käsitellä" (count niputettavat) "niputusta.")
+    (when (seq niputettavat)
+      (c/doseq-with-timeout
+        timeout?
+        [nippu niputettavat]
+        (if (get @processed-niput (get-nippu-key nippu))
+          (log/warn "Nippu on jo käsitelty" nippu)
+          (try (niputa nippu)
+               (swap! processed-niput assoc (get-nippu-key nippu) true)
+               (catch Exception e
+                 (log/error e "nipussa" nippu))))))))

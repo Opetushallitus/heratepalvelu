@@ -112,8 +112,7 @@
        (= :le (first (:alkupvm query-params)))
        (= :s (first (second (:alkupvm query-params))))
        (= "2021-10-10" (second (second (:alkupvm query-params))))
-       (= "lahetysIndex" (:index options))
-       (= 10 (:limit options))))
+       (= "lahetysIndex" (:index options))))
 
 (deftest test-do-query
   (testing "Varmista, että do-query kutsuu query-items oikein"
