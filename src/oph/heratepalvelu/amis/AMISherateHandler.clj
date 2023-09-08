@@ -40,8 +40,9 @@
         (not (some? opiskeluoikeus))
         (log/error "Ei löytynyt opiskeluoikeutta:" summary)
 
-        (not (has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus))
-        (log/warn "Ei tallenneta, opiskeluoikeus ei ammatillinen:" summary)
+        (not (has-one-or-more-ammatillisen-tutkinnon-suoritus? opiskeluoikeus))
+        (log/warn "Ei tallenneta, opiskeluoikeudessa ei yhtään ammatillisen "
+                  "tutkinnon suoritusta:" summary)
 
         (not (whitelisted-organisaatio?!
                koulutustoimija (date-string-to-timestamp (:alkupvm herate))))

@@ -168,20 +168,18 @@
       (str year "-" (inc (Integer/parseInt year)))
       (str (dec (Integer/parseInt year)) "-" year))))
 
-(defn ammatillinen-tutkinto?
+(defn ammatillisen-tutkinnon-suoritus?
   "Varmistaa, että suorituksen tyyppi on joko ammatillinen tutkinto tai
   osittainen ammatillinen tutkinto."
   [suoritus]
   (some? (#{"ammatillinentutkinto" "ammatillinentutkintoosittainen"}
           (:koodiarvo (:tyyppi suoritus)))))
 
-(defn has-one-or-more-ammatillinen-tutkinto?
-  "Varmistaa, että opiskeluoikeuden suorituksiin kuuluu vähintään yksi, jonka
-  tyyppi on ammatillinen tutkinto tai osittainen ammatillinen tutkinto."
+(defn has-one-or-more-ammatillisen-tutkinnon-suoritus?
+  "Varmistaa, että opiskeluoikeuden suorituksiin kuuluu vähintään yksi
+  ammatillisen tutkinnon tai osittaisen ammatillisen tutkinnon suoritus."
   [opiskeluoikeus]
-  (some? (or (some ammatillinen-tutkinto? (:suoritukset opiskeluoikeus))
-             (log/info "Väärä suoritustyyppi opiskeluoikeudessa"
-                       (:oid opiskeluoikeus)))))
+  (some? (some ammatillisen-tutkinnon-suoritus? (:suoritukset opiskeluoikeus))))
 
 (defn sisaltyy-toiseen-opiskeluoikeuteen?
   "Palauttaa true, jos opiskeluoikeus sisältyy toiseen opiskeluoikeuteen."
@@ -195,7 +193,8 @@
 (defn get-suoritus
   "Hakee tutkinnon tai tutkinnon osan suorituksen opiskeluoikeudesta."
   [opiskeluoikeus]
-  (first (filter ammatillinen-tutkinto? (:suoritukset opiskeluoikeus))))
+  (first (filter ammatillisen-tutkinnon-suoritus?
+                 (:suoritukset opiskeluoikeus))))
 
 (defn has-nayttotutkintoonvalmistavakoulutus?
   "Tarkistaa, onko opiskeluoikeudessa näyttötutkintoon valmistavan koulutuksen

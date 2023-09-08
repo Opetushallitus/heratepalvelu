@@ -19,8 +19,9 @@
   (reset! call-log (str @call-log "get-koulutustoimija-oid "))
   (:koulutustoimija-oid opiskeluoikeus))
 
-(defn- mock-has-one-or-more-ammatillinen-tutkinto? [_]
-  (reset! call-log (str @call-log "has-one-or-more-ammatillinen-tutkinto? "))
+(defn- mock-has-one-or-more-ammatillisen-tutkinnon-suoritus? [_]
+  (reset! call-log
+          (str @call-log "has-one-or-more-ammatillisen-tutkinnon-suoritus? "))
   true)
 
 (defn- mock-whitelisted-organisaatio?! [_ _]
@@ -44,8 +45,8 @@
 
                   c/get-koulutustoimija-oid mock-get-koulutustoimija-oid
 
-                  c/has-one-or-more-ammatillinen-tutkinto?
-                  mock-has-one-or-more-ammatillinen-tutkinto?
+                  c/has-one-or-more-ammatillisen-tutkinnon-suoritus?
+                  mock-has-one-or-more-ammatillisen-tutkinnon-suoritus?
 
                   c/whitelisted-organisaatio?! mock-whitelisted-organisaatio?!
 
@@ -62,11 +63,12 @@
         (with-redefs [c/valid-herate-date?
                       mock-check-valid-herate-date-true]
           (hh/-handleAMISherate {} event context)
-          (is (= @call-log (str "get-opiskeluoikeus-catch-404 "
-                                "get-koulutustoimija-oid "
-                                "has-one-or-more-ammatillinen-tutkinto? "
-                                "whitelisted-organisaatio?! "
-                                "sisaltyy-toiseen-opiskeluoikeuteen? ")))
+          (is (= @call-log
+                 (str "get-opiskeluoikeus-catch-404 "
+                      "get-koulutustoimija-oid "
+                      "has-one-or-more-ammatillisen-tutkinnon-suoritus? "
+                      "whitelisted-organisaatio?! "
+                      "sisaltyy-toiseen-opiskeluoikeuteen? ")))
           (is (= @results {:herate {:alkupvm "2021-10-10"
                                     :opiskeluoikeus-oid "1234.5.6678"
                                     :oppija-oid "12345"

@@ -1,6 +1,6 @@
 (ns oph.heratepalvelu.common-test
   (:require [clojure.test :refer :all]
-            [oph.heratepalvelu.common :refer :all :as c]
+            [oph.heratepalvelu.common :refer :all]
             [oph.heratepalvelu.test-util :refer :all]
             [clj-time.core :as t]
             [clojure.string :as str])
@@ -111,35 +111,36 @@
         opiskeluoikeus-eronnut-tulevaisuudessa false
         opiskeluoikeus-eronnut-paivaa-aiemmin true))))
 
-(deftest test-ammatillinen-tutkinto
+(deftest test-ammatillisen-tutkinnon-suoritus
   (testing "Check suoritus type"
-    (is (false? (ammatillinen-tutkinto? {:tyyppi {:koodiarvo "valma"}})))
-    (is (true? (ammatillinen-tutkinto?
+    (is (false? (ammatillisen-tutkinnon-suoritus?
+                  {:tyyppi {:koodiarvo "valma"}})))
+    (is (true? (ammatillisen-tutkinnon-suoritus?
                  {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}})))
-    (is (true? (ammatillinen-tutkinto?
+    (is (true? (ammatillisen-tutkinnon-suoritus?
                  {:tyyppi {:koodiarvo "ammatillinentutkinto"}})))))
 
-(deftest test-ammatillinen-tutkinto?
+(deftest test-ammatillisen-tutkinnon-suoritus?
   (testing "Check suoritus type"
-    (is (not (ammatillinen-tutkinto? {:tyyppi {:koodiarvo "valma"}})))
-    (is (ammatillinen-tutkinto?
+    (is (not (ammatillisen-tutkinnon-suoritus? {:tyyppi {:koodiarvo "valma"}})))
+    (is (ammatillisen-tutkinnon-suoritus?
           {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}))
-    (is (ammatillinen-tutkinto?
+    (is (ammatillisen-tutkinnon-suoritus?
           {:tyyppi {:koodiarvo "ammatillinentutkinto"}}))))
 
-(deftest test-has-one-or-more-ammatillinen-tutkinto?
+(deftest test-has-one-or-more-ammatillisen-tutkinnon-suoritus?
   (testing
     "Has one or more ammatillinen tutkinto in opiskeluoikeus suoritus types"
-    (is (not (has-one-or-more-ammatillinen-tutkinto?
+    (is (not (has-one-or-more-ammatillisen-tutkinnon-suoritus?
                {:suoritukset [{:tyyppi {:koodiarvo "valma"}}]})))
-    (is (has-one-or-more-ammatillinen-tutkinto?
+    (is (has-one-or-more-ammatillisen-tutkinnon-suoritus?
           {:suoritukset
            [{:tyyppi {:koodiarvo "ammatillinentutkinto"}}]}))
-    (is (has-one-or-more-ammatillinen-tutkinto?
+    (is (has-one-or-more-ammatillisen-tutkinnon-suoritus?
           {:suoritukset
            [{:tyyppi {:koodiarvo "nayttotutkintoonvalmistavakoulutus"}}
             {:tyyppi {:koodiarvo "ammatillinentutkintoosittainen"}}]}))
-    (is (not (has-one-or-more-ammatillinen-tutkinto?
+    (is (not (has-one-or-more-ammatillisen-tutkinnon-suoritus?
                {:suoritukset [{:tyyppi {:koodiarvo "valma"}}
                               {:tyyppi {:koodiarvo "telma"}}]})))))
 
@@ -200,7 +201,7 @@
 
 (deftest test-valid-herate-date?
   (testing "True if heratepvm is >= [rahoituskausi start year]-07-01"
-    (with-redefs [c/local-date-now (constantly (LocalDate/of 2023 6 22))]
+    (with-redefs [local-date-now (constantly (LocalDate/of 2023 6 22))]
       (is (true? (valid-herate-date? "2022-07-02")))
       (is (true? (valid-herate-date? "2022-07-01")))
       (is (not (true? (valid-herate-date? "2022-06-01"))))
@@ -208,7 +209,7 @@
       (is (not (true? (valid-herate-date? ""))))
       (is (not (true? (valid-herate-date? nil))))))
   (testing "Not true if heratepvm is < [rahoituskausi start year]-07-01"
-    (with-redefs [c/local-date-now (constantly (LocalDate/of 2023 7 22))]
+    (with-redefs [local-date-now (constantly (LocalDate/of 2023 7 22))]
       (is (not (true? (valid-herate-date? "2022-07-02"))))
       (is (not (true? (valid-herate-date? "2022-07-01")))))))
 

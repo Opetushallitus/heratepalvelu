@@ -491,9 +491,9 @@
      :herate herate})
   false)
 
-(defn- mock-has-one-or-more-ammatillinen-tutkinto? [opiskeluoikeus]
+(defn- mock-has-one-or-more-ammatillisen-tutkinnon-suoritus? [opiskeluoikeus]
   (add-to-test-handleJaksoHerate-results
-    {:type "mock-has-one-or-more-ammatillinen-tutkinto?"
+    {:type "mock-has-one-or-more-ammatillisen-tutkinnon-suoritus?"
      :opiskeluoikeus opiskeluoikeus})
   true)
 
@@ -522,8 +522,8 @@
 
 (deftest test-handleJaksoHerate
   (testing "Varmista, että -handleJaksoHerate kutsuu funktioita oikein"
-    (with-redefs [c/has-one-or-more-ammatillinen-tutkinto?
-                  mock-has-one-or-more-ammatillinen-tutkinto?
+    (with-redefs [c/has-one-or-more-ammatillisen-tutkinnon-suoritus?
+                  mock-has-one-or-more-ammatillisen-tutkinnon-suoritus?
                   c/sisaltyy-toiseen-opiskeluoikeuteen?
                   mock-sisaltyy-toiseen-opiskeluoikeuteen?
                   c/get-koulutustoimija-oid mock-get-koulutustoimija-oid
@@ -562,7 +562,8 @@
                                :loppupvm "2021-12-15"
                                :hankkimistapa-id 12345
                                :keskeytymisajanjaksot []}}
-                     {:type "mock-has-one-or-more-ammatillinen-tutkinto?"
+                     {:type
+                      "mock-has-one-or-more-ammatillisen-tutkinnon-suoritus?"
                       :opiskeluoikeus
                       {:oid "123.456.789"
                        :koulutustoimija "mock-koulutustoimija-oid"}}

@@ -35,7 +35,7 @@
   sellainen on olemassa."
   [opiskeluoikeus]
   (or
-    (some #(and (ammatillinen-tutkinto? %)
+    (some #(and (ammatillisen-tutkinnon-suoritus? %)
                 (get-in % [:vahvistus :päivä]))
           (:suoritukset opiskeluoikeus))
     (log/info "Opiskeluoikeudessa" (:oid opiskeluoikeus)

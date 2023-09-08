@@ -298,8 +298,10 @@
                 (fully-keskeytynyt? herate)
                 (log/warn "Jakso on täysin keskeytynyt.")
 
-                (not (c/has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus))
-                (log/warn "Ei ole ammatillinen tutkinto:" opiskeluoikeus)
+                (not (c/has-one-or-more-ammatillisen-tutkinnon-suoritus?
+                       opiskeluoikeus))
+                (log/warn "Ei tallenneta, opiskeluoikeudessa `" oo
+                          "` ei yhtään ammatillisen tutkinnon suoritusta.")
 
                 (c/feedback-collecting-prevented? opiskeluoikeus
                                                   (:loppupvm herate))

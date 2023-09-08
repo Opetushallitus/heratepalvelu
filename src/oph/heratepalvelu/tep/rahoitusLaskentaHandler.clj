@@ -193,7 +193,8 @@
                 (jh/fully-keskeytynyt? herate)
                 (log/warn "jakso keskeytynyt:" herate)
 
-                (not (c/has-one-or-more-ammatillinen-tutkinto? opiskeluoikeus))
+                (not (c/has-one-or-more-ammatillisen-tutkinnon-suoritus?
+                       opiskeluoikeus))
                 (log/warn "Tutkinto ei ole ammatillinen:" opiskeluoikeus)
 
                 (c/sisaltyy-toiseen-opiskeluoikeuteen? opiskeluoikeus)
