@@ -190,6 +190,12 @@
                      "sisältyy toiseen opiskeluoikeuteen.")
            true)))
 
+(defn tuva-opiskeluoikeus?
+  "Palauttaa `true`, jos parametrina annettu `opiskeluoikeus` on
+  TUVA-opiskeluoikeus."
+  [opiskeluoikeus]
+  (= (get-in opiskeluoikeus [:tyyppi :koodiarvo]) "tuva"))
+
 (defn get-suoritus
   "Hakee tutkinnon tai tutkinnon osan suorituksen opiskeluoikeudesta."
   [opiskeluoikeus]

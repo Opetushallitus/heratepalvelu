@@ -40,6 +40,10 @@
         (not (some? opiskeluoikeus))
         (log/error "Ei löytynyt opiskeluoikeutta:" summary)
 
+        (tuva-opiskeluoikeus? opiskeluoikeus)
+        (log/warn "Ei tallenneta, opiskeluoikeus kuuluu TUVA-opiskelijalle, "
+                  "jolloin opinnoista ei kerätä palautetta:" summary)
+
         (not (has-one-or-more-ammatillisen-tutkinnon-suoritus? opiskeluoikeus))
         (log/warn "Ei tallenneta, opiskeluoikeudessa ei yhtään ammatillisen "
                   "tutkinnon suoritusta:" summary)

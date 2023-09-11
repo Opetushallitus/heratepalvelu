@@ -298,6 +298,11 @@
                 (fully-keskeytynyt? herate)
                 (log/warn "Jakso on täysin keskeytynyt.")
 
+                (c/tuva-opiskeluoikeus? opiskeluoikeus)
+                (log/warn "Ei tallenneta, opiskeluoikeus `" oo "` kuuluu "
+                          "TUVA-opiskelijalle, jolloin opinnoista ei kerätä "
+                          "palautetta.")
+
                 (not (c/has-one-or-more-ammatillisen-tutkinnon-suoritus?
                        opiskeluoikeus))
                 (log/warn "Ei tallenneta, opiskeluoikeudessa `" oo
