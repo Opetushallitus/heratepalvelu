@@ -2,11 +2,12 @@
   "TODO"
   (:require [clojure.tools.logging :as log]
             [environ.core :refer [env]]
+            [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
-            [oph.heratepalvelu.tep.tepCommon :as tc]
-            [oph.heratepalvelu.tep.niputusHandler :as nh]
             [oph.heratepalvelu.log.caller-log :refer
-             [log-caller-details-scheduled]]))
+             [log-caller-details-scheduled]]
+            [oph.heratepalvelu.tep.niputusHandler :as nh]
+            [oph.heratepalvelu.tep.tepCommon :as tc]))
 
 (gen-class :name "oph.heratepalvelu.tep.kestojenUudelleenlaskentaHandler"
            :methods
@@ -62,7 +63,7 @@
                                             0)]
                             :kesto_vanha [:n (:kesto jakso)]})))
       (tc/update-nippu nippu {:kestojen_uudelleenlaskenta_suoritettu
-                              [:bool true]}))
+                              [:s (str (c/local-date-now))]}))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key niput))
       (recur (scan-for-unhandled-nippus! (:last-evaluated-key niput))))))
