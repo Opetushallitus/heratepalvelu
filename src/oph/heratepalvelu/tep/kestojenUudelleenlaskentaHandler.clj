@@ -62,7 +62,7 @@
                                             (:hankkimistapa_id jakso)
                                             0)]
                             :kesto_vanha [:n (:kesto jakso)]})))
-      (tc/update-nippu nippu {:kestojen_uudelleenlaskenta_suoritettu
+      (tc/update-nippu nippu {:keston_uudelleenlaskenta_suoritettu
                               [:s (str (c/local-date-now))]}))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key niput))
