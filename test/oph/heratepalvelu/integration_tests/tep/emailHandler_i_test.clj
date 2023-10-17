@@ -171,7 +171,8 @@
                              {:basic-auth ["arvo-user" "arvo-pwd"]
                               :content-type "application/json"
                               :body
-                              "{\"tila\":\"ei_kelvollisia_yhteystietoja\"}"
+                              (str "{\"tila\":\"ei_kelvollisia_yhteystietoja\","
+                                   "\"voimassa_loppupvm\":\"2022-03-01\"}")
                               :as :json}}
                             {:method :get
                              :url "https://oph-organisaatio.com/test-laitos"

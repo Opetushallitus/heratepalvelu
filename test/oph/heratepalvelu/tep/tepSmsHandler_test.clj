@@ -90,6 +90,7 @@
                              {:ohjaaja_puhelinnumero "+358407654321"}]
             nippu-base {:ohjaaja_ytunnus_kj_tutkinto "test-id"
                         :niputuspvm "2021-12-15"
+                        :voimassaloppupvm "2022-01-15"
                         :kyselylinkki "kysely.linkki/123"}
             nippu-good-email
             (assoc nippu-base :kasittelytila (:ei-lahetetty c/kasittelytilat))
@@ -107,6 +108,7 @@
                [{:type "mock-ohjaaja-puhnro-update-nippu"
                  :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
                          :niputuspvm "2021-12-15"
+                         :voimassaloppupvm "2022-01-15"
                          :kasittelytila (:ei-lahetetty c/kasittelytilat)
                          :kyselylinkki "kysely.linkki/123"}
                  :updates {:sms_kasittelytila
@@ -119,6 +121,7 @@
                [{:type "mock-ohjaaja-puhnro-update-nippu"
                  :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
                          :niputuspvm "2021-12-15"
+                         :voimassaloppupvm "2022-01-15"
                          :kasittelytila (:email-mismatch c/kasittelytilat)
                          :kyselylinkki "kysely.linkki/123"}
                  :updates {:sms_kasittelytila
@@ -126,13 +129,15 @@
                            :lahetettynumeroon [:s "1234"]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
-                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}]))
+                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)
+                        :voimassa_loppupvm "2022-01-15"}}]))
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-no-email jaksot-one-invalid-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
                [{:type "mock-ohjaaja-puhnro-update-nippu"
                  :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
                          :niputuspvm "2021-12-15"
+                         :voimassaloppupvm "2022-01-15"
                          :kasittelytila (:no-email c/kasittelytilat)
                          :kyselylinkki "kysely.linkki/123"}
                  :updates {:sms_kasittelytila
@@ -140,13 +145,15 @@
                            :lahetettynumeroon [:s "1234"]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
-                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}]))
+                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)
+                        :voimassa_loppupvm "2022-01-15"}}]))
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-good-email jaksot-no-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
                [{:type "mock-ohjaaja-puhnro-update-nippu"
                  :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
                          :niputuspvm "2021-12-15"
+                         :voimassaloppupvm "2022-01-15"
                          :kasittelytila (:ei-lahetetty c/kasittelytilat)
                          :kyselylinkki "kysely.linkki/123"}
                  :updates {:sms_kasittelytila
@@ -157,26 +164,30 @@
                [{:type "mock-ohjaaja-puhnro-update-nippu"
                  :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
                          :niputuspvm "2021-12-15"
+                         :voimassaloppupvm "2022-01-15"
                          :kasittelytila (:email-mismatch c/kasittelytilat)
                          :kyselylinkki "kysely.linkki/123"}
                  :updates {:sms_kasittelytila
                            [:s (:phone-mismatch c/kasittelytilat)]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
-                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}]))
+                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)
+                        :voimassa_loppupvm "2022-01-15"}}]))
         (reset-test-ohjaaja-puhnro-results)
         (is (nil? (sh/ohjaaja-puhnro nippu-no-email jaksot-no-number)))
         (is (= (vec (reverse @test-ohjaaja-puhnro-results))
                [{:type "mock-ohjaaja-puhnro-update-nippu"
                  :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id"
                          :niputuspvm "2021-12-15"
+                         :voimassaloppupvm "2022-01-15"
                          :kasittelytila (:no-email c/kasittelytilat)
                          :kyselylinkki "kysely.linkki/123"}
                  :updates {:sms_kasittelytila
                            [:s (:no-phone c/kasittelytilat)]}}
                 {:type "mock-ohjaaja-puhnro-patch-nippulinkki"
                  :kyselylinkki "kysely.linkki/123"
-                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}]))))))
+                 :data {:tila (:ei-yhteystietoja c/kasittelytilat)
+                        :voimassa_loppupvm "2022-01-15"}}]))))))
 
 (def test-query-lahetettavat-results (atom {}))
 

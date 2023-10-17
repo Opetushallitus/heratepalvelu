@@ -43,10 +43,12 @@
                   mock-lahetysosoite-update-nippu]
       (let [nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
                    :niputuspvm "2021-10-10"
+                   :voimassaloppupvm "2021-11-10"
                    :sms_kasittelytila (:success c/kasittelytilat)
                    :kyselylinkki "kysely.linkki/123"}
             nippu-bad-phone {:ohjaaja_ytunnus_kj_tutkinto "test-bad-phone-id"
                              :niputuspvm "2021-10-10"
+                             :voimassaloppupvm "2021-11-10"
                              :kyselylinkki "kysely.linkki/1234"
                              :sms_kasittelytila
                              (:phone-mismatch c/kasittelytilat)}
@@ -75,7 +77,8 @@
                 {:kasittelytila [:s (:email-mismatch c/kasittelytilat)]}}))
         (is (= @mock-patch-nippulinkki-result
                {:kyselylinkki "kysely.linkki/1234"
-                :data {:tila (:ei-yhteystietoja c/kasittelytilat)}}))
+                :data {:tila (:ei-yhteystietoja c/kasittelytilat)
+                       :voimassa_loppupvm "2021-11-10"}}))
         (is (true? (tu/logs-contain?
                      {:level :warn
                       :message (str "Ei yksiselitteistä ohjaajan sähköpostia  "

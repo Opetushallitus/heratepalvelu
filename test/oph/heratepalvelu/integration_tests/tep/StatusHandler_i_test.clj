@@ -170,13 +170,15 @@
     :options {:as :json
               :basic-auth ["arvo-user" "arvo-pwd"]
               :content-type "application/json"
-              :body "{\"tila\":\"lahetetty\"}"}}
+              :body (str "{\"tila\":\"lahetetty\","
+                         "\"voimassa_loppupvm\":\"2022-02-28\"}")}}
    {:method :patch
     :url (str (:arvo-url mock-env) "tyoelamapalaute/v1/nippu/asdf_b")
     :options {:as :json
               :basic-auth ["arvo-user" "arvo-pwd"]
               :content-type "application/json"
-              :body "{\"tila\":\"lahetys_epaonnistunut\"}"}}])
+              :body (str "{\"tila\":\"lahetys_epaonnistunut\","
+                         "\"voimassa_loppupvm\":\"2022-02-28\"}")}}])
 
 (deftest test-StatusHandler-integration
   (testing "StatusHandler integraatiotesti"
