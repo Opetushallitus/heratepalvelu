@@ -59,7 +59,7 @@
                   (:kyselylinkki nippu)
                   (if (and new-loppupvm (= tila (:success c/kasittelytilat)))
                     {:tila tila :voimassa_loppupvm new-loppupvm}
-                    {:tila tila})))
+                    {:tila tila :voimassa_loppupvm (:voimassaloppupvm nippu)})))
               (log/info "Päivitetään tietokantaan tila" tila
                         "loppupvm" new-loppupvm)
               (tc/update-nippu

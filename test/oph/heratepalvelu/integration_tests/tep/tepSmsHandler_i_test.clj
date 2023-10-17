@@ -204,7 +204,8 @@
     :url (str (:arvo-url mock-env) "tyoelamapalaute/v1/nippu/3")
     :options {:basic-auth   ["arvo-user" "arvo-pwd"]
               :content-type "application/json"
-              :body         "{\"tila\":\"ei_kelvollisia_yhteystietoja\"}"
+              :body         (str "{\"tila\":\"ei_kelvollisia_yhteystietoja\","
+                                 "\"voimassa_loppupvm\":\"2022-02-28\"}")
               :as           :json}}
    {:method :get
     :url "testilaitos"
@@ -216,7 +217,8 @@
     :url (str (:arvo-url mock-env) "tyoelamapalaute/v1/nippu/5")
     :options {:basic-auth   ["arvo-user" "arvo-pwd"]
               :content-type "application/json"
-              :body         "{\"tila\":\"ei_kelvollisia_yhteystietoja\"}"
+              :body         (str "{\"tila\":\"ei_kelvollisia_yhteystietoja\","
+                                 "\"voimassa_loppupvm\":\"2022-02-28\"}")
               :as           :json}}])
 
 (deftest test-tepSmsHandler-integration

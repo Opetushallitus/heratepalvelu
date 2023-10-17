@@ -73,8 +73,10 @@
         (when (or (= (:email-mismatch c/kasittelytilat) (:kasittelytila nippu))
                   (= (:no-email c/kasittelytilat) (:kasittelytila nippu)))
           (log/info "Päivitetään tila Arvoon" (:kyselylinkki nippu))
-          (arvo/patch-nippulinkki (:kyselylinkki nippu)
-                                  {:tila (:ei-yhteystietoja c/kasittelytilat)}))
+          (arvo/patch-nippulinkki
+            (:kyselylinkki nippu)
+            {:tila (:ei-yhteystietoja c/kasittelytilat)
+             :voimassa_loppupvm (:voimassaloppupvm nippu)}))
         nil))))
 
 (defn query-lahetettavat
@@ -141,9 +143,16 @@
                                          new-loppupvm
                                          lahetyspvm)
                     (log/info "Päivitetään tiedot Arvoon" (:kyselylinkki nippu))
-                    (arvo/patch-nippulinkki (:kyselylinkki nippu)
-                                            (update-arvo-obj-sms status
-                                                                 new-loppupvm))
+                    (arvo/patch-nippulinkki
+                      (:kyselylinkki nippu)
+                      (if (or (= status "CREATED") (= status "mock-lahetys"))
+                        (if new-loppupvm
+                          {:tila (:success c/kasittelytilat)
+                           :voimassa_loppupvm new-loppupvm}
+                          {:tila (:success c/kasittelytilat)
+                           :voimassa_loppupvm (:voimassaloppupvm nippu)})
+                        {:tila (:failure c/kasittelytilat)
+                         :voimassa_loppupvm (:voimassaloppupvm nippu)}))
                     (when-not (= (:niputuspvm nippu) lahetyspvm)
                       (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)
                                 "niputuspvm" (:niputuspvm nippu)

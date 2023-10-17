@@ -115,7 +115,8 @@
                      {:type "mock-get-email-status" :id 3}
                      {:type "mock-patch-nippulinkki"
                       :kyselylinkki "kysely.linkki/asdf"
-                      :data {:tila (:failed c/kasittelytilat)}}
+                      :data {:tila (:failed c/kasittelytilat)
+                             :voimassa_loppupvm "2021-11-11"}}
                      {:type "mock-update-nippu"
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-3"
                               :niputuspvm "2021-12-15"

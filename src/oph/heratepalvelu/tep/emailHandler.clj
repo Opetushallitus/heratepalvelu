@@ -42,8 +42,10 @@
                               (:email-mismatch c/kasittelytilat))]
           (tc/update-nippu nippu {:kasittelytila [:s kasittelytila]}))
         (when (bad-phone? nippu)
-          (arvo/patch-nippulinkki (:kyselylinkki nippu)
-                                  {:tila (:ei-yhteystietoja c/kasittelytilat)}))
+          (arvo/patch-nippulinkki
+            (:kyselylinkki nippu)
+            {:tila (:ei-yhteystietoja c/kasittelytilat)
+             :voimassa_loppupvm (:voimassaloppupvm nippu)}))
         nil))))
 
 (defn do-nippu-query
