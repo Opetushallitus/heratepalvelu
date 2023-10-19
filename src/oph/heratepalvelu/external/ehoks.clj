@@ -14,36 +14,48 @@
                        "cas-security-check")}
    :as      :json})
 
+(defn- retry-on-401
+  [operation]
+  (try
+    (operation)
+    (catch Exception e
+      (if (= (:status (ex-data e)) 401)
+        (operation)
+        (throw e)))))
+
 (defn- ehoks-get
   "Tekee GET-kyselyn ehoksiin."
   ([uri-path] (ehoks-get uri-path {}))
   ([uri-path options]
-   (client/get (str (:ehoks-url env) uri-path)
-               (merge (ehoks-query-base-options) options))))
+   (retry-on-401
+     #(client/get (str (:ehoks-url env) uri-path)
+                  (merge (ehoks-query-base-options) options)))))
 
 (defn- ehoks-post
   "Tekee POST-kyselyn ehoksiin"
   ([uri-path] (ehoks-post uri-path {}))
   ([uri-path options]
-   (client/post (str (:ehoks-url env) uri-path)
-                (merge (ehoks-query-base-options) options))))
+   (retry-on-401
+     #(client/post (str (:ehoks-url env) uri-path)
+                   (merge (ehoks-query-base-options) options)))))
 
 (defn- ehoks-patch
   "Tekee PATCH-kyselyn ehoksiin"
   ([uri-path] (ehoks-patch uri-path {}))
   ([uri-path options]
-   (client/patch (str (:ehoks-url env) uri-path)
-                 (merge (assoc (ehoks-query-base-options)
-                               :content-type
-                               "application/json")
-                        options))))
+   (retry-on-401
+     #(client/patch (str (:ehoks-url env) uri-path)
+                    (merge (assoc (ehoks-query-base-options)
+                                  :content-type "application/json")
+                           options)))))
 
 (defn- ehoks-delete
   "Tekee DELETE-kyselyn ehoksiin."
   ([uri-path] (ehoks-delete uri-path {}))
   ([uri-path options]
-   (client/delete (str (:ehoks-url env) uri-path)
-                  (merge (ehoks-query-base-options) options))))
+   (retry-on-401
+     #(client/delete (str (:ehoks-url env) uri-path)
+                     (merge (ehoks-query-base-options) options)))))
 
 (defn get-hoks-by-opiskeluoikeus
   "Hakee HOKSin opiskeluoikeuden OID:n perusteella."

@@ -5,6 +5,7 @@
             [clj-cas.client :as cl]
             [environ.core :refer [env]]
             [cheshire.core :as json]
+            [clojure.tools.logging :as log]
             [oph.heratepalvelu.external.http-client :refer [request]]
             [oph.heratepalvelu.external.aws-ssm :as ssm])
   (:import (fi.vm.sade.utils.cas CasClient
@@ -101,6 +102,32 @@
   "Ticket granting ticket client -objekti (atom, joka saa sisältää nil)."
   (atom nil))
 
+(defn get-tgt
+  [cas-uri params]
+  (.run (TicketGrantingTicketClient/getTicketGrantingTicket
+          cas-uri cl/client params (:caller-id env))))
+
+(defn- refresh-tgt
+  [cas-uri params]
+  (reset! tgt (get-tgt cas-uri params)))
+
+(defn get-st
+  [service-uri]
+  (.run (ServiceTicketClient/getServiceTicketFromTgt
+          cl/client service-uri (:caller-id env) @tgt)))
+
+(defn- try-to-get-st
+  [service-uri cas-uri params]
+  (try
+    (get-st service-uri)
+    (catch Exception e
+      (if (= (:status (ex-data e)) 404)
+        (do
+          (log/info (str "TGT not found, refreshing TGT"))
+          (refresh-tgt cas-uri params)
+          (get-st service-uri))
+        (throw e)))))
+
 (defn get-service-ticket
   "Hakee service ticketin palvelusta."
   [service suffix]
@@ -110,7 +137,5 @@
         service-uri (get-uri (str (:virkailija-url env) service "/" suffix))
         cas-uri     (get-uri (:cas-url env))]
     (when (nil? @tgt)
-      (reset! tgt (.run (TicketGrantingTicketClient/getTicketGrantingTicket
-                          cas-uri cl/client params (:caller-id env)))))
-    (.run (ServiceTicketClient/getServiceTicketFromTgt
-            cl/client service-uri (:caller-id env) @tgt))))
+      (refresh-tgt cas-uri params))
+    (try-to-get-st service-uri cas-uri params)))

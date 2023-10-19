@@ -21,7 +21,8 @@
           (cons {:method :post :url url :body body :options options} @results))
   (get @url-bindings [:post url body]))
 
-(defn mock-get-service-ticket [service suffix]
+(defn mock-get-service-ticket
+  [service suffix]
   (reset! results (cons {:type :get-service-ticket
                          :service service
                          :suffix suffix}
