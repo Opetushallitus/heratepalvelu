@@ -573,6 +573,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
             resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],
             actions: ['ssm:GetParameter']
           }));
+          this.createMetricFilters(lambdaFunction);
         }
     );
   }

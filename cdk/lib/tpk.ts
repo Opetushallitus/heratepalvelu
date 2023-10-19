@@ -120,11 +120,14 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       tpkArvoCallHandler,
       //archiveTpkNippuTable,
     ].forEach(
-      lambdaFunction => lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
-        effect: iam.Effect.ALLOW,
-        resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],
-        actions: ["ssm:GetParameter"],
-      }))
+      lambdaFunction => {
+        lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
+          effect: iam.Effect.ALLOW,
+          resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],
+          actions: ["ssm:GetParameter"],
+        }));
+        this.createMetricFilters(lambdaFunction);
+      }
     );
   }
 }
