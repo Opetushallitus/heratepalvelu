@@ -2,7 +2,9 @@
   (:require [cheshire.core :refer [generate-string]]
             [clojure.test :refer :all]
             [oph.heratepalvelu.common :as c]
-            [oph.heratepalvelu.external.ehoks :as ehoks]))
+            [oph.heratepalvelu.external.cas-client :as cas-client]
+            [oph.heratepalvelu.external.ehoks :as ehoks])
+  (:import (com.amazonaws.xray AWSXRay)))
 
 (defn- mock-general-client-call [method uri options]
   {:body {:data {:type "mock-client-call-response"
@@ -29,7 +31,8 @@
     (mock-general-client-call "post" uri options)
     (throw (ex-info "some error" {:type "random-error"}))))
 
-(defn- mock-get-service-ticket [service suffix]
+(defn- mock-get-service-ticket
+  [service suffix]
   {:type "cas-service-ticket" :service service :suffix suffix})
 
 (deftest test-get-hoks-by-opiskeluoikeus
@@ -254,3 +257,75 @@
              {:url "heratepalvelu/hoksit/34/aloitusherate-kasitelty"}))
       (is (= (ehoks/patch-amis-paattoherate-kasitelty 56)
              {:url "heratepalvelu/hoksit/56/paattoherate-kasitelty"})))))
+
+(deftest test-post-henkilomodify-event-returns-401
+  (testing (str "Varmista, että pyyntö tehdään uudelleen uudella ST:llä "
+                "kun pyyntö palautuu 401:nä")
+    (reset! cas-client/tgt nil)
+    (let [get-tgt-count (atom 0)
+          get-st-count (atom 0)
+          mock-clj-http-client-request-count (atom 0)]
+      (with-redefs [oph.heratepalvelu.external.cas-client/get-tgt
+                    (fn [cas-uri params]
+                      (swap! get-tgt-count inc)
+                      (reset! cas-client/tgt
+                              (str cas-uri "/tickets/TGT-" @get-tgt-count)))
+                    oph.heratepalvelu.external.cas-client/get-st
+                    (fn [service-uri]
+                      (swap! get-st-count inc)
+                      (str "ST-" @get-tgt-count "-" @get-st-count))
+                    clj-http.client/request
+                    (fn [params]
+                      (swap! mock-clj-http-client-request-count inc)
+                      (if (= 1 @mock-clj-http-client-request-count)
+                        (throw (ex-info "HTTP-virhe" {:status 401}))
+                        {:status 200 :params params}))
+                    environ.core/env {:caller-id "asdf"
+                                      :cas-user "user"
+                                      :cas-url "https://localhost/cas"}
+                    oph.heratepalvelu.external.cas-client/pwd
+                    (delay "p@ssw0rd")]
+        (AWSXRay/beginSegment "test-post-henkilomodify-event-returns-401")
+        (let [result (ehoks/post-henkilomodify-event "1.2.3")]
+          (is (= "https://localhost/cas/tickets/TGT-1" @cas-client/tgt))
+          (is (= "ST-1-2" (get-in result [:params :headers :ticket])))
+          (is (= 1 @get-tgt-count))
+          (is (= 2 @get-st-count))
+          (is (= 2 @mock-clj-http-client-request-count)))
+        (AWSXRay/endSegment)))))
+
+(deftest test-get-st-returns-404
+  (testing (str "Varmista, että TGT haetaan uudelleen, "
+                "jos ST:n haku palauttaa 404")
+    (reset! cas-client/tgt nil)
+    (let [get-tgt-count (atom 0)
+          get-st-count (atom 0)
+          mock-clj-http-client-request-count (atom 0)]
+      (with-redefs [oph.heratepalvelu.external.cas-client/get-tgt
+                    (fn [cas-uri params]
+                      (swap! get-tgt-count inc)
+                      (reset! cas-client/tgt
+                              (str cas-uri "/tickets/TGT-" @get-tgt-count)))
+                    oph.heratepalvelu.external.cas-client/get-st
+                    (fn [service-uri]
+                      (swap! get-st-count inc)
+                      (if (= 1 @get-st-count)
+                        (throw (ex-info "HTTP-virhe" {:status 404}))
+                        (str "ST-" @get-tgt-count "-" @get-st-count)))
+                    clj-http.client/request
+                    (fn [params]
+                      (swap! mock-clj-http-client-request-count inc)
+                      {:status 200 :params params})
+                    environ.core/env {:caller-id "asdf"
+                                      :cas-user "user"
+                                      :cas-url "https://localhost/cas"}
+                    oph.heratepalvelu.external.cas-client/pwd
+                    (delay "p@ssw0rd")]
+        (AWSXRay/beginSegment "test-get-st-returns-404")
+        (let [result (ehoks/post-henkilomodify-event "1.2.3")]
+          (is (= "https://localhost/cas/tickets/TGT-2" @cas-client/tgt))
+          (is (= "ST-2-2" (get-in result [:params :headers :ticket])))
+          (is (= 2 @get-tgt-count))
+          (is (= 2 @get-st-count))
+          (is (= 1 @mock-clj-http-client-request-count)))
+        (AWSXRay/endSegment)))))

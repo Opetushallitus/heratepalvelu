@@ -23,7 +23,7 @@
 (def temporary-conditions
   #{java.net.SocketTimeoutException java.net.ConnectException
     ; these should not be temporary but often are
-    400 401 404 500
+    400 404 500
     ; these are allowed to be temporary
     408 425 429 502 503 504
     ; these are non-standard extensions; probably doesn't do harm to include
