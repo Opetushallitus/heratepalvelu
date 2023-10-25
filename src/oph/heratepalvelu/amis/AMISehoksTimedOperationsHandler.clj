@@ -27,7 +27,9 @@
             "aloittaneille tai suorituksia saaneille,"
             "joilla ei ole vielä kyselylinkkiä")
   (let [resp (ehoks/send-kasittelemattomat-heratteet!
-               "2021-07-01" (str (c/local-date-now)) 1000)]
+               (str (c/current-rahoituskausi-alkupvm))
+               (str (c/local-date-now))
+               1000)]
     (log/info "Lähetetty" (:data (:body resp)) "viestiä")))
 
 (defn delete-oppija-contact!

@@ -198,6 +198,15 @@
     (is (str/starts-with? (create-nipputunniste "árvíztűrő tükörfúrógép")
                           "arvizturo_tukorfurogep"))))
 
+(deftest test-current-rahoituskausi-alkupvm
+  (testing "Is 1st of July of the current rahoituskausi"
+    (with-redefs [c/local-date-now #(LocalDate/of 2023 6 22)]
+      (is (= "2022-07-01" (str (current-rahoituskausi-alkupvm)))))
+    (with-redefs [c/local-date-now #(LocalDate/of 2023 7 22)]
+      (is (= "2023-07-01" (str (current-rahoituskausi-alkupvm)))))
+    (with-redefs [c/local-date-now #(LocalDate/of 2024 1 10)]
+      (is (= "2023-07-01" (str (current-rahoituskausi-alkupvm)))))))
+
 (deftest test-valid-herate-date?
   (testing "True if heratepvm is >= [rahoituskausi start year]-07-01"
     (with-redefs [c/local-date-now (constantly (LocalDate/of 2023 6 22))]
