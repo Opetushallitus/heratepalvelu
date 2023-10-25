@@ -115,8 +115,11 @@
                        hoks (get-kysely-type opiskeluoikeus) vahvistus-pvm)]
           (if-not (:osaamisen-hankkimisen-tarve hoks)
             (log/info "Ei osaamisen hankkimisen tarvetta hoksissa" (:id hoks))
-            (ac/check-and-save-herate! herate opiskeluoikeus koulutustoimija
-                                       (:koski herate-sources))))
+            (do
+              (ac/check-and-save-herate! herate opiskeluoikeus koulutustoimija
+                                         (:koski herate-sources))
+              (ac/update-herate-ehoks! (:ehoks-id herate)
+                                       (:kyselytyyppi herate)))))
         (catch ExceptionInfo e
           (if (= 404 (:status (ex-data e)))
             (log/info "Opiskeluoikeudella" (:oid opiskeluoikeus)

@@ -141,7 +141,6 @@
                     uuid)
           (save-herate-ddb! db-data-cond-values herate-source
                             oppija koulutustoimija laskentakausi kyselytyyppi)
-          (update-herate-ehoks! (:ehoks-id herate) kyselytyyppi)
           (when (c/has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
             (log/info
               {:nayttotutkinto        true
