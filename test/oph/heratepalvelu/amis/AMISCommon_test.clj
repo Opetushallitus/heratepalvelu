@@ -61,14 +61,6 @@
                         :ehoks-id ehoks-id
                         :data data}))
 
-(defn- mock-patch-amis-aloitusherate-kasitelty [ehoks-id]
-  (add-to-test-results {:type "mock-patch-amis-aloitusherate-kasitelty"
-                        :ehoks-id ehoks-id}))
-
-(defn- mock-patch-amis-paattoherate-kasitelty [ehoks-id]
-  (add-to-test-results {:type "mock-patch-amis-paattoherate-kasitelty"
-                        :ehoks-id ehoks-id}))
-
 (defn- mock-has-nayttotutkintoonvalmistavakoulutus? [opiskeluoikeus]
   (add-to-test-results {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"
                         :opiskeluoikeus opiskeluoikeus})
@@ -109,11 +101,7 @@
        oph.heratepalvelu.external.arvo/get-osaamisalat mock-get-osaamisalat
        oph.heratepalvelu.external.arvo/get-toimipiste mock-get-toimipiste
        oph.heratepalvelu.external.ehoks/add-kyselytunnus-to-hoks
-       mock-add-kyselytunnus-to-hoks
-       oph.heratepalvelu.external.ehoks/patch-amis-aloitusherate-kasitelty
-       mock-patch-amis-aloitusherate-kasitelty
-       oph.heratepalvelu.external.ehoks/patch-amis-paattoherate-kasitelty
-       mock-patch-amis-paattoherate-kasitelty]
+       mock-add-kyselytunnus-to-hoks]
       (let [herate-1 {:kyselytyyppi "aloittaneet"
                       :alkupvm "2021-12-15"
                       :oppija-oid "34.56.78"
@@ -201,8 +189,6 @@
                              :herate-source [:s (:ehoks c/herate-sources)]}
                       :options
                       {:cond-expr "attribute_not_exists(kyselylinkki)"}}
-                     {:type "mock-patch-amis-aloitusherate-kasitelty"
-                      :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"
                       :opiskeluoikeus
                       {:oppilaitos {:oid "test-laitos-id"}
@@ -267,8 +253,6 @@
                        :expr-attr-names {"#source" "herate-source"}
                        :expr-attr-vals
                        {":koski" [:s (:koski c/herate-sources)]}}}
-                     {:type "mock-patch-amis-paattoherate-kasitelty"
-                      :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"
                       :opiskeluoikeus
                       {:oppilaitos {:oid "test-laitos-id"}
@@ -331,8 +315,6 @@
                                 :puhelinnumero [:s "1234567"]},
                       :options {:cond-expr
                                 "attribute_not_exists(kyselylinkki)"}}
-                     {:type "mock-patch-amis-paattoherate-kasitelty",
-                      :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?",
                       :opiskeluoikeus {:oppilaitos  {:oid "test-laitos-id"},
                                        :oid         "123.456.789",
@@ -391,8 +373,6 @@
                              :herate-source [:s (:ehoks c/herate-sources)]}
                       :options
                       {:cond-expr "attribute_not_exists(kyselylinkki)"}}
-                     {:type "mock-patch-amis-paattoherate-kasitelty"
-                      :ehoks-id 98}
                      {:type "mock-has-nayttotutkintoonvalmistavakoulutus?"
                       :opiskeluoikeus
                       {:oppilaitos {:oid "test-laitos-id"}

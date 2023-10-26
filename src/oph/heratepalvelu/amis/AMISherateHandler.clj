@@ -52,7 +52,8 @@
                   (:sisältyyOpiskeluoikeuteen opiskeluoikeus) ":" summary)
 
         :else (ac/check-and-save-herate! herate opiskeluoikeus koulutustoimija
-                                         (:ehoks herate-sources))))
+                                         (:ehoks herate-sources)))
+      (ac/update-herate-ehoks! (:ehoks-id herate) (:kyselytyyppi herate)))
     (catch JsonParseException e
       (log/error e "Virhe viestin lukemisessa:" (.getBody msg) "\n" e))
     (catch ExceptionInfo e
