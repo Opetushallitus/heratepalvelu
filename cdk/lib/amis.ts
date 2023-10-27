@@ -137,7 +137,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         queue: herateDeadLetterQueue,
         maxReceiveCount: 5
       },
-      visibilityTimeout: Duration.seconds(60),
+      visibilityTimeout: Duration.minutes(5),
       retentionPeriod: Duration.days(14)
     });
 
@@ -152,7 +152,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         queue: ONRhenkilomodifyDLQ,
         maxReceiveCount: 5
       },
-      visibilityTimeout: Duration.seconds(60),
+      visibilityTimeout: Duration.minutes(5),
       retentionPeriod: Duration.days(14)
     });
 
