@@ -1,5 +1,7 @@
 import { App, Duration, Token, StackProps } from 'aws-cdk-lib';
 import dynamodb = require("aws-cdk-lib/aws-dynamodb");
+import events = require("aws-cdk-lib/aws-events");
+import targets = require("aws-cdk-lib/aws-events-targets");
 import lambda = require("aws-cdk-lib/aws-lambda");
 import s3assets = require("aws-cdk-lib/aws-s3-assets");
 import iam = require("aws-cdk-lib/aws-iam");
@@ -77,6 +79,19 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
     tepJaksotunnusTable.grantReadWriteData(tpkNiputusHandler);
     tpkNippuTable.grantReadWriteData(tpkNiputusHandler);
 
+    new events.Rule(this, "TPKNiputusHandlerDefaultScheduleRule", {
+      schedule: events.Schedule.expression(
+          `cron(5,25,45 0-5 * JUN,DEC MON,THU *)`
+      ),
+      targets: [new targets.LambdaFunction(tpkNiputusHandler)]
+    });
+    new events.Rule(this, "TPKNiputusHandlerJanuaryFirstScheduleRule", {
+      schedule: events.Schedule.expression(
+          `cron(5,25,45 0-5 1 JAN * *)`
+      ),
+      targets: [new targets.LambdaFunction(tpkNiputusHandler)]
+    });
+
     const tpkArvoCallHandler = new lambda.Function(this, "TPKArvoCallHandler", {
       runtime: this.runtime,
       code: lambdaCode,
@@ -93,27 +108,40 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
 
     tpkNippuTable.grantReadWriteData(tpkArvoCallHandler);
 
- /*   const archiveTpkNippuTable = new lambda.Function(
-      this,
-      "archiveTpkNippuTable",
-      {
-        runtime: this.runtime,
-        code: lambdaCode,
-        environment: {
-          ...this.envVars,
-          tpk_nippu_table: tpkNippuTable.tableName,
-          archive_table_2021_fall: tpkNippuArchive2021FallTable.tableName,
-          caller_id: `1.2.246.562.10.00000000001.${id}-archiveTpkNippuTable`,
-        },
-        memorySize: Token.asNumber(1024),
-        timeout: Duration.seconds(900),
-        handler: "oph.heratepalvelu.tpk.archiveTpkNippuTable::archiveTpkNippuTable",
-        tracing: lambda.Tracing.ACTIVE,
-      }
-    );
+    new events.Rule(this, "TPKArvoCallHandlerDefaultScheduleRule", {
+      schedule: events.Schedule.expression(
+          `cron(5,25,45 6-18 * JUN,DEC MON,THU *)`
+      ),
+      targets: [new targets.LambdaFunction(tpkArvoCallHandler)]
+    });
+    new events.Rule(this, "TPKArvoCallHandlerJanuaryFirstScheduleRule", {
+      schedule: events.Schedule.expression(
+          `cron(5,25,45 6-18 1 JAN * *))`
+      ),
+      targets: [new targets.LambdaFunction(tpkArvoCallHandler)]
+    });
 
-    tpkNippuTable.grantReadWriteData(archiveTpkNippuTable);
-    tpkNippuArchive2021FallTable.grantReadWriteData(archiveTpkNippuTable);*/
+    /*   const archiveTpkNippuTable = new lambda.Function(
+         this,
+         "archiveTpkNippuTable",
+         {
+           runtime: this.runtime,
+           code: lambdaCode,
+           environment: {
+             ...this.envVars,
+             tpk_nippu_table: tpkNippuTable.tableName,
+             archive_table_2021_fall: tpkNippuArchive2021FallTable.tableName,
+             caller_id: `1.2.246.562.10.00000000001.${id}-archiveTpkNippuTable`,
+           },
+           memorySize: Token.asNumber(1024),
+           timeout: Duration.seconds(900),
+           handler: "oph.heratepalvelu.tpk.archiveTpkNippuTable::archiveTpkNippuTable",
+           tracing: lambda.Tracing.ACTIVE,
+         }
+       );
+
+       tpkNippuTable.grantReadWriteData(archiveTpkNippuTable);
+       tpkNippuArchive2021FallTable.grantReadWriteData(archiveTpkNippuTable);*/
 
     [
       tpkNiputusHandler,
