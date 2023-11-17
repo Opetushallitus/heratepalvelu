@@ -116,7 +116,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
     });
     new events.Rule(this, "TPKArvoCallHandlerJanuaryFirstScheduleRule", {
       schedule: events.Schedule.expression(
-          `cron(5,25,45 6-18 1 JAN ? *))`
+          `cron(5,25,45 6-18 1 JAN ? *)`
       ),
       targets: [new targets.LambdaFunction(tpkArvoCallHandler)]
     });
