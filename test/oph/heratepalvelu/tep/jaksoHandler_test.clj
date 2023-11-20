@@ -326,8 +326,7 @@
                        :oppija_oid [:s "123.456.789"]
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
-                       :viimeinen_vastauspvm [:s "2022-02-14"]
-                       :rahoitusryhma [:s "02"]}
+                       :viimeinen_vastauspvm [:s "2022-02-14"]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]
@@ -437,8 +436,7 @@
                        :oppija_oid [:s "123.456.789"]
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
-                       :viimeinen_vastauspvm [:s "2022-02-14"]
-                       :rahoitusryhma [:s "02"]}
+                       :viimeinen_vastauspvm [:s "2022-02-14"]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]

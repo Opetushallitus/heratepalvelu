@@ -66,9 +66,6 @@
                                             :koodiarvo])
             existing-arvo-tunnus
             (:tunnus (read-previously-processed-hankkimistapa tapa-id))
-            rahoitusryhma (->> (:loppupvm herate)
-                               (LocalDate/parse)
-                               (c/get-rahoitusryhma opiskeluoikeus))
             jakso {:hankkimistapa_id tapa-id
                    :oppija_oid (:oppija-oid herate)
                    :jakso_alkupvm (:alkupvm herate)
@@ -113,7 +110,6 @@
                               koulutustoimija "/" tutkinto)]
                      :tyopaikan_normalisoitu_nimi
                      [:s (c/normalize-string (:tyopaikan-nimi herate))]
-                     :rahoitusryhma        [:s rahoitusryhma]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
                      :vanha-kesto           [:n kesto-vanha]
                      ; NOTE: Uudessa laskutavassa osa-aikaisuutta ei oteta

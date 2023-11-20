@@ -162,7 +162,6 @@
      :oppija-oid [:s "1.2.3"]
      :ehoks-id [:n "123"]
      :rahoituskausi [:s "2022-2023"]
-     :rahoitusryhma [:s "02"]
      :herate-source [:s (:koski c/herate-sources)]}})
 
 (def expected-http-results

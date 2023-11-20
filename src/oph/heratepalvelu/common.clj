@@ -102,15 +102,6 @@
   [opiskeluoikeus date]
   (period-contains-date? (:erityinenTuki (:lisätiedot opiskeluoikeus)) date))
 
-(defn get-rahoitusryhma
-  "Päättää, mihin rahoitusryhmään oppilas kuuluu. Oppilas kuuluu rahoitusryhmään
-  1 jos hänen opinnot ovat maksuttomia tai hän on erityisen tuen opiskelijan."
-  [opiskeluoikeus ^LocalDate herate-date]
-  (if (or (is-maksuton? opiskeluoikeus (str herate-date))
-          (erityinen-tuki-voimassa? opiskeluoikeus (str herate-date)))
-    "01"
-    "02"))
-
 (defn has-time-to-answer?
   "Tarkistaa, onko aikaa jäljellä ennen annettua päivämäärää."
   [loppupvm]

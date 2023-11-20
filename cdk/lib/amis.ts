@@ -631,23 +631,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(EhoksOpiskeluoikeusUpdateHandler)]
     });
 
-    const dbChanger = new lambda.Function(this, "dbChanger", {
-      runtime: this.runtime,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        table: AMISherateTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-dbChanger`
-      },
-      handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdate",
-      memorySize: 1024,
-      reservedConcurrentExecutions: 1,
-      timeout: Duration.seconds(900),
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    AMISherateTable.grantReadWriteData(dbChanger);
-
     /*
     const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
       runtime: this.runtime,
@@ -684,7 +667,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISTimedOperationsHandler,
       AMISMassHerateResendHandler,
       EhoksOpiskeluoikeusUpdateHandler,
-      dbChanger,
       updateSmsLahetystila,
       // dbArchiver,
     ].forEach(
