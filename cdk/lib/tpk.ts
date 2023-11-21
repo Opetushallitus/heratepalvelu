@@ -86,9 +86,9 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       enabled: false,
       targets: [new targets.LambdaFunction(tpkNiputusHandler)]
     });
-    new events.Rule(this, "TPKNiputusHandlerJanuaryFirstScheduleRule", {
+    new events.Rule(this, "TPKNiputusHandlerFinalizingScheduleRule", {
       schedule: events.Schedule.expression(
-          `cron(5,25,45 0-5 1 JAN ? *)`
+          `cron(5,25,45 0-5 1 JAN,JUL ? *)`
       ),
       enabled: false,
       targets: [new targets.LambdaFunction(tpkNiputusHandler)]
@@ -117,9 +117,9 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       enabled: false,
       targets: [new targets.LambdaFunction(tpkArvoCallHandler)]
     });
-    new events.Rule(this, "TPKArvoCallHandlerJanuaryFirstScheduleRule", {
+    new events.Rule(this, "TPKArvoCallHandlerFinalizingScheduleRule", {
       schedule: events.Schedule.expression(
-          `cron(5,25,45 6-18 1 JAN ? *)`
+          `cron(5,25,45 6-18 1 JAN,JUL ? *)`
       ),
       enabled: false,
       targets: [new targets.LambdaFunction(tpkArvoCallHandler)]
