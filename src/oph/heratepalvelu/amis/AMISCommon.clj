@@ -74,9 +74,7 @@
           uuid (c/generate-uuid)
           oppilaitos (:oid (:oppilaitos opiskeluoikeus))
           suorituskieli (str/lower-case
-                          (:koodiarvo (:suorituskieli suoritus)))
-          rahoitusryhma (c/get-rahoitusryhma opiskeluoikeus
-                                             herate-date)]
+                          (:koodiarvo (:suorituskieli suoritus)))]
       (if-some [existing (c/already-superseding-herate! oppija
                                                         koulutustoimija
                                                         laskentakausi
@@ -128,7 +126,6 @@
                :hankintakoulutuksen-toteuttaja
                [:s (str (:hankintakoulutuksen_toteuttaja req-body))]
                :tallennuspvm        [:s (str (c/local-date-now))]
-               :rahoitusryhma       [:s rahoitusryhma]
                :herate-source       [:s herate-source]}
               db-data-cond-values
               (cond-> db-data

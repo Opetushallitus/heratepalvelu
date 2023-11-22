@@ -4,7 +4,6 @@
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.log.caller-log :as cl]
-            [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.tep.niputusHandler :as nip])
   (:import (software.amazon.awssdk.services.dynamodb.model
@@ -13,10 +12,7 @@
 
 (gen-class
   :name "oph.heratepalvelu.util.dbChanger"
-  :methods [[^:static handleDBUpdate
-             [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
-              com.amazonaws.services.lambda.runtime.Context] void]
-            [^:static handleDBUpdateTep
+  :methods [[^:static handleDBUpdateTep
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]
             [^:static updateSmsLahetystila
@@ -40,29 +36,6 @@
     response))
 
 (defn- attr [^String input] (.build (.s (AttributeValue/builder) input)))
-
-(defn -handleDBUpdate [this event context]
-  (loop [resp (scan {:filter-expression
-                     "attribute_not_exists(rahoitusryhma) AND alkupvm = :pvm"
-                     :expr-attr-vals {":pvm" (attr "2022-08-11")}})]
-    (doseq [item (map ddb/map-attribute-values-to-vals (.items resp))]
-      (try
-        (let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404!
-                               (:opiskeluoikeus-oid item))
-              rahoitusryhma (c/get-rahoitusryhma
-                              opiskeluoikeus (LocalDate/parse (:alkupvm item)))]
-          (when (some? rahoitusryhma)
-            (ac/update-herate
-              item
-              {:rahoitusryhma [:s rahoitusryhma]})))
-        (catch Exception e
-          (log/error e))))
-    (when (.hasLastEvaluatedKey resp)
-      (recur (scan
-               {:filter-expression
-                "attribute_not_exists(rahoitusryhma) AND alkupvm = :pvm"
-                :expr-attr-vals {":pvm" (attr "2022-07-11")}
-                :exclusive-start-key (.lastEvaluatedKey resp)})))))
 
 (defn -handleDBUpdateTep [this event context]
   (loop [resp (scan {:filter-expression

@@ -143,9 +143,6 @@
               tutkinto      (get-in suoritus [:koulutusmoduuli
                                               :tunniste
                                               :koodiarvo])
-              rahoitusryhma (c/get-rahoitusryhma
-                              opiskeluoikeus
-                              (LocalDate/parse (:loppupvm herate)))
               db-data {:hankkimistapa_id     [:n tapa-id]
                        :hankkimistapa_tyyppi
                        [:s (last (str/split (:hankkimistapa-tyyppi herate)
@@ -183,8 +180,7 @@
                                 (:tyopaikan-ytunnus herate) "/"
                                 koulutustoimija "/" tutkinto)]
                        :tyopaikan_normalisoitu_nimi
-                       [:s (c/normalize-string (:tyopaikan-nimi herate))]
-                       :rahoitusryhma        [:s rahoitusryhma]}
+                       [:s (c/normalize-string (:tyopaikan-nimi herate))]}
               jaksotunnus-table-data
               (cond-> db-data
                 (not-empty (:tyopaikkaohjaaja-email herate))

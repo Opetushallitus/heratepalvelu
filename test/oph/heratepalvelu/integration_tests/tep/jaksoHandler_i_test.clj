@@ -178,8 +178,7 @@
      :rahoituskausi [:s "2021-2022"]
      :tutkintonimike [:s "(\"test-tutkintonimike\")"]
      :viimeinen_vastauspvm [:s "2022-04-17"]
-     :request_id [:s "test-uuid"]
-     :rahoitusryhma [:s "02"]}})
+     :request_id [:s "test-uuid"]}})
 
 (def expected-nippu-table
   #{{:ohjaaja_ytunnus_kj_tutkinto

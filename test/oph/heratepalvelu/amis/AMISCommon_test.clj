@@ -185,7 +185,6 @@
                              :hankintakoulutuksen-toteuttaja
                              [:s "test-hankintakoulutuksen-toteuttaja"]
                              :tallennuspvm [:s "2021-12-17"]
-                             :rahoitusryhma [:s "02"]
                              :herate-source [:s (:ehoks c/herate-sources)]}
                       :options
                       {:cond-expr "attribute_not_exists(kyselylinkki)"}}
@@ -243,7 +242,6 @@
                              :hankintakoulutuksen-toteuttaja
                              [:s "test-hankintakoulutuksen-toteuttaja"]
                              :tallennuspvm [:s "2021-12-17"]
-                             :rahoitusryhma [:s "02"]
                              :herate-source [:s (:koski c/herate-sources)]}
                       :options
                       {:cond-expr (str "attribute_not_exists(toimija_oppija) "
@@ -284,8 +282,7 @@
                      {:type     "mock-get-hankintakoulutuksen-toteuttaja",
                       :ehoks-id 98}
                      {:type    "mock-put-item",
-                      :item    {:rahoitusryhma [:s "02"],
-                                :kyselytyyppi [:s "tutkinnon_suorittaneet"],
+                      :item    {:kyselytyyppi [:s "tutkinnon_suorittaneet"],
                                 :request-id [:s "test-uuid"],
                                 :voimassa-loppupvm [:s "2022-01-15"],
                                 :hankintakoulutuksen-toteuttaja
@@ -369,7 +366,6 @@
                              :hankintakoulutuksen-toteuttaja
                              [:s "test-hankintakoulutuksen-toteuttaja"]
                              :tallennuspvm [:s "2021-12-17"]
-                             :rahoitusryhma [:s "02"]
                              :herate-source [:s (:ehoks c/herate-sources)]}
                       :options
                       {:cond-expr "attribute_not_exists(kyselylinkki)"}}
