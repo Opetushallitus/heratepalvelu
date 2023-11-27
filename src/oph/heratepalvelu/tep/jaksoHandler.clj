@@ -2,7 +2,7 @@
   "Käsittelee työpaikkajaksoja, tallentaa niitä tietokantaan, ja valmistaa niitä
   niputukseen."
   (:require [cheshire.core :refer [parse-string]]
-            [clojure.string :as str]
+            [clojure.string :as str :refer [trim]]
             [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
@@ -15,7 +15,6 @@
   (:import (clojure.lang ExceptionInfo)
            (com.amazonaws.services.lambda.runtime.events SQSEvent
                                                          SQSEvent$SQSMessage)
-           (com.fasterxml.jackson.core JsonParseException)
            (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
@@ -132,7 +131,8 @@
   jaksotunnuksen Arvosta, luo jakson ja alusatavan nipun, ja tallentaa ne
   tietokantaan."
   [herate opiskeluoikeus koulutustoimija]
-  (let [tapa-id (:hankkimistapa-id herate)]
+  (let [herate (update herate :tyopaikan-nimi trim)
+        tapa-id (:hankkimistapa-id herate)]
     (log/info "Tallennetaan oht" tapa-id)
     (when (check-duplicate-hankkimistapa tapa-id)
       (try
