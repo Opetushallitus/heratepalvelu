@@ -249,7 +249,7 @@
                             :oppilaitos {:oid "1234"}
                             :oid "567"}
             herate-open-keskeytymisajanjakso
-            {:tyopaikan-nimi "Testityöpaikka"
+            {:tyopaikan-nimi "  Testityöpaikka "
              :tyopaikan-ytunnus "765432-1"
              :tyopaikkaohjaaja-nimi "Testi Ojaaja"
              :alkupvm "2021-09-09"
