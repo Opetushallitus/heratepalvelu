@@ -9,6 +9,7 @@ import iam = require("aws-cdk-lib/aws-iam");
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { HeratepalveluStack } from "./heratepalvelu";
 import { CfnEventSourceMapping } from "aws-cdk-lib/aws-lambda";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export class HeratepalveluTEPStack extends HeratepalveluStack {
   constructor(
@@ -249,7 +250,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tep.ehoksTimedOperationsHandler::handleTimedOperations",
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     new events.Rule(this, "TimedOperationsScheduleRule", {
@@ -280,7 +282,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       timeout: Duration.seconds(
           Token.asNumber(this.getParameterFromSsm("jaksohandler-timeout"))
       ),
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     jaksoHandler.addEventSource(new SqsEventSource(herateQueue, { batchSize: 1 }));
@@ -303,7 +306,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tep.niputusHandler::handleNiputus",
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     new events.Rule(this, "niputusHandlerScheduleRule", {
@@ -332,7 +336,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(300),
       handler: "oph.heratepalvelu.tep.emailHandler::handleSendTEPEmails",
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     new events.Rule(this, "emailHandlerScheduleRule", {
@@ -358,7 +363,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(300),
       handler: "oph.heratepalvelu.tep.StatusHandler::handleEmailStatus",
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     new events.Rule(this, "TEPEmailStatusScheduleRule", {
@@ -386,7 +392,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       timeout: Duration.seconds(
           Token.asNumber(this.getParameterFromSsm("smshandler-timeout"))
       ),
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     new events.Rule(this, "SMSscheduleRule", {
@@ -416,7 +423,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
           Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
       handler: "oph.heratepalvelu.tep.EmailMuistutusHandler::handleSendEmailMuistutus",
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     nippuTable.grantReadWriteData(EmailMuistutusHandler);
@@ -448,7 +456,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       timeout: Duration.seconds(
           Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     nippuTable.grantReadWriteData(SmsMuistutusHandler);
@@ -472,7 +481,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       handler: "oph.heratepalvelu.util.DLQresendHandler::handleDLQresend",
       memorySize: 1024,
       timeout: Duration.seconds(60),
-      tracing: lambda.Tracing.ACTIVE
+      tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     dlqResendHandler.addToRolePolicy(new iam.PolicyStatement({

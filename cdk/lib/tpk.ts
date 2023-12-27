@@ -6,6 +6,7 @@ import lambda = require("aws-cdk-lib/aws-lambda");
 import s3assets = require("aws-cdk-lib/aws-s3-assets");
 import iam = require("aws-cdk-lib/aws-iam");
 import { HeratepalveluStack } from "./heratepalvelu";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export class HeratepalveluTPKStack extends HeratepalveluStack {
   constructor(
@@ -74,6 +75,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tpk.tpkNiputusHandler::handleTpkNiputus",
       tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     tepJaksotunnusTable.grantReadWriteData(tpkNiputusHandler);
@@ -106,6 +108,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tpk.tpkArvoCallHandler::handleTpkArvoCalls",
       tracing: lambda.Tracing.ACTIVE,
+      logRetention: RetentionDays.TWO_YEARS
     });
 
     tpkNippuTable.grantReadWriteData(tpkArvoCallHandler);
