@@ -6,6 +6,7 @@ import sqs = require("aws-cdk-lib/aws-sqs");
 import iam = require("aws-cdk-lib/aws-iam");
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { HeratepalveluStack } from "./heratepalvelu";
+import { RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
     constructor(
@@ -86,7 +87,8 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             memorySize: 1024,
             reservedConcurrentExecutions: 2, //fixme, parametrit kuntoon
             timeout: Duration.seconds(80),
-            tracing: lambda.Tracing.ACTIVE
+            tracing: lambda.Tracing.ACTIVE,
+	    logRetention: RetentionDays.TWO_YEARS
         });
 
         rahoitusResultsHandler.addEventSource(new SqsEventSource(tepRahoitusQueue, { batchSize: 1 }));
