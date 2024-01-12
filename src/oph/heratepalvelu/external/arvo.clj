@@ -97,7 +97,8 @@
 
 (defn build-arvo-request-body
   "Luo AMISin Arvo-requestin dataobjektin."
-  [herate oo request-id koulutustoimija suoritus alkupvm loppupvm]
+  [herate oo request-id koulutustoimija suoritus alkupvm loppupvm
+   initial-status]
   {:vastaamisajan_alkupvm          alkupvm
    :heratepvm                      (:alkupvm herate)
    :vastaamisajan_loppupvm         loppupvm
@@ -113,7 +114,8 @@
    :request_id                     request-id
    :toimipiste_oid                 (get-toimipiste suoritus)
    :hankintakoulutuksen_toteuttaja (get-hankintakoulutuksen-toteuttaja
-                                     (:ehoks-id herate))})
+                                     (:ehoks-id herate))
+   :metatiedot                     {:tila initial-status}})
 
 (defn create-amis-kyselylinkki
   "Pyytää Arvolta uuden AMIS-kyselylinkin annettujen tietojen perusteella."

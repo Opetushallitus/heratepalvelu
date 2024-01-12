@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.external.arvo-test
   (:require [clojure.test :refer :all]
+            [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.external.arvo :as arvo])
   (:import (clojure.lang ExceptionInfo)
            (java.time LocalDate)))
@@ -112,14 +113,16 @@
                       :oppilaitos_oid "test-laitos"
                       :request_id "test-request-id"
                       :toimipiste_oid "test-toimipiste"
-                      :hankintakoulutuksen_toteuttaja "hkt for: 123"}]
+                      :hankintakoulutuksen_toteuttaja "hkt for: 123"
+                      :metatiedot {:tila "ei_lahetetty"}}]
         (is (= (arvo/build-arvo-request-body herate
                                              opiskeluoikeus
                                              request-id
                                              koulutustoimija
                                              suoritus
                                              alkupvm
-                                             loppupvm)
+                                             loppupvm
+                                             (:ei-lahetetty c/kasittelytilat))
                expected))))))
 
 (defn- mock-http [method]
