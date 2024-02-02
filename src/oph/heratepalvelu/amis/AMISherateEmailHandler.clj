@@ -42,11 +42,7 @@
   "Hakee kyselylinkin arvosta, tallettaa sen tietokantaan,
   ja palauttaa osana herätettä."
   [herate opiskeluoikeus]
-  (let [initial-status (if (or (not-empty (:sahkoposti herate))
-                               (not-empty (:puhelinnumero herate)))
-                         (:ei-lahetetty c/kasittelytilat)
-                         (:ei-laheteta c/kasittelytilat))
-        req-body (arvo/build-arvo-request-body
+  (let [req-body (arvo/build-arvo-request-body
                    herate
                    opiskeluoikeus
                    (:request-id herate)
@@ -54,7 +50,7 @@
                    (c/get-suoritus opiskeluoikeus)
                    (:alkupvm herate)
                    (:voimassa-loppupvm herate)
-                   initial-status)
+                   (:odottaa-lahetysta c/kasittelytilat))
         arvo-resp (try (arvo/create-amis-kyselylinkki req-body)
                        (catch Exception e
                          (log/error e "Virhe kyselylinkin hakemisessa Arvosta."
