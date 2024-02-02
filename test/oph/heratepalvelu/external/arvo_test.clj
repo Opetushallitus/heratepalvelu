@@ -122,7 +122,8 @@
                                              suoritus
                                              alkupvm
                                              loppupvm
-                                             (:odottaa-lahetysta c/kasittelytilat))
+                                             (-> c/kasittelytilat
+                                                 :odottaa-lahetysta))
                expected))))))
 
 (defn- mock-http [method]
