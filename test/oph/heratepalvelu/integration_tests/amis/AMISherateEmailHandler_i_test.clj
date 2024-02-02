@@ -299,7 +299,7 @@
      :body (str "{\"vastaamisajan_alkupvm\":\"2022-01-15\","
                 "\"osaamisala\":[],\"heratepvm\":\"2022-01-15\","
                 "\"koulutustoimija_oid\":null,"
-                "\"metatiedot\":{\"tila\":\"ei_lahetetty\"},"
+                "\"metatiedot\":{\"tila\":\"odottaa_lahetysta\"},"
                 "\"tutkinnon_suorituskieli\":\"fi\",\"toimipiste_oid\":null,"
                 "\"oppilaitos_oid\":null,"
                 "\"hankintakoulutuksen_toteuttaja\":null,"

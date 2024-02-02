@@ -114,7 +114,7 @@
                       :request_id "test-request-id"
                       :toimipiste_oid "test-toimipiste"
                       :hankintakoulutuksen_toteuttaja "hkt for: 123"
-                      :metatiedot {:tila "ei_lahetetty"}}]
+                      :metatiedot {:tila "odottaa_lahetysta"}}]
         (is (= (arvo/build-arvo-request-body herate
                                              opiskeluoikeus
                                              request-id
@@ -122,7 +122,8 @@
                                              suoritus
                                              alkupvm
                                              loppupvm
-                                             (:ei-lahetetty c/kasittelytilat))
+                                             (-> c/kasittelytilat
+                                                 :odottaa-lahetysta))
                expected))))))
 
 (defn- mock-http [method]

@@ -35,6 +35,7 @@
 (def kasittelytilat
   "Heräteviestien lähetyksien käsittelytilat."
   {:ei-lahetetty "ei_lahetetty"
+   :odottaa-lahetysta "odottaa_lahetysta" ; Arvo odottaa tätä tilaa alkutilaksi
    :viestintapalvelussa "viestintapalvelussa"
    :vastausaika-loppunut "vastausaika_loppunut_ennen_lahetysta"
    :vastausaika-loppunut-m "vastausaika_loppunut_ennen_muistutusta"
