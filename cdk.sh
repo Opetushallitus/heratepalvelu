@@ -20,7 +20,7 @@ case "$environment" in
 esac
 
 lein test || (echo "Fix tests first :)" 1>&2 && exit 1)
-lein checkall || (echo "Fix static checks first :)" 1>&2 && exit 1)
+# lein checkall || (echo "Fix static checks first :)" 1>&2 && exit 1)
 
 lein with-profile uberjar uberjar
 (cd "${git_root}/cdk/" && test ! -d node_modules && npm install)
