@@ -49,7 +49,8 @@
                    (:koulutustoimija herate)
                    (c/get-suoritus opiskeluoikeus)
                    (:alkupvm herate)
-                   (:voimassa-loppupvm herate))
+                   (:voimassa-loppupvm herate)
+                   (:odottaa-lahetysta c/kasittelytilat))
         arvo-resp (try (arvo/create-amis-kyselylinkki req-body)
                        (catch Exception e
                          (log/error e "Virhe kyselylinkin hakemisessa Arvosta."
