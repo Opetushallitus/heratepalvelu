@@ -215,7 +215,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         queue: herateDeadLetterQueue,
         maxReceiveCount: 5
       },
-      visibilityTimeout: Duration.seconds(60),
+      visibilityTimeout: Duration.minutes(5),
       retentionPeriod: Duration.days(14)
     });
 
