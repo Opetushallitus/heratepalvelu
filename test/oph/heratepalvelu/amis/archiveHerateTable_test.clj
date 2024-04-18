@@ -59,7 +59,8 @@
     (with-redefs
       [environ.core/env {:to-table           "archive_2019-2020"
                          :to-table-2020-2021 "archive_2020-2021"
-                         :to-table-2021-2022 "archive_2021-2022"}
+                         :to-table-2021-2022 "archive_2021-2022"
+                         :to-table-2022-2023 "archive_2022-2023"}
        oph.heratepalvelu.amis.archiveHerateTable/do-herate-table-archiving
        mock-do-herate-table-archiving]
       (aht/-archiveHerateTable {}
@@ -68,4 +69,5 @@
       (is (= (vec (reverse @test-archiveHerateTable-results))
              [{:kausi "2019-2020" :to-table "archive_2019-2020"}
               {:kausi "2020-2021" :to-table "archive_2020-2021"}
-              {:kausi "2021-2022" :to-table "archive_2021-2022"}])))))
+              {:kausi "2021-2022" :to-table "archive_2021-2022"}
+              {:kausi "2022-2023" :to-table "archive_2022-2023"}])))))

@@ -5,12 +5,15 @@
             [oph.heratepalvelu.test-util :as tu]))
 
 (def mock-env {:jaksotunnus-table       "jaksotunnus-table-name"
-               :archive-table-2021-2022 "archive_2021-2022"})
+               :archive-table-2021-2022 "archive_2021-2022"
+               :archive-table-2022-2023 "archive_2022-2023"})
 
 (def starting-table [{:hankkimistapa_id [:n 1]
                       :rahoituskausi    [:s "2021-2022"]}
                      {:hankkimistapa_id [:n 2]
-                      :rahoituskausi    [:s "2022-2023"]}])
+                      :rahoituskausi    [:s "2022-2023"]}
+                     {:hankkimistapa_id [:n 3]
+                      :rahoituskausi    [:s "2023-2024"]}])
 
 (defn- setup-test []
   (mdb/clear-mock-db)
@@ -21,11 +24,14 @@
                     {:primary-key :hankkimistapa_id})
   (mdb/set-table-contents (:archive-table-2021-2022 mock-env) []))
 
-(def expected-table #{{:hankkimistapa_id [:n 2]
-                       :rahoituskausi    [:s "2022-2023"]}})
+(def expected-table #{{:hankkimistapa_id [:n 3]
+                       :rahoituskausi    [:s "2023-2024"]}})
 
 (def expected-archive-2021-2022 #{{:hankkimistapa_id [:n 1]
                                    :rahoituskausi    [:s "2021-2022"]}})
+
+(def expected-archive-2022-2023 #{{:hankkimistapa_id [:n 2]
+                                   :rahoituskausi    [:s "2022-2023"]}})
 
 (deftest test-archiveJaksoTable-integration
   (testing "archiveJaksoTable integraatiotesti"
@@ -41,4 +47,6 @@
              expected-table))
       (is (= (mdb/get-table-values (:archive-table-2021-2022 mock-env))
              expected-archive-2021-2022))
+      (is (= (mdb/get-table-values (:archive-table-2022-2023 mock-env))
+             expected-archive-2022-2023))
       (mdb/clear-mock-db))))

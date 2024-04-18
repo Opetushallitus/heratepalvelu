@@ -185,9 +185,39 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       }
     );
 
+    const jaksotunnusArchive2022_2023Table = new dynamodb.Table(
+      this,
+      "jaksotunnusArchive2022to2023Table",
+      {
+        partitionKey: {
+          name: "hankkimistapa_id",
+          type: dynamodb.AttributeType.NUMBER
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
+      }
+    );
+
     const nippuArchive2021_2022Table = new dynamodb.Table(
       this,
       "nippuArchive2021to2022Table",
+      {
+        partitionKey: {
+          name: "ohjaaja_ytunnus_kj_tutkinto",
+          type: dynamodb.AttributeType.STRING
+        },
+        sortKey: {
+          name: "niputuspvm",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
+      }
+    );
+
+    const nippuArchive2022_2023Table = new dynamodb.Table(
+      this,
+      "nippuArchive2022to2023Table",
       {
         partitionKey: {
           name: "ohjaaja_ytunnus_kj_tutkinto",
@@ -522,7 +552,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     jaksotunnusTable.grantReadWriteData(dbChangerTep);
 
     // Arkistointifunktiot
-    /*
     const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {
       runtime: this.runtime,
       code: lambdaCode,
@@ -530,6 +559,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         ...this.envVars,
         jaksotunnus_table: jaksotunnusTable.tableName,
         archive_table_2021_2022: jaksotunnusArchive2021_2022Table.tableName,
+        archive_table_2022_2023: jaksotunnusArchive2022_2023Table.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-archiveJaksoTable`,
       },
       memorySize: Token.asNumber(1024),
@@ -541,6 +571,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     jaksotunnusTable.grantReadWriteData(archiveJaksoTable);
     jaksotunnusArchive2021_2022Table.grantReadWriteData(archiveJaksoTable);
+    jaksotunnusArchive2022_2023Table.grantReadWriteData(archiveJaksoTable);
 
     const archiveNippuTable = new lambda.Function(this, "archiveNippuTable", {
       runtime: this.runtime,
@@ -549,6 +580,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         ...this.envVars,
         nippu_table: nippuTable.tableName,
         archive_table_2021_2022: nippuArchive2021_2022Table.tableName,
+        archive_table_2022_2023: nippuArchive2022_2023Table.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-archiveJaksoTable`,
       },
       memorySize: Token.asNumber(1024),
@@ -560,7 +592,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     nippuTable.grantReadWriteData(archiveNippuTable);
     nippuArchive2021_2022Table.grantReadWriteData(archiveNippuTable);
-    */
+    nippuArchive2022_2023Table.grantReadWriteData(archiveNippuTable);
 
     // IAM
 
@@ -574,8 +606,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       SmsMuistutusHandler,
       EmailMuistutusHandler,
       dbChangerTep,
-      // archiveJaksoTable,
-      // archiveNippuTable,
+      archiveJaksoTable,
+      archiveNippuTable,
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({

@@ -74,11 +74,18 @@
 (deftest test-archiveTpkNippuTable
   (testing "Varmista, että -archiveTpkNippuTable tekee oikeita kutsuja"
     (with-redefs
-      [environ.core/env {:archive-table-2021-fall "archive_2021-fall"}
+      [environ.core/env {:archive-table-2021-fall   "archive_2021-fall"
+                         :archive-table-2022-spring "archive_2022-spring"
+                         :archive-table-2022-fall   "archive_2022-fall"
+                         :archive-table-2023-spring "archive_2023-spring"}
        oph.heratepalvelu.tpk.archiveTpkNippuTable/do-tpk-nippu-table-archiving
        mock-do-tpk-nippu-table-archiving]
       (atnt/-archiveTpkNippuTable {}
                                   (tu/mock-handler-event :scheduledherate)
                                   (tu/mock-handler-context))
       (is (= (vec (reverse @test-archiveTpkNippuTable-results))
-             [{:kausi-alkupvm "2021-07-01" :to-table "archive_2021-fall"}])))))
+             [{:kausi-alkupvm "2021-07-01" :to-table "archive_2021-fall"}
+              {:kausi-alkupvm "2022-01-01" :to-table "archive_2022-spring"}
+              {:kausi-alkupvm "2022-07-01" :to-table "archive_2022-fall"}
+              {:kausi-alkupvm "2023-01-01"
+               :to-table "archive_2023-spring"}])))))

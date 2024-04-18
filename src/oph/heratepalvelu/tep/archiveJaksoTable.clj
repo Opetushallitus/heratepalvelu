@@ -42,4 +42,5 @@
   "Arkistoi kaikki vanhoihin kausiin kuuluvat jaksot. Jos funktion sallittu
   ajoaika loppuu kesken ajon, voi joutua ajamaan funktion monta kertaa."
   [_ _ _]
-  (do-jakso-table-archiving "2021-2022" (:archive-table-2021-2022 env)))
+  (do-jakso-table-archiving "2021-2022" (:archive-table-2021-2022 env))
+  (do-jakso-table-archiving "2022-2023" (:archive-table-2022-2023 env)))

@@ -571,6 +571,23 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       }
     );
 
+    const AMISherateArchive2022_2023Table = new dynamodb.Table(
+      this,
+      "AMISHerateArchive2022to2023Table",
+      {
+        partitionKey: {
+          name: "toimija_oppija",
+          type: dynamodb.AttributeType.STRING
+        },
+        sortKey: {
+          name: "tyyppi_kausi",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
+      }
+    );
+
     const AMISTimedOperationsHandler = new lambda.Function(
       this,
       "AMISTimedOperationsHandler",
@@ -647,7 +664,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(EhoksOpiskeluoikeusUpdateHandler)]
     });
 
-    /*
     const dbArchiver = new lambda.Function(this, "archiveHerateTable", {
       runtime: this.runtime,
       code:lambdaCode,
@@ -657,6 +673,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         to_table: AMISherateArchive2019_2020Table.tableName,
         to_table_2020_2021: AMISherateArchive2020_2021Table.tableName,
         to_table_2021_2022: AMISherateArchive2021_2022Table.tableName,
+        to_table_2022_2023: AMISherateArchive2022_2023Table.tableName,
         caller_id: `1.2.246.562.10.00000000001.${id}-AMISDBArchiver`,
       },
       handler: "oph.heratepalvelu.amis.archiveHerateTable::archiveHerateTable",
@@ -669,7 +686,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     AMISherateArchive2019_2020Table.grantReadWriteData(dbArchiver);
     AMISherateArchive2020_2021Table.grantReadWriteData(dbArchiver);
     AMISherateArchive2021_2022Table.grantReadWriteData(dbArchiver);
-    */
+    AMISherateArchive2022_2023Table.grantReadWriteData(dbArchiver);
 
     [
       AMISHerateHandler,
@@ -684,7 +701,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       AMISMassHerateResendHandler,
       EhoksOpiskeluoikeusUpdateHandler,
       updateSmsLahetystila,
-      // dbArchiver,
+      dbArchiver,
     ].forEach(
       lambdaFunction => {
         AMISherateTable.grantReadWriteData(lambdaFunction);

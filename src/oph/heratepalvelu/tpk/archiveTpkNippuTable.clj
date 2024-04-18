@@ -42,4 +42,7 @@
   sallittu ajoaika loppuu kesken ajon, voi joutua ajamaan funktion monta
   kertaa."
   [_ _ _]
-  (do-tpk-nippu-table-archiving "2021-07-01" (:archive-table-2021-fall env)))
+  (do-tpk-nippu-table-archiving "2021-07-01" (:archive-table-2021-fall env))
+  (do-tpk-nippu-table-archiving "2022-01-01" (:archive-table-2022-spring env))
+  (do-tpk-nippu-table-archiving "2022-07-01" (:archive-table-2022-fall env))
+  (do-tpk-nippu-table-archiving "2023-01-01" (:archive-table-2023-spring env)))

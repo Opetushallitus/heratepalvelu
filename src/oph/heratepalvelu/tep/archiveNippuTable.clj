@@ -48,4 +48,7 @@
   [_ _ _]
   (do-nippu-table-archiving "2021-07-02"
                             "2022-07-01"
-                            (:archive-table-2021-2022 env)))
+                            (:archive-table-2021-2022 env))
+  (do-nippu-table-archiving "2022-07-02"
+                            "2023-07-01"
+                            (:archive-table-2022-2023 env)))
