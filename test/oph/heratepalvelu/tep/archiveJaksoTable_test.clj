@@ -70,11 +70,13 @@
 (deftest test-archiveJaksoTable
   (testing "Varmista, että -archiveJaksoTable tekee oikeita kutsuja."
     (with-redefs
-      [environ.core/env {:archive-table-2021-2022 "archive_2021-2022"}
+      [environ.core/env {:archive-table-2021-2022 "archive_2021-2022"
+                         :archive-table-2022-2023 "archive_2022-2023"}
        oph.heratepalvelu.tep.archiveJaksoTable/do-jakso-table-archiving
        mock-do-jakso-table-archiving]
       (ajt/-archiveJaksoTable {}
                               (tu/mock-handler-event :scheduledherate)
                               (tu/mock-handler-context))
       (is (= (vec (reverse @test-archiveJaksoTable-results))
-             [{:kausi "2021-2022" :to-table "archive_2021-2022"}])))))
+             [{:kausi "2021-2022" :to-table "archive_2021-2022"}
+              {:kausi "2022-2023" :to-table "archive_2022-2023"}])))))

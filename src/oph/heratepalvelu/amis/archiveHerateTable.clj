@@ -39,4 +39,5 @@
   [_ _ _]
   (do-herate-table-archiving "2019-2020" (:to-table env))
   (do-herate-table-archiving "2020-2021" (:to-table-2020-2021 env))
-  (do-herate-table-archiving "2021-2022" (:to-table-2021-2022 env)))
+  (do-herate-table-archiving "2021-2022" (:to-table-2021-2022 env))
+  (do-herate-table-archiving "2022-2023" (:to-table-2022-2023 env)))

@@ -82,7 +82,8 @@
 (deftest test-archiveNippuTable
   (testing "Varmista, että -archiveNippuTable tekee oikeita kutsuja"
     (with-redefs
-      [environ.core/env {:archive-table-2021-2022 "archive"}
+      [environ.core/env {:archive-table-2021-2022 "archive-21-22"
+                         :archive-table-2022-2023 "archive-22-23"}
        oph.heratepalvelu.tep.archiveNippuTable/do-nippu-table-archiving
        mock-do-nippu-table-archiving]
       (ant/-archiveNippuTable {}
@@ -91,4 +92,7 @@
       (is (= (vec (reverse @test-archiveNippuTable-results))
              [{:kausi-start "2021-07-02"
                :kausi-end "2022-07-01"
-               :to-table "archive"}])))))
+               :to-table "archive-21-22"}
+              {:kausi-start "2022-07-02"
+               :kausi-end "2023-07-01"
+               :to-table "archive-22-23"}])))))

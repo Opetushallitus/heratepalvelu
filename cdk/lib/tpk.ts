@@ -43,6 +43,45 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       }
     );
 
+    const tpkNippuArchive2022SpringTable = new dynamodb.Table(
+      this,
+      "tpkNippuArchive2022SpringTable",
+      {
+        partitionKey: {
+          name: "nippu-id",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
+      }
+    );
+
+    const tpkNippuArchive2022FallTable = new dynamodb.Table(
+      this,
+      "tpkNippuArchive2022FallTable",
+      {
+        partitionKey: {
+          name: "nippu-id",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
+      }
+    );
+
+    const tpkNippuArchive2023SpringTable = new dynamodb.Table(
+      this,
+      "tpkNippuArchive2023SpringTable",
+      {
+        partitionKey: {
+          name: "nippu-id",
+          type: dynamodb.AttributeType.STRING
+        },
+        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+        encryption: dynamodb.TableEncryption.AWS_MANAGED
+      }
+    );
+
     // S3
 
     const ehoksHerateTPKAsset = new s3assets.Asset(
@@ -128,32 +167,38 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(tpkArvoCallHandler)]
     });
 
-    /*   const archiveTpkNippuTable = new lambda.Function(
-         this,
-         "archiveTpkNippuTable",
-         {
-           runtime: this.runtime,
-           code: lambdaCode,
-           environment: {
-             ...this.envVars,
-             tpk_nippu_table: tpkNippuTable.tableName,
-             archive_table_2021_fall: tpkNippuArchive2021FallTable.tableName,
-             caller_id: `1.2.246.562.10.00000000001.${id}-archiveTpkNippuTable`,
-           },
-           memorySize: Token.asNumber(1024),
-           timeout: Duration.seconds(900),
-           handler: "oph.heratepalvelu.tpk.archiveTpkNippuTable::archiveTpkNippuTable",
-           tracing: lambda.Tracing.ACTIVE,
-         }
-       );
+    const archiveTpkNippuTable = new lambda.Function(
+      this,
+      "archiveTpkNippuTable",
+      {
+        runtime: this.runtime,
+        code: lambdaCode,
+        environment: {
+          ...this.envVars,
+          tpk_nippu_table: tpkNippuTable.tableName,
+          archive_table_2021_fall: tpkNippuArchive2021FallTable.tableName,
+          archive_table_2022_spring: tpkNippuArchive2022SpringTable.tableName,
+          archive_table_2022_fall: tpkNippuArchive2022FallTable.tableName,
+          archive_table_2023_spring: tpkNippuArchive2023SpringTable.tableName,
+          caller_id: `1.2.246.562.10.00000000001.${id}-archiveTpkNippuTable`,
+        },
+        memorySize: Token.asNumber(1024),
+        timeout: Duration.seconds(900),
+        handler: "oph.heratepalvelu.tpk.archiveTpkNippuTable::archiveTpkNippuTable",
+        tracing: lambda.Tracing.ACTIVE,
+      }
+    );
 
-       tpkNippuTable.grantReadWriteData(archiveTpkNippuTable);
-       tpkNippuArchive2021FallTable.grantReadWriteData(archiveTpkNippuTable);*/
+    tpkNippuTable.grantReadWriteData(archiveTpkNippuTable);
+    tpkNippuArchive2021FallTable.grantReadWriteData(archiveTpkNippuTable);
+    tpkNippuArchive2022SpringTable.grantReadWriteData(archiveTpkNippuTable);
+    tpkNippuArchive2022FallTable.grantReadWriteData(archiveTpkNippuTable);
+    tpkNippuArchive2023SpringTable.grantReadWriteData(archiveTpkNippuTable);
 
     [
       tpkNiputusHandler,
       tpkArvoCallHandler,
-      //archiveTpkNippuTable,
+      archiveTpkNippuTable,
     ].forEach(
       lambdaFunction => {
         lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
