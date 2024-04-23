@@ -8,29 +8,17 @@
 (use-fixtures :each tu/clear-logs-before-test)
 
 (def mock-tep-msg-body
-  (str "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - "
-       "Survey to workplace instructors."
-       "\n\n"
-       "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
-       "Pyydämme vastaamaan tähän kyselyyn (5 min) yhteistyömme "
-       "kehittämiseksi. "
-       "Kyselyssä arvioidaan oppilaitoksen toimintaa, ei opiskelijaa."
-       "\n\n"
-       "Tack för att du handleder studerande på utbildnings-/läroavtal! "
-       "Vi ber dig svara på den här enkäten (5 min) för att utveckla vårt "
-       "samarbete. "
-       "Responsen utvärderar utbildningsanordnarens verksamhet, inte "
-       "studerande."
-       "\n\n"
-       "Thank you for guiding students with a training "
-       "agreement/apprenticeship! "
-       "Please respond to this survey (5 min) to help us work together more "
-       "effectively. "
-       "The survey assesses the institution, not the student."
-       "\n\n"
-       "kysely.linkki/123\n\n"
-       "Testilaitos, Testilaitos 2\n\n"
-       "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
+  (str "Testilaitos, Testilaitos 2: Työpaikkaohjaajakysely - "
+       "Enkät till arbetsplatshandledaren.\n\nKiitos "
+       "koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
+       "Kerro, miten yhteistyömme onnistui. Kyselyssä arvioidaan "
+       "oppilaitosta (ei opiskelijaa). Palautteella kehitämme "
+       "toimintaamme.\n\nTack för att du handleder studerande på "
+       "utbildningsavtal/läroavtal! Berätta gärna hur vårt samarbete "
+       "fungerade. I enkäten utvärderas läroanstalten (inte den studerande). "
+       "Responsen använder vi för att utveckla vår verksamhet.\n\n"
+       "kysely.linkki/123\n\nOsoitelähde Opetushallituksen (OPH) "
+       "eHOKS-rekisteri"))
 
 (deftest test-tep-msg-body
   (testing "Varmista, että msg-body tekee formatointia oikein"
@@ -39,25 +27,13 @@
            mock-tep-msg-body))))
 
 (def mock-tep-muistutus-msg-body
-  (str "Muistutus-påminnelse-reminder: Työpaikkaohjaajakysely - "
-       "Enkät till arbetsplatshandledaren - "
-       "Survey to workplace instructors"
-       "\n\n"
-       "Hyvä työpaikkaohjaaja, olethan muistanut antaa palautetta "
-       "oppilaitokselle - "
-       "Bästa arbetsplatshandledare, kom ihåg att ge respons till "
-       "läroanstalten - "
-       "Dear workplace instructor, please remember to give feedback to the "
-       "educational institution!"
-       "\n\n"
-       "kysely.linkki/123"
-       "\n\n"
-       "Kiitos, että vastaat - Tack för att du svarar - Thank you for "
-       "responding!"
-       "\n\n"
-       "Testilaitos, Testilaitos 2"
-       "\n\n"
-       "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
+  (str "Testilaitos, Testilaitos 2: Muistutus: Työpaikkaohjaajakysely - "
+       "Påminnelse: Enkät till arbetsplatshandledaren\n\nHyvä "
+       "työpaikkaohjaaja, muistathan antaa palautetta oppilaitokselle. "
+       "Kiitos, että vastaat! - Bästa arbetsplatshandledare, kom ihåg att "
+       "ge din respons till läroanstalten.  Tack för att du svarar!\n\n"
+       "kysely.linkki/123\n\nOsoitelähde Opetushallituksen (OPH) "
+       "eHOKS-rekisteri"))
 
 (deftest test-tep-muistutus-msg-body
   (testing "Varmista, että muistutus-msg-body tekee formatointia oikein"
