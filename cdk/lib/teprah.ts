@@ -66,7 +66,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
         // LogGroup
 
         const teprahLogGroup = new LogGroup(this, 'TepRahLogGroup', {
-            logGroupName: `${props?.env}-heratepalvelu-teprah`,
+            logGroupName: `${envName}-heratepalvelu-teprah`,
             retention: RetentionDays.TWO_YEARS,
         });
 

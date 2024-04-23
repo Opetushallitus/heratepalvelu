@@ -102,7 +102,7 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
     // LogGroup
 
     const tpkLogGroup = new LogGroup(this, 'TPKLogGroup', {
-      logGroupName: `${props?.env}-Heratepalvelu-tpk`,
+      logGroupName: `${envName}-Heratepalvelu-tpk`,
       retention: RetentionDays.TWO_YEARS,
     });
 

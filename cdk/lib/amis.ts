@@ -204,7 +204,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     );
 
     const amisLogGroup = new LogGroup(this, 'AmisLogGroup', {
-      logGroupName: `${props?.env}-Heratepalvelu-amis`,
+      logGroupName: `${envName}-Heratepalvelu-amis`,
       retention: RetentionDays.TWO_YEARS,
     });
 
