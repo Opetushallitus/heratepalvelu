@@ -6,7 +6,7 @@ import sqs = require("aws-cdk-lib/aws-sqs");
 import iam = require("aws-cdk-lib/aws-iam");
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { HeratepalveluStack } from "./heratepalvelu";
-import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
     constructor(
@@ -63,6 +63,13 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             }
         );
 
+        // LogGroup
+
+        const teprahLogGroup = new LogGroup(this, 'TepRahLogGroup', {
+            logGroupName: `${props?.env}-heratepalvelu-teprah`,
+            retention: RetentionDays.TWO_YEARS,
+        });
+
         // Lambda
 
         const lambdaCode = lambda.Code.fromBucket(
@@ -88,7 +95,7 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             reservedConcurrentExecutions: 2, //fixme, parametrit kuntoon
             timeout: Duration.seconds(80),
             tracing: lambda.Tracing.ACTIVE,
-	    logRetention: RetentionDays.TWO_YEARS
+	    logGroup: teprahLogGroup
         });
 
         rahoitusResultsHandler.addEventSource(new SqsEventSource(tepRahoitusQueue, { batchSize: 1 }));
