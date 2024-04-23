@@ -269,7 +269,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     // LogGroup
 
     const tepLogGroup = new LogGroup(this, 'TEPLogGroup', {
-      logGroupName: `${envName}-Heratepalvelu-tep`,
+      logGroupName: `${envName}-heratepalvelu-tep`,
       retention: RetentionDays.TWO_YEARS,
     });
 
