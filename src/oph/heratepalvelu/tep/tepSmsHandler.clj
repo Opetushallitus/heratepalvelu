@@ -56,7 +56,7 @@
   löytynyt, päivittää myös Arvoon sen, että nippulinkillä ei ole yhteystietoja."
   [nippu jaksot]
   (let [number (tc/reduce-common-value jaksot :ohjaaja_puhelinnumero)]
-    (if (and (some? number) (c/valid-number? number))
+    (if (and (some? number) (c/valid-finnish-number? number))
       number
       (do
         (log/warn "Epäselvää, mihin numeroon nippu lähetetään; numero on"

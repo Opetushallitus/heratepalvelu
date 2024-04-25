@@ -135,7 +135,7 @@
     (with-redefs [environ.core/env mock-env
                   oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2022 3 3))
-                  oph.heratepalvelu.common/valid-number? #(= % "12345")
+                  oph.heratepalvelu.common/valid-finnish-number? #(= % "12345")
                   oph.heratepalvelu.db.dynamodb/query-items-with-expression
                   mdb/query-items-expr
                   oph.heratepalvelu.db.dynamodb/update-item mdb/update-item
