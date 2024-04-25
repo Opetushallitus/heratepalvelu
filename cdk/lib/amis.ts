@@ -11,7 +11,7 @@ import iam = require("aws-cdk-lib/aws-iam");
 import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { CfnEventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import {HeratepalveluStack} from "./heratepalvelu";
-import { RetentionDays } from "aws-cdk-lib/aws-logs";
+import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 
 
 
@@ -203,6 +203,11 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       ehoksHerateAsset.s3ObjectKey
     );
 
+    const amisLogGroup = new LogGroup(this, 'AmisLogGroup', {
+      logGroupName: `${envName}-heratepalvelu-amis`,
+      retention: RetentionDays.TWO_YEARS,
+    });
+
     const AMISHerateHandler = new lambda.Function(this, "AMISHerateHandler", {
       runtime: this.runtime,
       code: lambdaCode,
@@ -220,7 +225,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         Token.asNumber(this.getParameterFromSsm("ehokshandler-timeout"))
       ),
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     AMISHerateHandler.addEventSource(new SqsEventSource(ehoksHerateQueue, { batchSize: 1, }));
@@ -241,7 +246,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           Token.asNumber(this.getParameterFromSsm("ehokshandler-timeout"))
       ),
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     new CfnEventSourceMapping(this, "ONRhenkilomodifyEventSourceMapping", {
@@ -278,7 +283,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       memorySize: 1024,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     ONRdlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
@@ -316,7 +321,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       ),
       handler: "oph.heratepalvelu.amis.AMISherateEmailHandler::handleSendAMISEmails",
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     new events.Rule(this, "AMISHerateEmailScheduleRule", {
@@ -341,7 +346,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       ),
       handler: "oph.heratepalvelu.amis.EmailStatusHandler::handleEmailStatus",
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     new events.Rule(this, "AMISEmailStatusScheduleRule", {
@@ -366,7 +371,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       ),
       handler: "oph.heratepalvelu.amis.AMISMuistutusHandler::handleSendAMISMuistutus",
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     new events.Rule(this, "AMISMuistutusScheduleRule", {
@@ -389,7 +394,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     AMISEmailResendHandler.addEventSource(new SqsEventSource(ehoksAmisResendQueue, { batchSize: 1, }));
@@ -410,7 +415,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       ),
       handler: "oph.heratepalvelu.amis.AMISSMSHandler::handleAMISSMS",
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     new events.Rule(this, "AMISSMSScheduleRule", {
@@ -440,7 +445,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         Token.asNumber(this.getParameterFromSsm("updatedoohandler-timeout"))
       ),
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     new events.Rule(this, "UpdatedOoScheduleRule", {
@@ -463,7 +468,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       memorySize: 1024,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     dlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
@@ -497,7 +502,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       memorySize: 1024,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     AMISDeleteTunnusHandler.addEventSource(
@@ -517,7 +522,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       reservedConcurrentExecutions: 1,
       timeout: Duration.seconds(900),
       tracing: lambda.Tracing.ACTIVE,
-      logRetention: RetentionDays.TWO_YEARS
+      logGroup: amisLogGroup
     });
 
     const AMISherateArchive2019_2020Table = new dynamodb.Table(
@@ -603,7 +608,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         timeout: Duration.seconds(900),
         handler: "oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler::handleAMISTimedOperations",
         tracing: lambda.Tracing.ACTIVE,
-	logRetention: RetentionDays.TWO_YEARS
+	      logGroup: amisLogGroup
       }
     );
 
@@ -628,7 +633,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
         timeout: Duration.seconds(900),
         handler: "oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler::handleMassHerateResend",
         tracing: lambda.Tracing.ACTIVE,
-	logRetention: RetentionDays.TWO_YEARS
+	logGroup: amisLogGroup
       }
     );
 
@@ -653,7 +658,7 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           timeout: Duration.seconds(900),
           handler: "oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler::handleEhoksOpiskeluoikeusUpdate",
           tracing: lambda.Tracing.ACTIVE,
-	  logRetention: RetentionDays.TWO_YEARS
+	        logGroup: amisLogGroup
         }
     );
 
