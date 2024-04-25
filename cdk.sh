@@ -23,7 +23,7 @@ lein test || (echo "Fix tests first :)" 1>&2 && exit 1)
 lein checkall || (echo "Fix static checks first :)" 1>&2 && exit 1)
 
 lein with-profile uberjar uberjar
-(cd "${git_root}/cdk/" && test ! -d node_modules && npm install)
+(cd "${git_root}/cdk/" && npm install)
 (cd "${git_root}/cdk/" && npx aws-cdk --profile "oph-${account}" "$@")
 
 ### This is no longer needed as CDK can do federated MFA itself (with --profile)
