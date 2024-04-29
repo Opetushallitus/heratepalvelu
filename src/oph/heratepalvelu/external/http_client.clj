@@ -63,8 +63,9 @@
 (defn request
   "Tekee HTTP-kutsun X-Rayn avulla."
   [options]
-  (wrap-aws-xray (:url options) (:method options)
-                 #(request-with-retries (merge-options options))))
+  (let [real-request #(request-with-retries (merge-options options))]
+    (if (env :disable-aws-xray) (real-request)
+      (wrap-aws-xray (:url options) (:method options) real-request))))
 
 (defn method-function
   "Luo HTTP-kyselyfunktion jollekin tietylle HTTP-verbille."
