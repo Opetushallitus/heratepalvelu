@@ -387,19 +387,22 @@
   [^LocalDate one-date ^LocalDate other-date]
   (.isAfter one-date other-date))
 
-(defn valid-number?
-  "Sallii vain numeroita, jotka kirjasto luokittelee mobiilinumeroiksi tai
-  mahdollisiksi mobiilinumeroiksi (FIXED_LINE_OR_MOBILE). Jos funktio ei hyväksy
-  numeroa, jonka tiedät olevan validi, tarkista, miten kirjasto luokittelee sen:
+(def ^PhoneNumberUtil pnutil (PhoneNumberUtil/getInstance))
+(def non-alphabetic? (partial every? #(not (Character/isLetter ^Character %))))
+(def smsable-phone-type? #{"FIXED_LINE_OR_MOBILE" "MOBILE"})
+
+(defn valid-finnish-number?
+  "Sallii vain numeroita, joihin voi lähettää SMS-viestejä ja jotka
+  ovat Suomessa (kustannussyistä).  Jos funktio ei hyväksy numeroa,
+  jonka tiedät olevan validi, tarkista, miten kirjasto luokittelee sen:
   https://libphonenumber.appspot.com/."
   [number]
   (try
-    (let [utilobj (PhoneNumberUtil/getInstance)
-          numberobj (.parse utilobj number "FI")]
-      (and (empty? (filter (fn [^Character x] (Character/isLetter x)) number))
-           (.isValidNumber utilobj numberobj)
-           (let [numtype (str (.getNumberType utilobj numberobj))]
-             (or (= numtype "FIXED_LINE_OR_MOBILE") (= numtype "MOBILE")))))
+    (let [numberobj (.parse pnutil number "FI")]
+      (and (non-alphabetic? number)
+           (.isValidNumber pnutil numberobj)
+           (= 358 (.getCountryCode numberobj))
+           (smsable-phone-type? (str (.getNumberType pnutil numberobj)))))
     (catch NumberParseException e
       (log/error "PhoneNumberUtils failed to parse phonenumber")
       (log/error e)

@@ -278,19 +278,17 @@
             :expr-attr-vals {":field_1" [:s "value"]
                              ":field_2" [:n 123]}}))))
 
-(deftest test-valid-number?
+(deftest test-valid-finnish-number?
   (testing
-    "Funktio valid-number? tunnistaa oikeita ja virheellisiä puhelinnumeroja"
-    (let [fi-phone-number "040 654 3210"
-          fi-phone-number-intl-fmt "040 654 3210"
-          intl-phone-number "+1 517 987 5432"
-          junk-invalid "laksj fdaiu fd098098asdf"
-          unicode-invalid "+358 40 987 6543à"]
-      (is (valid-number? fi-phone-number))
-      (is (valid-number? fi-phone-number-intl-fmt))
-      (is (valid-number? intl-phone-number))
-      (is (not (valid-number? junk-invalid)))
-      (is (not (valid-number? unicode-invalid))))))
+    "Funktio valid-finnish-number? tunnistaa puhelinnumeroja oikein"
+    (is (valid-finnish-number? "040 654 3210"))
+    (is (valid-finnish-number? "+35840 654 3210"))
+    (is (valid-finnish-number? "+35845 333 377"))
+    (is (not (valid-finnish-number? "040")))
+    (is (not (valid-finnish-number? "+4144 123 4567")))
+    (is (not (valid-finnish-number? "+1 517 987 5432")))
+    (is (not (valid-finnish-number? "laksj fdaiu fd098098asdf")))
+    (is (not (valid-finnish-number? "+358 40 987 6543à")))))
 
 (deftest test-client-error?
   (testing

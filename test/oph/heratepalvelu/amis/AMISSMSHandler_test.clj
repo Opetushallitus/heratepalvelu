@@ -66,7 +66,8 @@
                   mock-query-lahetettavat
                   oph.heratepalvelu.common/local-date-now
                   (fn [] (LocalDate/of 2022 3 3))
-                  oph.heratepalvelu.common/valid-number? mock-valid-number?
+                  oph.heratepalvelu.common/valid-finnish-number?
+                  mock-valid-number?
                   oph.heratepalvelu.external.organisaatio/get-organisaatio
                   mock-get-organisaatio
                   oph.heratepalvelu.external.elisa/send-sms mock-send-sms]

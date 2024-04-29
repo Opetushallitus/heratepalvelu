@@ -35,6 +35,8 @@ Elisa käsittelee SMS-viestien todellista lähetystä. Tiedostossa
 `src/oph/heratepalvelu/external/elisa.clj` on funktioita, joilla SMS-viestien
 tekstit luodaan ja viestit lähetetään palvelun kautta.
 
+Ulkoisen palvelun nimi on Elisa Dialogi (vuonna 2024) ja sen
+API-dokumentaatio on [täällä](https://docs.dialogi.elisa.fi/docs/dialogi/send-sms/operations/create-a).
 
 ## Koski
 

@@ -59,7 +59,7 @@
     {:status (:vastausaika-loppunut c/kasittelytilat)}
 
     (or (not (:puhelinnumero herate))
-        (not (c/valid-number? (:puhelinnumero herate))))
+        (not (c/valid-finnish-number? (:puhelinnumero herate))))
     {:status (:phone-invalid c/kasittelytilat)}
 
     :else
