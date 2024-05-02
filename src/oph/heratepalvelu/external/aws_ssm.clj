@@ -1,5 +1,7 @@
 (ns oph.heratepalvelu.external.aws-ssm
   "Wrapperit SSM:n ympäri."
+  (:require [environ.core :refer [env]]
+            [clojure.string :refer [split]])
   (:import (software.amazon.awssdk.services.ssm SsmClient)
            (software.amazon.awssdk.regions Region)
            (software.amazon.awssdk.services.ssm.model GetParameterRequest)
@@ -18,11 +20,14 @@
       (.build)))
 
 (defn get-secret
-  "Hakee salaisen arvon SSMistä."
+  "Hakee salaisen arvon AWS:n SSM-palvelusta tai ympäristömuuttujista
+  (jälkemmäinen testausta varten)."
   [secret-name]
-  (.value
-    (.parameter
-      (.getParameter client (-> (GetParameterRequest/builder)
-                                (.name secret-name)
-                                (.withDecryption true)
-                                ^GetParameterRequest (.build))))))
+  (or (env (keyword (last (split secret-name #"/"))))
+      (-> (GetParameterRequest/builder)
+          (.name secret-name)
+          (.withDecryption true)
+          ^GetParameterRequest (.build)
+          (->> (.getParameter client))
+          (.parameter)
+          (.value))))

@@ -70,7 +70,9 @@
             body (elisa/amis-msg-body (:kyselylinkki herate) oppilaitos-nimi)
             resp (elisa/send-sms numero body)
             results (get-in resp [:body :messages (keyword numero)])]
-        results)
+        (or results
+            (log/error "invalid response from Elisa:" resp)
+            {:status (:ei-lahetetty c/kasittelytilat)}))
       (catch ExceptionInfo e
         (let [error-type (if (c/client-error? e) "Client" "Server")]
           (log/error e error-type "error while sending AMIS SMS")
