@@ -18,7 +18,8 @@
   "Luo työpaikkaohjaajakyselyn viestin tekstin."
   [linkki oppilaitokset]
   (str (str/join ", " (map :fi oppilaitokset)) ": "
-       "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren."
+       "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - "
+       "Survey to workplace instructors"
        "\n\n"
        "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
        "Kerro, miten yhteistyömme onnistui. "
@@ -43,7 +44,8 @@
   [linkki oppilaitokset]
   (str (str/join ", " (map :fi oppilaitokset)) ": "
        "Muistutus: Työpaikkaohjaajakysely - "
-       "Påminnelse: Enkät till arbetsplatshandledaren"
+       "Påminnelse: Enkät till arbetsplatshandledaren - "
+       "Reminder: Survey to workplace instructors"
        "\n\n"
        "Hyvä työpaikkaohjaaja, muistathan antaa palautetta oppilaitokselle. "
        "Kiitos, että vastaat! - "
