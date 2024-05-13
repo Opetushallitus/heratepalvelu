@@ -230,7 +230,7 @@
 
 (defn build-niputus-request-body
   "Luo dataobjektin TEP-nippulinkin luomisrequestille."
-  [tunniste nippu tunnukset request-id]
+  [tunniste nippu tunnukset request-id rahoituskausi-pvm]
   {:tunniste            tunniste
    :koulutustoimija_oid (:koulutuksenjarjestaja nippu)
    :tutkintotunnus      (:tutkinto nippu)
@@ -238,7 +238,8 @@
    :tyopaikka           (:tyopaikka nippu)
    :tunnukset           tunnukset
    :voimassa_alkupvm    (str (c/local-date-now))
-   :request_id          request-id})
+   :request_id          request-id
+   :rahoituskausi_pvm   rahoituskausi-pvm})
 
 (defn create-nippu-kyselylinkki
   "Pyytää TEP-kyselylinkin Arvolta."

@@ -669,7 +669,8 @@
     [{:tunnus "ABCDEF"
       :kesto 1.5
       :tyopaikan_nimi "Testi Työ Paikka"
-      :viimeinen_vastauspvm "2022-02-02"}]
+      :viimeinen_vastauspvm "2022-02-02"
+      :jakso_loppupvm "2021-12-31"}]
     []))
 
 (deftest test-niputa
@@ -720,7 +721,8 @@
                        :tunnukset [{:tunnus "ABCDEF"
                                     :tyopaikkajakson_kesto 1.5}]
                        :voimassa_alkupvm "2021-12-31"
-                       :request_id "test-uuid"}}
+                       :request_id "test-uuid"
+                       :rahoituskausi_pvm "2021-12-31"}}
                      {:type "mock-update-nippu"
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-1"
                               :niputuspvm "2021-12-15"
@@ -748,7 +750,8 @@
                        :tunnukset [{:tunnus "ABCDEF"
                                     :tyopaikkajakson_kesto 1.5}]
                        :voimassa_alkupvm "2021-12-31"
-                       :request_id "test-uuid"}}
+                       :request_id "test-uuid"
+                       :rahoituskausi_pvm "2021-12-31"}}
                      {:type "mock-update-nippu"
                       :nippu {:ohjaaja_ytunnus_kj_tutkinto "test-id-2"
                               :niputuspvm "2021-12-15"

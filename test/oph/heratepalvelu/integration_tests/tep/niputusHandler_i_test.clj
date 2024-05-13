@@ -93,16 +93,17 @@
                  :as :json
                  :basic-auth [(:arvo-user mock-env) "arvo-pwd"]
                  :body
-                 (str "{\"tunniste\":\"testi_tyopaikka_1_2022-02-18_test6\","
-                      "\"koulutustoimija_oid\":\"test-kj-1\","
-                      "\"tutkintotunnus\":\"test-tutkinto-1\","
-                      "\"tyonantaja\":\"123456-1\","
+                 (str "{\"voimassa_alkupvm\":\"2022-02-18\","
                       "\"tyopaikka\":\"Testi Työpaikka 1\","
+                      "\"tyonantaja\":\"123456-1\","
+                      "\"koulutustoimija_oid\":\"test-kj-1\","
                       "\"tunnukset\":[{\"tunnus\":\"AAjunk\","
                       "\"tyopaikkajakson_kesto\":18},"
                       "{\"tunnus\":\"ACjunk\","
                       "\"tyopaikkajakson_kesto\":5}],"
-                      "\"voimassa_alkupvm\":\"2022-02-18\","
+                      "\"rahoituskausi_pvm\":\"2022-01-31\","
+                      "\"tutkintotunnus\":\"test-tutkinto-1\","
+                      "\"tunniste\":\"testi_tyopaikka_1_2022-02-18_test6\","
                       "\"request_id\":\"test-uuid\"}")}
                 {:body {:nippulinkki "kysely.linkki/123"
                         :voimassa_loppupvm "2022-03-03"}})
@@ -112,14 +113,15 @@
                  :as :json
                  :basic-auth [(:arvo-user mock-env) "arvo-pwd"]
                  :body
-                 (str "{\"tunniste\":\"testi_tyopaikka_2_2022-02-18_test6\","
-                      "\"koulutustoimija_oid\":\"test-kj-2\","
-                      "\"tutkintotunnus\":\"test-tutkinto-2\","
-                      "\"tyonantaja\":\"123456-2\","
+                 (str "{\"voimassa_alkupvm\":\"2022-02-18\","
                       "\"tyopaikka\":\"Testi Työpaikka 2\","
+                      "\"tyonantaja\":\"123456-2\","
+                      "\"koulutustoimija_oid\":\"test-kj-2\","
                       "\"tunnukset\":[{\"tunnus\":\"BAjunk\","
                       "\"tyopaikkajakson_kesto\":4}],"
-                      "\"voimassa_alkupvm\":\"2022-02-18\","
+                      "\"rahoituskausi_pvm\":\"2022-01-20\","
+                      "\"tutkintotunnus\":\"test-tutkinto-2\","
+                      "\"tunniste\":\"testi_tyopaikka_2_2022-02-18_test6\","
                       "\"request_id\":\"test-uuid\"}")}
                 {:body {:errors "Jokin meni pieleen"}})
   (mhc/bind-url :get
@@ -339,16 +341,17 @@
    {:method :post
     :url "https://oph-arvo.com/tyoelamapalaute/v1/nippu"
     :options {:content-type "application/json"
-              :body (str "{\"tunniste\":\"testi_tyopaikka_1_2022-02-18_test6\","
-                         "\"koulutustoimija_oid\":\"test-kj-1\","
-                         "\"tutkintotunnus\":\"test-tutkinto-1\","
-                         "\"tyonantaja\":\"123456-1\","
+              :body (str "{\"voimassa_alkupvm\":\"2022-02-18\","
                          "\"tyopaikka\":\"Testi Työpaikka 1\","
+                         "\"tyonantaja\":\"123456-1\","
+                         "\"koulutustoimija_oid\":\"test-kj-1\","
                          "\"tunnukset\":[{\"tunnus\":\"AAjunk\","
                          "\"tyopaikkajakson_kesto\":18},"
                          "{\"tunnus\":\"ACjunk\","
                          "\"tyopaikkajakson_kesto\":5}],"
-                         "\"voimassa_alkupvm\":\"2022-02-18\","
+                         "\"rahoituskausi_pvm\":\"2022-01-31\","
+                         "\"tutkintotunnus\":\"test-tutkinto-1\","
+                         "\"tunniste\":\"testi_tyopaikka_1_2022-02-18_test6\","
                          "\"request_id\":\"test-uuid\"}")
               :basic-auth ["arvo-user" "arvo-pwd"] :as :json}}
    {:method :get
@@ -367,14 +370,15 @@
    {:method :post
     :url "https://oph-arvo.com/tyoelamapalaute/v1/nippu"
     :options {:content-type "application/json"
-              :body (str "{\"tunniste\":\"testi_tyopaikka_2_2022-02-18_test6\","
-                         "\"koulutustoimija_oid\":\"test-kj-2\","
-                         "\"tutkintotunnus\":\"test-tutkinto-2\","
-                         "\"tyonantaja\":\"123456-2\","
+              :body (str "{\"voimassa_alkupvm\":\"2022-02-18\","
                          "\"tyopaikka\":\"Testi Työpaikka 2\","
+                         "\"tyonantaja\":\"123456-2\","
+                         "\"koulutustoimija_oid\":\"test-kj-2\","
                          "\"tunnukset\":[{\"tunnus\":\"BAjunk\","
                          "\"tyopaikkajakson_kesto\":4}],"
-                         "\"voimassa_alkupvm\":\"2022-02-18\","
+                         "\"rahoituskausi_pvm\":\"2022-01-20\","
+                         "\"tutkintotunnus\":\"test-tutkinto-2\","
+                         "\"tunniste\":\"testi_tyopaikka_2_2022-02-18_test6\","
                          "\"request_id\":\"test-uuid\"}")
               :basic-auth ["arvo-user" "arvo-pwd"] :as :json}}])
 

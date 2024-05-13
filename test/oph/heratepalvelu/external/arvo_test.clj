@@ -332,7 +332,8 @@
         (is (= (arvo/build-niputus-request-body tunniste
                                                 nippu
                                                 tunnukset
-                                                request-id)
+                                                request-id
+                                                "2024-05-13")
                {:tunniste "test-tunniste"
                 :koulutustoimija_oid "test-kj"
                 :tutkintotunnus "test-tutkinto"
@@ -340,7 +341,8 @@
                 :tyopaikka "Työ Paikka"
                 :tunnukset ["ASDF" "HJKL"]
                 :voimassa_alkupvm "2022-02-02"
-                :request_id "test-request-id"}))))))
+                :request_id "test-request-id"
+                :rahoituskausi_pvm "2024-05-13"}))))))
 
 (deftest test-create-nippu-kyselylinkki
   (testing "Create nippu kyselylinkki"

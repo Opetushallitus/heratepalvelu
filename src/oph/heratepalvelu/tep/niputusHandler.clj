@@ -266,6 +266,10 @@
             (assoc % :kesto kesto))
          jaksot)))
 
+(defn- get-latest-loppupvm
+  [jaksot]
+  (last (sort (map :jakso_loppupvm jaksot))))
+
 (defn niputa
   "Luo nippukyselylinkin jokaiselle alustavalle nipulle, jos sillä on vielä
   jaksoja, joilla on vielä aikaa vastata."
@@ -279,7 +283,8 @@
     (if (not-empty tunnukset)
       (let [tunniste (c/create-nipputunniste (:tyopaikan_nimi (first jaksot)))
             arvo-req (arvo/build-niputus-request-body
-                       tunniste nippu tunnukset request-id)
+                       tunniste nippu tunnukset request-id
+                       (get-latest-loppupvm jaksot))
             arvo-resp (arvo/create-nippu-kyselylinkki arvo-req)]
         (log/info "Luotu kyselylinkki pyynnöllä" arvo-req
                   "; arvon vastaus" arvo-resp)
