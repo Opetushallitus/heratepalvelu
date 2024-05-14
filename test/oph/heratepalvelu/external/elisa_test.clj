@@ -9,8 +9,8 @@
 
 (def mock-tep-msg-body
   (str "Testilaitos, Testilaitos 2: Työpaikkaohjaajakysely - "
-       "Enkät till arbetsplatshandledaren.\n\nKiitos "
-       "koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
+       "Enkät till arbetsplatshandledaren - Survey to workplace instructors"
+       "\n\nKiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
        "Kerro, miten yhteistyömme onnistui. Kyselyssä arvioidaan "
        "oppilaitosta (ei opiskelijaa). Palautteella kehitämme "
        "toimintaamme.\n\nTack för att du handleder studerande på "
@@ -31,7 +31,8 @@
 
 (def mock-tep-muistutus-msg-body
   (str "Testilaitos, Testilaitos 2: Muistutus: Työpaikkaohjaajakysely - "
-       "Påminnelse: Enkät till arbetsplatshandledaren\n\nHyvä "
+       "Påminnelse: Enkät till arbetsplatshandledaren - "
+       "Reminder: Survey to workplace instructors\n\nHyvä "
        "työpaikkaohjaaja, muistathan antaa palautetta oppilaitokselle. "
        "Kiitos, että vastaat! - Bästa arbetsplatshandledare, kom ihåg att "
        "ge din respons till läroanstalten. Tack för att du svarar!"
