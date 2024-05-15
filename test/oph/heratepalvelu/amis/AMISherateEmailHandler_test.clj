@@ -155,17 +155,23 @@
   (reset! general-results
           (str @general-results "Ei aikaa: " (:kyselylinkki email))))
 
+(defn- mock-tutkinnonosat-by-hankkimistapa
+  [hoks-id]
+  {})
+
 (deftest test-handleSendAMISEmails
   (testing "Varmista, että -handleSendAMISEmails toimii oikein"
     (with-redefs
-      [oph.heratepalvelu.amis.AMISherateEmailHandler/save-email-to-db
+      [heh/save-email-to-db
        mock-save-email-to-db
-       oph.heratepalvelu.amis.AMISherateEmailHandler/update-data-in-ehoks
+       heh/update-data-in-ehoks
        mock-update-data-in-ehoks
-       oph.heratepalvelu.amis.AMISherateEmailHandler/save-no-time-to-answer
+       heh/save-no-time-to-answer
        mock-save-no-time-to-answer
-       oph.heratepalvelu.amis.AMISherateEmailHandler/send-feedback-email
+       heh/send-feedback-email
        mock-send-feedback-email
+       heh/tutkinnonosat-by-hankkimistapa
+       mock-tutkinnonosat-by-hankkimistapa
        oph.heratepalvelu.common/has-time-to-answer? mock-has-time-to-answer?
        oph.heratepalvelu.common/local-date-now
        (fn [] (LocalDate/of 2025 10 10))
@@ -174,13 +180,13 @@
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)]
         (with-redefs
-          [oph.heratepalvelu.amis.AMISherateEmailHandler/do-query mock-do-query]
+          [heh/do-query mock-do-query]
           (heh/-handleSendAMISEmails {} event context)
           (is (= @general-results
                  (str "save: good.kyselylinkki/123 test-id 2025-10-10; "
                       "ehoks: good.kyselylinkki/123 2025-10-10"))))
         (reset! general-results "")
-        (with-redefs [oph.heratepalvelu.amis.AMISherateEmailHandler/do-query
+        (with-redefs [heh/do-query
                       mock-do-query-no-time]
           (heh/-handleSendAMISEmails {} event context)
           (is (= @general-results "Ei aikaa: notime.kyselylinkki/123")))))))

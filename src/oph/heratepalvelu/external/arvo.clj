@@ -98,24 +98,25 @@
 (defn build-arvo-request-body
   "Luo AMISin Arvo-requestin dataobjektin."
   [herate oo request-id koulutustoimija suoritus alkupvm loppupvm
-   initial-status]
-  {:vastaamisajan_alkupvm          alkupvm
-   :heratepvm                      (:alkupvm herate)
-   :vastaamisajan_loppupvm         loppupvm
-   :kyselyn_tyyppi                 (:kyselytyyppi herate)
-   :tutkintotunnus                 (get-in suoritus [:koulutusmoduuli
-                                                     :tunniste
-                                                     :koodiarvo])
-   :tutkinnon_suorituskieli        (some-> suoritus :suorituskieli
-                                           :koodiarvo (str/lower-case))
-   :osaamisala                     (get-osaamisalat suoritus (:oid oo))
-   :koulutustoimija_oid            koulutustoimija
-   :oppilaitos_oid                 (:oid (:oppilaitos oo))
-   :request_id                     request-id
-   :toimipiste_oid                 (get-toimipiste suoritus)
-   :hankintakoulutuksen_toteuttaja (get-hankintakoulutuksen-toteuttaja
-                                     (:ehoks-id herate))
-   :metatiedot                     {:tila initial-status}})
+   initial-status tutkinnonosat]
+  {:vastaamisajan_alkupvm             alkupvm
+   :heratepvm                         (:alkupvm herate)
+   :vastaamisajan_loppupvm            loppupvm
+   :kyselyn_tyyppi                    (:kyselytyyppi herate)
+   :tutkintotunnus                    (get-in suoritus [:koulutusmoduuli
+                                                        :tunniste
+                                                        :koodiarvo])
+   :tutkinnon_suorituskieli           (some-> suoritus :suorituskieli
+                                              :koodiarvo (str/lower-case))
+   :osaamisala                        (get-osaamisalat suoritus (:oid oo))
+   :koulutustoimija_oid               koulutustoimija
+   :oppilaitos_oid                    (:oid (:oppilaitos oo))
+   :request_id                        request-id
+   :toimipiste_oid                    (get-toimipiste suoritus)
+   :hankintakoulutuksen_toteuttaja    (get-hankintakoulutuksen-toteuttaja
+                                        (:ehoks-id herate))
+   :metatiedot                        {:tila initial-status}
+   :tutkinnonosat_hankkimistavoittain tutkinnonosat})
 
 (defn create-amis-kyselylinkki
   "Pyytää Arvolta uuden AMIS-kyselylinkin annettujen tietojen perusteella."

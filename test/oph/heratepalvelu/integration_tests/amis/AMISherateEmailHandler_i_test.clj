@@ -148,6 +148,39 @@
                                [{:alku "2022-01-10"
                                  :tila {:koodiarvo "eronnut"}
                                  :opintojenRahoitus {:koodiarvo "1"}}]}}})
+  (mhc/bind-url :get
+                (str (:ehoks-url mock-env) "hoks/189438")
+                {:headers
+                 {:ticket
+                  "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+                 :as :json}
+                {:body
+                 {:data
+                  {:id 189438
+                   :hankittavat-ammat-tutkinnon-osat
+                   [{:tutkinnon-osa-koodi-uri "tutkinnonosat_123456"
+                     :osaamisen-hankkimistavat
+                     [{:osaamisen-hankkimistapa-koodi-uri
+                       "osaamisenhankkimistapa_koulutussopimus"}]}
+                    {:tutkinnon-osa-koodi-uri "tutkinnonosat_234567"
+                     :osaamisen-hankkimistavat
+                     [{:osaamisen-hankkimistapa-koodi-uri
+                       "osaamisenhankkimistapa_oppisopimus"}]}
+                    {:tutkinnon-osa-koodi-uri "tutkinnonosat_456789"
+                     :osaamisen-hankkimistavat
+                     [{:osaamisen-hankkimistapa-koodi-uri
+                       "osaamisenhankkimistapa_oppilaitosmuotoinenkoulutus"}]}]
+                   :hankittavat-yhteiset-tutkinnon-osat
+                   [{:tutkinnon-osa-koodi-uri "tutkinnonosat_345678"
+                     :osa-alueet
+                     [{:osaamisen-hankkimistavat
+                       [{:osaamisen-hankkimistapa-koodi-uri
+                         "osaamisenhankkimistapa_koulutussopimus"}]}]}
+                    {:tutkinnon-osa-koodi-uri "tutkinnonosat_123456"
+                     :osa-alueet
+                     [{:osaamisen-hankkimistavat
+                       [{:osaamisen-hankkimistapa-koodi-uri
+                         "osaamisenhankkimistapa_koulutussopimus"}]}]}]}}})
   (mcc/bind-url :post
                 (:viestintapalvelu-url mock-env)
                 {:recipient [{:email "sahko.posti@esimerkki.fi"}]
@@ -286,6 +319,11 @@
    {:method :get
     :url "koski-example.com/opiskeluoikeus/1242"
     :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
+   {:method :get :url "ehoks-example.com/hoks/189438"
+    :options
+    {:headers
+     {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"}
+     :as :json}}
    {:method :get :url "organisaatio-example.com/" :options {:as :json}}
    {:method :get :url "ehoks-example.com/hoks/189438/hankintakoulutukset"
     :options
@@ -299,6 +337,10 @@
      :body (str "{\"vastaamisajan_alkupvm\":\"2022-01-15\","
                 "\"osaamisala\":[],\"heratepvm\":\"2022-01-15\","
                 "\"koulutustoimija_oid\":null,"
+                "\"tutkinnonosat_hankkimistavoittain\":{\"koulutussopimus\":"
+                "[\"tutkinnonosat_123456\",\"tutkinnonosat_345678\"],"
+                "\"oppisopimus\":[\"tutkinnonosat_234567\"],"
+                "\"oppilaitosmuotoinenkoulutus\":[\"tutkinnonosat_456789\"]},"
                 "\"metatiedot\":{\"tila\":\"odottaa_lahetysta\"},"
                 "\"tutkinnon_suorituskieli\":\"fi\",\"toimipiste_oid\":null,"
                 "\"oppilaitos_oid\":null,"
@@ -338,6 +380,9 @@
                                                :kyselylinkki "kysely.linkki/123"
                                                :kyselytyyppi "aloittaneet"})}}
     :options {:as :json}}
+   {:type :get-service-ticket
+    :service "/ehoks-virkailija-backend"
+    :suffix "cas-security-check"}
    {:type :get-service-ticket
     :service "/ehoks-virkailija-backend"
     :suffix "cas-security-check"}
