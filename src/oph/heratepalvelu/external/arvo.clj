@@ -198,6 +198,7 @@
    :osaamisala                (get-osaamisalat suoritus (:oid opiskeluoikeus))
    :tyopaikkajakson_alkupvm   (:alkupvm herate)
    :tyopaikkajakson_loppupvm  (:loppupvm herate)
+   :rahoituskausi_pvm         (:loppupvm herate)
    :osa_aikaisuus             (:osa-aikaisuus herate)
    :sopimustyyppi             (last
                                 (str/split
