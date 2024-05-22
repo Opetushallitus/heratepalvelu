@@ -45,11 +45,15 @@
   (zipmap (keys m) (map f (vals m))))
 
 (defn- koodiarvo
-  "Gets koodiarvo from koodi-uri."
+  "Gets koodiarvo from koodi-uri. For example
+  osaamisenhankkimistapa_oppisopimus -> oppisopimus"
   [koodi-uri]
   (last (str/split koodi-uri #"_")))
 
 (defn- osaamisen-hankkimistapa-mapper
+  "Returns a mapper function for osaamisen hankkimistapa. Mapper function
+  produces a hashmap such as:
+  {:hankkimistapa \"oppisopimus\" :tutkinnonosa \"tutkinnonosat_234567\"}"
   [tutkinnon-osa-koodi-uri]
   (fn [osaamisen-hankkimistapa]
     {:hankkimistapa
@@ -65,19 +69,17 @@
   [hoks-id]
   (let [hoks (ehoks/get-hoks-by-id hoks-id)
         hato
-        (flatten
-          (map #(map (osaamisen-hankkimistapa-mapper
-                       (:tutkinnon-osa-koodi-uri %))
-                     (:osaamisen-hankkimistavat %))
-               (:hankittavat-ammat-tutkinnon-osat hoks)))
+        (mapcat #(map (osaamisen-hankkimistapa-mapper
+                        (:tutkinnon-osa-koodi-uri %))
+                      (:osaamisen-hankkimistavat %))
+                (:hankittavat-ammat-tutkinnon-osat hoks))
         hyto
-        (flatten
-          (map #(map (fn [osa-alue]
-                       (map (osaamisen-hankkimistapa-mapper
-                              (:tutkinnon-osa-koodi-uri %))
-                            (:osaamisen-hankkimistavat osa-alue)))
-                     (:osa-alueet %))
-               (:hankittavat-yhteiset-tutkinnon-osat hoks)))]
+        (mapcat #(mapcat (fn [osa-alue]
+                           (map (osaamisen-hankkimistapa-mapper
+                                  (:tutkinnon-osa-koodi-uri %))
+                                (:osaamisen-hankkimistavat osa-alue)))
+                         (:osa-alueet %))
+                (:hankittavat-yhteiset-tutkinnon-osat hoks))]
     (map-values (group-by :hankkimistapa (concat hato hyto))
                 #(vec (set (map :tutkinnonosa %))))))
 
