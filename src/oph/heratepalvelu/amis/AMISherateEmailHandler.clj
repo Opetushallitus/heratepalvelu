@@ -53,12 +53,12 @@
 (defn- osaamisen-hankkimistapa-mapper
   "Returns a mapper function for osaamisen hankkimistapa. Mapper function
   produces a hashmap such as:
-  {:hankkimistapa \"oppisopimus\" :tutkinnonosa \"tutkinnonosat_234567\"}"
+  {:hankkimistapa \"oppisopimus\" :tutkinnonosa \"234567\"}"
   [tutkinnon-osa-koodi-uri]
   (fn [osaamisen-hankkimistapa]
     {:hankkimistapa
      (koodiarvo (:osaamisen-hankkimistapa-koodi-uri osaamisen-hankkimistapa))
-     :tutkinnonosa tutkinnon-osa-koodi-uri}))
+     :tutkinnonosa (koodiarvo tutkinnon-osa-koodi-uri)}))
 
 (defn tutkinnonosat-by-hankkimistapa
   "Generates tutkinnosat by hankkimistapa map from existing HOKS. Such as:
