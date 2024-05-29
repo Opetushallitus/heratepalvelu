@@ -355,6 +355,7 @@
                              :paikallinen_tutkinnon_osa nil
                              :tyopaikkajakson_alkupvm "2021-09-09"
                              :tyopaikkajakson_loppupvm "2021-12-15"
+                             :rahoituskausi_pvm "2021-12-15"
                              :toimipiste_oid "test-toimipiste"
                              :oppilaitos_oid "1234"
                              :tutkintotunnus nil
@@ -378,6 +379,7 @@
                              :paikallinen_tutkinnon_osa nil
                              :tyopaikkajakson_alkupvm "2021-09-09"
                              :tyopaikkajakson_loppupvm "2021-12-15"
+                             :rahoituskausi_pvm "2021-12-15"
                              :toimipiste_oid "test-toimipiste"
                              :oppilaitos_oid "1234"
                              :tutkintotunnus nil
@@ -401,6 +403,7 @@
                              :paikallinen_tutkinnon_osa nil
                              :tyopaikkajakson_alkupvm "2021-09-09"
                              :tyopaikkajakson_loppupvm "2021-12-15"
+                             :rahoituskausi_pvm "2021-12-15"
                              :toimipiste_oid "test-toimipiste"
                              :oppilaitos_oid "1234"
                              :tutkintotunnus nil

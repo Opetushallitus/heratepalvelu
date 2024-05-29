@@ -264,6 +264,7 @@
                 :osaamisala "osaamisala: test-suoritus test-oo"
                 :tyopaikkajakson_alkupvm "2022-01-01"
                 :tyopaikkajakson_loppupvm "2022-03-01"
+                :rahoituskausi_pvm "2022-03-01"
                 :osa_aikaisuus 90
                 :sopimustyyppi "oppisopimus"
                 :oppisopimuksen_perusta "01"
