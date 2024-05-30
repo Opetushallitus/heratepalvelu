@@ -118,6 +118,23 @@
                          :as :json}}}}]
         (is (= (ehoks/get-hankintakoulutus-oids 456) expected))))))
 
+(deftest test-get-hoks-by-id
+  (testing "Varmista, että get-hoks-by-id toimii oikein"
+    (with-redefs [environ.core/env {:ehoks-url "example.com/path/"}
+                  oph.heratepalvelu.external.cas-client/get-service-ticket
+                  mock-get-service-ticket
+                  oph.heratepalvelu.external.http-client/get mock-client-get]
+      (let [expected {:type "mock-client-call-response"
+                      :params
+                      {:method "get"
+                       :uri "example.com/path/hoks/123456"
+                       :options
+                       {:headers {:ticket {:type "cas-service-ticket"
+                                           :service "/ehoks-virkailija-backend"
+                                           :suffix "cas-security-check"}}
+                        :as :json}}}]
+        (is (= (ehoks/get-hoks-by-id 123456) expected))))))
+
 (deftest test-add-lahetys-info-to-kyselytunnus
   (testing "Varmista, että add-lahetys-info-to-kyselytunnus toimii oikein"
     (with-redefs [environ.core/env {:ehoks-url "example.com/path/"}

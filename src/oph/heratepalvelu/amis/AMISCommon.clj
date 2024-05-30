@@ -94,6 +94,7 @@
                          suoritus
                          alkupvm
                          loppupvm
+                         nil
                          nil)
               db-data
               {:toimija_oppija      [:s (str koulutustoimija "/" oppija)]

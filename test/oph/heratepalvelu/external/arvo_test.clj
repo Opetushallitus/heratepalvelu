@@ -102,6 +102,10 @@
                       :toimipiste {:oid "test-toimipiste"}}
             alkupvm "2022-02-16"
             loppupvm "2022-04-15"
+            tutkinnonosat {:oppisopimus ["106302"]
+                           :koulutussopimus ["106303"]
+                           :oppilaitosmuotoinenkoulutus
+                           ["106337" "106301"]}
             expected {:vastaamisajan_alkupvm "2022-02-16"
                       :heratepvm "2022-02-02"
                       :vastaamisajan_loppupvm "2022-04-15"
@@ -114,7 +118,8 @@
                       :request_id "test-request-id"
                       :toimipiste_oid "test-toimipiste"
                       :hankintakoulutuksen_toteuttaja "hkt for: 123"
-                      :metatiedot {:tila "odottaa_lahetysta"}}]
+                      :metatiedot {:tila "odottaa_lahetysta"}
+                      :tutkinnonosat_hankkimistavoittain tutkinnonosat}]
         (is (= (arvo/build-arvo-request-body herate
                                              opiskeluoikeus
                                              request-id
@@ -123,7 +128,8 @@
                                              alkupvm
                                              loppupvm
                                              (-> c/kasittelytilat
-                                                 :odottaa-lahetysta))
+                                                 :odottaa-lahetysta)
+                                             tutkinnonosat)
                expected))))))
 
 (defn- mock-http [method]

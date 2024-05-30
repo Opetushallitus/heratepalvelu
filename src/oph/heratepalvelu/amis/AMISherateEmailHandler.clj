@@ -1,6 +1,7 @@
 (ns oph.heratepalvelu.amis.AMISherateEmailHandler
   "Lähettää herätteiden sähköpostiviestit viestintäpalveluun."
-  (:require [clojure.tools.logging :as log]
+  (:require [clojure.string :as str]
+            [clojure.tools.logging :as log]
             [oph.heratepalvelu.amis.AMISCommon :as ac]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
@@ -38,6 +39,50 @@
   (ac/update-herate herate changes)
   (into herate (map #(vector %1 (second %2)) (keys changes) (vals changes))))
 
+(defn- map-values
+  "Helper function for mapping hashmap values."
+  [m f]
+  (zipmap (keys m) (map f (vals m))))
+
+(defn- koodiarvo
+  "Gets koodiarvo from koodi-uri. For example
+  osaamisenhankkimistapa_oppisopimus -> oppisopimus"
+  [koodi-uri]
+  (last (str/split koodi-uri #"_")))
+
+(defn- osaamisen-hankkimistapa-mapper
+  "Returns a mapper function for osaamisen hankkimistapa. Mapper function
+  produces a hashmap such as:
+  {:hankkimistapa \"oppisopimus\" :tutkinnonosa \"234567\"}"
+  [tutkinnon-osa-koodi-uri]
+  (fn [osaamisen-hankkimistapa]
+    {:hankkimistapa
+     (koodiarvo (:osaamisen-hankkimistapa-koodi-uri osaamisen-hankkimistapa))
+     :tutkinnonosa (koodiarvo tutkinnon-osa-koodi-uri)}))
+
+(defn tutkinnonosat-by-hankkimistapa
+  "Generates tutkinnosat by hankkimistapa map from existing HOKS. Such as:
+  {:koulutussopimus [tutkinnonosat_123456]
+   :oppisopimus [tutkinnonosat_234567 tutkinnonosat_345678]
+   :oppilaitosmuotoinenkoulutus [tutkinnonosat_123456]}. Skips hankittavat
+   paikalliset tutkinnon osat, because it does not have tutkinnonosa koodi."
+  [hoks-id]
+  (let [hoks (ehoks/get-hoks-by-id hoks-id)
+        hato
+        (mapcat #(map (osaamisen-hankkimistapa-mapper
+                        (:tutkinnon-osa-koodi-uri %))
+                      (:osaamisen-hankkimistavat %))
+                (:hankittavat-ammat-tutkinnon-osat hoks))
+        hyto
+        (mapcat #(mapcat (fn [osa-alue]
+                           (map (osaamisen-hankkimistapa-mapper
+                                  (:tutkinnon-osa-koodi-uri %))
+                                (:osaamisen-hankkimistavat osa-alue)))
+                         (:osa-alueet %))
+                (:hankittavat-yhteiset-tutkinnon-osat hoks))]
+    (map-values (group-by :hankkimistapa (concat hato hyto))
+                #(vec (set (map :tutkinnonosa %))))))
+
 (defn create-and-save-kyselylinkki!
   "Hakee kyselylinkin arvosta, tallettaa sen tietokantaan,
   ja palauttaa osana herätettä."
@@ -50,7 +95,8 @@
                    (c/get-suoritus opiskeluoikeus)
                    (:alkupvm herate)
                    (:voimassa-loppupvm herate)
-                   (:odottaa-lahetysta c/kasittelytilat))
+                   (:odottaa-lahetysta c/kasittelytilat)
+                   (tutkinnonosat-by-hankkimistapa (:ehoks-id herate)))
         arvo-resp (try (arvo/create-amis-kyselylinkki req-body)
                        (catch Exception e
                          (log/error e "Virhe kyselylinkin hakemisessa Arvosta."

@@ -57,6 +57,11 @@
      #(client/delete (str (:ehoks-url env) uri-path)
                      (merge (ehoks-query-base-options) options)))))
 
+(defn get-hoks-by-id
+  "Hakee HOKSin id:n perusteella."
+  [id]
+  (:data (:body (ehoks-get (str "hoks/" id)))))
+
 (defn get-hoks-by-opiskeluoikeus
   "Hakee HOKSin opiskeluoikeuden OID:n perusteella."
   [oo-oid]
