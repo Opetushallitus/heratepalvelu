@@ -13,6 +13,7 @@ target
 .lein-repl-history
 .DS_Store
 *.csv
+*.swp
 herate-script.sh
 .tool-versions
 /python-virtualenv

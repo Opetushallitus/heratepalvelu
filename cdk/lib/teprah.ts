@@ -1,6 +1,7 @@
-import { App, Duration, Token, StackProps } from 'aws-cdk-lib';
+import { App, Duration, Fn, Token, StackProps } from 'aws-cdk-lib';
 import dynamodb = require("aws-cdk-lib/aws-dynamodb");
 import lambda = require("aws-cdk-lib/aws-lambda");
+import ec2 = require("aws-cdk-lib/aws-ec2");
 import s3assets = require("aws-cdk-lib/aws-s3-assets");
 import sqs = require("aws-cdk-lib/aws-sqs");
 import iam = require("aws-cdk-lib/aws-iam");
@@ -70,6 +71,20 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             retention: RetentionDays.TWO_YEARS,
         });
 
+	// VPC
+
+	const vpc = ec2.Vpc.fromVpcAttributes(this, "VPC", {
+	  vpcId: Fn.importValue(`${envName}-Vpc`),
+	  availabilityZones: [
+	    Fn.importValue(`${envName}-SubnetAvailabilityZones`),
+	  ],
+	  privateSubnetIds: [
+	    Fn.importValue(`${envName}-PrivateSubnet1`),
+	    Fn.importValue(`${envName}-PrivateSubnet2`),
+	    Fn.importValue(`${envName}-PrivateSubnet3`),
+	  ],
+	});
+
         // Lambda
 
         const lambdaCode = lambda.Code.fromBucket(
@@ -95,7 +110,8 @@ export class HeratepalveluTEPRAHOITUSStack extends HeratepalveluStack {
             reservedConcurrentExecutions: 2, //fixme, parametrit kuntoon
             timeout: Duration.seconds(80),
             tracing: lambda.Tracing.ACTIVE,
-	    logGroup: teprahLogGroup
+	    logGroup: teprahLogGroup,
+	    vpc: vpc
         });
 
         rahoitusResultsHandler.addEventSource(new SqsEventSource(tepRahoitusQueue, { batchSize: 1 }));
