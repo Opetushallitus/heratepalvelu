@@ -1,8 +1,9 @@
-import { App, Duration, Token, StackProps } from 'aws-cdk-lib';
+import { App, Duration, Fn, Token, StackProps } from 'aws-cdk-lib';
 import dynamodb = require("aws-cdk-lib/aws-dynamodb");
 import events = require("aws-cdk-lib/aws-events");
 import targets = require("aws-cdk-lib/aws-events-targets");
 import lambda = require("aws-cdk-lib/aws-lambda");
+import ec2 = require("aws-cdk-lib/aws-ec2");
 import s3assets = require("aws-cdk-lib/aws-s3-assets");
 import sqs = require("aws-cdk-lib/aws-sqs");
 import iam = require("aws-cdk-lib/aws-iam");
@@ -273,6 +274,20 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       retention: RetentionDays.TWO_YEARS,
     });
 
+    // VPC
+
+    const vpc = ec2.Vpc.fromVpcAttributes(this, "VPC", {
+      vpcId: Fn.importValue(`${envName}-Vpc`),
+      availabilityZones: [
+        Fn.importValue(`${envName}-SubnetAvailabilityZones`),
+      ],
+      privateSubnetIds: [
+        Fn.importValue(`${envName}-PrivateSubnet1`),
+        Fn.importValue(`${envName}-PrivateSubnet2`),
+        Fn.importValue(`${envName}-PrivateSubnet3`),
+      ],
+    });
+
     // herateHandler
 
     const timedOperationsHandler = new lambda.Function(this, "timedOperationsHandler", {
@@ -288,7 +303,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tep.ehoksTimedOperationsHandler::handleTimedOperations",
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup
+      logGroup: tepLogGroup,
+      vpc: vpc
     });
 
     new events.Rule(this, "TimedOperationsScheduleRule", {
@@ -320,7 +336,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
           Token.asNumber(this.getParameterFromSsm("jaksohandler-timeout"))
       ),
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup
+      logGroup: tepLogGroup,
+      vpc: vpc
     });
 
     jaksoHandler.addEventSource(new SqsEventSource(herateQueue, { batchSize: 1 }));
@@ -344,7 +361,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tep.niputusHandler::handleNiputus",
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup
+      logGroup: tepLogGroup,
+      vpc: vpc
     });
 
     new events.Rule(this, "niputusHandlerScheduleRule", {
@@ -374,7 +392,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       timeout: Duration.seconds(300),
       handler: "oph.heratepalvelu.tep.emailHandler::handleSendTEPEmails",
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup
+      logGroup: tepLogGroup,
+      vpc: vpc
     });
 
     new events.Rule(this, "emailHandlerScheduleRule", {
@@ -401,7 +420,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       timeout: Duration.seconds(300),
       handler: "oph.heratepalvelu.tep.StatusHandler::handleEmailStatus",
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup
+      logGroup: tepLogGroup,
+      vpc: vpc
     });
 
     new events.Rule(this, "TEPEmailStatusScheduleRule", {
@@ -430,7 +450,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
           Token.asNumber(this.getParameterFromSsm("smshandler-timeout"))
       ),
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup
+      logGroup: tepLogGroup,
+      vpc: vpc
     });
 
     new events.Rule(this, "SMSscheduleRule", {
@@ -461,7 +482,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       ),
       handler: "oph.heratepalvelu.tep.EmailMuistutusHandler::handleSendEmailMuistutus",
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup
+      logGroup: tepLogGroup,
+      vpc: vpc
     });
 
     nippuTable.grantReadWriteData(EmailMuistutusHandler);
@@ -494,7 +516,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
           Token.asNumber(this.getParameterFromSsm("emailhandler-timeout"))
       ),
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup
+      logGroup: tepLogGroup,
+      vpc: vpc
     });
 
     nippuTable.grantReadWriteData(SmsMuistutusHandler);
@@ -519,7 +542,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       memorySize: 1024,
       timeout: Duration.seconds(60),
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup
+      logGroup: tepLogGroup,
+      vpc: vpc
     });
 
     dlqResendHandler.addToRolePolicy(new iam.PolicyStatement({

@@ -1,8 +1,9 @@
-import { App, Duration, Token, StackProps } from 'aws-cdk-lib';
+import { App, Duration, Fn, Token, StackProps } from 'aws-cdk-lib';
 import dynamodb = require("aws-cdk-lib/aws-dynamodb");
 import events = require("aws-cdk-lib/aws-events");
 import targets = require("aws-cdk-lib/aws-events-targets");
 import lambda = require("aws-cdk-lib/aws-lambda");
+import ec2 = require("aws-cdk-lib/aws-ec2");
 import s3assets = require("aws-cdk-lib/aws-s3-assets");
 import iam = require("aws-cdk-lib/aws-iam");
 import { HeratepalveluStack } from "./heratepalvelu";
@@ -106,6 +107,20 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       retention: RetentionDays.TWO_YEARS,
     });
 
+    // VPC
+
+    const vpc = ec2.Vpc.fromVpcAttributes(this, "VPC", {
+      vpcId: Fn.importValue(`${envName}-Vpc`),
+      availabilityZones: [
+	Fn.importValue(`${envName}-SubnetAvailabilityZones`),
+      ],
+      privateSubnetIds: [
+	Fn.importValue(`${envName}-PrivateSubnet1`),
+	Fn.importValue(`${envName}-PrivateSubnet2`),
+	Fn.importValue(`${envName}-PrivateSubnet3`),
+      ],
+    });
+
     // Handlers
 
     const tpkNiputusHandler = new lambda.Function(this, "TPKNiputusHandler", {
@@ -121,7 +136,8 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tpk.tpkNiputusHandler::handleTpkNiputus",
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tpkLogGroup
+      logGroup: tpkLogGroup,
+      vpc: vpc
     });
 
     tepJaksotunnusTable.grantReadWriteData(tpkNiputusHandler);
@@ -154,7 +170,8 @@ export class HeratepalveluTPKStack extends HeratepalveluStack {
       timeout: Duration.seconds(900),
       handler: "oph.heratepalvelu.tpk.tpkArvoCallHandler::handleTpkArvoCalls",
       tracing: lambda.Tracing.ACTIVE,
-      logGroup: tpkLogGroup
+      logGroup: tpkLogGroup,
+      vpc: vpc
     });
 
     tpkNippuTable.grantReadWriteData(tpkArvoCallHandler);
