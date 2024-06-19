@@ -316,6 +316,32 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
 
     jaksotunnusTable.grantReadWriteData(timedOperationsHandler);
 
+    const contactInfoCleaningHandler = new lambda.Function(this, "contactInfoCleaningHandler", {
+      runtime: this.runtime,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        jaksotunnus_table: jaksotunnusTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-contactInfoCleaningHandler`,
+      },
+      memorySize: Token.asNumber(1024),
+      reservedConcurrentExecutions: 1,
+      timeout: Duration.seconds(900),
+      handler: "oph.heratepalvelu.tep.contactInfoCleaningHandler::cleanContactInfo",
+      tracing: lambda.Tracing.ACTIVE,
+      logGroup: tepLogGroup,
+      vpc: vpc
+    });
+
+    new events.Rule(this, "ContactInfoCleaningScheduleRule", {
+      schedule: events.Schedule.expression(
+          `rate(${this.getParameterFromSsm("contactInfoCleaning-rate")})`
+      ),
+      targets: [new targets.LambdaFunction(contactInfoCleaningHandler)]
+    });
+
+    jaksotunnusTable.grantReadWriteData(contactInfoCleaningHandler);
+
     // jaksoHandler
 
     const jaksoHandler = new lambda.Function(this, "TEPJaksoHandler", {
@@ -630,6 +656,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     [
       jaksoHandler,
       timedOperationsHandler,
+      contactInfoCleaningHandler,
       niputusHandler,
       emailHandler,
       emailStatusHandler,
