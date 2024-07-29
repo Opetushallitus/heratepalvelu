@@ -220,6 +220,8 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       logGroupName: `${envName}-heratepalvelu-amis`,
       retention: RetentionDays.TWO_YEARS,
     });
+    
+    this.createErrorMetricFilter('amis', amisLogGroup);
 
     const AMISHerateHandler = new lambda.Function(this, "AMISHerateHandler", {
       runtime: this.runtime,
@@ -743,7 +745,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
           resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],
           actions: ['ssm:GetParameter']
         }));
-        this.createMetricFilters(lambdaFunction);
       }
     );
   }
