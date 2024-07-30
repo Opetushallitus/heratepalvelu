@@ -1,6 +1,6 @@
 import { Stack, App, StackProps, Tags } from 'aws-cdk-lib';
 import lambda = require("aws-cdk-lib/aws-lambda");
-import { FilterPattern, MetricFilter } from 'aws-cdk-lib/aws-logs';
+import { FilterPattern, LogGroup, MetricFilter } from 'aws-cdk-lib/aws-logs';
 import ssm = require("aws-cdk-lib/aws-ssm");
 
 export type EnvVars = {
@@ -59,15 +59,13 @@ export class HeratepalveluStack extends Stack {
     this.runtime = lambda.Runtime.JAVA_11;
   }
 
-  createMetricFilters = (lambdaFunction: lambda.Function) => {
+  createErrorMetricFilter = (stack: string, logGroup: LogGroup) => {
       const metricNamespace = 'OpintopolkuLogMetrics';
-      const logGroup = lambdaFunction.logGroup;
-      const functionName = lambdaFunction.node.id;
-      new MetricFilter(this, `${functionName}LogErrors`, {
+      new MetricFilter(this, `${stack}LogErrors`, {
         logGroup,
         metricNamespace: metricNamespace,
-        metricName: `${this.envName}/heratepalvelu/${functionName}/errors`,
-        filterPattern: FilterPattern.literal('ERROR'),
+        metricName: `${this.envName}/heratepalvelu/${stack}/errors`,
+        filterPattern: FilterPattern.stringValue('$.level', '=', 'ERROR'),
         metricValue: "1"
       });
   }

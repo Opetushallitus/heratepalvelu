@@ -274,6 +274,10 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       retention: RetentionDays.TWO_YEARS,
     });
 
+    // MetricFilter
+    
+    this.createErrorMetricFilter('tep', tepLogGroup);
+
     // VPC
 
     const vpc = ec2.Vpc.fromVpcAttributes(this, "VPC", {
@@ -673,7 +677,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
             resources: [`arn:aws:ssm:eu-west-1:*:parameter/${envName}/services/heratepalvelu/*`],
             actions: ['ssm:GetParameter']
           }));
-          this.createMetricFilters(lambdaFunction);
         }
     );
   }
