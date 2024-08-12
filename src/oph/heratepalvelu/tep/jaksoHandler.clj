@@ -60,17 +60,23 @@
   (s/checker tep-herate-schema))
 
 (defn check-duplicate-jakso
-  "Palauttaa true, jos ei ole vielä jaksoa tietokannassa annetulla HOKS ID:llä
+  "Palauttaa `true`, jos ei ole vielä jaksoa tietokannassa annetulla HOKS ID:llä
   ja jakson yksilöivällä tunnisteella."
-  [hoks-id yksiloiva-tunniste]
-  (if (empty? (ddb/get-item {:hoks_id            [:n hoks-id]
-                             :yksiloiva_tunniste [:s yksiloiva-tunniste]}
-                            (:jaksotunnus-table env)))
+  [hoks-id yksiloiva-tunniste hankkimistapa-id]
+  (if (and (empty? (ddb/get-item {:hankkimistapa_id [:n hankkimistapa-id]}
+                                 (:jaksotunnus-table env)))
+           (empty? (ddb/query-items
+                     {:hoks_id            [:eq [:n hoks-id]]
+                      :yksiloiva_tunniste [:eq [:s yksiloiva-tunniste]]}
+                     {:index "yksiloivaTunnisteIndex"}
+                     (:jaksotunnus-table env))))
     true
     (log/warnf (str "Työpaikkajakso HOKS ID:llä `%d` ja yksilöivällä "
-                    "tunnisteella `%s` on jo käsitelty.")
+                    "tunnisteella `%s` (osaamisen hankkimistapa `%d`) "
+                    "on jo käsitelty.")
                hoks-id
-               yksiloiva-tunniste)))
+               yksiloiva-tunniste
+               hankkimistapa-id)))
 
 (defn check-duplicate-tunnus
   "Palauttaa true, jos ei ole vielä jaksoa tietokannassa, jonka tunnus täsmää
@@ -145,7 +151,7 @@
       "Tallennetaan jakso HOKS ID:llä `%d` ja yksilöivällä tunnisteella `%s`."
       hoks-id
       yksiloiva-tunniste)
-    (when (check-duplicate-jakso hoks-id yksiloiva-tunniste)
+    (when (check-duplicate-jakso hoks-id yksiloiva-tunniste tapa-id)
       (try
         (let [request-id    (c/generate-uuid)
               niputuspvm    (c/next-niputus-date (str (c/local-date-now)))
