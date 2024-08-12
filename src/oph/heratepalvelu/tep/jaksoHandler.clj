@@ -41,6 +41,7 @@
    :oppija-oid             (s/conditional not-empty s/Str)
    :hankkimistapa-id       s/Num
    :hankkimistapa-tyyppi   (s/conditional not-empty s/Str)
+   :yksiloiva-tunniste     (s/conditional not-empty s/Str)
    :tutkinnonosa-id        s/Num
    :tutkinnonosa-koodi     (s/maybe s/Str)
    :tutkinnonosa-nimi      (s/maybe s/Str)
@@ -58,13 +59,18 @@
   "TEP-herätescheman tarkistusfunktio."
   (s/checker tep-herate-schema))
 
-(defn check-duplicate-hankkimistapa
-  "Palauttaa true, jos ei ole vielä jaksoa tietokannassa annetulla ID:llä."
-  [id]
-  (if (empty? (ddb/get-item {:hankkimistapa_id [:n id]}
+(defn check-duplicate-jakso
+  "Palauttaa true, jos ei ole vielä jaksoa tietokannassa annetulla HOKS ID:llä
+  ja jakson yksilöivällä tunnisteella."
+  [hoks-id yksiloiva-tunniste]
+  (if (empty? (ddb/get-item {:hoks_id            [:n hoks-id]
+                             :yksiloiva_tunniste [:s yksiloiva-tunniste]}
                             (:jaksotunnus-table env)))
     true
-    (log/warn "Osaamisenhankkimistapa id" id "on jo käsitelty.")))
+    (log/warnf (str "Työpaikkajakso HOKS ID:llä `%d` ja yksilöivällä "
+                    "tunnisteella `%s` on jo käsitelty.")
+               hoks-id
+               yksiloiva-tunniste)))
 
 (defn check-duplicate-tunnus
   "Palauttaa true, jos ei ole vielä jaksoa tietokannassa, jonka tunnus täsmää
@@ -131,10 +137,15 @@
   jaksotunnuksen Arvosta, luo jakson ja alusatavan nipun, ja tallentaa ne
   tietokantaan."
   [herate opiskeluoikeus koulutustoimija]
-  (let [herate (update herate :tyopaikan-nimi trim)
-        tapa-id (:hankkimistapa-id herate)]
-    (log/info "Tallennetaan oht" tapa-id)
-    (when (check-duplicate-hankkimistapa tapa-id)
+  (let [herate             (update herate :tyopaikan-nimi trim)
+        tapa-id            (:hankkimistapa-id herate)
+        hoks-id            (:hoks-id herate)
+        yksiloiva-tunniste (:yksiloiva-tunniste herate)]
+    (log/infof
+      "Tallennetaan jakso HOKS ID:llä `%d` ja yksilöivällä tunnisteella `%s`."
+      hoks-id
+      yksiloiva-tunniste)
+    (when (check-duplicate-jakso hoks-id yksiloiva-tunniste)
       (try
         (let [request-id    (c/generate-uuid)
               niputuspvm    (c/next-niputus-date (str (c/local-date-now)))
@@ -155,7 +166,8 @@
                        :request_id           [:s request-id]
                        :tutkinto             [:s tutkinto]
                        :oppilaitos    [:s (:oid (:oppilaitos opiskeluoikeus))]
-                       :hoks_id              [:n (:hoks-id herate)]
+                       :hoks_id              [:n hoks-id]
+                       :yksiloiva_tunniste   [:s yksiloiva-tunniste]
                        :opiskeluoikeus_oid   [:s (:oid opiskeluoikeus)]
                        :oppija_oid           [:s (:oppija-oid herate)]
                        :koulutustoimija      [:s koulutustoimija]
@@ -223,9 +235,11 @@
                        :kasittelytila     [:s (:ei-niputeta c/kasittelytilat)]
                        :sms_kasittelytila [:s (:ei-niputeta c/kasittelytilat)]))
               (catch ConditionalCheckFailedException _
-                (log/warn "Osaamisenhankkimistapa id:llä"
-                          tapa-id
-                          "on jo käsitelty."))
+                (log/warnf
+                  (str "Osaamisen hankkimistapa HOKS ID:llä `%d` ja "
+                       "yksilöivällä tunnisteella `%s` on jo käsitelty.")
+                  hoks-id
+                  yksiloiva-tunniste))
               (catch AwsServiceException e
                 (log/error "Virhe tietokantaan tallennettaessa, request-id"
                            request-id)
@@ -250,9 +264,11 @@
                     nippu-table-data)
                   (log/error "Tunnus oli tyhjä."))
                 (catch ConditionalCheckFailedException _
-                  (log/warn "Osaamisenhankkimistapa id:llä"
-                            tapa-id
-                            "on jo käsitelty.")
+                  (log/warnf
+                    (str "Osaamisen hankkimistapa HOKS ID:llä `%d` ja "
+                         "yksilöivällä tunnisteella `%s` on jo käsitelty.")
+                    hoks-id
+                    yksiloiva-tunniste)
                   (arvo/delete-jaksotunnus tunnus))
                 (catch AwsServiceException e
                   (log/error "Virhe tietokantaan tallennettaessa"

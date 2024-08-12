@@ -19,6 +19,7 @@
                  :oppija-oid "234-567-891"
                  :hankkimistapa-id 789
                  :hankkimistapa-tyyppi "01"
+                 :yksiloiva-tunniste "1234"
                  :tutkinnonosa-id 67
                  :tutkinnonosa-koodi "asdf"
                  :tutkinnonosa-nimi "A S D F"
@@ -100,25 +101,29 @@
     (is (not (jh/osa-aikaisuus-missing?
                {:osa-aikaisuus 30 :loppupvm "2023-08-01"})))))
 
-(defn- mock-check-duplicate-hankkimistapa-get-item [query-params table]
-  (when (and (= :n (first (:hankkimistapa_id query-params)))
+(defn- mock-check-duplicate-jakso-get-item [query-params table]
+  (when (and (= :n (first (:hoks_id query-params)))
+             (= :s (first (:yksiloiva_tunniste query-params)))
              (= "jaksotunnus-table-name" table))
-    (if (= 123 (second (:hankkimistapa_id query-params)))
+    (if (and (= 123 (second (:hoks_id query-params)))
+             (= "2345" (second (:yksiloiva_tunniste query-params))))
       []
-      {:hankkimistapa_id (second (:hankkimistapa_id query-params))})))
+      {:hoks_id            (second (:hoks_id query-params))
+       :yksiloiva_tunniste (second (:yksiloiva_tunniste query-params))})))
 
-(deftest test-check-duplicate-hankkimistapa
-  (testing "Varmista, että check-duplicate-hankkimistapa toimii oikein"
+(deftest test-check-duplicate-jakso
+  (testing "Varmista, että check-duplicate-jakso toimii oikein"
     (with-redefs [clojure.tools.logging/log* tu/mock-log*
                   environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
                   oph.heratepalvelu.db.dynamodb/get-item
-                  mock-check-duplicate-hankkimistapa-get-item]
-      (is (nil? (jh/check-duplicate-hankkimistapa 456)))
+                  mock-check-duplicate-jakso-get-item]
+      (is (nil? (jh/check-duplicate-jakso 456 "1234")))
       (is (true?
             (tu/logs-contain?
               {:level :warn
-               :message "Osaamisenhankkimistapa id 456 on jo käsitelty."})))
-      (is (true? (jh/check-duplicate-hankkimistapa 123))))))
+               :message (str "Työpaikkajakso HOKS ID:llä `456` ja yksilöivällä "
+                             "tunnisteella `1234` on jo käsitelty.")})))
+      (is (true? (jh/check-duplicate-jakso 123 "2345"))))))
 
 (defn- mock-check-duplicate-tunnus-query-items [query-params options table]
   (when (and (= :eq (first (:tunnus query-params)))
@@ -195,9 +200,11 @@
   (reset! test-save-jaksotunnus-results
           (cons data @test-save-jaksotunnus-results)))
 
-(defn- mock-check-duplicate-hankkimistapa [tapa-id]
+(defn- mock-check-duplicate-jakso [hoks-id yksiloiva-tunniste]
   (add-to-test-save-jaksotunnus-results
-    {:type "mock-check-duplicate-hankkimistapa" :tapa-id tapa-id})
+    {:type "mock-check-duplicate-jakso"
+     :hoks-id hoks-id
+     :yksiloiva-tunniste yksiloiva-tunniste})
   true)
 
 (defn- mock-get-toimipiste [suoritus]
@@ -236,8 +243,8 @@
        mock-delete-jaksotunnus
        oph.heratepalvelu.external.arvo/get-toimipiste
        mock-get-toimipiste
-       oph.heratepalvelu.tep.jaksoHandler/check-duplicate-hankkimistapa
-       mock-check-duplicate-hankkimistapa
+       oph.heratepalvelu.tep.jaksoHandler/check-duplicate-jakso
+       mock-check-duplicate-jakso
        oph.heratepalvelu.tep.jaksoHandler/check-duplicate-tunnus
        mock-check-duplicate-tunnus
        oph.heratepalvelu.tep.jaksoHandler/save-to-tables
@@ -254,7 +261,8 @@
              :tyopaikkaohjaaja-nimi "Testi Ojaaja"
              :alkupvm "2021-09-09"
              :loppupvm "2021-12-15"
-             :hoks-id "123"
+             :hoks-id 123
+             :yksiloiva-tunniste "1234"
              :oppija-oid "123.456.789"
              :tyyppi "test-tyyppi"
              :tutkinnonosa-id "test-tutkinnonosa-id"
@@ -266,7 +274,8 @@
                               :tyopaikkaohjaaja-nimi "Testi Ojaaja"
                               :alkupvm "2021-09-09"
                               :loppupvm "2021-12-15"
-                              :hoks-id "123"
+                              :hoks-id 123
+                              :yksiloiva-tunniste "2345"
                               :oppija-oid "123.456.789"
                               :tyyppi "test-tyyppi"
                               :tutkinnonosa-id "test-tutkinnonosa-id"
@@ -277,7 +286,8 @@
                                      :tyopaikkaohjaaja-nimi "Testi Ojaaja"
                                      :alkupvm "2021-09-09"
                                      :loppupvm "2021-12-15"
-                                     :hoks-id "123"
+                                     :hoks-id 123
+                                     :yksiloiva-tunniste "3456"
                                      :oppija-oid "123.456.789"
                                      :tyyppi "test-tyyppi"
                                      :tutkinnonosa-id "test-tutkinnonosa-id"
@@ -288,14 +298,17 @@
                          :tyopaikkaohjaaja-nimi "Testi Ojaaja"
                          :alkupvm "2021-09-09"
                          :loppupvm "2021-12-15"
-                         :hoks-id "123"
+                         :hoks-id 123
+                         :yksiloiva-tunniste "4567"
                          :oppija-oid "123.456.789"
                          :tyyppi "test-tyyppi"
                          :tutkinnonosa-id "test-tutkinnonosa-id"
                          :hankkimistapa-id 4
                          :hankkimistapa-tyyppi "koulutussopimus_01"
                          :keskeytymisajanjaksot []}
-            results [{:type "mock-check-duplicate-hankkimistapa" :tapa-id 1}
+            results [{:type "mock-check-duplicate-jakso"
+                      :hoks-id 123
+                      :yksiloiva-tunniste "1234"}
                      {:type "mock-get-toimipiste"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}}}
                      {:type "mock-save-to-tables"
@@ -303,7 +316,8 @@
                       {:ohjaaja_nimi [:s "Testi Ojaaja"]
                        :opiskeluoikeus_oid [:s "567"]
                        :hankkimistapa_tyyppi [:s "01"]
-                       :hoks_id [:n "123"]
+                       :hoks_id [:n 123]
+                       :yksiloiva_tunniste [:s "1234"]
                        :tyopaikan_nimi [:s "Testityöpaikka"]
                        :tyopaikan_ytunnus [:s "765432-1"]
                        :jakso_loppupvm [:s "2021-12-15"]
@@ -338,7 +352,9 @@
                        :sms_kasittelytila [:s "ei_niputeta"]
                        :tutkinto [:s nil]
                        :kasittelytila [:s "ei_niputeta"]}}
-                     {:type "mock-check-duplicate-hankkimistapa" :tapa-id 2}
+                     {:type "mock-check-duplicate-jakso"
+                      :hoks-id 123
+                      :yksiloiva-tunniste "2345"}
                      {:type "mock-get-toimipiste"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}}}
                      {:type "mock-get-toimipiste"
@@ -362,7 +378,9 @@
                              :sopimustyyppi "01"
                              :tutkintonimike ()
                              :tutkinnon_osa nil}}
-                     {:type "mock-check-duplicate-hankkimistapa" :tapa-id 3}
+                     {:type "mock-check-duplicate-jakso"
+                      :hoks-id 123
+                      :yksiloiva-tunniste "3456"}
                      {:type "mock-get-toimipiste"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}}}
                      {:type "mock-get-toimipiste"
@@ -386,7 +404,9 @@
                              :sopimustyyppi "01"
                              :tutkintonimike ()
                              :tutkinnon_osa nil}}
-                     {:type "mock-check-duplicate-hankkimistapa" :tapa-id 4}
+                     {:type "mock-check-duplicate-jakso"
+                      :hoks-id 123
+                      :yksiloiva-tunniste "4567"}
                      {:type "mock-get-toimipiste"
                       :suoritus {:tyyppi {:koodiarvo "ammatillinentutkinto"}}}
                      {:type "mock-get-toimipiste"
@@ -415,7 +435,8 @@
                       {:ohjaaja_nimi [:s "Testi Ojaaja"]
                        :opiskeluoikeus_oid [:s "567"]
                        :hankkimistapa_tyyppi [:s "01"]
-                       :hoks_id [:n "123"]
+                       :hoks_id [:n 123]
+                       :yksiloiva_tunniste [:s "4567"]
                        :tyopaikan_nimi [:s "Testityöpaikka"]
                        :tyopaikan_ytunnus [:s "123456-7"]
                        :jakso_loppupvm [:s "2021-12-15"]
