@@ -59,9 +59,10 @@
   "TEP-herätescheman tarkistusfunktio."
   (s/checker tep-herate-schema))
 
-(defn check-duplicate-jakso
+(defn not-duplicate-jakso?!
   "Palauttaa `true`, jos ei ole vielä jaksoa tietokannassa annetulla HOKS ID:llä
-  ja jakson yksilöivällä tunnisteella."
+  ja jakson yksilöivällä tunnisteella, eikä myöskään osaamisen hankkimistapa
+  ID:llä."
   [hoks-id yksiloiva-tunniste hankkimistapa-id]
   (if (and (empty? (ddb/get-item {:hankkimistapa_id [:n hankkimistapa-id]}
                                  (:jaksotunnus-table env)))
@@ -153,7 +154,7 @@
       hoks-id
       yksiloiva-tunniste
       hankkimistapa-id)
-    (when (check-duplicate-jakso hoks-id yksiloiva-tunniste hankkimistapa-id)
+    (when (not-duplicate-jakso?! hoks-id yksiloiva-tunniste hankkimistapa-id)
       (try
         (let [request-id    (c/generate-uuid)
               niputuspvm    (c/next-niputus-date (str (c/local-date-now)))

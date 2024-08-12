@@ -101,7 +101,7 @@
     (is (not (jh/osa-aikaisuus-missing?
                {:osa-aikaisuus 30 :loppupvm "2023-08-01"})))))
 
-(defn- mock-check-duplicate-jakso-get-item [query-params table]
+(defn- mock-not-duplicate-jakso?!-get-item [query-params table]
   (assert (= :n (first (:hankkimistapa_id query-params))))
   (assert (= "jaksotunnus-table-name" table))
   (let [existing #{56789 67890}]
@@ -109,7 +109,7 @@
       {:hankkimistapa_id (second (:hankkimistapa_id query-params))}
       [])))
 
-(defn- mock-check-duplicate-jakso-query-items [query-params options table]
+(defn- mock-not-duplicate-jakso?!-query-items [query-params options table]
   (assert (= (:hoks_id query-params)
              [:eq [:n (second (second (:hoks_id query-params)))]]))
   (assert (= (:yksiloiva_tunniste query-params)
@@ -123,14 +123,14 @@
       {:hoks_id hoks-id :yksiloiva_tunniste yksiloiva-tunniste}
       [])))
 
-(deftest test-check-duplicate-jakso
+(deftest test-not-duplicate-jakso?!
   (testing "The function returns"
     (with-redefs [clojure.tools.logging/log* tu/mock-log*
                   environ.core/env {:jaksotunnus-table "jaksotunnus-table-name"}
                   oph.heratepalvelu.db.dynamodb/get-item
-                  mock-check-duplicate-jakso-get-item
+                  mock-not-duplicate-jakso?!-get-item
                   oph.heratepalvelu.db.dynamodb/query-items
-                  mock-check-duplicate-jakso-query-items]
+                  mock-not-duplicate-jakso?!-query-items]
       (letfn [(log-msg [hoks-id yksiloiva-tunniste hankkimistapa-id]
                 {:level   :warn
                  :message (format (str "Työpaikkajakso HOKS ID:llä `%d` ja "
@@ -144,7 +144,7 @@
           (str "`true` when no existing herate is found with given `hoks-id`, "
                "`yksiloiva-tunniste`, and `hankkimistapa-id`.")
           (are [hoks-id yksiloiva-tunniste oht-id]
-               (true? (jh/check-duplicate-jakso
+               (true? (jh/not-duplicate-jakso?!
                         hoks-id yksiloiva-tunniste oht-id))
             123 "3456" 12345
             123 "4567" 23456
@@ -153,7 +153,7 @@
         (testing "`nil` and logs accordingly when jakso is found with given "
           (testing "`hoks-id` and `yksiloiva-tunniste`."
             (are [hoks-id yksiloiva-tunniste]
-                 (and (nil? (jh/check-duplicate-jakso
+                 (and (nil? (jh/not-duplicate-jakso?!
                               hoks-id yksiloiva-tunniste 99999))
                       (tu/logs-contain?
                         (log-msg hoks-id yksiloiva-tunniste 99999)))
@@ -162,7 +162,7 @@
               456 "4567"))
           (testing "`hankkimistapa-id`."
             (are [oht-id]
-                 (and (nil? (jh/check-duplicate-jakso 999 "9999" oht-id))
+                 (and (nil? (jh/not-duplicate-jakso?! 999 "9999" oht-id))
                       (tu/logs-contain? (log-msg 999 "9999" oht-id)))
               56789 67890)))))))
 
@@ -241,9 +241,9 @@
   (reset! test-save-jaksotunnus-results
           (cons data @test-save-jaksotunnus-results)))
 
-(defn- mock-check-duplicate-jakso [hoks-id yksiloiva-tunniste hankkimistapa-id]
+(defn- mock-not-duplicate-jakso?! [hoks-id yksiloiva-tunniste hankkimistapa-id]
   (add-to-test-save-jaksotunnus-results
-    {:type "mock-check-duplicate-jakso"
+    {:type "mock-not-duplicate-jakso?!"
      :hoks-id hoks-id
      :yksiloiva-tunniste yksiloiva-tunniste
      :hankkimistapa-id hankkimistapa-id})
@@ -285,8 +285,8 @@
        mock-delete-jaksotunnus
        oph.heratepalvelu.external.arvo/get-toimipiste
        mock-get-toimipiste
-       oph.heratepalvelu.tep.jaksoHandler/check-duplicate-jakso
-       mock-check-duplicate-jakso
+       oph.heratepalvelu.tep.jaksoHandler/not-duplicate-jakso?!
+       mock-not-duplicate-jakso?!
        oph.heratepalvelu.tep.jaksoHandler/check-duplicate-tunnus
        mock-check-duplicate-tunnus
        oph.heratepalvelu.tep.jaksoHandler/save-to-tables
@@ -348,7 +348,7 @@
                          :hankkimistapa-id 4
                          :hankkimistapa-tyyppi "koulutussopimus_01"
                          :keskeytymisajanjaksot []}
-            results [{:type "mock-check-duplicate-jakso"
+            results [{:type "mock-not-duplicate-jakso?!"
                       :hoks-id 123
                       :yksiloiva-tunniste "1234"
                       :hankkimistapa-id 1}
@@ -395,7 +395,7 @@
                        :sms_kasittelytila [:s "ei_niputeta"]
                        :tutkinto [:s nil]
                        :kasittelytila [:s "ei_niputeta"]}}
-                     {:type "mock-check-duplicate-jakso"
+                     {:type "mock-not-duplicate-jakso?!"
                       :hoks-id 123
                       :yksiloiva-tunniste "2345"
                       :hankkimistapa-id 2}
@@ -422,7 +422,7 @@
                              :sopimustyyppi "01"
                              :tutkintonimike ()
                              :tutkinnon_osa nil}}
-                     {:type "mock-check-duplicate-jakso"
+                     {:type "mock-not-duplicate-jakso?!"
                       :hoks-id 123
                       :yksiloiva-tunniste "3456"
                       :hankkimistapa-id 3}
@@ -449,7 +449,7 @@
                              :sopimustyyppi "01"
                              :tutkintonimike ()
                              :tutkinnon_osa nil}}
-                     {:type "mock-check-duplicate-jakso"
+                     {:type "mock-not-duplicate-jakso?!"
                       :hoks-id 123
                       :yksiloiva-tunniste "4567"
                       :hankkimistapa-id 4}
