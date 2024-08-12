@@ -144,14 +144,16 @@
   tietokantaan."
   [herate opiskeluoikeus koulutustoimija]
   (let [herate             (update herate :tyopaikan-nimi trim)
-        tapa-id            (:hankkimistapa-id herate)
+        hankkimistapa-id   (:hankkimistapa-id herate)
         hoks-id            (:hoks-id herate)
         yksiloiva-tunniste (:yksiloiva-tunniste herate)]
     (log/infof
-      "Tallennetaan jakso HOKS ID:llä `%d` ja yksilöivällä tunnisteella `%s`."
+      (str "Tallennetaan jakso HOKS ID:llä `%d` ja yksilöivällä tunnisteella "
+           "`%s` (osaamisen hankkimistapa `%d`).")
       hoks-id
-      yksiloiva-tunniste)
-    (when (check-duplicate-jakso hoks-id yksiloiva-tunniste tapa-id)
+      yksiloiva-tunniste
+      hankkimistapa-id)
+    (when (check-duplicate-jakso hoks-id yksiloiva-tunniste hankkimistapa-id)
       (try
         (let [request-id    (c/generate-uuid)
               niputuspvm    (c/next-niputus-date (str (c/local-date-now)))
@@ -160,7 +162,7 @@
               tutkinto      (get-in suoritus [:koulutusmoduuli
                                               :tunniste
                                               :koodiarvo])
-              db-data {:hankkimistapa_id     [:n tapa-id]
+              db-data {:hankkimistapa_id     [:n hankkimistapa-id]
                        :hankkimistapa_tyyppi
                        [:s (last (str/split (:hankkimistapa-tyyppi herate)
                                             #"_"))]
@@ -243,9 +245,11 @@
               (catch ConditionalCheckFailedException _
                 (log/warnf
                   (str "Osaamisen hankkimistapa HOKS ID:llä `%d` ja "
-                       "yksilöivällä tunnisteella `%s` on jo käsitelty.")
+                       "yksilöivällä tunnisteella `%s` (osaamisen "
+                       "hankkimistapa `%d`) on jo käsitelty.")
                   hoks-id
-                  yksiloiva-tunniste))
+                  yksiloiva-tunniste
+                  hankkimistapa-id))
               (catch AwsServiceException e
                 (log/error "Virhe tietokantaan tallennettaessa, request-id"
                            request-id)
@@ -272,9 +276,11 @@
                 (catch ConditionalCheckFailedException _
                   (log/warnf
                     (str "Osaamisen hankkimistapa HOKS ID:llä `%d` ja "
-                         "yksilöivällä tunnisteella `%s` on jo käsitelty.")
+                         "yksilöivällä tunnisteella `%s` (osaamisen "
+                         "hankkimistapa `%d`) on jo käsitelty.")
                     hoks-id
-                    yksiloiva-tunniste)
+                    yksiloiva-tunniste
+                    hankkimistapa-id)
                   (arvo/delete-jaksotunnus tunnus))
                 (catch AwsServiceException e
                   (log/error "Virhe tietokantaan tallennettaessa"
