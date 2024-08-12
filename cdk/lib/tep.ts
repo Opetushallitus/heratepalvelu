@@ -49,6 +49,19 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     });
 
     jaksotunnusTable.addGlobalSecondaryIndex({
+      indexName: "yksiloivaTunnisteIndex",
+      partitionKey: {
+        name: "hoks_id",
+        type: dynamodb.AttributeType.NUMBER
+      },
+      sortKey: {
+        name: "yksiloiva_tunniste",
+        type: dynamodb.AttributeType.STRING
+      },
+      projectionType: dynamodb.ProjectionType.ALL
+    });
+
+    jaksotunnusTable.addGlobalSecondaryIndex({
       indexName: "tepDbChangerIndex",
       partitionKey: {
         name: "oppija_oid",
