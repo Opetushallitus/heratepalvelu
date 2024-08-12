@@ -22,6 +22,7 @@
                   :alkupvm "2022-01-05"
                   :loppupvm "2022-02-02"
                   :hoks-id 123
+                  :yksiloiva-tunniste "1234"
                   :opiskeluoikeus-oid "test-oo-oid"
                   :oppija-oid "test-oppija-oid"
                   :hankkimistapa-id 234
@@ -44,7 +45,8 @@
          :oppija-oid "test-extfund-oppija-oid"
          :opiskeluoikeus-oid "test-oo-oid-externalfunding"
          :hankkimistapa-id 456
-         :hoks-id 345))
+         :hoks-id 345
+         :yksiloiva-tunniste "2345"))
 
 (def test-herate-missing-osa-aikaisuus
   (assoc test-herate
@@ -54,10 +56,11 @@
 (def duplicate-herate {:tyyppi "aloittaneet"
                        :alkupvm "2022-01-01"
                        :loppupvm "2022-02-06"
-                       :hoks-id 789
+                       :hoks-id 123
+                       :yksiloiva-tunniste "1234"
                        :opiskeluoikeus-oid "test-oo-oid2"
                        :oppija-oid "test-oppija-oid2"
-                       :hankkimistapa-id 234
+                       :hankkimistapa-id 567
                        :hankkimistapa-tyyppi "koulutussopimus"
                        :tutkinnonosa-id 2
                        :tutkinnonosa-koodi "test-tutkinnonosa2"
@@ -154,6 +157,7 @@
      :opiskeluoikeus_oid [:s "test-oo-oid"]
      :hankkimistapa_tyyppi [:s "oppisopimus"]
      :hoks_id [:n 123]
+     :yksiloiva_tunniste [:s "1234"]
      :oppisopimuksen_perusta [:s "01"]
      :tyopaikan_nimi [:s "Testi Oy"]
      :tyopaikan_ytunnus [:s "123456-7"]
@@ -238,7 +242,7 @@
     :options {:basic-auth ["koski-user" "koski-pwd"] :as :json}}
    {:method :patch
     :url (str (:ehoks-url mock-env)
-              "heratepalvelu/osaamisenhankkimistavat/234/kasitelty")
+              "heratepalvelu/osaamisenhankkimistavat/567/kasitelty")
     :options {:headers {:ticket (str "service-ticket/ehoks-virkailija-backend"
                                      "/cas-security-check")}
               :content-type "application/json"
