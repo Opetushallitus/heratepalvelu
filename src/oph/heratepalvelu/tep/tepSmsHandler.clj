@@ -45,7 +45,7 @@
       {:tila (:success c/kasittelytilat)
        :voimassa_loppupvm new-loppupvm}
       {:tila (:success c/kasittelytilat)})
-    {:tila (:failure c/kasittelytilat)}))
+    {:tila (:failed c/kasittelytilat)}))
 
 (defn ohjaaja-puhnro
   "Yrittää löytää yksittäisen ohjaajan puhelinnumeron jaksoista. Jos yksittäinen
@@ -151,7 +151,7 @@
                            :voimassa_loppupvm new-loppupvm}
                           {:tila (:success c/kasittelytilat)
                            :voimassa_loppupvm (:voimassaloppupvm nippu)})
-                        {:tila (:failure c/kasittelytilat)
+                        {:tila (:failed c/kasittelytilat)
                          :voimassa_loppupvm (:voimassaloppupvm nippu)}))
                     (when-not (= (:niputuspvm nippu) lahetyspvm)
                       (log/warn "Nipun" (:ohjaaja_ytunnus_kj_tutkinto nippu)

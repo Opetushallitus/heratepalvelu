@@ -11,7 +11,7 @@
     (let [success-new-loppupvm {:tila (:success c/kasittelytilat)
                                 :voimassa_loppupvm "2021-09-09"}
           success              {:tila (:success c/kasittelytilat)}
-          failure              {:tila (:failure c/kasittelytilat)}]
+          failure              {:tila (:failed c/kasittelytilat)}]
       (is (= (sh/update-arvo-obj-sms "CREATED" "2021-09-09")
              success-new-loppupvm))
       (is (= (sh/update-arvo-obj-sms "CREATED" nil) success))
