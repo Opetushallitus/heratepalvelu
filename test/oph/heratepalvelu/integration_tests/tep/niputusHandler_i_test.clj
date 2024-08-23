@@ -18,6 +18,8 @@
                :koski-user "koski-user"})
 
 (def starting-jaksotunnus-table [{:hankkimistapa_id [:n 11]
+                                  :hoks_id [:n 1]
+                                  :yksiloiva_tunniste [:s "11"]
                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                   :niputuspvm [:s "2022-02-01"]
                                   :viimeinen_vastauspvm [:s "2022-03-31"]
@@ -29,6 +31,8 @@
                                   :jakso_loppupvm [:s "2022-01-25"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                  {:hankkimistapa_id [:n 12]
+                                  :hoks_id [:n 1]
+                                  :yksiloiva_tunniste [:s "12"]
                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                   :niputuspvm [:s "2022-02-01"]
                                   :viimeinen_vastauspvm [:s "2022-02-16"]
@@ -40,6 +44,8 @@
                                   :jakso_loppupvm [:s "2022-01-31"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                  {:hankkimistapa_id [:n 13]
+                                  :hoks_id [:n 1]
+                                  :yksiloiva_tunniste [:s "13"]
                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                   :niputuspvm [:s "2022-02-01"]
                                   :viimeinen_vastauspvm [:s "2022-02-25"]
@@ -51,6 +57,8 @@
                                   :jakso_loppupvm [:s "2022-01-31"]
                                   :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                  {:hankkimistapa_id [:n 21]
+                                  :hoks_id [:n 2]
+                                  :yksiloiva_tunniste [:s "21"]
                                   :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
                                   :niputuspvm [:s "2022-02-01"]
                                   :viimeinen_vastauspvm [:s "2022-03-31"]
@@ -133,6 +141,8 @@
                                 :start "2022-01-01"
                                 :end "2022-01-31"}}
                 {:body {:data [{:hankkimistapa_id 11
+                                :hoks_id 1
+                                :yksiloiva_tunniste "11"
                                 :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
                                 :niputuspvm "2022-02-01"
                                 :viimeinen_vastauspvm "2022-03-31"
@@ -144,6 +154,8 @@
                                 :jakso_loppupvm "2022-01-25"
                                 :tyopaikan_nimi "Testi Työpaikka 1"}
                                {:hankkimistapa_id 12
+                                :hoks_id 1
+                                :yksiloiva_tunniste "12"
                                 :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
                                 :niputuspvm "2022-02-01"
                                 :viimeinen_vastauspvm "2022-02-16"
@@ -155,6 +167,8 @@
                                 :jakso_loppupvm "2022-01-31"
                                 :tyopaikan_nimi "Testi Työpaikka 1"}
                                {:hankkimistapa_id 13
+                                :hoks_id 1
+                                :yksiloiva_tunniste "13"
                                 :ohjaaja_ytunnus_kj_tutkinto "oykt-1"
                                 :niputuspvm "2022-02-01"
                                 :viimeinen_vastauspvm "2022-02-25"
@@ -176,6 +190,8 @@
                                 :start "2022-01-10"
                                 :end "2022-01-20"}}
                 {:body {:data [{:hankkimistapa_id 21
+                                :hoks_id 2
+                                :yksiloiva_tunniste "21"
                                 :ohjaaja_ytunnus_kj_tutkinto "oykt-2"
                                 :niputuspvm "2022-02-01"
                                 :viimeinen_vastauspvm "2022-03-31"
@@ -189,6 +205,8 @@
                                 :jakso_loppupvm "2022-01-20"
                                 :tyopaikan_nimi "Testi Työpaikka 2"}
                                {:hankkimistapa_id 22
+                                :hoks_id 2
+                                :yksiloiva_tunniste "22"
                                 :ohjaaja_ytunnus_kj_tutkinto "oykt-2"
                                 :tunnus "BBjunk"
                                 :oppija_oid "bbb"
@@ -243,6 +261,8 @@
   (mdb/clear-mock-db))
 
 (def expected-jaksotunnus-table #{{:hankkimistapa_id [:n 11]
+                                   :hoks_id [:n 1]
+                                   :yksiloiva_tunniste [:s "11"]
                                    :kesto [:n 18]
                                    :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                    :niputuspvm [:s "2022-02-01"]
@@ -255,6 +275,8 @@
                                    :jakso_loppupvm [:s "2022-01-25"]
                                    :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                   {:hankkimistapa_id [:n 12]
+                                   :hoks_id [:n 1]
+                                   :yksiloiva_tunniste [:s "12"]
                                    :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                    :niputuspvm [:s "2022-02-01"]
                                    :viimeinen_vastauspvm [:s "2022-02-16"]
@@ -266,6 +288,8 @@
                                    :jakso_loppupvm [:s "2022-01-31"]
                                    :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                   {:hankkimistapa_id [:n 13]
+                                   :hoks_id [:n 1]
+                                   :yksiloiva_tunniste [:s "13"]
                                    :kesto [:n 5]
                                    :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-1"]
                                    :niputuspvm [:s "2022-02-01"]
@@ -278,6 +302,8 @@
                                    :jakso_loppupvm [:s "2022-01-31"]
                                    :tyopaikan_nimi [:s "Testi Työpaikka 1"]}
                                   {:hankkimistapa_id [:n 21]
+                                   :hoks_id [:n 2]
+                                   :yksiloiva_tunniste [:s "21"]
                                    :ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
                                    :kesto [:n 4]
                                    :niputuspvm [:s "2022-02-01"]

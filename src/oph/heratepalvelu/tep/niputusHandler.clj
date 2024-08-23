@@ -24,6 +24,12 @@
 
 (defn round-vals [m] (reduce-kv #(assoc %1 %2 (Math/round ^Double %3)) {} m))
 
+(defn ids
+  "Returns an array-map of identifiers (HOKS ID & yksiloiva tunniste) that
+  fully identify työpaikkajakso."
+  [jakso]
+  (select-keys jakso [:hoks_id :yksiloiva_tunniste]))
+
 (defn not-in-keskeytymisajanjakso?
   "Varmistaa, että annettu päivämäärä ei kuulu keskeytymisajanjaksoon."
   [^LocalDate date keskeytymisajanjaksot]
@@ -39,17 +45,25 @@
   esim. 80 % / 100 % = 0.8. Jos osa-aikaisuustieto puuttuu tai on ei-validi,
   palautetaan osa-aikaisuuskertoimena nolla."
   [jakso]
-  (let [id            (:hankkimistapa_id jakso)
-        osa-aikaisuus (:osa_aikaisuus jakso)]
+  (let [hoks-id            (:hoks_id jakso)
+        yksiloiva-tunniste (:yksiloiva_tunniste jakso)
+        osa-aikaisuus      (:osa_aikaisuus jakso)]
     (or (cond
           (nil? osa-aikaisuus)
-          (log/error "Osa-aikaisuustieto puuttuu jakson" id "tiedoista. Jakson"
-                     "kestoksi asetetaan nolla.")
+          (log/errorf
+            (str "Osa-aikaisuustieto puuttuu jakson (HOKS `%d`, yksilöivä "
+                 "tunniste `%s`) tiedoista. Jakson kestoksi asetetaan nolla.")
+            hoks-id
+            yksiloiva-tunniste)
           (not (and (integer? osa-aikaisuus)
                     (pos? osa-aikaisuus)
                     (>= 100 osa-aikaisuus)))
-          (log/error "Jakson" id "osa-aikaisuus" (str "`" osa-aikaisuus "`")
-                     "ei ole validi. Jakson kestoksi asetetaan nolla.")
+          (log/errorf
+            (str "Jakson (HOKS `%d`, yksilöivä tunniste `%s`) osa-aikaisuus "
+                 "`%s` ei ole validi. Jakson kestoksi asetetaan nolla.")
+            hoks-id
+            yksiloiva-tunniste
+            osa-aikaisuus)
           :else (/ osa-aikaisuus 100.0))
         0)))
 
@@ -123,7 +137,7 @@
   siis mukana palautettavassa hashmapissa."
   [jaksot opiskeluoikeudet pvm]
   (let [active-jakso-ids ; Päivänä `pvm` aktiivisena olevien jaksojen id:t
-        (map :hankkimistapa_id
+        (map ids
              (filter #(jakso-active? %
                                      (get opiskeluoikeudet
                                           (:opiskeluoikeus_oid %))
@@ -167,7 +181,7 @@
   [oppijan-jaksot opiskeluoikeudet]
   (when (not-empty oppijan-jaksot)
     (let [jaksot (map harmonize-alku-and-loppu-dates oppijan-jaksot)
-          ids    (map :hankkimistapa_id jaksot)]
+          ids    (map ids jaksot)]
       (round-vals ; Pyöristetään kestot lähimpään kokonaislukuun.
         (merge-with
           * ; Kerrotaan kestot osa-aikaisuuskertoimilla
@@ -214,14 +228,19 @@
   [jaksot]
   (reduce
     (fn [memoized-opiskeluoikeudet jakso]
-      (let [oht-id (:hankkimistapa_id jakso)
+      (let [hoks-id (:hoks_id jakso)
+            yksiloiva-tunniste (:yksiloiva_tunniste jakso)
             oo-oid (:opiskeluoikeus_oid jakso)]
         (if (contains? memoized-opiskeluoikeudet oo-oid)
           memoized-opiskeluoikeudet
           (if-let [opiskeluoikeus (koski/get-opiskeluoikeus-catch-404! oo-oid)]
             (conj memoized-opiskeluoikeudet [oo-oid opiskeluoikeus])
-            (do (log/warn "Opiskeluoikeutta" (str "`" oo-oid "`") "ei saatu"
-                          "Koskesta. Jakson" oht-id "kestoksi asetetaan nolla.")
+            (do (log/warnf (str "Opiskeluoikeutta `%s` ei saatu Koskesta. "
+                                "Jakson (HOKS `%d`, yksilöivä tunniste `%s`) "
+                                "kestoksi asetetaan nolla.")
+                           oo-oid
+                           hoks-id
+                           yksiloiva-tunniste)
                 memoized-opiskeluoikeudet)))))
     {}
     jaksot))
@@ -251,7 +270,7 @@
        ; hashmapiksi:
        (apply merge)
        ; Palautetaan vain niiden jaksojen kestot, jotka ovat `jaksot` listassa:
-       (#(select-keys % (map :hankkimistapa_id jaksot)))))
+       (#(select-keys % (map ids jaksot)))))
 
 (defn retrieve-and-update-jaksot!
   "Hakee nippuun kuuluvat jaksot tietokannasta, laskee niiden kestot, päivittää
@@ -259,9 +278,12 @@
   [nippu]
   (let [jaksot (query-jaksot! nippu)
         kestot (jaksojen-kestot! jaksot)]
-    (map #(let [oht-id (:hankkimistapa_id %)
-                kesto  (get kestot oht-id 0)]
-            (log/info "Päivitetään jaksoon" oht-id "kesto" kesto)
+    (map #(let [hoks-id            (:hoks_id %)
+                yksiloiva-tunniste (:yksiloiva-tunniste %)
+                kesto  (get kestot (ids %) 0)]
+            (log/infof (str "Päivitetään jaksoon (HOKS `%d`, yksilöivä "
+                            "tunniste `%s`) kesto `%d`.")
+                       hoks-id yksiloiva-tunniste kesto)
             (tc/update-jakso % {:kesto [:n kesto]})
             (assoc % :kesto kesto))
          jaksot)))
