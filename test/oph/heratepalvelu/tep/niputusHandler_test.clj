@@ -1,5 +1,6 @@
 (ns oph.heratepalvelu.tep.niputusHandler-test
   (:require [clojure.test :refer [are deftest is testing]]
+            [medley.core :refer [map-keys filter-vals]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.tep.niputusHandler :as nh]
             [oph.heratepalvelu.external.ehoks :as ehoks]
@@ -11,6 +12,8 @@
 
 (def jakso-1 {:opiskeluoikeus_oid "1.2.3.8"
               :oppija_oid "4.4.4.4"
+              :hoks_id 1
+              :yksiloiva_tunniste "1"
               :hankkimistapa_id 1
               :jakso_alkupvm "2021-10-22"
               :jakso_loppupvm "2021-10-25"
@@ -22,6 +25,8 @@
 
 (def jakso-2 {:opiskeluoikeus_oid "1.2.3.8"
               :oppija_oid "4.4.4.4"
+              :hoks_id 1
+              :yksiloiva_tunniste "2"
               :hankkimistapa_id 2
               :jakso_alkupvm "2021-09-01"
               :jakso_loppupvm "2021-12-15"
@@ -33,6 +38,8 @@
 
 (def jakso-3 {:opiskeluoikeus_oid "1.2.3.8"
               :oppija_oid "4.4.4.4"
+              :hoks_id 1
+              :yksiloiva_tunniste "3"
               :hankkimistapa_id 3
               :jakso_alkupvm "2021-10-11"
               :jakso_loppupvm "2021-10-21"
@@ -44,6 +51,8 @@
 
 (def jakso-4 {:opiskeluoikeus_oid "1.2.3.8"
               :oppija_oid "4.4.4.4"
+              :hoks_id 1
+              :yksiloiva_tunniste "4"
               :hankkimistapa_id 4
               :jakso_alkupvm "2021-05-15"
               :jakso_loppupvm "2021-12-01"
@@ -52,6 +61,8 @@
 
 (def jakso-5 {:opiskeluoikeus_oid "1.2.3.7"
               :oppija_oid "4.4.4.4"
+              :hoks_id 2
+              :yksiloiva_tunniste "1"
               :hankkimistapa_id 5
               :jakso_alkupvm "2021-09-01"
               :jakso_loppupvm "2023-12-15"
@@ -60,6 +71,8 @@
 
 (def jakso-6 {:opiskeluoikeus_oid "1.2.3.8"
               :oppija_oid "4.4.4.4"
+              :hoks_id 1
+              :yksiloiva_tunniste "5"
               :hankkimistapa_id 6
               :jakso_alkupvm "2021-10-11"
               :jakso_loppupvm "2021-10-21"
@@ -71,6 +84,8 @@
 
 (def jakso-7 {:opiskeluoikeus_oid "1.2.3.10"
               :oppija_oid "4.4.4.4"
+              :hoks_id 3
+              :yksiloiva_tunniste "1"
               :hankkimistapa_id 7
               :jakso_alkupvm "2021-01-15"
               :jakso_loppupvm "2022-04-29"
@@ -79,6 +94,8 @@
 
 (def jakso-8 {:opiskeluoikeus_oid "1.2.3.8"
               :oppija_oid "4.4.4.4"
+              :hoks_id 1
+              :yksiloiva_tunniste "6"
               :hankkimistapa_id 8
               :jakso_alkupvm "2021-10-15"
               :jakso_loppupvm "2021-12-11"
@@ -87,6 +104,8 @@
 
 (def jakso-9 {:opiskeluoikeus_oid "1.2.3.6"
               :oppija_oid "4.4.4.4"
+              :hoks_id 4
+              :yksiloiva_tunniste "1"
               :hankkimistapa_id 9
               :jakso_alkupvm "2021-07-03"
               :jakso_loppupvm "2021-08-26"
@@ -95,6 +114,8 @@
 
 (def jakso-10 {:opiskeluoikeus_oid "1.2.3.7"
                :oppija_oid "4.4.4.4"
+               :hoks_id 2
+               :yksiloiva_tunniste "2"
                :hankkimistapa_id 10
                :jakso_alkupvm "2021-08-20"
                :jakso_loppupvm "2021-09-10"
@@ -106,6 +127,8 @@
 
 (def jakso-11 {:opiskeluoikeus_oid "1.2.3.7"
                :oppija_oid "4.4.4.4"
+               :hoks_id 2
+               :yksiloiva_tunniste "3"
                :hankkimistapa_id 11
                :jakso_alkupvm "2021-09-03"
                :jakso_loppupvm "2021-09-30"
@@ -114,6 +137,8 @@
 
 (def jakso-12 {:opiskeluoikeus_oid "1.2.3.7"
                :oppija_oid "4.4.4.4"
+               :hoks_id 2
+               :yksiloiva_tunniste "4"
                :hankkimistapa_id 12
                :jakso_alkupvm "2021-11-12"
                :jakso_loppupvm "2021-12-15"
@@ -125,6 +150,8 @@
 
 (def jakso-13 {:opiskeluoikeus_oid "1.2.3.8"
                :oppija_oid "4.4.4.4"
+               :hoks_id 1
+               :yksiloiva_tunniste "7"
                :hankkimistapa_id 13
                :jakso_alkupvm "2021-09-06"
                :jakso_loppupvm "2021-10-19"
@@ -135,6 +162,8 @@
 
 (def jakso-14 {:opiskeluoikeus_oid "1.2.3.7"
                :oppija_oid "4.4.4.4"
+               :hoks_id 2
+               :yksiloiva_tunniste "5"
                :hankkimistapa_id 14
                :jakso_alkupvm "2021-09-01"
                :jakso_loppupvm "2024-12-15"
@@ -143,6 +172,8 @@
 
 (def jakso-15 {:opiskeluoikeus_oid "1.2.3.8"
                :oppija_oid "4.4.4.4"
+               :hoks_id 1
+               :yksiloiva_tunniste "8"
                :hankkimistapa_id 15
                :jakso_alkupvm "2021-10-04"
                :jakso_loppupvm "2021-10-19"
@@ -151,6 +182,8 @@
 
 (def jakso-16 {:opiskeluoikeus_oid "1.2.3.9"
                :oppija_oid "4.4.4.4"
+               :hoks_id 5
+               :yksiloiva_tunniste "1"
                :hankkimistapa_id 16
                :jakso_alkupvm "2021-02-01"
                :jakso_loppupvm "2021-08-30"
@@ -161,6 +194,8 @@
 
 (def jakso-17 {:opiskeluoikeus_oid "1.2.3.10.onnea.etsintaan"
                :oppija_oid "4.4.4.4"
+               :hoks_id 6
+               :yksiloiva_tunniste "1"
                :hankkimistapa_id 17
                :jakso_alkupvm "2021-08-27"
                :jakso_loppupvm "2022-04-29"
@@ -168,6 +203,8 @@
                :keskeytymisajanjaksot []})
 
 (def jakso-21 {:hankkimistapa_id 21
+               :hoks_id 7
+               :yksiloiva_tunniste "1"
                :oppija_oid "3.3.3.3"
                :osa_aikaisuus 100
                :jakso_alkupvm "2022-01-03"
@@ -176,6 +213,8 @@
                :opiskeluoikeus_oid "1.2.3.1"})
 
 (def jakso-22 {:hankkimistapa_id 22
+               :hoks_id 8
+               :yksiloiva_tunniste "1"
                :oppija_oid "3.3.3.3"
                :osa_aikaisuus 50
                :jakso_alkupvm "2022-02-07"
@@ -183,6 +222,8 @@
                :opiskeluoikeus_oid "1.2.3.2"})
 
 (def jakso-23 {:hankkimistapa_id 23
+               :hoks_id 9
+               :yksiloiva_tunniste "1"
                :oppija_oid "3.3.3.3"
                :osa_aikaisuus 20
                :jakso_alkupvm "2022-01-31"
@@ -192,6 +233,8 @@
                :opiskeluoikeus_oid "1.2.3.3"})
 
 (def jakso-24 {:hankkimistapa_id 24
+               :hoks_id 10
+               :yksiloiva_tunniste "1"
                :oppija_oid "3.3.3.3"
                :osa_aikaisuus 90
                :jakso_alkupvm "2022-01-17"
@@ -199,6 +242,8 @@
                :opiskeluoikeus_oid "1.2.3.4"})
 
 (def jakso-25 {:hankkimistapa_id 25
+               :hoks_id 11
+               :yksiloiva_tunniste "1"
                :oppija_oid "3.3.3.3"
                :osa_aikaisuus 100
                :jakso_alkupvm "2022-01-01"
@@ -285,15 +330,18 @@
                 jakso-5   ; 1.2.3.7
                 jakso-6   ; 1.2.3.8
                 jakso-10  ; 1.2.3.7
-                {:hankkimistapa_id 123 :opiskeluoikeus_oid "1.2.3.4.ei.loydy"}])
+                {:hoks_id 1
+                 :yksiloiva_tunniste "123"
+                 :hankkimistapa_id 123
+                 :opiskeluoikeus_oid "1.2.3.4.ei.loydy"}])
              {"1.2.3.7" (get opiskeluoikeudet "1.2.3.7")
               "1.2.3.8" (get opiskeluoikeudet "1.2.3.8")}))
       (is (= @mock-get-opiskeluoikeus-catch-404-count 3))
       (is (tu/logs-contain?
             {:level   :warn
-             :message
-             (str "Opiskeluoikeutta `1.2.3.4.ei.loydy` ei saatu Koskesta. "
-                  "Jakson 123 kestoksi asetetaan nolla.")})))))
+             :message (str "Opiskeluoikeutta `1.2.3.4.ei.loydy` ei saatu "
+                           "Koskesta. Jakson (HOKS `1`, yksilöivä tunniste "
+                           "`123`) kestoksi asetetaan nolla.")})))))
 
 (deftest test-get-opiskeluoikeusjaksot
   (testing "Funktio hakee onnistuneesti opiskeluoikeuden opiskeluoikeusjaksot."
@@ -392,19 +440,27 @@
   (with-redefs [clojure.tools.logging/log* tu/mock-log*]
     (testing (str "Jos osa-aikaisuustieto puuttuu jakson tiedosta, tulkitaan "
                   "jakson osa-aikaisuudeksi 0 %.")
-      (is (= (nh/osa-aikaisuuskerroin {:hankkimistapa_id 123}) 0))
+      (is (= (nh/osa-aikaisuuskerroin {:hoks_id 1
+                                       :yksiloiva_tunniste "123"
+                                       :hankkimistapa_id 123})
+             0))
       (is (tu/logs-contain?
             {:level   :error
-             :message (str "Osa-aikaisuustieto puuttuu jakson 123 tiedoista. "
+             :message (str "Osa-aikaisuustieto puuttuu jakson (HOKS `1`, "
+                           "yksilöivä tunniste `123`) tiedoista. "
                            "Jakson kestoksi asetetaan nolla.")})))
     (testing (str "Osa-aikaisuustiedon ollessa ei-validi, osa-aikaisuuden "
                   "katsotaan olevan 0 %.")
-      (are [oa] (true? (and (= (nh/osa-aikaisuuskerroin {:hankkimistapa_id 123
+      (are [oa] (true? (and (= (nh/osa-aikaisuuskerroin {:hoks_id 1
+                                                         :yksiloiva_tunniste 123
+                                                         :hankkimistapa_id 123
                                                          :osa_aikaisuus oa})
                                0)
                             (tu/logs-contain?
                               {:level :error
-                               :message (str "Jakson 123 osa-aikaisuus `" oa
+                               :message (str "Jakson (HOKS `1`, yksilöivä "
+                                             "tunniste `123`) osa-aikaisuus `"
+                                             oa
                                              "` ei ole validi. Jakson kestoksi "
                                              "asetetaan nolla.")})))
         -1 0 120 5.5 "100")))
@@ -454,38 +510,35 @@
     (str "Yhden päivän kesto jaetaan tasaisesti aktiivisena oleville "
          "jaksoille. Jos yksikään jaksoista ei ole aktiivinen, palautuu "
          "tyhjä taulu.")
-    (are [y m d jaksot kestot]
-         (let [oos (map :opiskeluoikeus_oid jaksot)]
+    (are [y m d kestot]
+         (let [oos (map :opiskeluoikeus_oid (keys kestot))]
            (= (do-rounding
                 (nh/oppijan-jaksojen-yhden-paivan-kestot
-                  (map nh/harmonize-alku-and-loppu-dates jaksot)
+                  (map nh/harmonize-alku-and-loppu-dates (keys kestot))
                   (zipmap oos (map mock-get-opiskeluoikeus-catch-404 oos))
                   (LocalDate/of y m d)))
-              kestot))
-      2021 10 13  [jakso-3]   {}  ; keskeytynyt (jakso)
-      2021 10 14  [jakso-6]   {}  ; keskeytynyt (jakso)
-      2021 10 14  [jakso-10]  {}  ; keskeytynyt (jakso)
-      2022  2  2  [jakso-25]  {}  ; keskeytynyt (opiskeluoikeus)
-      2021 10 12  [jakso-3]   {3 1.0}
-      2021  7 31  [jakso-9]   {9 1.0}
-      2021 10 13  [jakso-3 jakso-4]  {4 1.0}  ; 3 keskeytynyt
-      2021 10 12  [jakso-3 jakso-4]  {3 0.5  4 0.5}
+              (map-keys nh/ids (filter-vals #(not= % 0) kestot))))
+      2021 10 13  {jakso-3 0}  ; keskeytynyt (jakso)
+      2021 10 14  {jakso-6 0}  ; keskeytynyt (jakso)
+      2021 10 14  {jakso-10 0} ; keskeytynyt (jakso)
+      2022  2  2  {jakso-25 0} ; keskeytynyt (opiskeluoikeus)
+      2021 10 12  {jakso-3 1.0}
+      2021  7 31  {jakso-9 1.0}
+      2021 10 13  {jakso-3 0 jakso-4 1.0}  ; 3 keskeytynyt
+      2021 10 12  {jakso-3 0.5 jakso-4 0.5}
       ; 2 keskeytynyt, 3 päättynyt:
-      2021 10 25  [jakso-1 jakso-2 jakso-3 jakso-4] {1 0.5 4 0.5}
+      2021 10 25  {jakso-1 0.5 jakso-2 0 jakso-3 0 jakso-4 0.5}
       ; 1 ei vielä alkanut:
-      2021 10 21  [jakso-1 jakso-2 jakso-3 jakso-4]  {2 0.33 3 0.33 4 0.33}
+      2021 10 21  {jakso-1 0 jakso-2 0.33 jakso-3 0.33 jakso-4 0.33}
       ; 1 ei vielä alkanut, 11 ei vielä alkanut:
       2021  9  1
-      [jakso-1 jakso-5 jakso-10 jakso-11 jakso-14]
-      {5 0.33 10 0.33 14 0.33}
+      {jakso-1 0 jakso-5 0.33 jakso-10 0.33 jakso-11 0 jakso-14 0.33}
       ; 1 ei vielä alkanut
       2021  9  9
-      [jakso-1 jakso-5 jakso-10 jakso-11 jakso-14]
-      {5 0.25 10 0.25 11 0.25 14 0.25}
+      {jakso-1 0 jakso-5 0.25 jakso-10 0.25 jakso-11 0.25 jakso-14 0.25}
       ; 10 päättynyt, 11 päättynyt
       2021 10 22
-      [jakso-1 jakso-5 jakso-10 jakso-11 jakso-14]
-      {1 0.33 5 0.33 14 0.33})))
+      {jakso-1 0.33 jakso-5 0.33 jakso-10 0 jakso-11 0 jakso-14 0.33})))
 
 (deftest test-oppijan-jaksojen-kestot
   (testing (str "Funktio palauttaa `nil`, jos jaksot sisältävässä HashMapissa "
@@ -498,37 +551,39 @@
                 (= (nh/oppijan-jaksojen-kestot
                      [(assoc jakso-2 :osa_aikaisuus oa)]
                      {oo-oid (get opiskeluoikeudet oo-oid)})
-                   {2 0}))
+                   {{:hoks_id 1 :yksiloiva_tunniste "2"} 0}))
       nil -1 0 101 55.5 "merkkijono" true false {}))
   (testing (str "Funktio antaa jakson kestoksi nollan, mikäli jakson "
                 "opiskeluoikeus on `nil` tai sitä ei löydy "
                 "`opiskeluoikeudet` hashmapista.")
     (are [opiskeluoikeudet]
-         (= (nh/oppijan-jaksojen-kestot [jakso-2] opiskeluoikeudet) {2 0})
+         (= (nh/oppijan-jaksojen-kestot [jakso-2] opiskeluoikeudet)
+            {{:hoks_id 1 :yksiloiva_tunniste "2"} 0})
       {} {"1.2.3.8" nil}))
   (testing "Yhden jakson tapauksessa jakson kesto on jakson päivien
            yhteenlaskettu lukumäärä (pois lukien keskeytymisajanjakson päivät)
            kerrottuna osa-aikaisuuskertoimella"
     (are [jakso expected-kesto]
          (let [oo-oid (:opiskeluoikeus_oid jakso)]
-           (= (nh/oppijan-jaksojen-kestot
-                [jakso] {oo-oid (get opiskeluoikeudet oo-oid)})
+           (= (first (vals (nh/oppijan-jaksojen-kestot
+                             [jakso] {oo-oid (get opiskeluoikeudet oo-oid)})))
               expected-kesto))
-      jakso-1 {1 2}   ; 4 päivää • 0.4 = 1.6 päivää ≈ 2 päivää
-      jakso-2 {2 78}  ; (107 päivää - 9 k.jakson. päivää) • 0.8 = 78.4 päivää
-                      ;                                         ≈ 78 päivää
-      jakso-3 {3 9}   ; (10 päivää - 1 k.jakson. päivää) • 1.0 = 9 päivää
-      jakso-6 {6 9})) ; (10 päivää - 1 k.jakson. päivää) • 1.0 = 9 päivää
+      jakso-1 2   ; 4 päivää • 0.4 = 1.6 päivää ≈ 2 päivää
+      jakso-2 78  ; (107 päivää - 9 k.jakson. päivää) • 0.8 = 78.4 päivää
+                  ;                                         ≈ 78 päivää
+      jakso-3 9   ; (10 päivää - 1 k.jakson. päivää) • 1.0 = 9 päivää
+      jakso-6 9)) ; (10 päivää - 1 k.jakson. päivää) • 1.0 = 9 päivää
   (testing
     "Useamman jakson tapauksessa kestot ovat pienempiä jyvityksen seurauksena."
     (are [jaksot expected-kestot]
-         (= (nh/oppijan-jaksojen-kestot
-              jaksot
-              (select-keys opiskeluoikeudet (map :opiskeluoikeus_oid jaksot)))
+         (= (vals (nh/oppijan-jaksojen-kestot
+                    jaksot
+                    (select-keys opiskeluoikeudet
+                                 (map :opiskeluoikeus_oid jaksot))))
             expected-kestot)
-      [jakso-2 jakso-3] {2 74 3 5}
-      [jakso-2 jakso-4 jakso-8] {2 35 4 104 8 23}
-      [jakso-1 jakso-4 jakso-9 jakso-16] {1 1 4 109 9 28 16 119})))
+      [jakso-2 jakso-3] [74 5]
+      [jakso-2 jakso-4 jakso-8] [35 104 23]
+      [jakso-1 jakso-4 jakso-9 jakso-16] [1 109 28 119])))
 
 (deftest test-jaksojen-kestot!
   (with-redefs
@@ -536,22 +591,24 @@
      mock-get-tyoelamajaksot-active-between!
      koski/get-opiskeluoikeus-catch-404! mock-get-opiskeluoikeus-catch-404]
     (testing "Funktio laskee kestot oikein"
-      (are [jaksot kestot] (= (nh/jaksojen-kestot! jaksot) kestot)
-        [jakso-2] {2 12}
-        [jakso-9] {9 18}
-        [jakso-21] {21 16}
-        [jakso-1 jakso-4] {1 0 4 37}
-        [jakso-9 jakso-21] {9 18 21 16}
-        jaksot-1-25 {1 0, 2 12, 3 1, 4 37, 5 215, 6 1, 7 85, 8 9, 9 18, 10 4,
-                     11 4, 12 4, 13 5, 14 725, 15 2, 16 62, 17 0, 21 16,
-                     22 25, 23 0, 24 14, 25 13}))
+      (are [kestot] (= (nh/jaksojen-kestot! (keys kestot))
+                       (map-keys nh/ids kestot))
+        {jakso-2 12}
+        {jakso-9 18}
+        {jakso-21 16}
+        {jakso-1 0 jakso-4 37}
+        {jakso-9 18 jakso-21 16}
+        {jakso-1 0  jakso-2 12 jakso-3 1 jakso-4 37 jakso-5 215 jakso-6 1
+         jakso-7 85 jakso-8 9  jakso-9 18 jakso-10 4 jakso-11 4 jakso-12 4
+         jakso-13 5 jakso-14 725 jakso-15 2 jakso-16 62 jakso-17 0
+         jakso-21 16 jakso-22 25 jakso-23 0 jakso-24 14 jakso-25 13}))
     (testing (str "Lopputulos on sama kuin kestot laskettaisiin kunkin oppijan "
                   "jaksoille erikseen. Ts. funktio erottelee eri oppijoiden "
                   "jaksot kestoja laskiessaan.")
       (are [jaksot] (= (nh/jaksojen-kestot! jaksot)
-                       (zipmap (map :hankkimistapa_id jaksot)
+                       (zipmap (map nh/ids jaksot)
                                (map #(get (nh/jaksojen-kestot! [%])
-                                          (:hankkimistapa_id %))
+                                          (nh/ids %))
                                     jaksot)))
         [jakso-9 jakso-23]
         [jakso-3 jakso-6 jakso-15 jakso-22 jakso-23]
@@ -567,7 +624,7 @@
       (with-redefs
         [koski/get-opiskeluoikeus-catch-404! (constantly nil)]
         (is (= (nh/jaksojen-kestot! jaksot-1-25)
-               (zipmap (map :hankkimistapa_id jaksot-1-25) (repeat 0))))))))
+               (zipmap (map nh/ids jaksot-1-25) (repeat 0))))))))
 
 (deftest test-query-jaksot
   (testing "Varmistaa, että query-jaksot toimii oikein."
@@ -599,12 +656,16 @@
 
 (defn- mock-trauj-query-jaksot [nippu]
   (add-to-trauj-results {:type "query-jaksot" :nippu nippu})
-  [{:hankkimistapa_id 1} {:hankkimistapa_id 2} {:hankkimistapa_id 3}])
+  [{:hoks_id 1 :yksiloiva_tunniste "1" :hankkimistapa_id 1}
+   {:hoks_id 1 :yksiloiva_tunniste "2" :hankkimistapa_id 2}
+   {:hoks_id 1 :yksiloiva_tunniste "3" :hankkimistapa_id 3}])
 
 (defn- mock-trauj-jaksojen-kestot [jaksot]
   (add-to-trauj-results {:type "jaksojen-kestot!"
                          :jaksot jaksot})
-  {1 1 2 3 3 5})
+  {{:hoks_id 1 :yksiloiva_tunniste "1"} 1
+   {:hoks_id 1 :yksiloiva_tunniste "2"} 3
+   {:hoks_id 1 :yksiloiva_tunniste "3"} 5})
 
 (defn- mock-trauj-update-jakso [jakso updates]
   (add-to-trauj-results {:type "update-jakso" :jakso jakso :updates updates}))
@@ -616,23 +677,26 @@
        nh/query-jaksot! mock-trauj-query-jaksot
        oph.heratepalvelu.tep.tepCommon/update-jakso mock-trauj-update-jakso]
       (let [nippu {:mock-nippu-contents "asdf"}
-            results [{:type "query-jaksot" :nippu {:mock-nippu-contents "asdf"}}
-                     {:type "jaksojen-kestot!"
-                      :jaksot [{:hankkimistapa_id 1}
-                               {:hankkimistapa_id 2}
-                               {:hankkimistapa_id 3}]}
-                     {:type "update-jakso"
-                      :jakso {:hankkimistapa_id 1}
-                      :updates {:kesto [:n 1]}}
-                     {:type "update-jakso"
-                      :jakso {:hankkimistapa_id 2}
-                      :updates {:kesto [:n 3]}}
-                     {:type "update-jakso"
-                      :jakso {:hankkimistapa_id 3}
-                      :updates {:kesto [:n 5]}}]
-            updated-jaksot [{:hankkimistapa_id 1 :kesto 1}
-                            {:hankkimistapa_id 2 :kesto 3}
-                            {:hankkimistapa_id 3 :kesto 5}]]
+            results
+            [{:type "query-jaksot" :nippu {:mock-nippu-contents "asdf"}}
+             {:type "jaksojen-kestot!"
+              :jaksot
+              [{:hoks_id 1 :yksiloiva_tunniste "1" :hankkimistapa_id 1}
+               {:hoks_id 1 :yksiloiva_tunniste "2" :hankkimistapa_id 2}
+               {:hoks_id 1 :yksiloiva_tunniste "3" :hankkimistapa_id 3}]}
+             {:type "update-jakso"
+              :jakso {:hoks_id 1 :yksiloiva_tunniste "1" :hankkimistapa_id 1}
+              :updates {:kesto [:n 1]}}
+             {:type "update-jakso"
+              :jakso {:hoks_id 1 :yksiloiva_tunniste "2" :hankkimistapa_id 2}
+              :updates {:kesto [:n 3]}}
+             {:type "update-jakso"
+              :jakso {:hoks_id 1 :yksiloiva_tunniste "3" :hankkimistapa_id 3}
+              :updates {:kesto [:n 5]}}]
+            updated-jaksot
+            [{:hoks_id 1 :yksiloiva_tunniste "1" :hankkimistapa_id 1 :kesto 1}
+             {:hoks_id 1 :yksiloiva_tunniste "2" :hankkimistapa_id 2 :kesto 3}
+             {:hoks_id 1 :yksiloiva_tunniste "3" :hankkimistapa_id 3 :kesto 5}]]
         (is (= (nh/retrieve-and-update-jaksot! nippu) updated-jaksot))
         (is (= @trauj-results results))))))
 
