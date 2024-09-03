@@ -629,12 +629,11 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       this,
       "kestojenUudelleenlaskentaHandler",
       {
-        runtime: lambda.Runtime.JAVA_8_CORRETTO,
+        runtime: this.runtime,
         code: lambdaCode,
         environment: {
           ...this.envVars,
           jaksotunnus_table: jaksotunnusTable.tableName,
-          nippu_table: nippuTable.tableName,
           caller_id: `1.2.246.562.10.00000000001.${id}-kestojenUudelleenlaskentaHandler`,
         },
         memorySize: Token.asNumber(1024),
@@ -644,8 +643,12 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         tracing: lambda.Tracing.ACTIVE
     });
 
+    new events.Rule(this, "KestojenUudelleenlaskentaScheduleRule", {
+      schedule: events.Schedule.expression("rate(15 minutes)"),
+      targets: [new targets.LambdaFunction(kestojenUudelleenlaskentaHandler)]
+    });
+
     jaksotunnusTable.grantReadWriteData(kestojenUudelleenlaskentaHandler);
-    nippuTable.grantReadWriteData(kestojenUudelleenlaskentaHandler);
 
     // Arkistointifunktiot
     const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {

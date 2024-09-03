@@ -253,8 +253,8 @@
   `oppijan-jaksojen-kestot`-funktion tekemää kestojen laskemista.
 
   Palauttaa hashmapin, joka sisältää `jaksot` listan jaksoille lasketut kestot.
-  Hashmapin avaimina jaksojen id:t (osaamisenhankkimistapojen) ja arvoina kestot
-  kokonaislukuina."
+  Hashmapin avaimina jaksojen id:t (HOKS id + yksiloiva tunniste) ja arvoina
+  kestot kokonaislukuina."
   [jaksot]
   (->> (group-by :oppija_oid jaksot) ; Ryhmitellään jaksot oppijan perusteella
        vals
