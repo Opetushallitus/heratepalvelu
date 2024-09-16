@@ -33,15 +33,21 @@
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleKestojenUudelleenlaskenta" event context)
   (loop [resp (scan-for-jaksot-with-kesto! nil)]
+    (log/info "Processing" (count (:items resp)) "jaksoa.")
     (let [jaksot (:items resp)
           kestot (nh/jaksojen-kestot! jaksot)]
+      (log/info "Got" (count kestot) "durations for jaksot:"
+                (clojure.string/join ", " (take 3 (keys kestot))) ", ...")
       (doseq [jakso jaksot]
-        (if-let [new-kesto (get kestot (nh/ids jakso))]
-          (tc/update-jakso jakso
-                           {:kesto       [:n new-kesto]
-                            :kesto_vanha [:n (:kesto jakso)]})
-          (log/warn "Couldn't calculate kesto for jakso with ids "
-                    (nh/ids jakso)))))
+        (let [jakso-key (nh/ids jakso)]
+          (if-let [new-kesto (get kestot jakso-key)]
+            (do
+              (log/info "Updating jakso" jakso-key "with kesto" new-kesto)
+              (tc/update-jakso jakso
+                               {:kesto       [:n new-kesto]
+                                :kesto_vanha [:n (:kesto jakso)]}))
+            (log/warn "Couldn't calculate kesto for jakso with ids"
+                      jakso-key)))))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key resp))
       (recur (scan-for-jaksot-with-kesto! (:last-evaluated-key resp))))))
