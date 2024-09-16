@@ -640,7 +640,9 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
         reservedConcurrentExecutions: 1,
         timeout: Duration.seconds(900),
         handler: "oph.heratepalvelu.tep.kestojenUudelleenlaskentaHandler::handleKestojenUudelleenlaskenta",
-        tracing: lambda.Tracing.ACTIVE
+        tracing: lambda.Tracing.ACTIVE,
+        logGroup: tepLogGroup,
+        vpc: vpc
     });
 
     new events.Rule(this, "KestojenUudelleenlaskentaScheduleRule", {
