@@ -445,7 +445,7 @@
                                        :hankkimistapa_id 123})
              0))
       (is (tu/logs-contain?
-            {:level   :error
+            {:level   :warn
              :message (str "Osa-aikaisuustieto puuttuu jakson (HOKS `1`, "
                            "yksilöivä tunniste `123`) tiedoista. "
                            "Jakson kestoksi asetetaan nolla.")})))
@@ -457,7 +457,7 @@
                                                          :osa_aikaisuus oa})
                                0)
                             (tu/logs-contain?
-                              {:level :error
+                              {:level :warn
                                :message (str "Jakson (HOKS `1`, yksilöivä "
                                              "tunniste `123`) osa-aikaisuus `"
                                              oa
