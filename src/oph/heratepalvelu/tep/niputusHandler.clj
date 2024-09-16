@@ -50,7 +50,7 @@
         osa-aikaisuus      (:osa_aikaisuus jakso)]
     (or (cond
           (nil? osa-aikaisuus)
-          (log/errorf
+          (log/warnf
             (str "Osa-aikaisuustieto puuttuu jakson (HOKS `%d`, yksilöivä "
                  "tunniste `%s`) tiedoista. Jakson kestoksi asetetaan nolla.")
             hoks-id
@@ -58,7 +58,7 @@
           (not (and (integer? osa-aikaisuus)
                     (pos? osa-aikaisuus)
                     (>= 100 osa-aikaisuus)))
-          (log/errorf
+          (log/warnf
             (str "Jakson (HOKS `%d`, yksilöivä tunniste `%s`) osa-aikaisuus "
                  "`%s` ei ole validi. Jakson kestoksi asetetaan nolla.")
             hoks-id
@@ -279,7 +279,7 @@
   (let [jaksot (query-jaksot! nippu)
         kestot (jaksojen-kestot! jaksot)]
     (map #(let [hoks-id            (:hoks_id %)
-                yksiloiva-tunniste (:yksiloiva-tunniste %)
+                yksiloiva-tunniste (:yksiloiva_tunniste %)
                 kesto  (get kestot (ids %) 0)]
             (log/infof (str "Päivitetään jaksoon (HOKS `%d`, yksilöivä "
                             "tunniste `%s`) kesto `%d`.")
