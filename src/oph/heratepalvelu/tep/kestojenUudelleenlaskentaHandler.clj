@@ -33,23 +33,49 @@
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
   (log-caller-details-scheduled "handleKestojenUudelleenlaskenta" event context)
   (loop [resp (scan-for-jaksot-with-kesto! nil)]
-    (let [jaksot (:items resp)]
-      (log/info "Processing" (count jaksot) "jaksoa.")
-      (doseq [jakso jaksot]
-        (let [concurrent-jaksot (nh/get-concurrent-jaksot-from-ehoks! [jakso])
-              opiskeluoikeudet  (nh/get-and-memoize-opiskeluoikeudet!
-                                  concurrent-jaksot)
-              kestot            (nh/oppijan-jaksojen-kestot
-                                  concurrent-jaksot opiskeluoikeudet)
-              jakso-key         (nh/ids jakso)]
-          (if-let [new-kesto (get kestot jakso-key 0)]
-            (do
-              (log/info "Updating jakso" jakso-key "with kesto" new-kesto)
+    (log/info "Processing" (count (:items resp)) "jaksoa.")
+    (doseq [jakso (:items resp)]
+      (let [concurrent-jaksot (nh/get-concurrent-jaksot-from-ehoks! [jakso])
+            opiskeluoikeudet  (nh/get-and-memoize-opiskeluoikeudet!
+                                concurrent-jaksot)
+            jakso-key         (nh/ids jakso)]
+        (cond
+          (not-any? #(= (nh/ids %) jakso-key) concurrent-jaksot)
+          (do (log/warnf (str "Couldn't calculate duriation for jakso %s "
+                              "because it cannot be found from eHOKS. Setting "
+                              "newly calculated kesto to 0.")
+                         jakso-key)
               (tc/update-jakso jakso
-                               {:kesto       [:n new-kesto]
-                                :kesto_vanha [:n (:kesto jakso)]}))
-            (log/warn "Couldn't calculate kesto for jakso with ids"
-                      jakso-key)))))
+                               {:kesto           [:n 0]
+                                :kesto_vanha     [:n (:kesto jakso)]
+                                :nollakeston_syy [:s "Jakso poistettu"]}))
+
+          (not (contains? opiskeluoikeudet (:opiskeluoikeus_oid jakso)))
+          (do (log/warnf (str "Couldn't calculate duriation for jakso %s "
+                              "because couldn't get opiskeluoikeus from Koski. "
+                              "Setting newly calculated kesto to 0.")
+                         jakso-key)
+              (tc/update-jakso
+                jakso
+                {:kesto           [:n 0]
+                 :kesto_vanha     [:n (:kesto jakso)]
+                 :nollakeston_syy [:s "Ei saatu opiskeluoikeutta Koskesta"]}))
+
+          :else
+          (if-let [new-kesto (get (nh/oppijan-jaksojen-kestot
+                                    concurrent-jaksot opiskeluoikeudet)
+                                  jakso-key)]
+            (do (log/info "Updating jakso" jakso-key "with kesto" new-kesto)
+                (tc/update-jakso jakso {:kesto       [:n new-kesto]
+                                        :kesto_vanha [:n (:kesto jakso)]}))
+            (do (log/errorf (str "For unknown reason, couldn't calculate kesto "
+                                 "for jakso with ids %s. Setting newly "
+                                 "calculated kesto to 0.")
+                            jakso-key)
+                (tc/update-jakso jakso
+                                 {:kesto           [:n 0]
+                                  :kesto_vanha     [:n (:kesto jakso)]
+                                  :nollakeston_syy [:s "Tuntematon"]}))))))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key resp))
       (recur (scan-for-jaksot-with-kesto! (:last-evaluated-key resp))))))
