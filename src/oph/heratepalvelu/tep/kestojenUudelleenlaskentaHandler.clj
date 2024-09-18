@@ -42,7 +42,7 @@
               kestot            (nh/oppijan-jaksojen-kestot
                                   concurrent-jaksot opiskeluoikeudet)
               jakso-key         (nh/ids jakso)]
-          (if-let [new-kesto (get kestot jakso-key)]
+          (if-let [new-kesto (get kestot jakso-key 0)]
             (do
               (log/info "Updating jakso" jakso-key "with kesto" new-kesto)
               (tc/update-jakso jakso
