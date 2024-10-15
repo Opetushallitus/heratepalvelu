@@ -15,19 +15,31 @@
               com.amazonaws.services.lambda.runtime.Context] void]])
 
 (def alkupvm "2023-07-01")
+(def koulutustoimija-oid "1.2.246.562.10.82246911869")
 
 (defn scan-for-jaksot-with-kesto!
-  "Hakee tietokannasta ne jaksot, jotka ovat päättyneet `alkupvm` jälkeen ja
-  joille on laskettu niputuksen yhteydessä kesto. Suodattaan jaksoja edelleen
-  siten, että jäljelle jääviltä jaksoilta löytyy vanhastaan laskettu kesto,
-  mutta ei uudella tavalla laskettua kestoa."
+  "Hakee tietokannasta koulutustoimijan jaksot, jotka ovat päättyneet
+  `alkupvm` jälkeen ja joille on laskettu niputuksen yhteydessä kesto. Näille
+  jaksoille on jo kerran suoritettu uudelleenlaskenta, joten `kesto_vanha`
+  tiedon sijasta hyödynnetään `kestojen_uudelleenlaskentakerta` attribuuttia,
+  jotta suoritus etenisi eikä `scan` palauttaisi samoja jaksoja uudelleen ja
+  uudelleen aina seuraavaan `scan`-operaation yhteydessä."
   [exclusive-start-key]
-  (ddb/scan {:filter-expression   (str "jakso_loppupvm >= :alkupvm AND "
-                                       "attribute_exists(kesto) AND "
-                                       "attribute_not_exists(kesto_vanha)")
+  (ddb/scan {:filter-expression
+             (str "koulutustoimija = :koulutustoimija AND
+                  jakso_loppupvm >= :alkupvm AND "
+                  "attribute_exists(kesto) AND "
+                  "attribute_not_exists(kestojen_uudelleenlaskentakerta)")
              :exclusive-start-key exclusive-start-key
-             :expr-attr-vals      {":alkupvm" [:s alkupvm]}}
+             :expr-attr-vals      {":koulutustoimija" [:s koulutustoimija-oid]
+                                   ":alkupvm"         [:s alkupvm]}}
             (:jaksotunnus-table env)))
+
+(defn- get-old-kesto
+  "If `kesto_vanha` field already exists in `jakso`, return that, otherwise
+  return `:kesto`."
+  [jakso]
+  (or (:kesto_vanha jakso) (:kesto jakso)))
 
 (defn -handleKestojenUudelleenlaskenta
   [_ event ^com.amazonaws.services.lambda.runtime.Context context]
@@ -46,9 +58,10 @@
                               "newly calculated kesto to 0.")
                          jakso-key)
               (tc/update-jakso jakso
-                               {:kesto           [:n 0]
-                                :kesto_vanha     [:n (:kesto jakso)]
-                                :nollakeston_syy [:s "Jakso poistettu"]}))
+                               {:kesto [:n 0]
+                                :kesto_vanha [:n (get-old-kesto jakso)]
+                                :nollakeston_syy [:s "Jakso poistettu"]
+                                :kestojen_uudelleenlaskentakerta [:n 2]}))
 
           (not (contains? opiskeluoikeudet (:opiskeluoikeus_oid jakso)))
           (do (log/warnf (str "Couldn't calculate duriation for jakso %s "
@@ -57,25 +70,29 @@
                          jakso-key)
               (tc/update-jakso
                 jakso
-                {:kesto           [:n 0]
-                 :kesto_vanha     [:n (:kesto jakso)]
-                 :nollakeston_syy [:s "Ei saatu opiskeluoikeutta Koskesta"]}))
+                {:kesto [:n 0]
+                 :kesto_vanha [:n (get-old-kesto jakso)]
+                 :nollakeston_syy [:s "Ei saatu opiskeluoikeutta Koskesta"]
+                 :kestojen_uudelleenlaskentakerta [:n 2]}))
 
           :else
           (if-let [new-kesto (get (nh/oppijan-jaksojen-kestot
                                     concurrent-jaksot opiskeluoikeudet)
                                   jakso-key)]
             (do (log/info "Updating jakso" jakso-key "with kesto" new-kesto)
-                (tc/update-jakso jakso {:kesto       [:n new-kesto]
-                                        :kesto_vanha [:n (:kesto jakso)]}))
+                (tc/update-jakso jakso
+                                 {:kesto [:n new-kesto]
+                                  :kesto_vanha [:n (get-old-kesto jakso)]
+                                  :kestojen_uudelleenlaskentakerta [:n 2]}))
             (do (log/errorf (str "For unknown reason, couldn't calculate kesto "
                                  "for jakso with ids %s. Setting newly "
                                  "calculated kesto to 0.")
                             jakso-key)
                 (tc/update-jakso jakso
-                                 {:kesto           [:n 0]
-                                  :kesto_vanha     [:n (:kesto jakso)]
-                                  :nollakeston_syy [:s "Tuntematon"]}))))))
+                                 {:kesto [:n 0]
+                                  :kesto_vanha [:n (get-old-kesto jakso)]
+                                  :nollakeston_syy [:s "Tuntematon"]
+                                  :kestojen_uudelleenlaskentakerta [:n 2]}))))))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key resp))
       (recur (scan-for-jaksot-with-kesto! (:last-evaluated-key resp))))))
