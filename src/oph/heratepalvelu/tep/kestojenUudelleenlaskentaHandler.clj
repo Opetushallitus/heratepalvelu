@@ -33,7 +33,7 @@
              :exclusive-start-key exclusive-start-key
              :expr-attr-vals      {":koulutustoimija" [:s koulutustoimija-oid]
                                    ":alkupvm"         [:s alkupvm]
-                                   ":kerta"           [:n 2]}}
+                                   ":kerta"           [:n 3]}}
             (:jaksotunnus-table env)))
 
 (defn- get-old-kesto
@@ -62,7 +62,7 @@
                                {:kesto [:n 0]
                                 :kesto_vanha [:n (get-old-kesto jakso)]
                                 :nollakeston_syy [:s "Jakso poistettu"]
-                                :kestojen_uudelleenlaskentakerta [:n 3]}))
+                                :kestojen_uudelleenlaskentakerta [:n 4]}))
 
           (not (contains? opiskeluoikeudet (:opiskeluoikeus_oid jakso)))
           (do (log/warnf (str "Couldn't calculate duriation for jakso %s "
@@ -74,7 +74,7 @@
                 {:kesto [:n 0]
                  :kesto_vanha [:n (get-old-kesto jakso)]
                  :nollakeston_syy [:s "Ei saatu opiskeluoikeutta Koskesta"]
-                 :kestojen_uudelleenlaskentakerta [:n 3]}))
+                 :kestojen_uudelleenlaskentakerta [:n 4]}))
 
           :else
           (if-let [new-kesto (get (nh/oppijan-jaksojen-kestot
@@ -84,7 +84,7 @@
                 (tc/update-jakso jakso
                                  {:kesto [:n new-kesto]
                                   :kesto_vanha [:n (get-old-kesto jakso)]
-                                  :kestojen_uudelleenlaskentakerta [:n 3]}))
+                                  :kestojen_uudelleenlaskentakerta [:n 4]}))
             (do (log/errorf (str "For unknown reason, couldn't calculate kesto "
                                  "for jakso with ids %s. Setting newly "
                                  "calculated kesto to 0.")
@@ -93,7 +93,7 @@
                                  {:kesto [:n 0]
                                   :kesto_vanha [:n (get-old-kesto jakso)]
                                   :nollakeston_syy [:s "Tuntematon"]
-                                  :kestojen_uudelleenlaskentakerta [:n 3]}))))))
+                                  :kestojen_uudelleenlaskentakerta [:n 4]}))))))
     (when (and (< 30000 (.getRemainingTimeInMillis context))
                (:last-evaluated-key resp))
       (recur (scan-for-jaksot-with-kesto! (:last-evaluated-key resp))))))
