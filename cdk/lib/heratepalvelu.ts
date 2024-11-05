@@ -56,7 +56,7 @@ export class HeratepalveluStack extends Stack {
       stage: envName
     };
 
-    this.runtime = lambda.Runtime.JAVA_11;
+    this.runtime = lambda.Runtime.JAVA_17;
   }
 
   createErrorMetricFilter = (stack: string, logGroup: LogGroup) => {
