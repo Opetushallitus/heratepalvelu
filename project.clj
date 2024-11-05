@@ -31,7 +31,7 @@
                          [org.clojure/core.memoize "1.1.266"]
                          [environ "1.2.0"]
                          [clj-http "3.13.0"]
-                         [cheshire "5.13.0"]
+                         [cheshire "5.12.0"]
                          [clj-time "0.15.2"]
                          [clj-tuple "0.2.2"]
                          [com.amazonaws/aws-xray-recorder-sdk-core "2.18.2"]

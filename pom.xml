@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/heratepalvelu</url>
     <connection>scm:git:git://github.com/Opetushallitus/heratepalvelu.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/heratepalvelu.git</developerConnection>
-    <tag>4979e0dd79c46e124d22b3ffed682395e192921e</tag>
+    <tag>f78c814539d5c790792d0cae4d05529e5de05db4</tag>
   </scm>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -125,7 +125,7 @@
       <dependency>
         <groupId>cheshire</groupId>
         <artifactId>cheshire</artifactId>
-        <version>5.13.0</version>
+        <version>5.12.0</version>
       </dependency>
       <dependency>
         <groupId>clj-time</groupId>
