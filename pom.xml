@@ -11,7 +11,7 @@
     <url>https://github.com/Opetushallitus/heratepalvelu</url>
     <connection>scm:git:git://github.com/Opetushallitus/heratepalvelu.git</connection>
     <developerConnection>scm:git:ssh://git@github.com/Opetushallitus/heratepalvelu.git</developerConnection>
-    <tag>246de1565b597afc6e61164adcc0d852349dc504</tag>
+    <tag>4979e0dd79c46e124d22b3ffed682395e192921e</tag>
   </scm>
   <build>
     <sourceDirectory>src</sourceDirectory>
@@ -240,22 +240,22 @@
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-core</artifactId>
-        <version>2.18.1</version>
+        <version>2.15.4</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-annotations</artifactId>
-        <version>2.18.1</version>
+        <version>2.15.4</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.core</groupId>
         <artifactId>jackson-databind</artifactId>
-        <version>2.18.1</version>
+        <version>2.15.4</version>
       </dependency>
       <dependency>
         <groupId>com.fasterxml.jackson.dataformat</groupId>
         <artifactId>jackson-dataformat-cbor</artifactId>
-        <version>2.18.1</version>
+        <version>2.15.4</version>
       </dependency>
       <dependency>
         <groupId>com.typesafe.akka</groupId>
