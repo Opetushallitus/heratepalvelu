@@ -1,12 +1,13 @@
 (ns oph.heratepalvelu.tpk.tpkNiputusHandler
   "Käsittelee TPK:n niputusta ja tallennusta herätepalvelun tietokantaan."
-  (:require [clojure.tools.logging :as log]
-            [clojure.core.memoize :refer [memo]]
+  (:require [clojure.core.memoize :refer [memo]]
+            [clojure.tools.logging :as log]
             [environ.core :refer [env]]
             [oph.heratepalvelu.common :as c]
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.log.caller-log :refer :all]
-            [oph.heratepalvelu.tpk.tpkCommon :as tpkc])
+            [oph.heratepalvelu.tpk.tpkCommon :as tpkc]
+            [oph.heratepalvelu.util.string :as u-str])
   (:import (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)))
 
@@ -32,7 +33,7 @@
   "Luo nipputunnisteen työpaikan normalisoidun nimen, työpaikan Y-tunnuksen,
   koulutustoimijan ja tiedonkeruukauden perustella."
   [jakso]
-  (str (c/normalize-string (:tyopaikan_nimi jakso)) "/"
+  (str (u-str/normalize (:tyopaikan_nimi jakso)) "/"
        (:tyopaikan_ytunnus jakso) "/"
        (:koulutustoimija jakso) "/"
        (tpkc/get-kausi-alkupvm (LocalDate/parse (:jakso_loppupvm jakso))) "_"
@@ -68,7 +69,7 @@
                          (LocalDate/parse (:jakso_loppupvm jakso)))]
     {:nippu-id                    (create-nippu-id jakso)
      :tyopaikan-nimi              (:tyopaikan_nimi jakso)
-     :tyopaikan-nimi-normalisoitu (c/normalize-string (:tyopaikan_nimi jakso))
+     :tyopaikan-nimi-normalisoitu (u-str/normalize (:tyopaikan_nimi jakso))
      :vastaamisajan-alkupvm       (str alkupvm)
      :vastaamisajan-loppupvm      (str loppupvm)
      :tyopaikan-ytunnus           (:tyopaikan_ytunnus jakso)

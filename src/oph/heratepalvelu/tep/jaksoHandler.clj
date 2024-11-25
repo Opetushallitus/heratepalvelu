@@ -11,6 +11,7 @@
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.koski :as koski]
             [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
+            [oph.heratepalvelu.util.string :as u-str]
             [schema.core :as s])
   (:import (clojure.lang ExceptionInfo)
            (com.amazonaws.services.lambda.runtime.events SQSEvent
@@ -201,7 +202,7 @@
                                 (:tyopaikan-ytunnus herate) "/"
                                 koulutustoimija "/" tutkinto)]
                        :tyopaikan_normalisoitu_nimi
-                       [:s (c/normalize-string (:tyopaikan-nimi herate))]}
+                       [:s (u-str/normalize (:tyopaikan-nimi herate))]}
               jaksotunnus-table-data
               (cond-> db-data
                 (not-empty (:tyopaikkaohjaaja-email herate))
@@ -258,7 +259,7 @@
             (let [arvo-resp (arvo/create-jaksotunnus
                               (arvo/build-jaksotunnus-request-body
                                 herate
-                                (c/normalize-string (:tyopaikan-nimi herate))
+                                (u-str/normalize (:tyopaikan-nimi herate))
                                 opiskeluoikeus
                                 request-id
                                 koulutustoimija
