@@ -16,14 +16,13 @@
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.external.koski :as koski]
+            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]]
             [oph.heratepalvelu.tep.jaksoHandler :as jh]
             [oph.heratepalvelu.tep.niputusHandler :as nh]
-            [oph.heratepalvelu.log.caller-log :refer [log-caller-details-sqs]])
+            [oph.heratepalvelu.util.string :as u-str])
   (:import (clojure.lang ExceptionInfo)
            (com.amazonaws.services.lambda.runtime.events SQSEvent
                                                          SQSEvent$SQSMessage)
-           (com.fasterxml.jackson.core JsonParseException)
-           (java.time LocalDate)
            (software.amazon.awssdk.awscore.exception AwsServiceException)
            (software.amazon.awssdk.services.dynamodb.model
              ConditionalCheckFailedException)))
@@ -109,7 +108,7 @@
                               (:tyopaikan-ytunnus herate) "/"
                               koulutustoimija "/" tutkinto)]
                      :tyopaikan_normalisoitu_nimi
-                     [:s (c/normalize-string (:tyopaikan-nimi herate))]
+                     [:s (u-str/normalize (:tyopaikan-nimi herate))]
                      :existing-arvo-tunnus [:s (str existing-arvo-tunnus)]
                      :vanha-kesto           [:n kesto-vanha]
                      ; NOTE: Uudessa laskutavassa osa-aikaisuutta ei oteta

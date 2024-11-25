@@ -8,10 +8,10 @@
             [oph.heratepalvelu.db.dynamodb :as ddb]
             [oph.heratepalvelu.external.ehoks :as ehoks]
             [oph.heratepalvelu.external.organisaatio :as org]
+            [oph.heratepalvelu.util.string :as u-str]
             [schema.core :as s])
   (:import (clojure.lang ExceptionInfo)
            (com.google.i18n.phonenumbers PhoneNumberUtil NumberParseException)
-           (java.text Normalizer Normalizer$Form)
            (java.time LocalDate)
            (java.time.format DateTimeParseException)
            (java.util UUID)))
@@ -210,22 +210,10 @@
         (LocalDate/of (inc year) 1 1)
         (LocalDate/of year (inc month) 1)))))
 
-(defn- deaccent-string
-  "Poistaa diakriittiset merkit stringistä ja palauttaa muokatun stringin."
-  [utf8-string]
-  (str/replace (Normalizer/normalize utf8-string Normalizer$Form/NFD)
-               #"\p{InCombiningDiacriticalMarks}+"
-               ""))
-
-(defn normalize-string
-  "Muuttaa muut merkit kuin kirjaimet ja numerot alaviivaksi."
-  [string]
-  (str/lower-case (str/replace (deaccent-string string) #"\W+" "_")))
-
 (defn create-nipputunniste
   "Luo nipulle tunnisteen ilman erikoismerkkejä."
   [tyopaikan-nimi]
-  (str (normalize-string tyopaikan-nimi) "_" (local-date-now) "_" (rand-str 6)))
+  (str (u-str/normalize tyopaikan-nimi) "_" (local-date-now) "_" (rand-str 6)))
 
 (defn whitelisted-organisaatio?!
   "Tarkistaa, onko koulutustoimija mukana automaatiossa."
@@ -352,7 +340,7 @@
 (defn- make-set-pair
   "Luo '#x = :x' -pareja update-expreja varten."
   [item-key]
-  (let [normalized (normalize-string (name item-key))]
+  (let [normalized (u-str/normalize (name item-key))]
     (str "#" normalized " = :" normalized)))
 
 (defn create-update-item-options
@@ -361,10 +349,10 @@
   {:update-expr (str "SET " (str/join ", " (map make-set-pair (keys updates))))
    :expr-attr-names
    (let [names (map name (keys updates))]
-     (zipmap (map #(str "#" (normalize-string %)) names) names))
+     (zipmap (map #(str "#" (u-str/normalize %)) names) names))
    :expr-attr-vals
    ; FIXME: map-keys
-   (reduce-kv #(assoc %1 (str ":" (normalize-string (name %2))) %3)
+   (reduce-kv #(assoc %1 (str ":" (u-str/normalize (name %2))) %3)
               {}
               updates)})
 
