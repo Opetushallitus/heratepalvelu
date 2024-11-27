@@ -4,17 +4,9 @@
   (:import (fi.vm.sade.utils.cas CasClient CasParams)
            (com.amazonaws.xray AWSXRay)))
 
-(defn- mock-cas-client [url caller-id]
-  (str "cas-client-placeholder " url " " caller-id))
-
-(defn- mock-cas-params [path username password]
-  (str "cas-params-placeholder " path " " username " " password))
-
 (deftest test-init-client
   (testing "Varmista, että init-client toimii oikein"
-    (with-redefs [clj-cas.cas/cas-client mock-cas-client
-                  clj-cas.cas/cas-params mock-cas-params
-                  environ.core/env {:caller-id "asdf"
+    (with-redefs [environ.core/env {:caller-id "asdf"
                                     :cas-user "user"
                                     :cas-url "example.com"}
                   oph.heratepalvelu.external.cas-client/pwd (delay "p@ssw0rd")]

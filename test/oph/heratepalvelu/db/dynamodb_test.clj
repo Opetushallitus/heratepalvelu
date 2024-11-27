@@ -2,7 +2,8 @@
   (:require [clojure.test :refer :all]
             [oph.heratepalvelu.db.dynamodb :as ddb])
   (:import (software.amazon.awssdk.services.dynamodb DynamoDbClient)
-           (software.amazon.awssdk.services.dynamodb.model Condition
+           (software.amazon.awssdk.services.dynamodb.model AttributeValue
+                                                           Condition
                                                            DeleteItemRequest
                                                            GetItemRequest
                                                            GetItemResponse
@@ -102,8 +103,8 @@
                   :tableName (.tableName req)}]
         (reset! mock-ddb-client-request-results resp)
         (.build (.item (GetItemResponse/builder)
-                       {:field (ddb/to-attribute-value [:s "qwerty"])
-                        :other-field (ddb/to-attribute-value [:n 5])}))))
+                       {"field" (ddb/to-attribute-value [:s "qwerty"])
+                        "other-field" (ddb/to-attribute-value [:n 5])}))))
     (putItem [^PutItemRequest req]
       (let [resp {:conditionExpression (.conditionExpression req)
                   :item                (.item req)
@@ -152,16 +153,18 @@
 (deftest test-put-item
   (testing "Varmista, että put-item toimii oikein"
     (with-redefs [environ.core/env {:herate-table "herate-table-name"}
-                  oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient
-                  oph.heratepalvelu.db.dynamodb/map-vals-to-attribute-values
-                  (fn [item] {:mapped-to-attribute-values item})]
-      (let [test-item {:test-field "abc"}
+                  oph.heratepalvelu.db.dynamodb/ddb-client mockDDBClient]
+      (let [test-item {:test-field [:s "foo"]}
             test-options {:cond-expr "a = 4"}
             results-1 {:tableName "herate-table-name"
-                       :item {:mapped-to-attribute-values {:test-field "abc"}}
+                       :item {"test-field" (-> (AttributeValue/builder)
+                                               (.s "foo")
+                                               (.build))}
                        :conditionExpression "a = 4"}
             results-2 {:tableName "herate-table-name"
-                       :item {:mapped-to-attribute-values {:test-field "abc"}}
+                       :item {"test-field" (-> (AttributeValue/builder)
+                                               (.s "foo")
+                                               (.build))}
                        :conditionExpression nil}]
         (ddb/put-item test-item test-options)
         (is (= results-1 @mock-ddb-client-request-results))
