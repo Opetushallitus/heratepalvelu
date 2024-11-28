@@ -26,6 +26,9 @@
   "CAS-client -objekti (atom, joka saa sisältää nil)."
   (atom nil))
 
+(def ^:dynamic *default-client*
+  (.defaultClient org.http4s.client.blaze.package$/MODULE$))
+
 (def ^:private pwd
   "CAS-clientin autentikoinnin salasana."
   (delay
@@ -112,7 +115,7 @@
 (defn get-tgt
   [cas-uri params]
   (.run (TicketGrantingTicketClient/getTicketGrantingTicket
-          cas-uri @client params (:caller-id env))))
+          cas-uri *default-client* params (:caller-id env))))
 
 (defn- refresh-tgt
   [cas-uri params]
@@ -121,7 +124,7 @@
 (defn get-st
   [service-uri]
   (.run (ServiceTicketClient/getServiceTicketFromTgt
-          @client service-uri (:caller-id env) @tgt)))
+          *default-client* service-uri (:caller-id env) @tgt)))
 
 (defn- try-to-get-st
   [service-uri cas-uri params]
