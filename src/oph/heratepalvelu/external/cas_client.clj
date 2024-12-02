@@ -1,9 +1,7 @@
 (ns oph.heratepalvelu.external.cas-client
   "Wrapperit CAS-clientin ympäri."
   (:refer-clojure :exclude [get])
-  (:require [clj-cas.cas :refer :all]
-            [clj-cas.client :as cl]
-            [environ.core :refer [env]]
+  (:require [environ.core :refer [env]]
             [cheshire.core :as json]
             [clojure.tools.logging :as log]
             [oph.heratepalvelu.external.http-client :refer [request]]
@@ -12,13 +10,24 @@
                                  CasParams
                                  TicketGrantingTicketClient
                                  ServiceTicketClient)
+           (org.http4s.client.blaze package$)
+           (org.http4s.client Client)
            (org.http4s Uri)))
 
 (defrecord CasClientWrapper [client params session-id])
 
+(defn new-cas-client [cas-url caller-id]
+  (new CasClient
+       ^String cas-url
+       ^Client (.defaultClient package$/MODULE$)
+       ^String caller-id))
+
 (def client
   "CAS-client -objekti (atom, joka saa sisältää nil)."
   (atom nil))
+
+(def ^:dynamic *default-client*
+  (.defaultClient org.http4s.client.blaze.package$/MODULE$))
 
 (def ^:private pwd
   "CAS-clientin autentikoinnin salasana."
@@ -31,8 +40,9 @@
   (let [username   (:cas-user env)
         password   @pwd
         cas-url    (:cas-url env)
-        cas-params (cas-params "/ryhmasahkoposti-service" username password)
-        cas-client (cas-client cas-url (:caller-id env))]
+        cas-params (CasParams/apply
+                     "/ryhmasahkoposti-service" username password)
+        cas-client (new-cas-client cas-url (:caller-id env))]
     (map->CasClientWrapper {:client     cas-client
                             :params     cas-params
                             :session-id (atom nil)})))
@@ -105,7 +115,7 @@
 (defn get-tgt
   [cas-uri params]
   (.run (TicketGrantingTicketClient/getTicketGrantingTicket
-          cas-uri cl/client params (:caller-id env))))
+          cas-uri *default-client* params (:caller-id env))))
 
 (defn- refresh-tgt
   [cas-uri params]
@@ -114,7 +124,7 @@
 (defn get-st
   [service-uri]
   (.run (ServiceTicketClient/getServiceTicketFromTgt
-          cl/client service-uri (:caller-id env) @tgt)))
+          *default-client* service-uri (:caller-id env) @tgt)))
 
 (defn- try-to-get-st
   [service-uri cas-uri params]
