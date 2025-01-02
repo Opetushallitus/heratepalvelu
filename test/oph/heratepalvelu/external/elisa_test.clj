@@ -10,7 +10,7 @@
 (def mock-tep-msg-body
   (str "Testilaitos, Testilaitos 2: Työpaikkaohjaajakysely - "
        "Enkät till arbetsplatshandledaren - Survey to workplace instructors"
-       "\n\nkysely.linkki/123\n\nKiitos koulutussopimus-/"
+       "\n\nhttps://kysely.linkki/123?t=s\n\nKiitos koulutussopimus-/"
        "oppisopimusopiskelijoiden ohjaamisesta! Pyydämme arvioimaan "
        "oppilaitoksemme toimintaa ja yhteistyömme onnistumista.\n\n"
        "Tack för att du handleder studerande på utbildningsavtal/läroavtal! "
@@ -22,14 +22,16 @@
 
 (deftest test-tep-msg-body
   (testing "Varmista, että msg-body tekee formatointia oikein"
-    (is (= (elisa/tep-msg-body "kysely.linkki/123" [{:fi "Testilaitos"}
-                                                    {:fi "Testilaitos 2"}])
+    (is (= (elisa/tep-msg-body "https://kysely.linkki/123"
+                               [{:fi "Testilaitos"}
+                                {:fi "Testilaitos 2"}])
            mock-tep-msg-body))))
 
 (def mock-tep-muistutus-msg-body
   (str "Testilaitos, Testilaitos 2: Muistutus: Työpaikkaohjaajakysely - "
        "Påminnelse: Enkät till arbetsplatshandledaren - Reminder: Survey to "
-       "workplace instructors\n\nkysely.linkki/123\n\nMuistathan antaa meille "
+       "workplace instructors\n\n"
+       "https://kysely.linkki/123?t=s\n\nMuistathan antaa meille "
        "palautetta. Kiitos, kun vastaat!\n\nKom ihåg att ge din respons till "
        "läroanstalten. Tack för att du svarar!\n\nPlease give your feedback to "
        "the institution. Thank you for responding!"
@@ -38,9 +40,23 @@
 (deftest test-tep-muistutus-msg-body
   (testing "Varmista, että muistutus-msg-body tekee formatointia oikein"
     (is (= (elisa/tep-muistutus-msg-body
-             "kysely.linkki/123"
+             "https://kysely.linkki/123"
              [{:fi "Testilaitos"} {:fi "Testilaitos 2"}])
            mock-tep-muistutus-msg-body))))
+
+(def mock-amis-msg-body
+  (str "Testilaitos: Päättökysely - Slutenkät - VET-feedback survey\n\n"
+       "https://kysely.linkki/123?t=s\n\nMissä onnistuimme ja mitä voisimme "
+       "tehdä paremmin? Kiitos, kun vastaat! Palaute annetaan nimettömänä.\n\n"
+       "Vad har vi lyckats med och vad kan vi göra bättre? Tack för att du "
+       "svarar! Responsen ges anonymt.\n\nWhere did we succeed? What could we "
+       "do better? Thank you for replying! All feedback is anonymous.\n\n"
+       "Osoitelähde: Opetushallitus, eHOKS-rekisteri"))
+
+(deftest test-amis-msg-body
+  (testing "Varmista, että amis-msg-body tekee formatointia oikein"
+    (is (= (elisa/amis-msg-body "https://kysely.linkki/123" "Testilaitos")
+           mock-amis-msg-body))))
 
 (deftest test-send-sms-send-messages-disabled
   (testing "send-sms palauttaa oikean arvon, kun viestit eivät lähde"
