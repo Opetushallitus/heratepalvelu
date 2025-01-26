@@ -10,18 +10,15 @@
 (def mock-tep-msg-body
   (str "Testilaitos, Testilaitos 2: Työpaikkaohjaajakysely - "
        "Enkät till arbetsplatshandledaren - Survey to workplace instructors"
-       "\n\nKiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
-       "Kerro, miten yhteistyömme onnistui. Kyselyssä arvioidaan "
-       "oppilaitosta (ei opiskelijaa). Palautteella kehitämme "
-       "toimintaamme.\n\nTack för att du handleder studerande på "
-       "utbildningsavtal/läroavtal! Berätta gärna hur vårt samarbete "
-       "fungerade. I enkäten utvärderas läroanstalten (inte den studerande). "
-       "Responsen använder vi för att utveckla vår verksamhet.\n\n"
-       "Thank you for guiding students with a training "
-       "agreement/apprenticeship! Please, tell us how our co-operation worked. "
-       "The survey assesses the institution, not the student.\n\n"
-       "kysely.linkki/123\n\nOsoitelähde Opetushallituksen (OPH) "
-       "eHOKS-rekisteri"))
+       "\n\nkysely.linkki/123\n\nKiitos koulutussopimus-/"
+       "oppisopimusopiskelijoiden ohjaamisesta! Pyydämme arvioimaan "
+       "oppilaitoksemme toimintaa ja yhteistyömme onnistumista.\n\n"
+       "Tack för att du handleder studerande på utbildningsavtal/läroavtal! "
+       "Utvärdera gärna vår läroanstalts verksamhet och hur vårt samarbete "
+       "har lyckats.\n\nThank you for guiding students with a training "
+       "agreement/apprenticeship! Please evaluate the activities of our "
+       "institution and the success of our co-operation."
+       "\n\nOsoitelähde: Opetushallitus, eHOKS-rekisteri"))
 
 (deftest test-tep-msg-body
   (testing "Varmista, että msg-body tekee formatointia oikein"
@@ -31,15 +28,12 @@
 
 (def mock-tep-muistutus-msg-body
   (str "Testilaitos, Testilaitos 2: Muistutus: Työpaikkaohjaajakysely - "
-       "Påminnelse: Enkät till arbetsplatshandledaren - "
-       "Reminder: Survey to workplace instructors\n\nHyvä "
-       "työpaikkaohjaaja, muistathan antaa palautetta oppilaitokselle. "
-       "Kiitos, että vastaat! - Bästa arbetsplatshandledare, kom ihåg att "
-       "ge din respons till läroanstalten. Tack för att du svarar!"
-       " - Dear workplace instructor, please give your feedback to the "
-       "institution. Thank you for responding!\n\n"
-       "kysely.linkki/123\n\nOsoitelähde Opetushallituksen (OPH) "
-       "eHOKS-rekisteri"))
+       "Påminnelse: Enkät till arbetsplatshandledaren - Reminder: Survey to "
+       "workplace instructors\n\nkysely.linkki/123\n\nMuistathan antaa meille "
+       "palautetta. Kiitos, kun vastaat!\n\nKom ihåg att ge din respons till "
+       "läroanstalten. Tack för att du svarar!\n\nPlease give your feedback to "
+       "the institution. Thank you for responding!"
+       "\n\nOsoitelähde: Opetushallitus, eHOKS-rekisteri"))
 
 (deftest test-tep-muistutus-msg-body
   (testing "Varmista, että muistutus-msg-body tekee formatointia oikein"

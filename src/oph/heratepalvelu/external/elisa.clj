@@ -21,23 +21,21 @@
        "Työpaikkaohjaajakysely - Enkät till arbetsplatshandledaren - "
        "Survey to workplace instructors"
        "\n\n"
-       "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
-       "Kerro, miten yhteistyömme onnistui. "
-       "Kyselyssä arvioidaan oppilaitosta (ei opiskelijaa). "
-       "Palautteella kehitämme toimintaamme."
-       "\n\n"
-       "Tack för att du handleder studerande på utbildningsavtal/läroavtal! "
-       "Berätta gärna hur vårt samarbete fungerade. "
-       "I enkäten utvärderas läroanstalten (inte den studerande). "
-       "Responsen använder vi för att utveckla vår verksamhet."
-       "\n\n"
-       "Thank you for guiding students with a training "
-       "agreement/apprenticeship! Please, tell us how our co-operation "
-       "worked. The survey assesses the institution, not the student."
-       "\n\n"
        linkki
        "\n\n"
-       "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
+       "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
+       "Pyydämme arvioimaan oppilaitoksemme toimintaa ja yhteistyömme "
+       "onnistumista."
+       "\n\n"
+       "Tack för att du handleder studerande på utbildningsavtal/läroavtal! "
+       "Utvärdera gärna vår läroanstalts verksamhet och hur vårt samarbete "
+       "har lyckats."
+       "\n\n"
+       "Thank you for guiding students with a training "
+       "agreement/apprenticeship! Please evaluate the activities of our "
+       "institution and the success of our co-operation."
+       "\n\n"
+       "Osoitelähde: Opetushallitus, eHOKS-rekisteri"))
 
 (defn tep-muistutus-msg-body
   "Luo työpaikkaohjaajakyselyn muistutuksen viestin tekstin."
@@ -47,35 +45,33 @@
        "Påminnelse: Enkät till arbetsplatshandledaren - "
        "Reminder: Survey to workplace instructors"
        "\n\n"
-       "Hyvä työpaikkaohjaaja, muistathan antaa palautetta oppilaitokselle. "
-       "Kiitos, että vastaat! - "
-       "Bästa arbetsplatshandledare, kom ihåg att ge din respons till "
-       "läroanstalten. Tack för att du svarar! - "
-       "Dear workplace instructor, please give your feedback to the "
-       "institution. Thank you for responding!"
-       "\n\n"
        linkki
        "\n\n"
-       "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
+       "Muistathan antaa meille palautetta. Kiitos, kun vastaat!"
+       "\n\n"
+       "Kom ihåg att ge din respons till läroanstalten. Tack för att du svarar!"
+       "\n\n"
+       "Please give your feedback to the institution. Thank you for responding!"
+       "\n\n"
+       "Osoitelähde: Opetushallitus, eHOKS-rekisteri"))
 
 (defn amis-msg-body
   "Luo opiskelijapalauteviestin tekstin."
   [linkki oppilaitos]
-  (str oppilaitos ": Palautetta oppilaitokselle - "
-       "Respons till läroanstalten - Feedback to educational institution."
-       "\n\n"
-       "Arvostamme näkemyksiäsi. Kerro, missä onnistuimme ja mitä voisimme "
-       "tehdä paremmin.  Palaute annetaan nimettömänä."
-       "\n\n"
-       "Vi uppskattar dina synpunkter. Berätta gärna för oss vad vi gjorde "
-       "bra och vad vi skulle kunna göra bättre.  Responsen samlas in anonymt."
-       "\n\n"
-       "We appreciate your opinions. Please tell us, where we did well, "
-       "and what could we do better.  Your feedback is collected anonymously."
+  (str oppilaitos ": Päättökysely - Slutenkät - VET-feedback survey"
        "\n\n"
        linkki
        "\n\n"
-       "Osoitelähde Opetushallituksen (OPH) eHOKS-rekisteri"))
+       "Missä onnistuimme ja mitä voisimme tehdä paremmin? "
+       "Kiitos, kun vastaat! Palaute annetaan nimettömänä."
+       "\n\n"
+       "Vad har vi lyckats med och vad kan vi göra bättre? "
+       "Tack för att du svarar! Responsen ges anonymt."
+       "\n\n"
+       "Where did we succeed? What could we do better? "
+       "Thank you for replying! All feedback is anonymous."
+       "\n\n"
+       "Osoitelähde: Opetushallitus, eHOKS-rekisteri"))
 
 (defn send-sms
   "Lähettää SMS-viestin viestintäpalveluun."
