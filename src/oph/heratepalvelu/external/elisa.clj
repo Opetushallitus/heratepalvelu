@@ -22,6 +22,7 @@
        "Survey to workplace instructors"
        "\n\n"
        linkki
+       "?t=s"
        "\n\n"
        "Kiitos koulutussopimus-/oppisopimusopiskelijoiden ohjaamisesta! "
        "Pyydämme arvioimaan oppilaitoksemme toimintaa ja yhteistyömme "
@@ -46,6 +47,7 @@
        "Reminder: Survey to workplace instructors"
        "\n\n"
        linkki
+       "?t=s"
        "\n\n"
        "Muistathan antaa meille palautetta. Kiitos, kun vastaat!"
        "\n\n"
@@ -61,6 +63,7 @@
   (str oppilaitos ": Päättökysely - Slutenkät - VET-feedback survey"
        "\n\n"
        linkki
+       "?t=s"
        "\n\n"
        "Missä onnistuimme ja mitä voisimme tehdä paremmin? "
        "Kiitos, kun vastaat! Palaute annetaan nimettömänä."
