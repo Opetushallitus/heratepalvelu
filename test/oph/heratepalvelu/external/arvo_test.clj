@@ -90,6 +90,7 @@
        oph.heratepalvelu.external.arvo/get-toimipiste
        (fn [suoritus] (:oid (:toimipiste suoritus)))]
       (let [herate {:alkupvm "2022-02-02"
+                    :heratepvm "2022-02-07"
                     :ehoks-id 123
                     :kyselytyyppi "aloittaneet"}
             opiskeluoikeus {:oid "test-oo"
@@ -107,7 +108,7 @@
                            :oppilaitosmuotoinenkoulutus
                            ["106337" "106301"]}
             expected {:vastaamisajan_alkupvm "2022-02-16"
-                      :heratepvm "2022-02-02"
+                      :heratepvm "2022-02-07"
                       :vastaamisajan_loppupvm "2022-04-15"
                       :kyselyn_tyyppi "aloittaneet"
                       :tutkintotunnus "test-tunniste"
