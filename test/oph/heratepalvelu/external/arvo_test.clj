@@ -102,14 +102,14 @@
                       :suorituskieli {:koodiarvo "FI"}
                       :toimipiste {:oid "test-toimipiste"}}
             alkupvm "2022-02-16"
-            loppupvm "2022-04-15"
+            loppupvm "2022-03-17"
             tutkinnonosat {:oppisopimus ["106302"]
                            :koulutussopimus ["106303"]
                            :oppilaitosmuotoinenkoulutus
                            ["106337" "106301"]}
             expected {:vastaamisajan_alkupvm "2022-02-16"
                       :heratepvm "2022-02-07"
-                      :vastaamisajan_loppupvm "2022-04-15"
+                      :vastaamisajan_loppupvm "2022-03-17"
                       :kyselyn_tyyppi "aloittaneet"
                       :tutkintotunnus "test-tunniste"
                       :tutkinnon_suorituskieli "fi"
