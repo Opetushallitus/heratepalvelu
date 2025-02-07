@@ -100,7 +100,7 @@
   [herate oo request-id koulutustoimija suoritus alkupvm loppupvm
    initial-status tutkinnonosat]
   {:vastaamisajan_alkupvm             alkupvm
-   :heratepvm                         (:alkupvm herate)
+   :heratepvm                         (:heratepvm herate)
    :vastaamisajan_loppupvm            loppupvm
    :kyselyn_tyyppi                    (:kyselytyyppi herate)
    :tutkintotunnus                    (get-in suoritus [:koulutusmoduuli
