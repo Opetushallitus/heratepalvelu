@@ -169,6 +169,22 @@
       (when-not (= 404 (:status (ex-data e)))
         (throw e)))))
 
+(defn patch-kyselylinkki
+  "Päivittää AMIS-kyselinkin tilan ja vastaamisajan päivämäärät Arvoon."
+  [linkki tila new-alkupvm new-loppupvm]
+  (try
+    (let [tunnus (last (str/split linkki #"/"))]
+      (:body (arvo-patch (str "vastauslinkki/v1/" tunnus)
+                         (if (and new-alkupvm new-loppupvm)
+                           {:metatiedot {:tila tila}
+                            :vastaamisajan_alkupvm new-alkupvm
+                            :vastaamisajan_loppupvm new-loppupvm}
+                           {:metatiedot {:tila tila}}))))
+    (catch ExceptionInfo e
+      (log/error e)
+      (when-not (= 404 (:status (ex-data e)))
+        (throw e)))))
+
 (defn build-jaksotunnus-request-body
   "Luo dataobjektin TEP-jaksotunnuksen luomisrequestille."
   [herate

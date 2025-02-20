@@ -228,6 +228,24 @@
                         :body "{\"tila\":\"test-tila\"}"
                         :as :json}})))))
 
+(deftest test-patch-kyselylinkki
+  (testing "Patch kyselylinkki with new alkupvm & loppupvm"
+    (with-redefs [environ.core/env {:arvo-url "example.com/"
+                                    :arvo-user "arvo-user"}
+                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
+                  oph.heratepalvelu.external.http-client/patch (mock-http
+                                                                 :patch)]
+      (is (= (arvo/patch-kyselylinkki "kysely.linkki/123" "test-tila"
+                                      "2025-01-01" "2025-01-30")
+             {:method :patch
+              :url "example.com/vastauslinkki/v1/123"
+              :options {:basic-auth ["arvo-user" "arvo-pwd"]
+                        :content-type "application/json"
+                        :body (str "{\"metatiedot\":{\"tila\":\"test-tila\"},"
+                                   "\"vastaamisajan_alkupvm\":\"2025-01-01\","
+                                   "\"vastaamisajan_loppupvm\":\"2025-01-30\"}")
+                        :as :json}})))))
+
 (deftest test-build-jaksotunnus-request-body
   (testing "Build jaksotunnus request body"
     (with-redefs [oph.heratepalvelu.external.arvo/get-osaamisalat
