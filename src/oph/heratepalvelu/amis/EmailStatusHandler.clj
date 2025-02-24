@@ -61,7 +61,6 @@
 (defn get-new-loppupvm
   [herate]
   (when (and
-          use-new-endpoint-for-vastauslinkki-patch?
           (not (or (= (:lahetystila herate) (:success c/kasittelytilat))
                    (= (:lahetystila herate) (:vastattu c/kasittelytilat))))
           (not= (LocalDate/parse (:alkupvm herate)) (c/local-date-now)))
