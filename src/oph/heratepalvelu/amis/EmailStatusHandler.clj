@@ -40,9 +40,10 @@
   [herate tila new-alkupvm new-loppupvm]
   (try
     (ac/update-herate herate (cond-> {:lahetystila [:s tila]}
-                               (and new-alkupvm new-loppupvm)
-                               (assoc :alkupvm [:s new-alkupvm]
-                                      :voimassa-loppupvm [:s new-loppupvm])))
+                               new-alkupvm
+                               (assoc :alkupvm [:s new-alkupvm])
+                               new-loppupvm
+                               (assoc :voimassa-loppupvm [:s new-loppupvm])))
     (catch AwsServiceException e
       (log/error "Lähetystilan tallennus kantaan epäonnistui" herate)
       (log/error e))))
