@@ -10,7 +10,8 @@
             [oph.heratepalvelu.external.koski :as k]
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all])
-  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
+  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
+           (java.time LocalDate)))
 
 (gen-class
   :name "oph.heratepalvelu.amis.AMISherateEmailHandler"
@@ -87,14 +88,22 @@
   "Hakee kyselylinkin arvosta, tallettaa sen tietokantaan,
   ja palauttaa osana herätettä."
   [herate opiskeluoikeus]
-  (let [req-body (arvo/build-arvo-request-body
+  ; päätellään alku ja loppupvm uudelleen, mikäli lähetys tapahtuukin myöhemmin
+  ; kuin alunperin tallennettu alkupvm
+  (let [alku-date (c/local-date-now)
+        alkupvm   (str alku-date)
+        loppupvm  (some-> (:heratepvm herate)
+                          (LocalDate/parse)
+                          (c/loppu alku-date)
+                          (str))
+        req-body (arvo/build-arvo-request-body
                    herate
                    opiskeluoikeus
                    (:request-id herate)
                    (:koulutustoimija herate)
                    (c/get-suoritus opiskeluoikeus)
-                   (:alkupvm herate)
-                   (:voimassa-loppupvm herate)
+                   alkupvm
+                   loppupvm
                    (:odottaa-lahetysta c/kasittelytilat)
                    (tutkinnonosat-by-hankkimistapa (:ehoks-id herate)))
         arvo-resp (try (arvo/create-amis-kyselylinkki req-body)
@@ -104,7 +113,9 @@
                                     "Response:" (:body (ex-data e)))
                          (throw e)))]
     (if-let [kyselylinkki (:kysely_linkki arvo-resp)]
-      (update-and-return-herate! herate {:kyselylinkki [:s kyselylinkki]})
+      (update-and-return-herate! herate {:kyselylinkki [:s kyselylinkki]
+                                         :alkupvm [:s alkupvm]
+                                         :voimassa-loppupvm [:s loppupvm]})
       (do (log/error "Arvo ei antanut kyselylinkkiä, heräte" herate)
           herate))))
 
