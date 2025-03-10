@@ -1,0 +1,4 @@
+vulnerabilities:
+  - id: CVE-2021-21293
+    statement: scala-cas has been sunsetted. This vulnerability doesn't affect Herätepalvelu
+    expired_at: 2026-01-01
