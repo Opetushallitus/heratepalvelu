@@ -75,21 +75,16 @@
   (try
     (let [status (vp/get-email-status (:viestintapalvelu-id herate))
           tila (vp/viestintapalvelu-status->kasittelytila status)
-          new-alkupvm (when (and use-new-endpoint-for-vastauslinkki-patch?
-                                 (= tila (:success c/kasittelytilat)))
+          new-alkupvm (when (= tila (:success c/kasittelytilat))
                         (str (c/local-date-now)))
-          new-loppupvm (when (and use-new-endpoint-for-vastauslinkki-patch?
-                                  (= tila (:success c/kasittelytilat)))
+          new-loppupvm (when (= tila (:success c/kasittelytilat))
                          (get-new-loppupvm herate))]
       (if tila
         (do
           (log/info "Herätteellä on status" status "eli tila" tila)
           (update-db-tila! herate tila new-alkupvm new-loppupvm)
-          (if use-new-endpoint-for-vastauslinkki-patch?
-            (arvo/patch-kyselylinkki
-              (:kyselylinkki herate) tila new-alkupvm new-loppupvm)
-            (arvo/patch-kyselylinkki-metadata
-              (:kyselylinkki herate) tila))
+          (arvo/patch-kyselylinkki
+            (:kyselylinkki herate) tila new-alkupvm new-loppupvm)
           (update-ehoks-if-not-muistutus! herate status tila))
         (log/info "Heräte odottaa lähetystä:" status))
       tila)

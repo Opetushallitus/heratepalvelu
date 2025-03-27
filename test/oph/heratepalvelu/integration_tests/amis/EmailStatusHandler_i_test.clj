@@ -87,8 +87,8 @@
               :content-type "application/json"
               :body
               (str "{\"metatiedot\":{\"tila\":\"lahetetty\"},"
-                   "\"vastaamisajan_alkupvm\":\"2022-02-02\","
-                   "\"vastaamisajan_loppupvm\":\"2022-03-03\"}")
+                   "\"voimassa_alkupvm\":\"2022-02-02\","
+                   "\"voimassa_loppupvm\":\"2022-03-03\"}")
               :as :json}}
    {:method :patch
     :url "arvo-example.com/vastauslinkki/v1/245"
@@ -128,7 +128,6 @@
                   oph.heratepalvelu.db.dynamodb/query-items mdb/query-items
                   oph.heratepalvelu.db.dynamodb/update-item mdb/update-item
                   oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
-                  esh/use-new-endpoint-for-vastauslinkki-patch? true
                   oph.heratepalvelu.external.cas-client/cas-authenticated-post
                   mcc/mock-cas-authenticated-post
                   oph.heratepalvelu.external.cas-client/get-service-ticket

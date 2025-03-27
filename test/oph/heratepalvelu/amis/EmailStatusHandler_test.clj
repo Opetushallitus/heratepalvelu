@@ -98,9 +98,10 @@
 
 (defn- mock-get-email-status-none [_] {})
 
-(defn- mock-patch-kyselylinkki-metadata [kyselylinkki tila]
+(defn- mock-patch-kyselylinkki [kyselylinkki tila new-alkupvm new-loppupvm]
   (reset! test-handleEmailStatus-results
-          (str @test-handleEmailStatus-results kyselylinkki " " tila " ")))
+          (str @test-handleEmailStatus-results kyselylinkki " " tila " "
+               new-alkupvm " " new-loppupvm " ")))
 
 (defn- mock-update-ehoks-if-not-muistutus [email status tila]
   (reset! test-handleEmailStatus-results
@@ -120,8 +121,8 @@
        oph.heratepalvelu.amis.EmailStatusHandler/update-db-tila! mock-update-db
        oph.heratepalvelu.amis.EmailStatusHandler/update-ehoks-if-not-muistutus!
        mock-update-ehoks-if-not-muistutus
-       oph.heratepalvelu.external.arvo/patch-kyselylinkki-metadata
-       mock-patch-kyselylinkki-metadata]
+       oph.heratepalvelu.external.arvo/patch-kyselylinkki
+       mock-patch-kyselylinkki]
       (let [event (tu/mock-handler-event :scheduledherate)
             context (tu/mock-handler-context)]
         (with-redefs
@@ -131,8 +132,8 @@
           (is (= @test-handleEmailStatus-results
                  (str "update-db {:viestintapalvelu-id \"12345\", "
                       ":heratepvm \"2025-02-19\", :alkupvm \"2025-02-19\", "
-                      ":kyselylinkki \"kysely.linkki/123\"} lahetetty   "
-                      "kysely.linkki/123 lahetetty "
+                      ":kyselylinkki \"kysely.linkki/123\"} lahetetty "
+                      "2025-02-19  kysely.linkki/123 lahetetty 2025-02-19  "
                       "{:viestintapalvelu-id \"12345\", "
                       ":heratepvm \"2025-02-19\", :alkupvm \"2025-02-19\", "
                       ":kyselylinkki \"kysely.linkki/123\"} "

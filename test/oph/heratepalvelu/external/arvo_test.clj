@@ -213,21 +213,6 @@
               :url "example.com/tyoelamapalaute/v1/status/123"
               :options {:basic-auth ["arvo-user" "arvo-pwd"] :as :json}})))))
 
-(deftest test-patch-kyselylinkki-metadata
-  (testing "Patch kyselylinkki metadata"
-    (with-redefs [environ.core/env {:arvo-url "example.com/"
-                                    :arvo-user "arvo-user"}
-                  oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
-                  oph.heratepalvelu.external.http-client/patch (mock-http
-                                                                 :patch)]
-      (is (= (arvo/patch-kyselylinkki-metadata "kysely.linkki/123" "test-tila")
-             {:method :patch
-              :url "example.com/vastauslinkki/v1/123/metatiedot"
-              :options {:basic-auth ["arvo-user" "arvo-pwd"]
-                        :content-type "application/json"
-                        :body "{\"tila\":\"test-tila\"}"
-                        :as :json}})))))
-
 (deftest test-patch-kyselylinkki
   (testing "Patch kyselylinkki with new alkupvm & loppupvm"
     (with-redefs [environ.core/env {:arvo-url "example.com/"
@@ -242,8 +227,8 @@
               :options {:basic-auth ["arvo-user" "arvo-pwd"]
                         :content-type "application/json"
                         :body (str "{\"metatiedot\":{\"tila\":\"test-tila\"},"
-                                   "\"vastaamisajan_alkupvm\":\"2025-01-01\","
-                                   "\"vastaamisajan_loppupvm\":\"2025-01-30\"}")
+                                   "\"voimassa_alkupvm\":\"2025-01-01\","
+                                   "\"voimassa_loppupvm\":\"2025-01-30\"}")
                         :as :json}})))))
 
 (deftest test-build-jaksotunnus-request-body
