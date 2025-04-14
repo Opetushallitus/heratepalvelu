@@ -277,9 +277,10 @@
      :suorituskieli [:s "fi"]
      :kyselytyyppi [:s "aloittaneet"]
      :kyselylinkki [:s "kysely.linkki/86423"]
-     :alkupvm [:s "2022-01-15"]
+     :alkupvm [:s "2022-02-02"]
      :heratepvm [:s "2022-01-15"]
-     :opiskeluoikeus-oid [:s "1242"]}
+     :opiskeluoikeus-oid [:s "1242"]
+     :voimassa-loppupvm [:s "2022-03-03"]}
     {:kyselytyyppi [:s "tutkinnon_suorittaneet"],
      :suorituskieli [:s "fi"],
      :sahkoposti [:s "sahko.posti5@esimerkki.fi"],
@@ -334,7 +335,7 @@
     :url "arvo-example.com/vastauslinkki/v1"
     :options
     {:content-type "application/json"
-     :body (str "{\"vastaamisajan_alkupvm\":\"2022-01-15\","
+     :body (str "{\"vastaamisajan_alkupvm\":\"2022-02-02\","
                 "\"osaamisala\":[],\"heratepvm\":\"2022-01-15\","
                 "\"koulutustoimija_oid\":null,"
                 "\"tutkinnonosat_hankkimistavoittain\":{\"koulutussopimus\":"
@@ -345,7 +346,8 @@
                 "\"oppilaitos_oid\":null,"
                 "\"hankintakoulutuksen_toteuttaja\":null,"
                 "\"kyselyn_tyyppi\":\"aloittaneet\",\"tutkintotunnus\":null,"
-                "\"request_id\":null,\"vastaamisajan_loppupvm\":null}")
+                "\"request_id\":null,\"vastaamisajan_loppupvm\":"
+                "\"2022-03-03\"}")
      :basic-auth ["arvo-user" "arvo-pwd"], :as :json}}
    {:method :post
     :url "ehoks-example.com/hoks/189438/kyselylinkki"
@@ -355,7 +357,7 @@
      :as :json
      :content-type "application/json"
      :body (str "{\"kyselylinkki\":\"kysely.linkki/86423\","
-                "\"tyyppi\":\"aloittaneet\",\"alkupvm\":\"2022-01-15\","
+                "\"tyyppi\":\"aloittaneet\",\"alkupvm\":\"2022-02-02\","
                 "\"lahetystila\":\"ei_lahetetty\"}")}}
    {:method :get
     :url "arvo-example.com/vastauslinkki/v1/status/86423"

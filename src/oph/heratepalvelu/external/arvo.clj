@@ -100,7 +100,7 @@
   [herate oo request-id koulutustoimija suoritus alkupvm loppupvm
    initial-status tutkinnonosat]
   {:vastaamisajan_alkupvm             alkupvm
-   :heratepvm                         (:alkupvm herate)
+   :heratepvm                         (:heratepvm herate)
    :vastaamisajan_loppupvm            loppupvm
    :kyselyn_tyyppi                    (:kyselytyyppi herate)
    :tutkintotunnus                    (get-in suoritus [:koulutusmoduuli
@@ -157,13 +157,17 @@
   (:body (arvo-get (str "tyoelamapalaute/v1/status/"
                         (last (str/split linkki #"/"))))))
 
-(defn patch-kyselylinkki-metadata
-  "Päivittää AMIS-kyselinkin tilan Arvoon."
-  [linkki tila]
+(defn patch-kyselylinkki
+  "Päivittää AMIS-kyselinkin tilan ja vastaamisajan päivämäärät Arvoon."
+  [linkki tila new-alkupvm new-loppupvm]
   (try
     (let [tunnus (last (str/split linkki #"/"))]
-      (:body (arvo-patch (str "vastauslinkki/v1/" tunnus "/metatiedot")
-                         {:tila tila})))
+      (:body (arvo-patch (str "vastauslinkki/v1/" tunnus)
+                         (if (and new-alkupvm new-loppupvm)
+                           {:metatiedot {:tila tila}
+                            :voimassa_alkupvm new-alkupvm
+                            :voimassa_loppupvm new-loppupvm}
+                           {:metatiedot {:tila tila}}))))
     (catch ExceptionInfo e
       (log/error e)
       (when-not (= 404 (:status (ex-data e)))

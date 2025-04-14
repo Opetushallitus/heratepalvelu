@@ -5,7 +5,8 @@
             [oph.heratepalvelu.integration-tests.mock-cas-client :as mcc]
             [oph.heratepalvelu.integration-tests.mock-db :as mdb]
             [oph.heratepalvelu.integration-tests.mock-http-client :as mhc]
-            [oph.heratepalvelu.test-util :as tu]))
+            [oph.heratepalvelu.test-util :as tu])
+  (:import (java.time LocalDate)))
 
 (def mock-env {:herate-table "herate-table-name"
                :viestintapalvelu-url "viestintapalvelu-example.com"
@@ -17,12 +18,18 @@
   [{:toimija_oppija [:s "abc/123"]
     :tyyppi_kausi [:s "aloittaneet/2021-2022"]
     :muistutukset [:n 2]
+    :heratepvm [:s "2022-02-01"]
+    :alkupvm [:s "2022-02-01"]
+    :voimassa-loppupvm [:s "2022-03-01"]
     :kyselylinkki [:s "kysely.linkki/123"]
     :sahkoposti [:s "sahko.posti@esimerkki.fi"]
     :lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]
     :viestintapalvelu-id [:n 123]}
    {:toimija_oppija [:s "lkj/245"]
     :tyyppi_kausi [:s "paattyneet/2022-2023"]
+    :heratepvm [:s "2022-02-01"]
+    :alkupvm [:s "2022-02-01"]
+    :voimassa-loppupvm [:s "2022-03-01"]
     :kyselylinkki [:s "kysely.linkki/245"]
     :sahkoposti [:s "asdf@esimerkki.fi"]
     :lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]
@@ -56,12 +63,18 @@
 (def expected-table-contents #{{:toimija_oppija [:s "abc/123"]
                                 :tyyppi_kausi [:s "aloittaneet/2021-2022"]
                                 :muistutukset [:n 2]
+                                :heratepvm [:s "2022-02-01"]
+                                :alkupvm [:s "2022-02-02"]
+                                :voimassa-loppupvm [:s "2022-03-03"]
                                 :kyselylinkki [:s "kysely.linkki/123"]
                                 :sahkoposti [:s "sahko.posti@esimerkki.fi"]
                                 :lahetystila [:s (:success c/kasittelytilat)]
                                 :viestintapalvelu-id [:n 123]}
                                {:toimija_oppija [:s "lkj/245"]
                                 :tyyppi_kausi [:s "paattyneet/2022-2023"]
+                                :heratepvm [:s "2022-02-01"]
+                                :alkupvm [:s "2022-02-01"]
+                                :voimassa-loppupvm [:s "2022-03-01"]
                                 :kyselylinkki [:s "kysely.linkki/245"]
                                 :sahkoposti [:s "asdf@esimerkki.fi"]
                                 :lahetystila [:s (:failed c/kasittelytilat)]
@@ -69,16 +82,19 @@
 
 (def expected-http-results
   [{:method :patch
-    :url "arvo-example.com/vastauslinkki/v1/123/metatiedot"
+    :url "arvo-example.com/vastauslinkki/v1/123"
     :options {:basic-auth ["arvo-user" "arvo-pwd"]
               :content-type "application/json"
-              :body "{\"tila\":\"lahetetty\"}"
+              :body
+              (str "{\"metatiedot\":{\"tila\":\"lahetetty\"},"
+                   "\"voimassa_alkupvm\":\"2022-02-02\","
+                   "\"voimassa_loppupvm\":\"2022-03-03\"}")
               :as :json}}
    {:method :patch
-    :url "arvo-example.com/vastauslinkki/v1/245/metatiedot"
+    :url "arvo-example.com/vastauslinkki/v1/245"
     :options {:basic-auth ["arvo-user" "arvo-pwd"]
               :content-type "application/json"
-              :body "{\"tila\":\"lahetys_epaonnistunut\"}"
+              :body "{\"metatiedot\":{\"tila\":\"lahetys_epaonnistunut\"}}"
               :as :json}}
    {:method :patch
     :url "ehoks-example.com/hoks/kyselylinkki"
@@ -106,6 +122,8 @@
 (deftest test-EmailStatusHandler-integration
   (testing "EmailStatusHandlerin integraatiotesti"
     (with-redefs [environ.core/env mock-env
+                  oph.heratepalvelu.common/local-date-now
+                  #(LocalDate/of 2022 2 2)
                   oph.heratepalvelu.db.dynamodb/get-item mdb/get-item
                   oph.heratepalvelu.db.dynamodb/query-items mdb/query-items
                   oph.heratepalvelu.db.dynamodb/update-item mdb/update-item

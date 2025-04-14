@@ -90,6 +90,7 @@
        oph.heratepalvelu.external.arvo/get-toimipiste
        (fn [suoritus] (:oid (:toimipiste suoritus)))]
       (let [herate {:alkupvm "2022-02-02"
+                    :heratepvm "2022-02-07"
                     :ehoks-id 123
                     :kyselytyyppi "aloittaneet"}
             opiskeluoikeus {:oid "test-oo"
@@ -101,14 +102,14 @@
                       :suorituskieli {:koodiarvo "FI"}
                       :toimipiste {:oid "test-toimipiste"}}
             alkupvm "2022-02-16"
-            loppupvm "2022-04-15"
+            loppupvm "2022-03-17"
             tutkinnonosat {:oppisopimus ["106302"]
                            :koulutussopimus ["106303"]
                            :oppilaitosmuotoinenkoulutus
                            ["106337" "106301"]}
             expected {:vastaamisajan_alkupvm "2022-02-16"
-                      :heratepvm "2022-02-02"
-                      :vastaamisajan_loppupvm "2022-04-15"
+                      :heratepvm "2022-02-07"
+                      :vastaamisajan_loppupvm "2022-03-17"
                       :kyselyn_tyyppi "aloittaneet"
                       :tutkintotunnus "test-tunniste"
                       :tutkinnon_suorituskieli "fi"
@@ -212,19 +213,22 @@
               :url "example.com/tyoelamapalaute/v1/status/123"
               :options {:basic-auth ["arvo-user" "arvo-pwd"] :as :json}})))))
 
-(deftest test-patch-kyselylinkki-metadata
-  (testing "Patch kyselylinkki metadata"
+(deftest test-patch-kyselylinkki
+  (testing "Patch kyselylinkki with new alkupvm & loppupvm"
     (with-redefs [environ.core/env {:arvo-url "example.com/"
                                     :arvo-user "arvo-user"}
                   oph.heratepalvelu.external.arvo/pwd (delay "arvo-pwd")
                   oph.heratepalvelu.external.http-client/patch (mock-http
                                                                  :patch)]
-      (is (= (arvo/patch-kyselylinkki-metadata "kysely.linkki/123" "test-tila")
+      (is (= (arvo/patch-kyselylinkki "kysely.linkki/123" "test-tila"
+                                      "2025-01-01" "2025-01-30")
              {:method :patch
-              :url "example.com/vastauslinkki/v1/123/metatiedot"
+              :url "example.com/vastauslinkki/v1/123"
               :options {:basic-auth ["arvo-user" "arvo-pwd"]
                         :content-type "application/json"
-                        :body "{\"tila\":\"test-tila\"}"
+                        :body (str "{\"metatiedot\":{\"tila\":\"test-tila\"},"
+                                   "\"voimassa_alkupvm\":\"2025-01-01\","
+                                   "\"voimassa_loppupvm\":\"2025-01-30\"}")
                         :as :json}})))))
 
 (deftest test-build-jaksotunnus-request-body

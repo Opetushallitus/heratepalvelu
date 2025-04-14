@@ -9,7 +9,8 @@
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.external.arvo :as arvo]
             [oph.heratepalvelu.log.caller-log :refer :all])
-  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)))
+  (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
+           (java.time LocalDate)))
 
 (gen-class
   :name "oph.heratepalvelu.amis.EmailStatusHandler"
@@ -35,10 +36,14 @@
          :lahetystila tila}))))
 
 (defn update-db-tila!
-  "Päivittää sähköpostin tilan tietokantaan."
-  [herate tila]
+  "Päivittää sähköpostin ja uuden voimassaolon loppupäivän tilan tietokantaan."
+  [herate tila new-alkupvm new-loppupvm]
   (try
-    (ac/update-herate herate {:lahetystila [:s tila]})
+    (ac/update-herate herate (cond-> {:lahetystila [:s tila]}
+                               new-alkupvm
+                               (assoc :alkupvm [:s new-alkupvm])
+                               new-loppupvm
+                               (assoc :voimassa-loppupvm [:s new-loppupvm])))
     (catch AwsServiceException e
       (log/error "Lähetystilan tallennus kantaan epäonnistui" herate)
       (log/error e))))
@@ -50,6 +55,18 @@
                     [:eq [:s (:viestintapalvelussa c/kasittelytilat)]]}
                    {:index "lahetysIndex"}))
 
+; TODO enable/remove feature-flag after API change is implemented in Arvo
+(def use-new-endpoint-for-vastauslinkki-patch? false)
+
+(defn get-new-loppupvm
+  [herate]
+  (when (and
+          (not (or (= (:lahetystila herate) (:success c/kasittelytilat))
+                   (= (:lahetystila herate) (:vastattu c/kasittelytilat))))
+          (not= (LocalDate/parse (:alkupvm herate)) (c/local-date-now)))
+    (str (c/loppu (LocalDate/parse (:heratepvm herate))
+                  (c/local-date-now)))))
+
 (defn handle-single-herate!
   "Hakee yhden viestin tilan viestintäpalvelusta ja päivittää sen tietokantaan.
   Palauttaa, päivitettiinkö viestin tila."
@@ -57,12 +74,17 @@
   (log/info "Kysytään herätteen" herate "viestintäpalvelun tila")
   (try
     (let [status (vp/get-email-status (:viestintapalvelu-id herate))
-          tila (vp/viestintapalvelu-status->kasittelytila status)]
+          tila (vp/viestintapalvelu-status->kasittelytila status)
+          new-alkupvm (when (= tila (:success c/kasittelytilat))
+                        (str (c/local-date-now)))
+          new-loppupvm (when (= tila (:success c/kasittelytilat))
+                         (get-new-loppupvm herate))]
       (if tila
         (do
           (log/info "Herätteellä on status" status "eli tila" tila)
-          (update-db-tila! herate tila)
-          (arvo/patch-kyselylinkki-metadata (:kyselylinkki herate) tila)
+          (update-db-tila! herate tila new-alkupvm new-loppupvm)
+          (arvo/patch-kyselylinkki
+            (:kyselylinkki herate) tila new-alkupvm new-loppupvm)
           (update-ehoks-if-not-muistutus! herate status tila))
         (log/info "Heräte odottaa lähetystä:" status))
       tila)
