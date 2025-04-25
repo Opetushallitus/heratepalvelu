@@ -14,8 +14,6 @@ import { CfnEventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import {HeratepalveluStack} from "./heratepalvelu";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 
-
-
 export class HeratepalveluAMISStack extends HeratepalveluStack {
   constructor(
     scope: App,
@@ -106,43 +104,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       projectionType: dynamodb.ProjectionType.KEYS_ONLY
     })
 
-    const organisaatioWhitelistTable = new dynamodb.Table(
-      this,
-      "OrganisaatioWhitelistTable",
-      {
-        partitionKey: {
-          name: "organisaatio-oid",
-          type: dynamodb.AttributeType.STRING
-        },
-        billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-        encryption: dynamodb.TableEncryption.AWS_MANAGED
-      }
-    );
-
-    const metadataTable = new dynamodb.Table(this, "MetadataTable", {
-      partitionKey: {
-        name: "key",
-        type: dynamodb.AttributeType.STRING
-      },
-      billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
-      encryption: dynamodb.TableEncryption.AWS_MANAGED
-    });
-
-    const herateDeadLetterQueue = new sqs.Queue(this, "HerateDeadLetterQueue", {
-      retentionPeriod: Duration.days(14),
-      visibilityTimeout: (Duration.seconds(60))
-    });
-
-    const ehoksHerateQueue = new sqs.Queue(this, "HerateQueue", {
-      queueName: `${id}-eHOKSHerateQueue`,
-      deadLetterQueue: {
-        queue: herateDeadLetterQueue,
-        maxReceiveCount: 5
-      },
-      visibilityTimeout: Duration.minutes(5),
-      retentionPeriod: Duration.days(14)
-    });
-
     const ONRhenkilomodifyDLQ = new sqs.Queue(this, "ONRhenkilomodifyDLQ", {
       retentionPeriod: Duration.days(14),
       visibilityTimeout: (Duration.seconds(60))
@@ -222,30 +183,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     });
     
     this.createErrorMetricFilter('amis', amisLogGroup);
-
-    const AMISHerateHandler = new lambda.Function(this, "AMISHerateHandler", {
-      runtime: this.runtime,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        orgwhitelist_table: organisaatioWhitelistTable.tableName,
-        herate_table: AMISherateTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-AMISherateHandler`,
-      },
-      handler: "oph.heratepalvelu.amis.AMISherateHandler::handleAMISherate",
-      memorySize: Token.asNumber(this.getParameterFromSsm("ehokshandler-memory")),
-      reservedConcurrentExecutions:
-        Token.asNumber(this.getParameterFromSsm("ehokshandler-concurrency")),
-      timeout: Duration.seconds(
-        Token.asNumber(this.getParameterFromSsm("ehokshandler-timeout"))
-      ),
-      tracing: lambda.Tracing.ACTIVE,
-      logGroup: amisLogGroup,
-      vpc: vpc
-    });
-
-    AMISHerateHandler.addEventSource(new SqsEventSource(ehoksHerateQueue, { batchSize: 1, }));
-    organisaatioWhitelistTable.grantReadData(AMISHerateHandler);
 
     const ONRhenkilomodifyHandler = new lambda.Function(this, "ONRhenkilomodifyHandler", {
       runtime: this.runtime,
@@ -448,73 +385,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(AMISSMSHandler)]
     });
 
-    const updatedOoHandler = new lambda.Function(this, "UpdatedOOHandler", {
-      runtime: this.runtime,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        orgwhitelist_table: organisaatioWhitelistTable.tableName,
-        metadata_table: metadataTable.tableName,
-        herate_table: AMISherateTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-updatedOpiskeluoikeusHandler`,
-      },
-      handler:
-        "oph.heratepalvelu.amis.UpdatedOpiskeluoikeusHandler::handleUpdatedOpiskeluoikeus",
-      memorySize: Token.asNumber(
-          this.getParameterFromSsm("updatedoohandler-memory")
-      ),
-      reservedConcurrentExecutions: 1,
-      timeout: Duration.seconds(
-        Token.asNumber(this.getParameterFromSsm("updatedoohandler-timeout"))
-      ),
-      tracing: lambda.Tracing.ACTIVE,
-      logGroup: amisLogGroup,
-      vpc: vpc
-    });
-
-    new events.Rule(this, "UpdatedOoScheduleRule", {
-      schedule: events.Schedule.expression(
-        `cron(${this.getParameterFromSsm("updatedoohandler-cron")}))`
-      ),
-      targets: [new targets.LambdaFunction(updatedOoHandler)]
-    });
-
-    organisaatioWhitelistTable.grantReadData(updatedOoHandler);
-    metadataTable.grantReadWriteData(updatedOoHandler);
-
-    const dlqResendHandler = new lambda.Function(this, "AMIS-DLQresendHandler", {
-      runtime: this.runtime,
-      code: lambdaCode,
-      environment: {
-        queue_name: ehoksHerateQueue.queueName
-      },
-      handler: "oph.heratepalvelu.util.DLQresendHandler::handleDLQresend",
-      memorySize: 1024,
-      timeout: Duration.seconds(60),
-      tracing: lambda.Tracing.ACTIVE,
-      logGroup: amisLogGroup,
-      vpc: vpc
-    });
-
-    dlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: [ehoksHerateQueue.queueArn, herateDeadLetterQueue.queueArn],
-      actions: [
-        "sqs:GetQueueUrl",
-        "sqs:SendMessage",
-        "sqs:ReceiveMessage",
-        "sqs:ChangeMessageVisibility",
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes"
-      ]}));
-
-    new CfnEventSourceMapping(this, "DLQResendEventSourceMapping", {
-      eventSourceArn: herateDeadLetterQueue.queueArn,
-      functionName: dlqResendHandler.functionName,
-      batchSize: 1,
-      enabled: false
-    });
-
     const AMISDeleteTunnusHandler = new lambda.Function(this, "AMISDeleteTunnusHandler", {
       runtime: this.runtime,
       code: lambdaCode,
@@ -647,32 +517,6 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
       targets: [new targets.LambdaFunction(AMISTimedOperationsHandler)]
     });
 
-    const AMISMassHerateResendHandler = new lambda.Function(
-      this,
-      "AMISMassHerateResendHandler",
-      {
-        runtime: this.runtime,
-        code: lambdaCode,
-        environment: {
-          ...this.envVars,
-          caller_id: `1.2.246.562.10.00000000001.${id}-AMISMassHerateResendHandler`,
-        },
-        memorySize: Token.asNumber(1024),
-        timeout: Duration.seconds(900),
-        handler: "oph.heratepalvelu.amis.AMISehoksTimedOperationsHandler::handleMassHerateResend",
-        tracing: lambda.Tracing.ACTIVE,
-	logGroup: amisLogGroup,
-	vpc: vpc
-      }
-    );
-
-    new events.Rule(this, "AMISMassHerateResendScheduleRule", {
-      schedule: events.Schedule.expression(
-        `rate(7 days)`
-      ),
-      targets: [new targets.LambdaFunction(AMISMassHerateResendHandler)]
-    });
-
     const EhoksOpiskeluoikeusUpdateHandler = new lambda.Function(
         this,
         "EhoksOpiskeluoikeusUpdateHandler",
@@ -724,16 +568,13 @@ export class HeratepalveluAMISStack extends HeratepalveluStack {
     AMISherateArchive2022_2023Table.grantReadWriteData(dbArchiver);
 
     [
-      AMISHerateHandler,
       AMISherateEmailHandler,
-      updatedOoHandler,
       AMISEmailResendHandler,
       AMISMuistutusHandler,
       AMISEmailStatusHandler,
       AMISSMSHandler,
       AMISDeleteTunnusHandler,
       AMISTimedOperationsHandler,
-      AMISMassHerateResendHandler,
       EhoksOpiskeluoikeusUpdateHandler,
       updateSmsLahetystila,
       dbArchiver,
