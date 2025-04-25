@@ -5,11 +5,8 @@ import targets = require("aws-cdk-lib/aws-events-targets");
 import lambda = require("aws-cdk-lib/aws-lambda");
 import ec2 = require("aws-cdk-lib/aws-ec2");
 import s3assets = require("aws-cdk-lib/aws-s3-assets");
-import sqs = require("aws-cdk-lib/aws-sqs");
 import iam = require("aws-cdk-lib/aws-iam");
-import { SqsEventSource } from "aws-cdk-lib/aws-lambda-event-sources";
 import { HeratepalveluStack } from "./heratepalvelu";
-import { CfnEventSourceMapping } from "aws-cdk-lib/aws-lambda";
 import { LogGroup, RetentionDays } from "aws-cdk-lib/aws-logs";
 
 export class HeratepalveluTEPStack extends HeratepalveluStack {
@@ -246,23 +243,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       }
     );
 
-    // SQS
-
-    const herateDeadLetterQueue = new sqs.Queue(this, "HerateDLQ", {
-      retentionPeriod: Duration.days(14),
-      visibilityTimeout: (Duration.seconds(60))
-    });
-
-    const herateQueue = new sqs.Queue(this, "HerateQueue", {
-      queueName: `${id}-HerateQueue`,
-      deadLetterQueue: {
-        queue: herateDeadLetterQueue,
-        maxReceiveCount: 5
-      },
-      visibilityTimeout: Duration.minutes(5),
-      retentionPeriod: Duration.days(14)
-    });
-
     // S3
 
     const ehoksHerateTEPAsset = new s3assets.Asset(
@@ -305,34 +285,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       ],
     });
 
-    // herateHandler
-
-    const timedOperationsHandler = new lambda.Function(this, "timedOperationsHandler", {
-      runtime: this.runtime,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        jaksotunnus_table: jaksotunnusTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-timedOperationsHandler`,
-      },
-      memorySize: Token.asNumber(1024),
-      reservedConcurrentExecutions: 1,
-      timeout: Duration.seconds(900),
-      handler: "oph.heratepalvelu.tep.ehoksTimedOperationsHandler::handleTimedOperations",
-      tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup,
-      vpc: vpc
-    });
-
-    new events.Rule(this, "TimedOperationsScheduleRule", {
-      schedule: events.Schedule.expression(
-          `rate(${this.getParameterFromSsm("timedoperations-rate")})`
-      ),
-      targets: [new targets.LambdaFunction(timedOperationsHandler)]
-    });
-
-    jaksotunnusTable.grantReadWriteData(timedOperationsHandler);
-
     const contactInfoCleaningHandler = new lambda.Function(this, "contactInfoCleaningHandler", {
       runtime: this.runtime,
       code: lambdaCode,
@@ -358,35 +310,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     });
 
     jaksotunnusTable.grantReadWriteData(contactInfoCleaningHandler);
-
-    // jaksoHandler
-
-    const jaksoHandler = new lambda.Function(this, "TEPJaksoHandler", {
-      runtime: this.runtime,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        jaksotunnus_table: jaksotunnusTable.tableName,
-        nippu_table: nippuTable.tableName,
-        orgwhitelist_table: organisaatioWhitelistTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-JaksoHandler`,
-      },
-      handler: "oph.heratepalvelu.tep.jaksoHandler::handleJaksoHerate",
-      memorySize: Token.asNumber(this.getParameterFromSsm("jaksohandler-memory")),
-      reservedConcurrentExecutions:
-          Token.asNumber(this.getParameterFromSsm("jaksohandler-concurrency")),
-      timeout: Duration.seconds(
-          Token.asNumber(this.getParameterFromSsm("jaksohandler-timeout"))
-      ),
-      tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup,
-      vpc: vpc
-    });
-
-    jaksoHandler.addEventSource(new SqsEventSource(herateQueue, { batchSize: 1 }));
-    jaksotunnusTable.grantReadWriteData(jaksoHandler);
-    nippuTable.grantReadWriteData(jaksoHandler);
-    organisaatioWhitelistTable.grantReadData(jaksoHandler);
 
     // niputusHandler
 
@@ -572,86 +495,7 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       ),
       targets: [new targets.LambdaFunction(SmsMuistutusHandler)]
     });
-
-    // DLQ tyhjennys
-
-    const dlqResendHandler = new lambda.Function(this, "TEP-DLQresendHandler", {
-      runtime: this.runtime,
-      code: lambdaCode,
-      environment: {
-        queue_name: herateQueue.queueName
-      },
-      handler: "oph.heratepalvelu.util.DLQresendHandler::handleDLQresend",
-      memorySize: 1024,
-      timeout: Duration.seconds(60),
-      tracing: lambda.Tracing.ACTIVE,
-      logGroup: tepLogGroup,
-      vpc: vpc
-    });
-
-    dlqResendHandler.addToRolePolicy(new iam.PolicyStatement({
-      effect: iam.Effect.ALLOW,
-      resources: [herateQueue.queueArn, herateDeadLetterQueue.queueArn],
-      actions: [
-        "sqs:GetQueueUrl",
-        "sqs:SendMessage",
-        "sqs:ReceiveMessage",
-        "sqs:ChangeMessageVisibility",
-        "sqs:DeleteMessage",
-        "sqs:GetQueueAttributes"
-      ]}));
-
-    new CfnEventSourceMapping(this, "DLQResendEventSourceMapping", {
-      eventSourceArn: herateDeadLetterQueue.queueArn,
-      functionName: dlqResendHandler.functionName,
-      batchSize: 1,
-      enabled: false
-    });
-
-    const dbChangerTep = new lambda.Function(this, "dbChangerTep", {
-      runtime: this.runtime,
-      code: lambdaCode,
-      environment: {
-        ...this.envVars,
-        table: jaksotunnusTable.tableName,
-        caller_id: `1.2.246.562.10.00000000001.${id}-dbChangerTep`
-      },
-      handler: "oph.heratepalvelu.util.dbChanger::handleDBUpdateTep",
-      memorySize: 1024,
-      reservedConcurrentExecutions: 1,
-      timeout: Duration.seconds(900),
-      tracing: lambda.Tracing.ACTIVE
-    });
-
-    jaksotunnusTable.grantReadWriteData(dbChangerTep);
     
-    const kestojenUudelleenlaskentaHandler = new lambda.Function(
-      this,
-      "kestojenUudelleenlaskentaHandler",
-      {
-        runtime: this.runtime,
-        code: lambdaCode,
-        environment: {
-          ...this.envVars,
-          jaksotunnus_table: jaksotunnusTable.tableName,
-          caller_id: `1.2.246.562.10.00000000001.${id}-kestojenUudelleenlaskentaHandler`,
-        },
-        memorySize: Token.asNumber(1024),
-        reservedConcurrentExecutions: 1,
-        timeout: Duration.seconds(900),
-        handler: "oph.heratepalvelu.tep.kestojenUudelleenlaskentaHandler::handleKestojenUudelleenlaskenta",
-        tracing: lambda.Tracing.ACTIVE,
-        logGroup: tepLogGroup,
-        vpc: vpc
-    });
-
-    new events.Rule(this, "KestojenUudelleenlaskentaScheduleRule", {
-      schedule: events.Schedule.expression("rate(15 minutes)"),
-      targets: [new targets.LambdaFunction(kestojenUudelleenlaskentaHandler)]
-    });
-
-    jaksotunnusTable.grantReadWriteData(kestojenUudelleenlaskentaHandler);
-
     // Arkistointifunktiot
     const archiveJaksoTable = new lambda.Function(this, "archiveJaksoTable", {
       runtime: this.runtime,
@@ -725,8 +569,6 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
     // IAM
 
     [
-      jaksoHandler,
-      timedOperationsHandler,
       contactInfoCleaningHandler,
       niputusHandler,
       emailHandler,
@@ -734,10 +576,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tepSmsHandler,
       SmsMuistutusHandler,
       EmailMuistutusHandler,
-      dbChangerTep,
       archiveJaksoTable,
       archiveNippuTable,
-      kestojenUudelleenlaskentaHandler,
       tmpKestoCalculationHandler
     ].forEach(
         lambdaFunction => {
