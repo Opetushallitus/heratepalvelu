@@ -26,7 +26,7 @@
              :tyyppi       (:kyselytyyppi herate)
              :alkupvm      (:alkupvm herate)
              :lahetystila  (:ei-lahetetty c/kasittelytilat)}]
-    (try (ehoks/add-kyselytunnus-to-hoks (:ehoks-id herate) req)
+    (try (ehoks/add-kyselytunnus-to-hoks (c/hoks-id herate) req)
          (catch Exception e
            (log/error e "Virhe kyselylinkin lähetyksessä eHOKSiin"
                       "Request:" req
@@ -105,7 +105,7 @@
                    alkupvm
                    loppupvm
                    (:odottaa-lahetysta c/kasittelytilat)
-                   (tutkinnonosat-by-hankkimistapa (:ehoks-id herate)))
+                   (tutkinnonosat-by-hankkimistapa (c/hoks-id herate)))
         arvo-resp (try (arvo/create-amis-kyselylinkki req-body)
                        (catch Exception e
                          (log/error e "Virhe kyselylinkin hakemisessa Arvosta."
@@ -150,7 +150,7 @@
                       " ja " (concat (when terminal? ["opiskeluoikeuden tilan"])
                                      (when ext-funded? ["rahoituspohjan"])))
                     "vuoksi; opiskeluoikeus" (:oid opiskeluoikeus)
-                    "ehoks-id" (:ehoks-id herate)
+                    "ehoks-id" (c/hoks-id herate)
                     "herätepvm" (:heratepvm herate))
           (update-and-return-herate!
             herate
@@ -235,7 +235,7 @@
           status (some-> kyselylinkki (arvo/get-kyselylinkki-status))]
       (cond
         (not kyselylinkki)
-        (log/warn "Hoksille" (:ehoks-id herate)
+        (log/warn "Hoksille" (c/hoks-id herate)
                   "ei ole kyselylinkkiä, ei voi lähettää")
 
         (not status)
@@ -251,7 +251,7 @@
           (update-data-in-ehoks herate lahetyspvm))
 
         :else
-        (do (log/info "Vastausaika loppunut hoksille" (:ehoks-id herate))
+        (do (log/info "Vastausaika loppunut hoksille" (c/hoks-id herate))
             (save-no-time-to-answer herate))))
     (catch Exception e
       (log/error e "at send-email-for-palaute! for" herate)
