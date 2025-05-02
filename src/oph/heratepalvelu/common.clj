@@ -32,6 +32,12 @@
                             (empty? (:sahkoposti %))))
                  "Aloituskyselyn herätteessä sahkoposti on pakollinen tieto"))
 
+(defn hoks-id
+  "Get hoks id from herate/item. This function is neccessary because
+  `:ehoks_id` was accidentally introduced on palaute-backend transition."
+  [item]
+  (or (:ehoks-id item) (:ehoks_id item)))
+
 (def kasittelytilat
   "Heräteviestien lähetyksien käsittelytilat."
   {:ei-lahetetty "ei_lahetetty"
@@ -121,13 +127,13 @@
                                   :tyyppi_kausi [:s tyyppi-kausi]})]
           (try
             (ehoks/add-kyselytunnus-to-hoks
-              (:ehoks-id item)
+              (hoks-id item)
               (assoc data
                      :alkupvm (:alkupvm item)
                      :tyyppi (:kyselytyyppi item)))
             (catch ExceptionInfo e
               (if (= 404 (:status (ex-data e)))
-                (log/warn "Ei hoksia " (:ehoks-id item))
+                (log/warn "Ei hoksia " (hoks-id item))
                 (throw e)))))
         (throw e)))))
 

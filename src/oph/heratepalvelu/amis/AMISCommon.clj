@@ -58,7 +58,7 @@
 (defn check-and-save-herate!
   "Tarkistaa herätteen ja tallentaa sen tietokantaan."
   [herate opiskeluoikeus koulutustoimija herate-source]
-  (log/info "Kerätään tietoja " (:ehoks-id herate) " " (:kyselytyyppi herate))
+  (log/info "Kerätään tietoja " (c/hoks-id herate) " " (:kyselytyyppi herate))
   (if-some [errors (c/herate-schema-errors herate)]
     (log/error "Heräte" herate "ei vastaa skeemaa:" errors)
     (let [kyselytyyppi (:kyselytyyppi herate)
@@ -114,7 +114,7 @@
                :heratepvm           [:s heratepvm]
                :request-id          [:s uuid]
                :oppilaitos          [:s oppilaitos]
-               :ehoks-id            [:n (str (:ehoks-id herate))]
+               :ehoks-id            [:n (str (c/hoks-id herate))]
                :opiskeluoikeus-oid  [:s (:oid opiskeluoikeus)]
                :oppija-oid          [:s oppija]
                :koulutustoimija     [:s koulutustoimija]
@@ -143,7 +143,7 @@
           (when (c/has-nayttotutkintoonvalmistavakoulutus? opiskeluoikeus)
             (log/info
               {:nayttotutkinto        true
-               :hoks-id               (:ehoks-id herate)
+               :hoks-id               (c/hoks-id herate)
                :request-id            uuid
                :opiskeluoikeus-oid    (:oid opiskeluoikeus)
                :koulutuksenjarjestaja koulutustoimija

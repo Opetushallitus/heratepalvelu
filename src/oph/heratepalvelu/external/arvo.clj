@@ -114,7 +114,7 @@
    :request_id                        request-id
    :toimipiste_oid                    (get-toimipiste suoritus)
    :hankintakoulutuksen_toteuttaja    (get-hankintakoulutuksen-toteuttaja
-                                        (:ehoks-id herate))
+                                        (c/hoks-id herate))
    :metatiedot                        {:tila initial-status}
    :tutkinnonosat_hankkimistavoittain tutkinnonosat})
 

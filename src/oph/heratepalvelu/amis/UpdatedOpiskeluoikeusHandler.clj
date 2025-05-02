@@ -118,7 +118,7 @@
             (do
               (ac/check-and-save-herate! herate opiskeluoikeus koulutustoimija
                                          (:koski herate-sources))
-              (ac/update-herate-ehoks! (:ehoks-id herate)
+              (ac/update-herate-ehoks! (hoks-id herate)
                                        (:kyselytyyppi herate)))))
         (catch ExceptionInfo e
           (if (= 404 (:status (ex-data e)))
