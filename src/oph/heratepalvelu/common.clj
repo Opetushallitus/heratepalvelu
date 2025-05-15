@@ -121,6 +121,7 @@
   [toimija-oppija tyyppi-kausi data]
   (try
     (ehoks/add-lahetys-info-to-kyselytunnus data)
+    (log/info "Patched lähetyksen tiedot:" toimija-oppija tyyppi-kausi data)
     (catch ExceptionInfo e
       (if (= 404 (:status (ex-data e)))
         (let [item (ddb/get-item {:toimija_oppija [:s toimija-oppija]
@@ -131,6 +132,11 @@
               (assoc data
                      :alkupvm (:alkupvm item)
                      :tyyppi (:kyselytyyppi item)))
+            (log/info "Created new kyselytunnus for hoks"
+                      (hoks-id item)
+                      (assoc data
+                             :alkupvm (:alkupvm item)
+                             :tyyppi  (:kyselytyyppi item)))
             (catch ExceptionInfo e
               (if (= 404 (:status (ex-data e)))
                 (log/warn "Ei hoksia " (hoks-id item))

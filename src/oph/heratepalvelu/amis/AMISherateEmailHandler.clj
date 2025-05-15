@@ -248,6 +248,7 @@
               lahetyspvm (str (c/local-date-now))]
           (log/info "Lähetetty sähköposti id" id ", tallennetaan tietokantaan")
           (save-email-to-db herate id lahetyspvm)
+          (log/info "Heräte before updating to eHOKS:" herate)
           (update-data-in-ehoks herate lahetyspvm))
 
         :else
