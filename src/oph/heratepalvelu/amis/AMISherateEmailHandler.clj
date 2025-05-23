@@ -11,6 +11,7 @@
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
+           (clojure.lang ExceptionInfo)
            (java.time LocalDate)))
 
 (gen-class
@@ -179,21 +180,33 @@
       (log/error "Tiedot herätteestä" herate "ei päivitetty kantaan")
       (log/error e))))
 
+(defn update-lahetystila-to-ehoks
+  [herate lahetyspvm]
+  (let [req {:kyselylinkki (:kyselylinkki herate)
+             :lahetyspvm lahetyspvm
+             :sahkoposti (:sahkoposti herate)
+             :lahetystila (:viestintapalvelussa c/kasittelytilat)}]
+    (log/info "Updating kyselylinkki state to ehoks with request" req)
+    (c/send-lahetys-data-to-ehoks
+      (:toimija_oppija herate) (:tyyppi_kausi herate) req)))
+
 (defn update-data-in-ehoks
   "Päivittää sähköpostin tiedot ehoksiin, kun sähköposti on lähetetty
   viestintäpalveluun."
   [herate lahetyspvm]
   (try
-    (c/send-lahetys-data-to-ehoks
-      (:toimija_oppija herate)
-      (:tyyppi_kausi herate)
-      {:kyselylinkki (:kyselylinkki herate)
-       :lahetyspvm lahetyspvm
-       :sahkoposti (:sahkoposti herate)
-       :lahetystila (:viestintapalvelussa c/kasittelytilat)})
+    (update-lahetystila-to-ehoks herate lahetyspvm)
+    (catch ExceptionInfo e
+      (if (= 404 (:status (ex-data e)))
+        (try
+          (log/warn e "kyselylinkki missing, creating")
+          (update-kyselytunnus-in-ehoks! herate)
+          (update-lahetystila-to-ehoks herate lahetyspvm)
+          (catch Exception e
+            (log/error e "Virhe lähetystilan luomisessa ehoksiin")))
+        (log/error e "update-data-in-ehoks: Käsittelemätön virhe")))
     (catch Exception e
-      (log/error "Virhe tietojen päivityksessä ehoksiin:" herate)
-      (log/error e))))
+      (log/error e "update-data-in-ehoks: Käsittelemätön virhe"))))
 
 (defn send-feedback-email
   "Lähettää palautekyselyviestin viestintäpalveluun."
