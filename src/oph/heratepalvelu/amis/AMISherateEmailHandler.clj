@@ -25,8 +25,11 @@
   (let [req {:kyselylinkki (:kyselylinkki herate)
              :tyyppi       (:kyselytyyppi herate)
              :alkupvm      (:alkupvm herate)
-             :lahetystila  (:ei-lahetetty c/kasittelytilat)}]
-    (try (ehoks/add-kyselytunnus-to-hoks (c/hoks-id herate) req)
+             :lahetystila  (:ei-lahetetty c/kasittelytilat)}
+        hoks-id (c/hoks-id herate)]
+    (try (log/info "Creating kyselytunnus in ehoks for hoks" hoks-id
+                   "with request" req)
+         (ehoks/add-kyselytunnus-to-hoks hoks-id req)
          (catch Exception e
            (log/error e "Virhe kyselylinkin lähetyksessä eHOKSiin"
                       "Request:" req
