@@ -194,19 +194,14 @@
   "Päivittää sähköpostin tiedot ehoksiin, kun sähköposti on lähetetty
   viestintäpalveluun."
   [herate lahetyspvm]
-  (try
-    (update-lahetystila-to-ehoks herate lahetyspvm)
-    (catch ExceptionInfo e
-      (if (= 404 (:status (ex-data e)))
-        (try
-          (log/warn e "kyselylinkki missing, creating")
-          (update-kyselytunnus-in-ehoks! herate)
-          (update-lahetystila-to-ehoks herate lahetyspvm)
-          (catch Exception e
-            (log/error e "Virhe lähetystilan luomisessa ehoksiin")))
-        (log/error e "update-data-in-ehoks: Käsittelemätön virhe")))
-    (catch Exception e
-      (log/error e "update-data-in-ehoks: Käsittelemätön virhe"))))
+  (try (update-kyselytunnus-in-ehoks! herate)
+       (catch Exception e
+         (log/warn e "update-data-in-ehoks: kyselylinkki creation failed with"
+                   (ex-data e))))
+  (try (update-lahetystila-to-ehoks herate lahetyspvm)
+       (catch Exception e
+         (log/warn e "update-data-in-ehoks: kyselylinkki update failed with"
+                   (ex-data e)))))
 
 (defn send-feedback-email
   "Lähettää palautekyselyviestin viestintäpalveluun."

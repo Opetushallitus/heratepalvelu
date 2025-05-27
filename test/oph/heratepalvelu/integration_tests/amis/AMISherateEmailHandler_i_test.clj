@@ -29,6 +29,7 @@
     :sms-lahetystila [:s (:ei-lahetetty c/kasittelytilat)]
     :suorituskieli [:s "fi"]
     :kyselytyyppi [:s "aloittaneet"]
+    :ehoks-id [:n 939393]
     :alkupvm [:s "2022-01-01"]
     :heratepvm [:s "2022-01-01"]}
    {:toimija_oppija [:s "lkj/245"]
@@ -221,6 +222,7 @@
      :lahetyspvm [:s "2022-02-02"]
      :suorituskieli [:s "fi"]
      :kyselytyyppi [:s "aloittaneet"]
+     :ehoks-id [:n 939393]
      :alkupvm [:s "2022-01-01"]
      :heratepvm [:s "2022-01-01"]
      :viestintapalvelu-id [:n 123]}
@@ -298,6 +300,17 @@
     :url "arvo-example.com/vastauslinkki/v1/status/123"
     :options {:basic-auth ["arvo-user" "arvo-pwd"]
               :as :json}}
+   {:options
+    {:headers
+     {:ticket "service-ticket/ehoks-virkailija-backend/cas-security-check"},
+     :as :json,
+     :content-type "application/json",
+     :body (str "{\"kyselylinkki\":\"kysely.linkki/123\","
+                "\"tyyppi\":\"aloittaneet\","
+                "\"alkupvm\":\"2022-01-01\","
+                "\"lahetystila\":\"ei_lahetetty\"}")},
+    :url "ehoks-example.com/hoks/939393/kyselylinkki",
+    :method :post}
    {:method :patch
     :url "ehoks-example.com/hoks/kyselylinkki"
     :options {:headers {:ticket (str "service-ticket/ehoks-virkailija-backend"
@@ -381,6 +394,9 @@
                                                :kyselylinkki "kysely.linkki/123"
                                                :kyselytyyppi "aloittaneet"})}}
     :options {:as :json}}
+   {:type :get-service-ticket
+    :service "/ehoks-virkailija-backend"
+    :suffix "cas-security-check"}
    {:type :get-service-ticket
     :service "/ehoks-virkailija-backend"
     :suffix "cas-security-check"}
