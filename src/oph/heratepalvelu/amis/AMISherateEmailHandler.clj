@@ -11,6 +11,7 @@
             [oph.heratepalvelu.external.viestintapalvelu :as vp]
             [oph.heratepalvelu.log.caller-log :refer :all])
   (:import (software.amazon.awssdk.awscore.exception AwsServiceException)
+           (clojure.lang ExceptionInfo)
            (java.time LocalDate)))
 
 (gen-class
@@ -25,8 +26,11 @@
   (let [req {:kyselylinkki (:kyselylinkki herate)
              :tyyppi       (:kyselytyyppi herate)
              :alkupvm      (:alkupvm herate)
-             :lahetystila  (:ei-lahetetty c/kasittelytilat)}]
-    (try (ehoks/add-kyselytunnus-to-hoks (c/hoks-id herate) req)
+             :lahetystila  (:ei-lahetetty c/kasittelytilat)}
+        hoks-id (c/hoks-id herate)]
+    (try (log/info "Creating kyselytunnus in ehoks for hoks" hoks-id
+                   "with request" req)
+         (ehoks/add-kyselytunnus-to-hoks hoks-id req)
          (catch Exception e
            (log/error e "Virhe kyselylinkin lähetyksessä eHOKSiin"
                       "Request:" req
@@ -176,21 +180,28 @@
       (log/error "Tiedot herätteestä" herate "ei päivitetty kantaan")
       (log/error e))))
 
+(defn update-lahetystila-to-ehoks
+  [herate lahetyspvm]
+  (let [req {:kyselylinkki (:kyselylinkki herate)
+             :lahetyspvm lahetyspvm
+             :sahkoposti (:sahkoposti herate)
+             :lahetystila (:viestintapalvelussa c/kasittelytilat)}]
+    (log/info "Updating kyselylinkki state to ehoks with request" req)
+    (c/send-lahetys-data-to-ehoks
+      (:toimija_oppija herate) (:tyyppi_kausi herate) req)))
+
 (defn update-data-in-ehoks
   "Päivittää sähköpostin tiedot ehoksiin, kun sähköposti on lähetetty
   viestintäpalveluun."
   [herate lahetyspvm]
-  (try
-    (c/send-lahetys-data-to-ehoks
-      (:toimija_oppija herate)
-      (:tyyppi_kausi herate)
-      {:kyselylinkki (:kyselylinkki herate)
-       :lahetyspvm lahetyspvm
-       :sahkoposti (:sahkoposti herate)
-       :lahetystila (:viestintapalvelussa c/kasittelytilat)})
-    (catch Exception e
-      (log/error "Virhe tietojen päivityksessä ehoksiin:" herate)
-      (log/error e))))
+  (try (update-kyselytunnus-in-ehoks! herate)
+       (catch Exception e
+         (log/warn e "update-data-in-ehoks: kyselylinkki creation failed with"
+                   (ex-data e))))
+  (try (update-lahetystila-to-ehoks herate lahetyspvm)
+       (catch Exception e
+         (log/warn e "update-data-in-ehoks: kyselylinkki update failed with"
+                   (ex-data e)))))
 
 (defn send-feedback-email
   "Lähettää palautekyselyviestin viestintäpalveluun."

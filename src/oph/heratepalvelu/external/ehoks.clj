@@ -2,6 +2,7 @@
   "Wrapperit eHOKSin REST-rajapinnan ympäri."
   (:require [cheshire.core :refer [generate-string]]
             [environ.core :refer [env]]
+            [clojure.tools.logging :as log]
             [oph.heratepalvelu.external.cas-client :as cas]
             [oph.heratepalvelu.external.http-client :as client])
   (:import (clojure.lang ExceptionInfo)))
@@ -94,6 +95,7 @@
                                    {:body (generate-string data)}))]
     (try (action)
          (catch ExceptionInfo e
+           (log/error e "while patching kyselylinkki with data" data)
            (if (not= 404 (:status (ex-data e)))
              (action)
              (throw e))))))

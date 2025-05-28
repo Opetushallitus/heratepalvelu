@@ -119,29 +119,8 @@
 (defn send-lahetys-data-to-ehoks
   "Lähettää lähetyksen tiedot ehoksiin."
   [toimija-oppija tyyppi-kausi data]
-  (try
-    (ehoks/add-lahetys-info-to-kyselytunnus data)
-    (log/info "Patched lähetyksen tiedot:" toimija-oppija tyyppi-kausi data)
-    (catch ExceptionInfo e
-      (if (= 404 (:status (ex-data e)))
-        (let [item (ddb/get-item {:toimija_oppija [:s toimija-oppija]
-                                  :tyyppi_kausi [:s tyyppi-kausi]})]
-          (try
-            (ehoks/add-kyselytunnus-to-hoks
-              (hoks-id item)
-              (assoc data
-                     :alkupvm (:alkupvm item)
-                     :tyyppi (:kyselytyyppi item)))
-            (log/info "Created new kyselytunnus for hoks"
-                      (hoks-id item)
-                      (assoc data
-                             :alkupvm (:alkupvm item)
-                             :tyyppi  (:kyselytyyppi item)))
-            (catch ExceptionInfo e
-              (if (= 404 (:status (ex-data e)))
-                (log/warn "Ei hoksia " (hoks-id item))
-                (throw e)))))
-        (throw e)))))
+  (log/info "Patching lähetyksen tiedot:" toimija-oppija tyyppi-kausi data)
+  (ehoks/add-lahetys-info-to-kyselytunnus data))
 
 (defn date-string-to-timestamp
   "Muuttaa stringinä olevan päivämäärän timestampiksi (long)."
