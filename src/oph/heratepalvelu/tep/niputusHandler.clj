@@ -204,7 +204,9 @@
      [:eq [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
      :niputuspvm [:eq [:s (:niputuspvm nippu)]]}
     {:index "niputusIndex"
-     :filter-expression "#pvm >= :pvm AND attribute_exists(#tunnus)"
+     :filter-expression (str "#pvm >= :pvm AND "
+                             "attribute_exists(#tunnus) AND "
+                             "attribute_not_exists(mitatoity)")
      :expr-attr-names {"#pvm"    "viimeinen_vastauspvm"
                        "#tunnus" "tunnus"}
      :expr-attr-vals {":pvm" [:s (str (c/local-date-now))]}}

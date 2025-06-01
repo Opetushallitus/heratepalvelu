@@ -116,7 +116,9 @@
                    (str kausi-end-date)
                    (str today))]
     (ddb/scan {:filter-expression
-               "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :start AND :end"
+               (str "#tpkNpvm = :tpkNpvm AND "
+                    "#jl BETWEEN :start AND :end AND "
+                    "attribute_not_exists(mitatoity)")
                :exclusive-start-key exclusive-start-key
                :expr-attr-names {"#tpkNpvm" "tpk-niputuspvm"
                                  "#jl"      "jakso_loppupvm"}

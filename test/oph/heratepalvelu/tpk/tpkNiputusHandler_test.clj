@@ -215,7 +215,9 @@
         (is (= @test-update-tpk-niputuspvm-results expected))))))
 
 (defn- results-with-end-date [end-date]
-  {:filter-expression "#tpkNpvm = :tpkNpvm AND #jl BETWEEN :start AND :end"
+  {:filter-expression (str "#tpkNpvm = :tpkNpvm AND "
+                           "#jl BETWEEN :start AND :end AND "
+                           "attribute_not_exists(mitatoity)")
    :exclusive-start-key "asdf"
    :expr-attr-names {"#tpkNpvm" "tpk-niputuspvm"
                      "#jl"      "jakso_loppupvm"}
