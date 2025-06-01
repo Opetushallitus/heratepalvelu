@@ -642,7 +642,9 @@
                      :options
                      {:index "niputusIndex"
                       :filter-expression
-                      "#pvm >= :pvm AND attribute_exists(#tunnus)"
+                      (str "#pvm >= :pvm AND "
+                           "attribute_exists(#tunnus) AND "
+                           "attribute_not_exists(mitatoity)")
                       :expr-attr-names {"#pvm"    "viimeinen_vastauspvm"
                                         "#tunnus" "tunnus"}
                       :expr-attr-vals {":pvm" [:s "2022-03-03"]}}

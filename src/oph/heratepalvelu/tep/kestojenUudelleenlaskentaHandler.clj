@@ -29,6 +29,7 @@
              (str "koulutustoimija = :koulutustoimija AND
                   jakso_loppupvm >= :alkupvm AND "
                   "attribute_exists(kesto) AND "
+                  "attribute_not_exists(mitatoity) AND "
                   "kestojen_uudelleenlaskentakerta = :kerta")
              :exclusive-start-key exclusive-start-key
              :expr-attr-vals      {":koulutustoimija" [:s koulutustoimija-oid]

@@ -28,7 +28,8 @@
       {:ohjaaja_ytunnus_kj_tutkinto [:eq
                                      [:s (:ohjaaja_ytunnus_kj_tutkinto nippu)]]
        :niputuspvm                  [:eq [:s (:niputuspvm nippu)]]}
-      {:index "niputusIndex"}
+      {:index "niputusIndex"
+       :filter-expression "attribute_not_exists(mitatoity)"}
       (:jaksotunnus-table env))
     (catch AwsServiceException e
       (log/error "Jakso-query epäonnistui nipulla" nippu)
