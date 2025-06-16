@@ -372,18 +372,18 @@
                        :ohjaaja_ytunnus_kj_tutkinto
                        [:s "Testi Ojaaja/765432-1/koulutustoimija-id/"]
                        :tutkinnonosa_id [:n "test-tutkinnonosa-id"]
-                       :niputuspvm [:s "2021-12-16"]
+                       :niputuspvm [:s "2022-01-01"]
                        :tyopaikan_normalisoitu_nimi [:s "testityopaikka"]
                        :toimipiste_oid [:s "test-toimipiste"]
                        :tutkinto [:s nil]
-                       :alkupvm [:s "2021-12-16"]
+                       :alkupvm [:s "2022-01-01"]
                        :koulutustoimija [:s "koulutustoimija-id"]
                        :jakso_alkupvm [:s "2021-09-09"]
                        :hankkimistapa_id [:n 1]
                        :oppija_oid [:s "123.456.789"]
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
-                       :viimeinen_vastauspvm [:s "2022-02-14"]}
+                       :viimeinen_vastauspvm [:s "2022-03-02"]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]
@@ -391,7 +391,7 @@
                        :ohjaaja [:s "Testi Ojaaja"]
                        :ohjaaja_ytunnus_kj_tutkinto
                        [:s "Testi Ojaaja/765432-1/koulutustoimija-id/"]
-                       :niputuspvm [:s "2021-12-16"]
+                       :niputuspvm [:s "2022-01-01"]
                        :sms_kasittelytila [:s "ei_niputeta"]
                        :tutkinto [:s nil]
                        :kasittelytila [:s "ei_niputeta"]}}
@@ -407,7 +407,7 @@
                       :body {:osa_aikaisuus nil
                              :tyopaikka "Testityöpaikka"
                              :tyopaikka_normalisoitu "testityopaikka"
-                             :vastaamisajan_alkupvm "2021-12-16"
+                             :vastaamisajan_alkupvm "2022-01-01"
                              :tyonantaja "765432-1"
                              :oppisopimuksen_perusta nil
                              :osaamisala []
@@ -434,7 +434,7 @@
                       :body {:osa_aikaisuus nil
                              :tyopaikka "Testityöpaikka"
                              :tyopaikka_normalisoitu "testityopaikka"
-                             :vastaamisajan_alkupvm "2021-12-16"
+                             :vastaamisajan_alkupvm "2022-01-01"
                              :tyonantaja "111111-1"
                              :oppisopimuksen_perusta nil
                              :osaamisala []
@@ -461,7 +461,7 @@
                       :body {:osa_aikaisuus nil
                              :tyopaikka "Testityöpaikka"
                              :tyopaikka_normalisoitu "testityopaikka"
-                             :vastaamisajan_alkupvm "2021-12-16"
+                             :vastaamisajan_alkupvm "2022-01-01"
                              :tyonantaja "123456-7"
                              :oppisopimuksen_perusta nil
                              :osaamisala []
@@ -495,18 +495,18 @@
                        :ohjaaja_ytunnus_kj_tutkinto
                        [:s "Testi Ojaaja/123456-7/koulutustoimija-id/"]
                        :tutkinnonosa_id [:n "test-tutkinnonosa-id"]
-                       :niputuspvm [:s "2021-12-16"]
+                       :niputuspvm [:s "2022-01-01"]
                        :tyopaikan_normalisoitu_nimi [:s "testityopaikka"]
                        :toimipiste_oid [:s "test-toimipiste"]
                        :tutkinto [:s nil]
-                       :alkupvm [:s "2021-12-16"]
+                       :alkupvm [:s "2022-01-01"]
                        :koulutustoimija [:s "koulutustoimija-id"]
                        :jakso_alkupvm [:s "2021-09-09"]
                        :hankkimistapa_id [:n 4]
                        :oppija_oid [:s "123.456.789"]
                        :rahoituskausi [:s "2021-2022"]
                        :tutkintonimike [:s ""]
-                       :viimeinen_vastauspvm [:s "2022-02-14"]}
+                       :viimeinen_vastauspvm [:s "2022-03-02"]}
                       :nippu-table-data
                       {:tyopaikka [:s "Testityöpaikka"]
                        :koulutuksenjarjestaja [:s "koulutustoimija-id"]
@@ -514,7 +514,7 @@
                        :ohjaaja [:s "Testi Ojaaja"]
                        :ohjaaja_ytunnus_kj_tutkinto
                        [:s "Testi Ojaaja/123456-7/koulutustoimija-id/"]
-                       :niputuspvm [:s "2021-12-16"]
+                       :niputuspvm [:s "2022-01-01"]
                        :sms_kasittelytila [:s "ei_lahetetty"]
                        :tutkinto [:s nil]
                        :kasittelytila [:s "ei_niputettu"]}}]]
