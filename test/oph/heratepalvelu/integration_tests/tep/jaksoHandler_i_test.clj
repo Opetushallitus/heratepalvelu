@@ -110,7 +110,7 @@
                 {:content-type "application/json"
                  :body (str "{\"osa_aikaisuus\":50,\"tyopaikka\":\"Testi Oy\","
                             "\"tyopaikka_normalisoitu\":\"testi_oy\","
-                            "\"vastaamisajan_alkupvm\":\"2022-02-16\","
+                            "\"vastaamisajan_alkupvm\":\"2022-03-01\","
                             "\"tyonantaja\":\"123456-7\","
                             "\"oppisopimuksen_perusta\":\"01\","
                             "\"osaamisala\":[\"test-osaamisala\"],"
@@ -150,7 +150,7 @@
 (def expected-jaksotunnus-table
   #{{:ohjaaja_ytunnus_kj_tutkinto
      [:s "Olli Ohjaaja/123456-7/koulutustoimija-oid/testitutkinto"]
-     :niputuspvm [:s "2022-02-16"]
+     :niputuspvm [:s "2022-03-01"]
      :osa_aikaisuus [:n 50]
      :ohjaaja_nimi [:s "Olli Ohjaaja"]
      :tutkinnonosa_nimi [:s "Test Kurssi"]
@@ -174,7 +174,7 @@
      :tyopaikan_normalisoitu_nimi [:s "testi_oy"]
      :toimipiste_oid [:s "test-toimipiste"]
      :tutkinto [:s "testitutkinto"]
-     :alkupvm [:s "2022-02-16"]
+     :alkupvm [:s "2022-03-01"]
      :koulutustoimija [:s "koulutustoimija-oid"]
      :jakso_alkupvm [:s "2022-01-05"]
      :ohjaaja_email [:s "ohjaaja@esimerkki.fi"]
@@ -182,13 +182,13 @@
      :oppija_oid [:s "test-oppija-oid"]
      :rahoituskausi [:s "2021-2022"]
      :tutkintonimike [:s "(\"test-tutkintonimike\")"]
-     :viimeinen_vastauspvm [:s "2022-04-17"]
+     :viimeinen_vastauspvm [:s "2022-04-30"]
      :request_id [:s "test-uuid"]}})
 
 (def expected-nippu-table
   #{{:ohjaaja_ytunnus_kj_tutkinto
      [:s "Olli Ohjaaja/123456-7/koulutustoimija-oid/testitutkinto"]
-     :niputuspvm [:s "2022-02-16"]
+     :niputuspvm [:s "2022-03-01"]
      :tyopaikka [:s "Testi Oy"]
      :koulutuksenjarjestaja [:s "koulutustoimija-oid"]
      :ytunnus [:s "123456-7"]
@@ -212,7 +212,7 @@
     :options {:content-type "application/json"
               :body (str "{\"osa_aikaisuus\":50,\"tyopaikka\":\"Testi Oy\","
                          "\"tyopaikka_normalisoitu\":\"testi_oy\","
-                         "\"vastaamisajan_alkupvm\":\"2022-02-16\","
+                         "\"vastaamisajan_alkupvm\":\"2022-03-01\","
                          "\"tyonantaja\":\"123456-7\","
                          "\"oppisopimuksen_perusta\":\"01\","
                          "\"osaamisala\":[\"test-osaamisala\"],"

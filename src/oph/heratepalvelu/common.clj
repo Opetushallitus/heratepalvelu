@@ -191,15 +191,14 @@
 
 (defn next-niputus-date
   "Palauttaa seuraavan niputuspäivämäärän annetun päivämäärän jälkeen.
-  Niputuspäivämäärät ovat kuun ensimmäinen ja kuudestoista päivä."
+  1.7.2025 voimaan tulleen asetusmuutoksen myötä niputukset tapahtuvat kerran
+  kuukaudessa, kuun ensimmäinen päivä."
   ^LocalDate [pvm-str]
-  (let [[^int year ^int month ^int day] (map #(Integer/parseInt %)
-                                             (str/split pvm-str #"-"))]
-    (if (< day 16)
-      (LocalDate/of year month 16)
-      (if (= 12 month)
-        (LocalDate/of (inc year) 1 1)
-        (LocalDate/of year (inc month) 1)))))
+  (let [[^int year ^int month _] (map #(Integer/parseInt %)
+                                      (str/split pvm-str #"-"))]
+    (if (= 12 month)
+      (LocalDate/of (inc year) 1 1)
+      (LocalDate/of year (inc month) 1))))
 
 (defn create-nipputunniste
   "Luo nipulle tunnisteen ilman erikoismerkkejä."
