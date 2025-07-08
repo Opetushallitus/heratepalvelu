@@ -44,7 +44,7 @@
                                    :status])]
             (log/info "Muistutus lähetetty, vastaus" resp)
             (tc/update-nippu nippu
-                             {:sms_kasittelytila [:s tila]
+                             {:sms_muistutus_kasittelytila [:s tila]
                               :sms_muistutuspvm [:s (str (c/local-date-now))]
                               :sms_muistutukset [:n 1]}))
           (let [kasittely-status (if (:vastattu status)

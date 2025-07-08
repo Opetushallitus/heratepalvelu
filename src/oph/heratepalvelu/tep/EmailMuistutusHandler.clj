@@ -41,8 +41,7 @@
   (try
     (tc/update-nippu
       nippu
-      {:kasittelytila       [:s (:viestintapalvelussa c/kasittelytilat)]
-       :viestintapalvelu-id [:n id]
+      {:muistutus-viestintapalvelu-id [:n id]
        :email_muistutuspvm  [:s (str (c/local-date-now))]
        :muistutukset        [:n 1]})
     (catch AwsServiceException e
