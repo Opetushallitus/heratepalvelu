@@ -26,7 +26,6 @@
       herate
       {:muistutukset [:n n]
        :muistutus-viestintapalvelu-id [:n id]
-       :muistutus-lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]
        (keyword (str n ".-muistutus-lahetetty")) [:s (str (c/local-date-now))]})
     (catch AwsServiceException e
       (log/error "Muistutus herätteelle"

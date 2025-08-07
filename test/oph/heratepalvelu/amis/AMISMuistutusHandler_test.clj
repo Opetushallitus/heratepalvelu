@@ -21,9 +21,7 @@
             expected {:herate email
                       :updates {:muistutukset [:n 1]
                                 :muistutus-viestintapalvelu-id [:n 123]
-                                :1.-muistutus-lahetetty [:s "2021-10-10"]
-                                :muistutus-lahetystila
-                                [:s (:viestintapalvelussa c/kasittelytilat)]}}]
+                                :1.-muistutus-lahetetty [:s "2021-10-10"]}}]
         (mh/update-after-send email 1 123)
         (is (= @mock-update-after-send-results expected))))))
 

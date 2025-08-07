@@ -130,8 +130,7 @@
      :suorituskieli [:s "fi"]
      :viestintapalvelu-id [:n 123]
      :muistutus-viestintapalvelu-id [:n 111]
-     :1.-muistutus-lahetetty [:s "2022-02-02"]
-     :muistutus-lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]}
+     :1.-muistutus-lahetetty [:s "2022-02-02"]}
     {:toimija_oppija [:s "lkj/245"]
      :tyyppi_kausi [:s "aloittaneet/2022-2023"]
      :muistutukset [:n 2]
@@ -143,8 +142,7 @@
      :suorituskieli [:s "fi"]
      :viestintapalvelu-id [:n 245]
      :muistutus-viestintapalvelu-id [:n 222]
-     :2.-muistutus-lahetetty [:s "2022-02-02"]
-     :muistutus-lahetystila [:s (:viestintapalvelussa c/kasittelytilat)]}
+     :2.-muistutus-lahetetty [:s "2022-02-02"]}
     {:toimija_oppija [:s "abc/333"]
      :tyyppi_kausi [:s "aloittaneet/2021-2022"]
      :muistutukset [:n 1]
