@@ -148,8 +148,7 @@
      :kyselylinkki [:s "kysely.linkki/1"]
      :muistutukset [:n 1]
      :lahetyspvm [:s "2022-01-27"]
-     :kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
-     :viestintapalvelu-id [:n 1]
+     :muistutus-viestintapalvelu-id [:n 1]
      :email_muistutuspvm [:s "2022-02-02"]}
     {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]
      :niputuspvm [:s "2022-02-01"]

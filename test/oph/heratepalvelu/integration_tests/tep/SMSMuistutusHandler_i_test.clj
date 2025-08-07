@@ -113,8 +113,9 @@
      :niputuspvm [:s "2022-01-16"]
      :kyselylinkki [:s "kysely.linkki/AAAAAA"]
      :lahetettynumeroon [:s "+358401234567"]
+     :sms_kasittelytila [:s (:success c/kasittelytilat)]
      :sms_muistutukset [:n 1]
-     :sms_kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
+     :sms_muistutus_kasittelytila [:s (:viestintapalvelussa c/kasittelytilat)]
      :sms_lahetyspvm [:s "2022-01-27"]
      :sms_muistutuspvm [:s "2022-02-02"]}
     {:ohjaaja_ytunnus_kj_tutkinto [:s "oykt-2"]

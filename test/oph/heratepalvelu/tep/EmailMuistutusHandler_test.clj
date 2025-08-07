@@ -48,9 +48,7 @@
             id 123
             expected {:nippu {:ohjaaja_ytunnus_kj_tutkinto "test-nippu-id"
                               :niputuspvm "2021-10-05"}
-                      :updates {:kasittelytila
-                                [:s (:viestintapalvelussa c/kasittelytilat)]
-                                :viestintapalvelu-id [:n 123]
+                      :updates {:muistutus-viestintapalvelu-id [:n 123]
                                 :email_muistutuspvm  [:s "2022-02-02"]
                                 :muistutukset        [:n 1]}}]
         (emh/update-item-email-sent nippu id)

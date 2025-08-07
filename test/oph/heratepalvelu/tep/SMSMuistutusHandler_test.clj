@@ -94,7 +94,7 @@
                               :ohjaaja_ytunnus_kj_tutkinto "test-id-1"
                               :niputuspvm "2021-12-15"
                               :lahetettynumeroon "+358401234567"}
-                      :updates {:sms_kasittelytila [:s "mock-lahetys"]
+                      :updates {:sms_muistutus_kasittelytila [:s "mock-lahetys"]
                                 :sms_muistutuspvm [:s "2021-12-16"]
                                 :sms_muistutukset [:n 1]}}
                      {:type "mock-get-nippulinkki-status"

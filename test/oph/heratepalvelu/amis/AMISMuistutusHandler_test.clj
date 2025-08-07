@@ -20,10 +20,8 @@
                    :tyyppi_kausi "tyyppi-kausi"}
             expected {:herate email
                       :updates {:muistutukset [:n 1]
-                                :viestintapalvelu-id [:n 123]
-                                :1.-muistutus-lahetetty [:s "2021-10-10"]
-                                :lahetystila
-                                [:s (:viestintapalvelussa c/kasittelytilat)]}}]
+                                :muistutus-viestintapalvelu-id [:n 123]
+                                :1.-muistutus-lahetetty [:s "2021-10-10"]}}]
         (mh/update-after-send email 1 123)
         (is (= @mock-update-after-send-results expected))))))
 
