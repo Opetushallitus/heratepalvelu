@@ -691,6 +691,33 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       tracing: lambda.Tracing.ACTIVE
     });
 
+    // NOTE: This is a temporary Lambda for calculating missing kestot for
+    // jaksot in 2024-2025 rahoituskausi (see EH-1900). This can be removed
+    // after the ticket has been marked as "Done".
+    const tmpKestoCalculationHandler = new lambda.Function(this, "tmpKestoCalculationHandler", {
+      runtime: this.runtime,
+      code: lambdaCode,
+      environment: {
+        ...this.envVars,
+        jaksotunnus_table: jaksotunnusTable.tableName,
+        caller_id: `1.2.246.562.10.00000000001.${id}-tmpKestoCalculationHandler`,
+      },
+      memorySize: Token.asNumber(1024),
+      reservedConcurrentExecutions: 1,
+      timeout: Duration.seconds(900),
+      handler: "oph.heratepalvelu.tep.tmpKestoCalculationHandler::calculateMissingKestot",
+      tracing: lambda.Tracing.ACTIVE,
+      logGroup: tepLogGroup,
+      vpc: vpc
+    });
+
+    new events.Rule(this, "TmpKestoCalculationHandlerRule", {
+      schedule: events.Schedule.expression("rate(15 minutes)"),
+      targets: [new targets.LambdaFunction(tmpKestoCalculationHandler)]
+    });
+
+    jaksotunnusTable.grantReadWriteData(tmpKestoCalculationHandler);
+
     nippuTable.grantReadWriteData(archiveNippuTable);
     nippuArchive2021_2022Table.grantReadWriteData(archiveNippuTable);
     nippuArchive2022_2023Table.grantReadWriteData(archiveNippuTable);
@@ -710,7 +737,8 @@ export class HeratepalveluTEPStack extends HeratepalveluStack {
       dbChangerTep,
       archiveJaksoTable,
       archiveNippuTable,
-      kestojenUudelleenlaskentaHandler
+      kestojenUudelleenlaskentaHandler,
+      tmpKestoCalculationHandler
     ].forEach(
         lambdaFunction => {
           lambdaFunction.addToRolePolicy(new iam.PolicyStatement({
