@@ -1,7 +1,11 @@
 (defproject heratepalvelu "0.1.0-SNAPSHOT"
   :description "Herätepalvelu Arvo-kyselylinkkien lähetyksen automatisointiin."
-  :repositories [["releases" "https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local"]
-                 ["snapshots" "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"]]
+  :repositories
+  [["github" {:url "https://maven.pkg.github.com/Opetushallitus/old-packages"
+              :username "private-token"
+              :password :env/GITHUB_TOKEN}]
+   ["releases" "https://artifactory.opintopolku.fi/artifactory/oph-sade-release-local"]
+   ["snapshots" "https://artifactory.opintopolku.fi/artifactory/oph-sade-snapshot-local"]]
   :dependencies [[org.clojure/clojure]
                  [org.clojure/tools.logging]
                  [org.clojure/core.memoize]
