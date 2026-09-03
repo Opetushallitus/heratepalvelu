@@ -14,8 +14,8 @@
              [com.amazonaws.services.lambda.runtime.events.ScheduledEvent
               com.amazonaws.services.lambda.runtime.Context] void]])
 
-(def rahoituskausi {:start-date "2024-07-01"
-                    :end-date   "2025-06-30"})
+(def aikavali {:start-date "2025-07-01"
+               :end-date   "2026-09-01"})
 
 (defn scan-for-jaksot-without-kesto!
   "Scans for jaksot in `jaksoTunnusTable`
@@ -32,8 +32,8 @@
                   "attribute_not_exists(kesto) AND "
                   "attribute_not_exists(mitatoity)")
              :exclusive-start-key exclusive-start-key
-             :expr-attr-vals {":alkupvm"  [:s (:start-date rahoituskausi)]
-                              ":loppupvm" [:s (:end-date rahoituskausi)]}}
+             :expr-attr-vals {":alkupvm"  [:s (:start-date aikavali)]
+                              ":loppupvm" [:s (:end-date aikavali)]}}
             (:jaksotunnus-table env)))
 
 (defn- update-jakso-with-kesto!
