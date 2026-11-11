@@ -46,9 +46,9 @@
                          [software.amazon.awssdk/ssm "2.30.36"]
                          [software.amazon.awssdk/sqs "2.30.36"]
                          [software.amazon.awssdk/bom "2.30.36" :extensions "pom"]
-                         [org.apache.logging.log4j/log4j-api "2.24.1"]
-                         [org.apache.logging.log4j/log4j-core "2.24.1"]
-                         [org.apache.logging.log4j/log4j-slf4j-impl "2.24.1"]
+                         [org.apache.logging.log4j/log4j-api "2.25.5"]
+                         [org.apache.logging.log4j/log4j-core "2.25.5"]
+                         [org.apache.logging.log4j/log4j-slf4j-impl "2.25.5"]
                          [prismatic/schema "1.1.11"] ;
                          [hiccup "1.0.5"]
                          [fi.vm.sade/scala-cas_2.12 "2.2.2.1-SNAPSHOT"]
