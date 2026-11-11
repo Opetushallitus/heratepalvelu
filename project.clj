@@ -57,10 +57,10 @@
 
                          [io.netty/netty-buffer "4.1.43.Final"] ;
                          [org.slf4j/slf4j-api "1.7.36"]
-                         [com.fasterxml.jackson.core/jackson-core "2.15.4"]
-                         [com.fasterxml.jackson.core/jackson-annotations "2.15.4"]
-                         [com.fasterxml.jackson.core/jackson-databind "2.15.4"]
-                         [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.15.4"]
+                         [com.fasterxml.jackson.core/jackson-core "2.21.8"]
+                         [com.fasterxml.jackson.core/jackson-annotations "2.21"]
+                         [com.fasterxml.jackson.core/jackson-databind "2.21.8"]
+                         [com.fasterxml.jackson.dataformat/jackson-dataformat-cbor "2.21.8"]
                          [com.typesafe.akka/akka-actor_2.12 "2.5.16"]
                          [commons-io/commons-io "2.17.0"]]
   :plugins [[jonase/eastwood "1.2.3"]
