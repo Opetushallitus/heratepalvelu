@@ -55,7 +55,16 @@
                          [com.googlecode.libphonenumber/libphonenumber "8.13.49"]
                          [org.clojure/data.json "2.5.0"]
 
-                         [io.netty/netty-buffer "4.1.43.Final"] ;
+                         [io.netty/netty-buffer "4.1.140.Final"]
+                         [io.netty/netty-codec "4.1.140.Final"]
+                         [io.netty/netty-codec-http "4.1.140.Final"]
+                         [io.netty/netty-codec-http2 "4.1.140.Final"]
+                         [io.netty/netty-common "4.1.140.Final"]
+                         [io.netty/netty-handler "4.1.140.Final"]
+                         [io.netty/netty-resolver "4.1.140.Final"]
+                         [io.netty/netty-transport "4.1.140.Final"]
+                         [io.netty/netty-transport-classes-epoll "4.1.140.Final"]
+                         [io.netty/netty-transport-native-unix-common "4.1.140.Final"]
                          [org.slf4j/slf4j-api "1.7.36"]
                          [com.fasterxml.jackson.core/jackson-core "2.21.8"]
                          [com.fasterxml.jackson.core/jackson-annotations "2.21"]
